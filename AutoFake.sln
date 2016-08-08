@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoFake", "AutoFake\AutoFake.csproj", "{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{DE4906FF-906E-447E-A915-A6DEE7DC9607}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
