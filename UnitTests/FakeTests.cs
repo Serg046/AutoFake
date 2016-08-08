@@ -18,6 +18,13 @@ namespace UnitTests
         {
             return TimeZoneInfo.ConvertTime(DateTime.Now, _timeZone);
         }
+
+        public DateTime GetDateWithInnerCall()
+        {
+            return TimeZoneInfo.ConvertTime(GetCurrentDate(), _timeZone);
+        }
+
+        private DateTime GetCurrentDate() => DateTime.Now;
     }
 
     public class FakeTests
@@ -34,6 +41,20 @@ namespace UnitTests
                 .Returns(currentDate);
 
             Assert.Equal(new DateTime(2016, 8, 8, 12, 00, 00), calendarFake.Execute(c => c.GetDate()));
+        }
+
+        [Fact]
+        public void InnerCallOfMockedMethodWorksFine()
+        {
+            var currentDate = new DateTime(2016, 8, 8, 15, 00, 00, DateTimeKind.Local);
+
+            var timeZone = TimeZoneInfo.GetSystemTimeZones().Single(t => t.Id == "UTC");
+            var calendarFake = Fake.For<Calendar>(timeZone)
+                .Setup(c => DateTime.Now)
+                .ReachableWith(c => c.GetDateWithInnerCall())
+                .Returns(currentDate);
+
+            Assert.Equal(new DateTime(2016, 8, 8, 12, 00, 00), calendarFake.Execute(c => c.GetDateWithInnerCall()));
         }
     }
 }

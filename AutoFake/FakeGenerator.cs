@@ -87,6 +87,10 @@ namespace AutoFake
                         processor.InsertBefore(instruction, processor.Create(OpCodes.Ldarg_0));
                         processor.Replace(instruction, processor.Create(OpCodes.Ldfld, field));
                     }
+                    else if (methodReference.DeclaringType == currentMethod.DeclaringType)
+                    {
+                        ReplaceInstructions(methodReference.Resolve(), methodToReplace, field);
+                    }
                 }
             }
         }
