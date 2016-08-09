@@ -7,19 +7,26 @@ namespace AutoFake
     public static class ExpressionUtils
     {
         public static MethodInfo GetMethodInfo(LambdaExpression expression)
+            => GetMethodInfo(expression.Body);
+
+        private static MethodInfo GetMethodInfo(Expression expression)
         {
             MethodInfo method;
 
-            if (expression.Body is MethodCallExpression)
+            if (expression is MethodCallExpression)
             {
-                method = ((MethodCallExpression)expression.Body).Method;
+                method = ((MethodCallExpression)expression).Method;
             }
-            else if (expression.Body is MemberExpression)
+            else if (expression is MemberExpression)
             {
-                var member = ((MemberExpression)expression.Body).Member as PropertyInfo;
+                var member = ((MemberExpression)expression).Member as PropertyInfo;
                 if (member == null)
                     throw new InvalidOperationException($"MemberExpression must be a property expression. Source: {expression.ToString()}.");
                 method = member.GetGetMethod();
+            }
+            else if (expression is UnaryExpression)
+            {
+                method = GetMethodInfo(((UnaryExpression)expression).Operand);
             }
             else
                 throw new InvalidOperationException($"Ivalid expression format. Source: {expression.ToString()}.");

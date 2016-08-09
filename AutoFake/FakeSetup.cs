@@ -26,7 +26,7 @@ namespace AutoFake
             return _fake;
         }
 
-        public FakeSetup<T, TReturn> ReachableWith(Expression<Func<T, TReturn>> reachableFunc)
+        public FakeSetup<T, TReturn> ReachableWith(Expression<Func<T, object>> reachableFunc)
         {
             _reachableWithCollection.Add(ExpressionUtils.GetMethodInfo(reachableFunc));
             return this;

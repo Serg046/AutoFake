@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace UnitTests
 {
@@ -10,6 +11,12 @@ namespace UnitTests
         {
             _timeZone = timeZone;
         }
+
+        public DateTime UtcDate => DateTime.UtcNow;
+
+        public DateTime GetUtcDate() => UtcDate;
+
+        public DateTime CalculateUtcDate() => new DateCalculator(DateTime.Now).UtcDate;
 
         public DateTime GetDate()
         {
@@ -23,14 +30,28 @@ namespace UnitTests
 
         public DateTime GetDateWithOffset(int offset)
         {
-            return new DateCalculator().AddHours(GetCurrentDate(), offset);
+            return new DateCalculator(DateTime.Now).AddHours(GetCurrentDate(), offset);
         }
 
         public DateTime GetCurrentDate() => DateTime.Now;
+
+        public TimeZoneInfo GetTimeZoneInfo() => GetTimeZone();
+
+        public static TimeZoneInfo GetTimeZone()
+            => TimeZoneInfo.GetSystemTimeZones().Single(t => t.Id == "UTC");
     }
 
     public class DateCalculator
     {
+        private readonly DateTime _currentDate;
+
+        public DateCalculator(DateTime currentDate)
+        {
+            _currentDate = currentDate;
+        }
+
         public DateTime AddHours(DateTime date, int hours) => date.AddHours(hours);
+
+        public DateTime UtcDate => _currentDate.ToUniversalTime();
     }
 }
