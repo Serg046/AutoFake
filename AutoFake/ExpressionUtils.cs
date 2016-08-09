@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -32,6 +33,33 @@ namespace AutoFake
                 throw new InvalidOperationException($"Ivalid expression format. Source: {expression.ToString()}.");
 
             return method;
+        }
+
+        //see http://stackoverflow.com/questions/36861196/how-to-serialize-method-call-expression-with-arguments/36862531
+        public static object GetArgument(Expression expr)
+        {
+            switch (expr.NodeType)
+            {
+                case ExpressionType.Constant:
+                    return ((ConstantExpression)expr).Value;
+                case ExpressionType.MemberAccess:
+                    var me = (MemberExpression)expr;
+                    object target = GetArgument(me.Expression);
+                    switch (me.Member.MemberType)
+                    {
+                        case MemberTypes.Field:
+                            return ((FieldInfo)me.Member).GetValue(target);
+                        case MemberTypes.Property:
+                            return ((PropertyInfo)me.Member).GetValue(target, null);
+                        default:
+                            throw new NotSupportedException(me.Member.MemberType.ToString());
+                    }
+                case ExpressionType.New:
+                    return ((NewExpression)expr).Constructor
+                        .Invoke(((NewExpression)expr).Arguments.Select(GetArgument).ToArray());
+                default:
+                    throw new NotSupportedException(expr.NodeType.ToString());
+            }
         }
     }
 }

@@ -29,12 +29,29 @@ namespace AutoFake
 
         public FakeSetup<T, TReturn> Setup<TReturn>(Expression<Func<TReturn>> setupFunc)
         {
-            return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc));
+            return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
         }
 
         public FakeSetup<T, TReturn> Setup<TInput, TReturn>(Expression<Func<TInput, TReturn>> setupFunc)
         {
-            return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc));
+            return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
+        }
+
+        private object[] GetSetupArguments(Expression expression)
+        {
+            var result = new object[0];
+
+            if (expression is UnaryExpression)
+            {
+                result = GetSetupArguments(((UnaryExpression)expression).Operand);
+            }
+            else if (expression is MethodCallExpression)
+            {
+                result = ((MethodCallExpression)expression).Arguments
+                    .Select(ExpressionUtils.GetArgument).ToArray();
+            }
+
+            return result;
         }
 
         public void SaveFakeAssembly(string fileName) => _assemblyFileName = fileName;
@@ -49,9 +66,22 @@ namespace AutoFake
             var generatedType = instance.GetType();
             foreach (var setup in Setups)
             {
-                var fieldName = _fakeGenerator.GetFieldName(setup, ++counter);
-                var field = generatedType.GetField(fieldName);
-                field.SetValue(instance, setup.ReturnObject);
+                if (setup.IsVerifiable)
+                {
+                    var i = 0;
+                    foreach (var setupArg in setup.SetupArguments)
+                    {
+                        var fldName = _fakeGenerator.GetArgumentFieldName(setup, i++);
+                        var fldInfo = generatedType.GetField(fldName, BindingFlags.Public | BindingFlags.Static);
+                        var realArg = fldInfo.GetValue(null);
+                        if (setupArg != realArg)
+                            throw new InvalidOperationException("Setup and real arguments are different");
+                    }
+                }
+
+                var fieldName = _fakeGenerator.GetFieldName(setup, counter++);
+                var field = generatedType.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
+                field.SetValue(null, setup.ReturnObject);
             }
 
             return (TReturn)GetInvocationResult(executeFunc.Body, instance, generatedType);
@@ -64,7 +94,7 @@ namespace AutoFake
             {
                 var methodCallExpression = (MethodCallExpression)executeFunc;
                 var methodName = methodCallExpression.Method;
-                var arguments = methodCallExpression.Arguments.Select(GetArgument).ToArray();
+                var arguments = methodCallExpression.Arguments.Select(ExpressionUtils.GetArgument).ToArray();
                 var method = generatedType.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
                 result = method.Invoke(instance, arguments);
@@ -82,33 +112,6 @@ namespace AutoFake
             else
                 throw new InvalidOperationException($"Ivalid expression format. Source: {executeFunc.ToString()}.");
             return result;
-        }
-
-        //see http://stackoverflow.com/questions/36861196/how-to-serialize-method-call-expression-with-arguments/36862531
-        private object GetArgument(Expression expr)
-        {
-            switch (expr.NodeType)
-            {
-                case ExpressionType.Constant:
-                    return ((ConstantExpression)expr).Value;
-                case ExpressionType.MemberAccess:
-                    var me = (MemberExpression)expr;
-                    object target = GetArgument(me.Expression);
-                    switch (me.Member.MemberType)
-                    {
-                        case MemberTypes.Field:
-                            return ((FieldInfo)me.Member).GetValue(target);
-                        case MemberTypes.Property:
-                            return ((PropertyInfo)me.Member).GetValue(target, null);
-                        default:
-                            throw new NotSupportedException(me.Member.MemberType.ToString());
-                    }
-                case ExpressionType.New:
-                    return ((NewExpression)expr).Constructor
-                        .Invoke(((NewExpression)expr).Arguments.Select(GetArgument).ToArray());
-                default:
-                    throw new NotSupportedException(expr.NodeType.ToString());
-            }
         }
     }
 }

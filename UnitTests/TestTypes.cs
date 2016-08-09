@@ -18,12 +18,12 @@ namespace UnitTests
 
         public DateTime CalculateUtcDate() => new DateCalculator(DateTime.Now).UtcDate;
 
-        public DateTime GetDate()
+        public DateTime GetConvertedDate()
         {
             return TimeZoneInfo.ConvertTime(DateTime.Now, _timeZone);
         }
 
-        public DateTime GetDateWithInnerCall()
+        public DateTime GetConvertedDateWithInnerCall()
         {
             return TimeZoneInfo.ConvertTime(GetCurrentDate(), _timeZone);
         }
@@ -39,11 +39,24 @@ namespace UnitTests
 
         public static TimeZoneInfo GetTimeZone()
             => TimeZoneInfo.GetSystemTimeZones().Single(t => t.Id == "UTC");
+
+        public DateTime GetNextWorkingDate()
+        {
+            var calculator = new DateCalculator();
+            var date = GetCurrentDate();
+            var offset = calculator.GetDaysCountUntilMonday(date);
+            return date.AddDays(offset).Date;
+        }
     }
 
     public class DateCalculator
     {
         private readonly DateTime _currentDate;
+
+        public DateCalculator()
+        {
+            _currentDate = DateTime.Now;
+        }
 
         public DateCalculator(DateTime currentDate)
         {
@@ -53,5 +66,8 @@ namespace UnitTests
         public DateTime AddHours(DateTime date, int hours) => date.AddHours(hours);
 
         public DateTime UtcDate => _currentDate.ToUniversalTime();
+
+        public int GetDaysCountUntilMonday(DateTime current)
+            => current.DayOfWeek == DayOfWeek.Friday ? 3 : 1;
     }
 }

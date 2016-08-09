@@ -5,15 +5,10 @@ namespace AutoFake
 {
     internal class FakeSetupPack
     {
-        public FakeSetupPack(MethodInfo method, object returnObject, IEnumerable<MethodInfo> reachableWithCollection)
-        {
-            Method = method;
-            ReturnObject = returnObject;
-            ReachableWithCollection = reachableWithCollection;
-        }
-
-        public MethodInfo Method { get; }
-        public object ReturnObject { get; }
-        public IEnumerable<MethodInfo> ReachableWithCollection { get; }
+        public MethodInfo Method { get; internal set; }
+        public object ReturnObject { get; internal set; }
+        public IEnumerable<MethodInfo> ReachableWithCollection { get; internal set; }
+        public bool IsVerifiable { get; internal set; }
+        public object[] SetupArguments { get; internal set; }
     }
 }

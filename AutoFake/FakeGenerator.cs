@@ -28,7 +28,7 @@ namespace AutoFake
             _typeDefinition.Name = _typeDefinition.Name + "Fake";
             _typeDefinition.Namespace = FAKE_NAMESPACE;
 
-            MockSetups(_assemblyDefinition.MainModule, setups);
+            MockSetups(setups);
 
             using (var memoryStream = new MemoryStream())
             {
@@ -50,13 +50,16 @@ namespace AutoFake
         public string GetFieldName(FakeSetupPack setup, int counter)
             => setup.Method.Name + counter;
 
-        private void MockSetups(ModuleDefinition moduleDefinition, IList<FakeSetupPack> setups)
+        public string GetArgumentFieldName(FakeSetupPack setup, int counter)
+            => setup.Method.Name + "Argument" + counter;
+
+        private void MockSetups(IList<FakeSetupPack> setups)
         {
             var counter = 0;
             foreach (var setup in setups)
             {
-                var field = new FieldDefinition(GetFieldName(setup, ++counter), FieldAttributes.Public,
-                    moduleDefinition.Import(setup.Method.ReturnType));
+                var field = new FieldDefinition(GetFieldName(setup, counter++), FieldAttributes.Public | FieldAttributes.Static,
+                    _assemblyDefinition.MainModule.Import(setup.Method.ReturnType));
                 _typeDefinition.Fields.Add(field);
                 
                 var reachableWithMethodNames = setup.ReachableWithCollection.Select(m => m.Name).ToList();
@@ -64,13 +67,14 @@ namespace AutoFake
 
                 foreach (var method in reachableWithMethods)
                 {
-                    ReplaceInstructions(method, setup.Method, field);
+                    ReplaceInstructions(method, setup, field, 0);
                 }
             }
         }
 
-        private void ReplaceInstructions(MethodDefinition currentMethod, System.Reflection.MethodInfo methodToReplace, FieldDefinition field)
+        private void ReplaceInstructions(MethodDefinition currentMethod, FakeSetupPack setup, FieldDefinition field, int callsCount)
         {
+            var methodToReplace = setup.Method;
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
                 if (instruction.OpCode.OperandType == OperandType.InlineMethod)
@@ -79,11 +83,11 @@ namespace AutoFake
                     
                     if (AreSameInCurrentType(methodReference, methodToReplace) || AreSameInExternalType(methodReference, methodToReplace))
                     {
-                        Inject(currentMethod.Body.GetILProcessor(), methodToReplace.GetParameters().Count(), field, instruction);
+                        Inject(currentMethod.Body.GetILProcessor(), methodToReplace.GetParameters().Count(), field, instruction, setup, callsCount++);
                     }
                     else if (methodReference.DeclaringType == currentMethod.DeclaringType)
                     {
-                        ReplaceInstructions(methodReference.Resolve(), methodToReplace, field);
+                        ReplaceInstructions(methodReference.Resolve(), setup, field, callsCount);
                     }
                 }
             }
@@ -98,23 +102,35 @@ namespace AutoFake
             => methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
                         && methodReference.Name == methodToReplace.Name;
 
-        private void Inject(ILProcessor processor, int parametersCount, FieldDefinition field, Instruction instruction)
+        private void Inject(ILProcessor processor, int parametersCount, FieldDefinition field, Instruction instruction, FakeSetupPack setup, int callsCount)
         {
             var methodReference = (MethodReference)instruction.Operand;
 
-            if (instruction.Previous != null)
+            if (parametersCount > 0)
             {
-                if (!methodReference.Resolve().IsStatic)
-                    processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
-                if (parametersCount > 0)
+                for (var i = 0; i < parametersCount; i++)
                 {
-                    for (var i = 0; i < parametersCount; i++)
+                    if (setup.IsVerifiable)
+                    {
+                        var idx = parametersCount - i - 1;
+                        var currentArg = setup.SetupArguments[idx];
+                        var fldName = GetArgumentFieldName(setup, parametersCount * callsCount + idx);
+                        var argField = new FieldDefinition(fldName, FieldAttributes.Public | FieldAttributes.Static,
+                            _assemblyDefinition.MainModule.Import(currentArg.GetType()));
+                        _typeDefinition.Fields.Add(argField);
+
+                        processor.InsertBefore(instruction, processor.Create(OpCodes.Stsfld, argField));
+                    }
+                    else
+                    {
                         processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
+                    }
                 }
             }
-            if (instruction.Previous == null || instruction.Previous.OpCode != OpCodes.Ldarg_0)
-                processor.InsertBefore(instruction, processor.Create(OpCodes.Ldarg_0));
-            processor.Replace(instruction, processor.Create(OpCodes.Ldfld, field));
+            if (!methodReference.Resolve().IsStatic)
+                processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
+
+            processor.Replace(instruction, processor.Create(OpCodes.Ldsfld, field));
         }
     }
 }

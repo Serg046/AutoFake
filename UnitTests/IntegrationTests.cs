@@ -35,11 +35,11 @@ namespace UnitTests
         {
             var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
                 .Setup(() => DateTime.Now)
-                .ReachableWith(c => c.GetDate())
+                .ReachableWith(c => c.GetConvertedDate())
                 .Returns(_currentDate);
 
-            var expectedDate = new DateTime(2016, 8, 8, 12, 00, 00);
-            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetDate()));
+            var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
+            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDate()));
         }
 
         [Fact]
@@ -47,11 +47,11 @@ namespace UnitTests
         {
             var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
                 .Setup((Calendar c) => c.GetCurrentDate())
-                .ReachableWith(c => c.GetDateWithInnerCall())
+                .ReachableWith(c => c.GetConvertedDateWithInnerCall())
                 .Returns(_currentDate);
 
-            var expectedDate = new DateTime(2016, 8, 8, 12, 00, 00);
-            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetDateWithInnerCall()));
+            var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
+            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDateWithInnerCall()));
         }
 
         [Fact]
@@ -82,13 +82,13 @@ namespace UnitTests
         {
             var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
                 .Setup(() => DateTime.Now)
-                .ReachableWith(c => c.GetDate())
-                .ReachableWith(c => c.GetDateWithInnerCall())
+                .ReachableWith(c => c.GetConvertedDate())
+                .ReachableWith(c => c.GetConvertedDateWithInnerCall())
                 .Returns(_currentDate);
 
-            var expectedDate = new DateTime(2016, 8, 8, 12, 00, 00);
-            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetDate()));
-            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetDateWithInnerCall()));
+            var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
+            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDate()));
+            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDateWithInnerCall()));
         }
 
         [Fact]
@@ -96,11 +96,11 @@ namespace UnitTests
         {
             var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
                 .Setup(() => DateTime.Now)
-                .ReachableWith(c => c.GetDateWithInnerCall())
+                .ReachableWith(c => c.GetConvertedDateWithInnerCall())
                 .Returns(_currentDate);
 
-            var expectedDate = new DateTime(2016, 8, 8, 12, 00, 00);
-            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetDateWithInnerCall()));
+            var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
+            Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDateWithInnerCall()));
         }
 
         [Fact]
@@ -111,6 +111,36 @@ namespace UnitTests
                 .ReachableWith(c => c.UtcDate)
                 .Returns(_currentDate);
             Assert.Equal(_currentDate, calendarFake.Execute(c => c.UtcDate));
+        }
+
+        [Fact]
+        public void InjectingDoesNotCorruptMethodState()
+        {
+            var todayDate = new DateTime(2016, 8, 11);
+            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
+                .Setup((Calendar c) => c.GetCurrentDate())
+                .ReachableWith(c => c.GetNextWorkingDate())
+                .Returns(todayDate);
+            Assert.Equal(new DateTime(2016, 8, 12), calendarFake.Execute(c => c.GetNextWorkingDate()));
+
+            calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
+                .Setup((Calendar c) => c.GetCurrentDate())
+                .ReachableWith(c => c.GetNextWorkingDate())
+                .Returns(todayDate.AddDays(1));
+            Assert.Equal(new DateTime(2016, 8, 15), calendarFake.Execute(c => c.GetNextWorkingDate()));
+        }
+
+        [Fact]
+        public void VerifiableWorksFine()
+        {
+            var offset = 1;
+            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
+                .Setup((DateCalculator dc) => dc.AddHours(new DateTime(2016, 5, 5), offset))
+                .Verifiable()
+                .ReachableWith(c => c.GetDateWithOffset(offset))
+                .Returns(_currentDate);
+
+            Assert.Equal(_currentDate, calendarFake.Execute(c => c.GetDateWithOffset(offset)));
         }
     }
 }
