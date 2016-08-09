@@ -54,20 +54,34 @@ namespace AutoFake
                 field.SetValue(instance, setup.ReturnObject);
             }
 
+            return (TReturn)GetInvocationResult(executeFunc.Body, instance, generatedType);
+        }
+
+        private object GetInvocationResult(Expression executeFunc, object instance, Type generatedType)
+        {
             object result;
-            if (executeFunc.Body is MethodCallExpression)
+            if (executeFunc is MethodCallExpression)
             {
-                var methodCallExpression = (MethodCallExpression)executeFunc.Body;
+                var methodCallExpression = (MethodCallExpression)executeFunc;
                 var methodName = methodCallExpression.Method;
                 var arguments = methodCallExpression.Arguments.Select(GetArgument).ToArray();
                 var method = generatedType.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
                 result = method.Invoke(instance, arguments);
             }
+            else if (executeFunc is MemberExpression)
+            {
+                var propInfo = ((MemberExpression)executeFunc).Member as PropertyInfo;
+                var property = generatedType.GetProperty(propInfo.Name);
+                result = property.GetValue(instance, null);
+            }
+            else if (executeFunc is UnaryExpression)
+            {
+                result = GetInvocationResult(((UnaryExpression)executeFunc).Operand, instance, generatedType);
+            }
             else
-                throw new InvalidOperationException($"Ivalid expression format. Source: {executeFunc.Body.ToString()}.");
-
-            return (TReturn)result;
+                throw new InvalidOperationException($"Ivalid expression format. Source: {executeFunc.ToString()}.");
+            return result;
         }
 
         //see http://stackoverflow.com/questions/36861196/how-to-serialize-method-call-expression-with-arguments/36862531

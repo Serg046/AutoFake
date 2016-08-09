@@ -102,5 +102,15 @@ namespace UnitTests
             var expectedDate = new DateTime(2016, 8, 8, 12, 00, 00);
             Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetDateWithInnerCall()));
         }
+
+        [Fact]
+        public void PropertyCallWorksFine()
+        {
+            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
+                .Setup(() => DateTime.UtcNow)
+                .ReachableWith(c => c.UtcDate)
+                .Returns(_currentDate);
+            Assert.Equal(_currentDate, calendarFake.Execute(c => c.UtcDate));
+        }
     }
 }
