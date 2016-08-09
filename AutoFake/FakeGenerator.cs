@@ -13,6 +13,7 @@ namespace AutoFake
 
         private readonly object[] _constructorArgs;
         private AssemblyDefinition _assemblyDefinition;
+        private TypeDefinition _typeDefinition;
 
         public FakeGenerator(object[] constructorArgs)
         {
@@ -23,28 +24,23 @@ namespace AutoFake
         {
             var type = typeof(T);
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(type.Assembly.GetFiles().Single());
-            var typeDefinition = _assemblyDefinition.MainModule.Types.Single(t => t.FullName == type.FullName);
-            typeDefinition.Name = typeDefinition.Name + "Fake";
-            typeDefinition.Namespace = FAKE_NAMESPACE;
+            _typeDefinition = _assemblyDefinition.MainModule.Types.Single(t => t.FullName == type.FullName);
+            _typeDefinition.Name = _typeDefinition.Name + "Fake";
+            _typeDefinition.Namespace = FAKE_NAMESPACE;
 
-            MockSetups(_assemblyDefinition.MainModule, typeDefinition, setups);
+            MockSetups(_assemblyDefinition.MainModule, setups);
 
             using (var memoryStream = new MemoryStream())
             {
                 _assemblyDefinition.Write(memoryStream);
                 var assembly = System.Reflection.Assembly.Load(memoryStream.ToArray());
-                var newType = assembly.GetType(typeDefinition.FullName);
+                var newType = assembly.GetType(_typeDefinition.FullName);
                 return Activator.CreateInstance(newType, _constructorArgs);
             }
         }
 
         public void Save(string fileName)
         {
-            foreach (var type in _assemblyDefinition.MainModule.Types.Where(t => t.Namespace.Length > 0 && t.Namespace != FAKE_NAMESPACE).ToList())
-            {
-                _assemblyDefinition.MainModule.Types.Remove(type);
-            }
-
             using (var fileStream = File.Create(fileName))
             {
                 _assemblyDefinition.Write(fileStream);
@@ -54,17 +50,17 @@ namespace AutoFake
         public string GetFieldName(FakeSetupPack setup, int counter)
             => setup.Method.Name + counter;
 
-        private void MockSetups(ModuleDefinition moduleDefinition, TypeDefinition typeDefinition, IList<FakeSetupPack> setups)
+        private void MockSetups(ModuleDefinition moduleDefinition, IList<FakeSetupPack> setups)
         {
             var counter = 0;
             foreach (var setup in setups)
             {
                 var field = new FieldDefinition(GetFieldName(setup, ++counter), FieldAttributes.Public,
                     moduleDefinition.Import(setup.Method.ReturnType));
-                typeDefinition.Fields.Add(field);
+                _typeDefinition.Fields.Add(field);
                 
                 var reachableWithMethodNames = setup.ReachableWithCollection.Select(m => m.Name).ToList();
-                var reachableWithMethods = typeDefinition.Methods.Where(m => reachableWithMethodNames.Contains(m.Name));
+                var reachableWithMethods = _typeDefinition.Methods.Where(m => reachableWithMethodNames.Contains(m.Name));
 
                 foreach (var method in reachableWithMethods)
                 {
@@ -80,12 +76,19 @@ namespace AutoFake
                 if (instruction.OpCode.OperandType == OperandType.InlineMethod)
                 {
                     var methodReference = (MethodReference)instruction.Operand;
-                    if (methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
-                        && methodReference.Name == methodToReplace.Name)
+
+                    Func<bool> isSameInCurrentType = () => methodToReplace.DeclaringType == typeof(T)
+                        && methodReference.DeclaringType.FullName == _typeDefinition.FullName
+                        && methodReference.Name == methodToReplace.Name;
+                    Func<bool> isSameInExternalType = () => methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
+                        && methodReference.Name == methodToReplace.Name;
+
+                    if (isSameInCurrentType() || isSameInExternalType())
                     {
                         var processor = currentMethod.Body.GetILProcessor();
-                        processor.InsertBefore(instruction, processor.Create(OpCodes.Ldarg_0));
-                        processor.Replace(instruction, processor.Create(OpCodes.Ldfld, field));
+                        processor.InsertAfter(instruction, processor.Create(OpCodes.Ldfld, field));
+                        processor.InsertAfter(instruction, processor.Create(OpCodes.Ldarg_0));
+                        processor.InsertAfter(instruction, processor.Create(OpCodes.Pop));
                     }
                     else if (methodReference.DeclaringType == currentMethod.DeclaringType)
                     {

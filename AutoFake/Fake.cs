@@ -27,7 +27,12 @@ namespace AutoFake
 
         internal List<FakeSetupPack> Setups { get; }
 
-        public FakeSetup<T, TReturn> Setup<TReturn>(Expression<Func<T, TReturn>> setupFunc)
+        public FakeSetup<T, TReturn> Setup<TReturn>(Expression<Func<TReturn>> setupFunc)
+        {
+            return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc));
+        }
+
+        public FakeSetup<T, TReturn> Setup<TInput, TReturn>(Expression<Func<TInput, TReturn>> setupFunc)
         {
             return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc));
         }
@@ -54,7 +59,7 @@ namespace AutoFake
             {
                 var methodCallExpression = (MethodCallExpression)executeFunc.Body;
                 var methodName = methodCallExpression.Method;
-                var arguments = methodCallExpression.Arguments.Cast<ConstantExpression>().Select(c => c.Value).ToArray();
+                var arguments = methodCallExpression.Arguments.Select(GetArgument).ToArray();
                 var method = generatedType.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
                 result = method.Invoke(instance, arguments);
@@ -63,6 +68,33 @@ namespace AutoFake
                 throw new InvalidOperationException($"Ivalid expression format. Source: {executeFunc.Body.ToString()}.");
 
             return (TReturn)result;
+        }
+
+        //see http://stackoverflow.com/questions/36861196/how-to-serialize-method-call-expression-with-arguments/36862531
+        private object GetArgument(Expression expr)
+        {
+            switch (expr.NodeType)
+            {
+                case ExpressionType.Constant:
+                    return ((ConstantExpression)expr).Value;
+                case ExpressionType.MemberAccess:
+                    var me = (MemberExpression)expr;
+                    object target = GetArgument(me.Expression);
+                    switch (me.Member.MemberType)
+                    {
+                        case MemberTypes.Field:
+                            return ((FieldInfo)me.Member).GetValue(target);
+                        case MemberTypes.Property:
+                            return ((PropertyInfo)me.Member).GetValue(target, null);
+                        default:
+                            throw new NotSupportedException(me.Member.MemberType.ToString());
+                    }
+                case ExpressionType.New:
+                    return ((NewExpression)expr).Constructor
+                        .Invoke(((NewExpression)expr).Arguments.Select(GetArgument).ToArray());
+                default:
+                    throw new NotSupportedException(expr.NodeType.ToString());
+            }
         }
     }
 }
