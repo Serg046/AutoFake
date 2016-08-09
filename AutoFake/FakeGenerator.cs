@@ -76,19 +76,10 @@ namespace AutoFake
                 if (instruction.OpCode.OperandType == OperandType.InlineMethod)
                 {
                     var methodReference = (MethodReference)instruction.Operand;
-
-                    Func<bool> isSameInCurrentType = () => methodToReplace.DeclaringType == typeof(T)
-                        && methodReference.DeclaringType.FullName == _typeDefinition.FullName
-                        && methodReference.Name == methodToReplace.Name;
-                    Func<bool> isSameInExternalType = () => methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
-                        && methodReference.Name == methodToReplace.Name;
-
-                    if (isSameInCurrentType() || isSameInExternalType())
+                    
+                    if (AreSameInCurrentType(methodReference, methodToReplace) || AreSameInExternalType(methodReference, methodToReplace))
                     {
-                        var processor = currentMethod.Body.GetILProcessor();
-                        processor.InsertAfter(instruction, processor.Create(OpCodes.Ldfld, field));
-                        processor.InsertAfter(instruction, processor.Create(OpCodes.Ldarg_0));
-                        processor.InsertAfter(instruction, processor.Create(OpCodes.Pop));
+                        Inject(currentMethod.Body.GetILProcessor(), methodToReplace.GetParameters().Count(), field, instruction);
                     }
                     else if (methodReference.DeclaringType == currentMethod.DeclaringType)
                     {
@@ -96,6 +87,34 @@ namespace AutoFake
                     }
                 }
             }
+        }
+
+        private bool AreSameInCurrentType(MethodReference methodReference, System.Reflection.MethodInfo methodToReplace)
+            => methodToReplace.DeclaringType == typeof(T)
+                        && methodReference.DeclaringType.FullName == _typeDefinition.FullName
+                        && methodReference.Name == methodToReplace.Name;
+
+        private bool AreSameInExternalType(MethodReference methodReference, System.Reflection.MethodInfo methodToReplace)
+            => methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
+                        && methodReference.Name == methodToReplace.Name;
+
+        private void Inject(ILProcessor processor, int parametersCount, FieldDefinition field, Instruction instruction)
+        {
+            var methodReference = (MethodReference)instruction.Operand;
+
+            if (instruction.Previous != null)
+            {
+                if (!methodReference.Resolve().IsStatic)
+                    processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
+                if (parametersCount > 0)
+                {
+                    for (var i = 0; i < parametersCount; i++)
+                        processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
+                }
+            }
+            if (instruction.Previous == null || instruction.Previous.OpCode != OpCodes.Ldarg_0)
+                processor.InsertBefore(instruction, processor.Create(OpCodes.Ldarg_0));
+            processor.Replace(instruction, processor.Create(OpCodes.Ldfld, field));
         }
     }
 }
