@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
 
 namespace AutoFake
 {
@@ -20,7 +22,7 @@ namespace AutoFake
             _constructorArgs = constructorArgs;
         }
 
-        public object Generate(IList<FakeSetupPack> setups)
+        public object Generate(IList<FakeSetupPack> setups, MethodInfo executeFunc)
         {
             var type = typeof(T);
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(type.Assembly.GetFiles().Single());
@@ -28,7 +30,7 @@ namespace AutoFake
             _typeDefinition.Name = _typeDefinition.Name + "Fake";
             _typeDefinition.Namespace = FAKE_NAMESPACE;
 
-            MockSetups(setups);
+            MockSetups(setups, executeFunc);
 
             using (var memoryStream = new MemoryStream())
             {
@@ -53,7 +55,7 @@ namespace AutoFake
         public string GetArgumentFieldName(FakeSetupPack setup, int counter)
             => setup.Method.Name + "Argument" + counter;
 
-        private void MockSetups(IList<FakeSetupPack> setups)
+        private void MockSetups(IList<FakeSetupPack> setups, MethodInfo executeFunc)
         {
             var counter = 0;
             foreach (var setup in setups)
@@ -61,15 +63,10 @@ namespace AutoFake
                 var field = new FieldDefinition(GetFieldName(setup, counter++), FieldAttributes.Public | FieldAttributes.Static,
                     _assemblyDefinition.MainModule.Import(setup.Method.ReturnType));
                 _typeDefinition.Fields.Add(field);
-                
-                var reachableWithMethodNames = setup.ReachableWithCollection.Select(m => m.Name).ToList();
-                var reachableWithMethods = _typeDefinition.Methods.Where(m => reachableWithMethodNames.Contains(m.Name));
 
                 var callsCount = 0;
-                foreach (var method in reachableWithMethods)
-                {
-                    ReplaceInstructions(method, setup, field, ref callsCount);
-                }
+                ReplaceInstructions(_typeDefinition.Methods.Single(m => m.Name == executeFunc.Name), setup, field, ref callsCount);
+
                 if (setup.ExpectedCallsCount != -1 && callsCount != setup.ExpectedCallsCount)
                 {
                     throw new InvalidOperationException($"Setup and actual calls count are different. Expected: { setup.ExpectedCallsCount }. Actual: { callsCount}.");

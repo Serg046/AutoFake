@@ -56,7 +56,7 @@ namespace AutoFake
 
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
-            var instance = _fakeGenerator.Generate(Setups);
+            var instance = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(executeFunc));
             if (_assemblyFileName != null)
                 _fakeGenerator.Save(_assemblyFileName);
 

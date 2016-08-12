@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace AutoFake
@@ -19,24 +17,15 @@ namespace AutoFake
             {
                 Method = method,
                 SetupArguments = setupArguments,
-                ReachableWithCollection = new List<MethodInfo>(),
                 ExpectedCallsCount = -1
             };
         }
 
         public Fake<T> Returns(TReturn returnObject)
         {
-            if (_fakeSetupPack.ReachableWithCollection.Count == 0)
-                throw new InvalidOperationException($"Please call {nameof(ReachableWith)}() method");
             _fakeSetupPack.ReturnObject = returnObject;
             _fake.Setups.Add(_fakeSetupPack);
             return _fake;
-        }
-
-        public FakeSetup<T, TReturn> ReachableWith(Expression<Func<T, object>> reachableFunc)
-        {
-            _fakeSetupPack.ReachableWithCollection.Add(ExpressionUtils.GetMethodInfo(reachableFunc));
-            return this;
         }
 
         public FakeSetup<T, TReturn> Verifiable()

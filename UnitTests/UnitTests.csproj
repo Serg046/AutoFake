@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestTypes.cs" />
-    <Compile Include="FakeSetupTests.cs" />
     <Compile Include="IntegrationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
