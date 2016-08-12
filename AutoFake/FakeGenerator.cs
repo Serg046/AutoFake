@@ -65,14 +65,20 @@ namespace AutoFake
                 var reachableWithMethodNames = setup.ReachableWithCollection.Select(m => m.Name).ToList();
                 var reachableWithMethods = _typeDefinition.Methods.Where(m => reachableWithMethodNames.Contains(m.Name));
 
+                var callsCount = 0;
                 foreach (var method in reachableWithMethods)
                 {
-                    ReplaceInstructions(method, setup, field, 0);
+                    ReplaceInstructions(method, setup, field, ref callsCount);
                 }
+                if (setup.ExpectedCallsCount != -1 && callsCount != setup.ExpectedCallsCount)
+                {
+                    throw new InvalidOperationException($"Setup and actual calls count are different. Expected: { setup.ExpectedCallsCount }. Actual: { callsCount}.");
+                }
+                setup.ActualCallsCount = callsCount;
             }
         }
 
-        private void ReplaceInstructions(MethodDefinition currentMethod, FakeSetupPack setup, FieldDefinition field, int callsCount)
+        private void ReplaceInstructions(MethodDefinition currentMethod, FakeSetupPack setup, FieldDefinition field, ref int callsCount)
         {
             var methodToReplace = setup.Method;
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
@@ -85,9 +91,9 @@ namespace AutoFake
                     {
                         Inject(currentMethod.Body.GetILProcessor(), methodToReplace.GetParameters().Count(), field, instruction, setup, callsCount++);
                     }
-                    else if (methodReference.DeclaringType == currentMethod.DeclaringType)
+                    else if (methodReference.IsDefinition)
                     {
-                        ReplaceInstructions(methodReference.Resolve(), setup, field, callsCount);
+                        ReplaceInstructions(methodReference.Resolve(), setup, field, ref callsCount);
                     }
                 }
             }

@@ -13,13 +13,11 @@ namespace AutoFake
 
     public class Fake<T>
     {
-        private readonly object[] _contructorArgs;
         private readonly FakeGenerator<T> _fakeGenerator;
         private string _assemblyFileName;
 
         internal Fake(object[] contructorArgs)
         {
-            _contructorArgs = contructorArgs;
             _fakeGenerator = new FakeGenerator<T>(contructorArgs);
 
             Setups = new List<FakeSetupPack>();
@@ -66,25 +64,35 @@ namespace AutoFake
             var generatedType = instance.GetType();
             foreach (var setup in Setups)
             {
-                if (setup.IsVerifiable)
-                {
-                    var i = 0;
-                    foreach (var setupArg in setup.SetupArguments)
-                    {
-                        var fldName = _fakeGenerator.GetArgumentFieldName(setup, i++);
-                        var fldInfo = generatedType.GetField(fldName, BindingFlags.Public | BindingFlags.Static);
-                        var realArg = fldInfo.GetValue(null);
-                        if (setupArg != realArg)
-                            throw new InvalidOperationException("Setup and real arguments are different");
-                    }
-                }
-
                 var fieldName = _fakeGenerator.GetFieldName(setup, counter++);
                 var field = generatedType.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
                 field.SetValue(null, setup.ReturnObject);
             }
 
-            return (TReturn)GetInvocationResult(executeFunc.Body, instance, generatedType);
+            var result = GetInvocationResult(executeFunc.Body, instance, generatedType);
+            VerifySetups(generatedType, instance);
+            return (TReturn)result;
+        }
+
+        private void VerifySetups(Type generatedType, object instance)
+        {
+            var counter = 0;
+            foreach (var setup in Setups.Where(s => s.IsVerifiable))
+            {
+                foreach (var setupArg in setup.SetupArguments)
+                {
+                    for (var i = 0; i < setup.ActualCallsCount; i++)
+                    {
+                        var fldName = _fakeGenerator.GetArgumentFieldName(setup, i * setup.SetupArguments.Length + counter);
+                        var fldInfo = generatedType.GetField(fldName, BindingFlags.Public | BindingFlags.Static);
+                        var realArg = fldInfo.GetValue(instance);
+                        if (!setupArg.Equals(realArg))
+                            throw new InvalidOperationException(
+                                $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
+                    }
+                    counter++;
+                }
+            }
         }
 
         private object GetInvocationResult(Expression executeFunc, object instance, Type generatedType)
@@ -93,7 +101,6 @@ namespace AutoFake
             if (executeFunc is MethodCallExpression)
             {
                 var methodCallExpression = (MethodCallExpression)executeFunc;
-                var methodName = methodCallExpression.Method;
                 var arguments = methodCallExpression.Arguments.Select(ExpressionUtils.GetArgument).ToArray();
                 var method = generatedType.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());

@@ -133,14 +133,43 @@ namespace UnitTests
         [Fact]
         public void VerifiableWorksFine()
         {
+            var incorrectDate = new DateTime(2016, 5, 5);
+
             var offset = 1;
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((DateCalculator dc) => dc.AddHours(new DateTime(2016, 5, 5), offset))
+            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((DateCalculator dc) => dc.AddHours(incorrectDate, offset))
                 .Verifiable()
                 .ReachableWith(c => c.GetDateWithOffset(offset))
                 .Returns(_currentDate);
 
-            Assert.Equal(_currentDate, calendarFake.Execute(c => c.GetDateWithOffset(offset)));
+            Assert.Throws<InvalidOperationException>(() => calendarFake.Execute(c => c.GetDateWithOffset(offset)));
+
+            calendarFake.Setup(() => DateTime.Now).ReachableWith(c => c.GetDateWithOffset(offset)).Returns(incorrectDate);
+            calendarFake.Execute(c => c.GetDateWithOffset(offset));
+        }
+
+        [Fact]
+        public void ExpectedCallsCountWorksFine()
+        {
+            var todayDate = new DateTime(2016, 8, 11);
+            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
+                .Setup(() => DateTime.Now)
+                .ExpectedCallsCount(2)
+                .ReachableWith(c => c.GetNextWorkingDate())
+                .Returns(todayDate);
+            Assert.Equal(new DateTime(2016, 8, 12), calendarFake.Execute(c => c.GetNextWorkingDate()));
+        }
+
+        [Fact]
+        public void VerifiableChecksAllCallsInCurrentAssembly()
+        {
+            var fake = Fake.For<VerifiableAnalyzer>()
+                .Setup((Calculator calc) => calc.Add(1, 2))
+                .ReachableWith(s => s.Analyze(1, 1))
+                .Verifiable()
+                .ExpectedCallsCount(3)
+                .Returns(1);
+            fake.Execute(f => f.Analyze(1, 2));
         }
     }
 }

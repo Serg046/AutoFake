@@ -70,4 +70,30 @@ namespace UnitTests
         public int GetDaysCountUntilMonday(DateTime current)
             => current.DayOfWeek == DayOfWeek.Friday ? 3 : 1;
     }
+
+    public class VerifiableAnalyzer
+    {
+        readonly Calculator _calculator = new Calculator();
+
+        public int Analyze(int a, int b)
+        {
+            var currentValue = _calculator.Add(a, b);
+            return ProcessValue(currentValue, a, b);
+        }
+
+        private int ProcessValue(int currentValue, int a, int b)
+        {
+            return PrepareValue(currentValue + _calculator.Add(a, b), a, b);
+        }
+
+        private int PrepareValue(int currentValue, int a, int b)
+        {
+            return currentValue + _calculator.Add(a, b);
+        }
+    }
+
+    public class Calculator
+    {
+        public int Add(int a, int b) => a + b;
+    }
 }
