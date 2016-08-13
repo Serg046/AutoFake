@@ -142,7 +142,33 @@ namespace UnitTests
                 .Verifiable()
                 .ExpectedCallsCount(3)
                 .Returns(1);
+            fake.Execute(f => f.GetAnalyzeValue(1, 2));
+        }
+
+        [Fact]
+        public void VoidCallWorksFine()
+        {
+            var fake = Fake.For<VerifiableAnalyzer>()
+                .Setup((Calculator calc) => calc.Add(1, 2))
+                .Verifiable()
+                .ExpectedCallsCount(3)
+                .Returns(1);
             fake.Execute(f => f.Analyze(1, 2));
+        }
+
+        [Fact]
+        public void SetupWithoutExpectedReturnValueWorksFine()
+        {
+            var fake = Fake.For<VerifiableAnalyzer>();
+            fake.Setup((Calculator calc) => calc.Add(1, 2))
+                .Verifiable()
+                .ExpectedCallsCount(3)
+                .Returns(1);
+            fake.Setup((VerifiableAnalyzer v) => v.WriteValues(1, 2))
+                .Verifiable()
+                .ExpectedCallsCount(1)
+                .Void();
+            fake.Execute(f => f.AnalyzeAndWrite(1, 2));
         }
     }
 }

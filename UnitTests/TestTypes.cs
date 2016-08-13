@@ -75,11 +75,13 @@ namespace UnitTests
     {
         readonly Calculator _calculator = new Calculator();
 
-        public int Analyze(int a, int b)
+        public int GetAnalyzeValue(int a, int b)
         {
             var currentValue = _calculator.Add(a, b);
             return ProcessValue(currentValue, a, b);
         }
+
+        public void Analyze(int a, int b) => GetAnalyzeValue(a, b);
 
         private int ProcessValue(int currentValue, int a, int b)
         {
@@ -89,6 +91,17 @@ namespace UnitTests
         private int PrepareValue(int currentValue, int a, int b)
         {
             return currentValue + _calculator.Add(a, b);
+        }
+
+        public void AnalyzeAndWrite(int a, int b)
+        {
+            GetAnalyzeValue(a, b);
+            WriteValues(a, b);
+        }
+
+        public void WriteValues(int a, int b)
+        {
+            Console.WriteLine(a + " " + b);
         }
     }
 

@@ -35,6 +35,11 @@ namespace AutoFake
             return new FakeSetup<T, TReturn>(this, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
         }
 
+        public FakeSetup<T> Setup<TInput>(Expression<Action<TInput>> setupFunc)
+        {
+            return new FakeSetup<T>(this, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
+        }
+
         private object[] GetSetupArguments(Expression expression)
         {
             var result = new object[0];
@@ -56,29 +61,47 @@ namespace AutoFake
 
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
-            var instance = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(executeFunc));
+            return (TReturn)Execute((LambdaExpression)executeFunc);
+        }
+
+        public void Execute(Expression<Action<T>> executeFunc)
+        {
+            Execute((LambdaExpression)executeFunc);
+        }
+
+        private object Execute(LambdaExpression expression)
+        {
+            if (Setups.Count == 0)
+                throw new InvalidOperationException("Setup pack is not found");
+
+            var instance = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
             if (_assemblyFileName != null)
                 _fakeGenerator.Save(_assemblyFileName);
 
-            var counter = 0;
             var generatedType = instance.GetType();
-            foreach (var setup in Setups)
+            SetReturnObjects(generatedType);
+
+            var result = GetInvocationResult(expression.Body, instance, generatedType);
+            VerifySetups(generatedType, instance);
+            return result;
+        }
+
+        private void SetReturnObjects(Type generatedType)
+        {
+            var counter = 0;
+            foreach (var setup in Setups.Where(s => !s.IsVoid))
             {
                 var fieldName = _fakeGenerator.GetFieldName(setup, counter++);
                 var field = generatedType.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
                 field.SetValue(null, setup.ReturnObject);
             }
-
-            var result = GetInvocationResult(executeFunc.Body, instance, generatedType);
-            VerifySetups(generatedType, instance);
-            return (TReturn)result;
         }
 
         private void VerifySetups(Type generatedType, object instance)
         {
-            var counter = 0;
             foreach (var setup in Setups.Where(s => s.IsVerifiable))
             {
+                var counter = 0;
                 foreach (var setupArg in setup.SetupArguments)
                 {
                     for (var i = 0; i < setup.ActualCallsCount; i++)

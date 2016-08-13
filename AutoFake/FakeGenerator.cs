@@ -60,9 +60,13 @@ namespace AutoFake
             var counter = 0;
             foreach (var setup in setups)
             {
-                var field = new FieldDefinition(GetFieldName(setup, counter++), FieldAttributes.Public | FieldAttributes.Static,
-                    _assemblyDefinition.MainModule.Import(setup.Method.ReturnType));
-                _typeDefinition.Fields.Add(field);
+                FieldDefinition field = null;
+                if (!setup.IsVoid)
+                {
+                    field = new FieldDefinition(GetFieldName(setup, counter++), FieldAttributes.Public | FieldAttributes.Static,
+                        _assemblyDefinition.MainModule.Import(setup.Method.ReturnType));
+                    _typeDefinition.Fields.Add(field);
+                }
 
                 var callsCount = 0;
                 ReplaceInstructions(_typeDefinition.Methods.Single(m => m.Name == executeFunc.Name), setup, field, ref callsCount);
@@ -133,7 +137,10 @@ namespace AutoFake
             if (!methodReference.Resolve().IsStatic)
                 processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
 
-            processor.Replace(instruction, processor.Create(OpCodes.Ldsfld, field));
+            if (setup.IsVoid)
+                processor.Remove(instruction);
+            else
+                processor.Replace(instruction, processor.Create(OpCodes.Ldsfld, field));
         }
     }
 }
