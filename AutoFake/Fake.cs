@@ -74,70 +74,73 @@ namespace AutoFake
             if (Setups.Count == 0)
                 throw new InvalidOperationException("Setup pack is not found");
 
-            var instance = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            var generatedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
             if (_assemblyFileName != null)
                 _fakeGenerator.Save(_assemblyFileName);
 
-            var generatedType = instance.GetType();
-            SetReturnObjects(generatedType);
-
-            var result = GetInvocationResult(expression.Body, instance, generatedType);
-            VerifySetups(generatedType, instance);
+            SetReturnObjects(generatedObject);
+            var result = GetInvocationResult(expression.Body, generatedObject);
+            VerifySetups(generatedObject);
             return result;
         }
 
-        private void SetReturnObjects(Type generatedType)
+        private void SetReturnObjects(GeneratedObject generatedObject)
         {
-            var counter = 0;
-            foreach (var setup in Setups.Where(s => !s.IsVoid))
+            foreach (var mockedMemberInfo in generatedObject.MockedMembers.Where(m => !m.Setup.IsVoid))
             {
-                var fieldName = _fakeGenerator.GetFieldName(setup, counter++);
-                var field = generatedType.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
-                field.SetValue(null, setup.ReturnObject);
+                var field = generatedObject.Type.GetField(mockedMemberInfo.ReturnValueField.Name, BindingFlags.NonPublic | BindingFlags.Static);
+                field.SetValue(null, mockedMemberInfo.Setup.ReturnObject);
             }
         }
 
-        private void VerifySetups(Type generatedType, object instance)
+        private void VerifySetups(GeneratedObject generatedObject)
         {
-            foreach (var setup in Setups.Where(s => s.IsVerifiable))
+            foreach (var mockedMemberInfo in generatedObject.MockedMembers)
             {
-                var counter = 0;
-                foreach (var setupArg in setup.SetupArguments)
+                if (mockedMemberInfo.Setup.ExpectedCallsCount != -1 && mockedMemberInfo.Setup.ExpectedCallsCount != mockedMemberInfo.ActualCallsCount)
                 {
-                    for (var i = 0; i < setup.ActualCallsCount; i++)
+                    throw new InvalidOperationException(
+                        $"Setup and actual calls count are different. Expected: {mockedMemberInfo.Setup.ExpectedCallsCount}. Actual: {mockedMemberInfo.ActualCallsCount}.");
+                }
+                if (mockedMemberInfo.Setup.IsVerifiable)
+                {
+                    foreach (var argumentFieldsList in mockedMemberInfo.ArgumentFields)
                     {
-                        var fldName = _fakeGenerator.GetArgumentFieldName(setup, i * setup.SetupArguments.Length + counter);
-                        var fldInfo = generatedType.GetField(fldName, BindingFlags.Public | BindingFlags.Static);
-                        var realArg = fldInfo.GetValue(instance);
-                        if (!setupArg.Equals(realArg))
-                            throw new InvalidOperationException(
-                                $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
+                        for (int i = 0; i < argumentFieldsList.Count; i++)
+                        {
+                            var setupArg = mockedMemberInfo.Setup.SetupArguments[i];
+                            var field = generatedObject.Type.GetField(argumentFieldsList[i].Name,
+                                BindingFlags.NonPublic | BindingFlags.Static);
+                            var realArg = field.GetValue(null);
+                            if (!setupArg.Equals(realArg))
+                                throw new InvalidOperationException(
+                                    $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
+                        }
                     }
-                    counter++;
                 }
             }
         }
 
-        private object GetInvocationResult(Expression executeFunc, object instance, Type generatedType)
+        private object GetInvocationResult(Expression executeFunc, GeneratedObject generatedObject)
         {
             object result;
             if (executeFunc is MethodCallExpression)
             {
                 var methodCallExpression = (MethodCallExpression)executeFunc;
                 var arguments = methodCallExpression.Arguments.Select(ExpressionUtils.GetArgument).ToArray();
-                var method = generatedType.GetMethod(methodCallExpression.Method.Name,
+                var method = generatedObject.Type.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
-                result = method.Invoke(instance, arguments);
+                result = method.Invoke(generatedObject.Instance, arguments);
             }
             else if (executeFunc is MemberExpression)
             {
                 var propInfo = ((MemberExpression)executeFunc).Member as PropertyInfo;
-                var property = generatedType.GetProperty(propInfo.Name);
-                result = property.GetValue(instance, null);
+                var property = generatedObject.Type.GetProperty(propInfo.Name);
+                result = property.GetValue(generatedObject.Instance, null);
             }
             else if (executeFunc is UnaryExpression)
             {
-                result = GetInvocationResult(((UnaryExpression)executeFunc).Operand, instance, generatedType);
+                result = GetInvocationResult(((UnaryExpression)executeFunc).Operand, generatedObject);
             }
             else
                 throw new InvalidOperationException($"Ivalid expression format. Source: {executeFunc.ToString()}.");

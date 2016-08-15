@@ -129,8 +129,16 @@ namespace UnitTests
             var todayDate = new DateTime(2016, 8, 11);
             var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
                 .Setup(() => DateTime.Now)
+                .ExpectedCallsCount(1)
+                .Returns(todayDate);
+
+            Assert.Throws<InvalidOperationException>(() => calendarFake.Execute(c => c.GetNextWorkingDate()));
+
+            calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
+                .Setup(() => DateTime.Now)
                 .ExpectedCallsCount(2)
                 .Returns(todayDate);
+
             Assert.Equal(new DateTime(2016, 8, 12), calendarFake.Execute(c => c.GetNextWorkingDate()));
         }
 

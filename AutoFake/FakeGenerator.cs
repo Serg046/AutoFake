@@ -22,22 +22,25 @@ namespace AutoFake
             _constructorArgs = constructorArgs;
         }
 
-        public object Generate(IList<FakeSetupPack> setups, MethodInfo executeFunc)
+        public GeneratedObject Generate(IList<FakeSetupPack> setups, MethodInfo executeFunc)
         {
+            var generatedObject = new GeneratedObject();
+
             var type = typeof(T);
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(type.Assembly.GetFiles().Single());
             _typeDefinition = _assemblyDefinition.MainModule.Types.Single(t => t.FullName == type.FullName);
             _typeDefinition.Name = _typeDefinition.Name + "Fake";
             _typeDefinition.Namespace = FAKE_NAMESPACE;
 
-            MockSetups(setups, executeFunc);
+            generatedObject.MockedMembers = MockSetups(setups, executeFunc).ToList();
 
             using (var memoryStream = new MemoryStream())
             {
                 _assemblyDefinition.Write(memoryStream);
-                var assembly = System.Reflection.Assembly.Load(memoryStream.ToArray());
-                var newType = assembly.GetType(_typeDefinition.FullName);
-                return Activator.CreateInstance(newType, _constructorArgs);
+                var assembly = Assembly.Load(memoryStream.ToArray());
+                generatedObject.Type = assembly.GetType(_typeDefinition.FullName);
+                generatedObject.Instance = Activator.CreateInstance(generatedObject.Type, _constructorArgs);
+                return generatedObject;
             }
         }
 
@@ -49,39 +52,30 @@ namespace AutoFake
             }
         }
 
-        public string GetFieldName(FakeSetupPack setup, int counter)
-            => setup.Method.Name + counter;
-
-        public string GetArgumentFieldName(FakeSetupPack setup, int counter)
-            => setup.Method.Name + "Argument" + counter;
-
-        private void MockSetups(IList<FakeSetupPack> setups, MethodInfo executeFunc)
+        private IEnumerable<MockedMemberInfo> MockSetups(IList<FakeSetupPack> setups, MethodInfo executeFunc)
         {
             var counter = 0;
             foreach (var setup in setups)
             {
-                FieldDefinition field = null;
+                var mockedMemberInfo = new MockedMemberInfo(setup);
+
                 if (!setup.IsVoid)
                 {
-                    field = new FieldDefinition(GetFieldName(setup, counter++), FieldAttributes.Public | FieldAttributes.Static,
+                    var fieldName = setup.Method.Name + counter++;
+                    mockedMemberInfo.ReturnValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                         _assemblyDefinition.MainModule.Import(setup.Method.ReturnType));
-                    _typeDefinition.Fields.Add(field);
+                    _typeDefinition.Fields.Add(mockedMemberInfo.ReturnValueField);
                 }
+                
+                ReplaceInstructions(_typeDefinition.Methods.Single(m => m.Name == executeFunc.Name), mockedMemberInfo);
 
-                var callsCount = 0;
-                ReplaceInstructions(_typeDefinition.Methods.Single(m => m.Name == executeFunc.Name), setup, field, ref callsCount);
-
-                if (setup.ExpectedCallsCount != -1 && callsCount != setup.ExpectedCallsCount)
-                {
-                    throw new InvalidOperationException($"Setup and actual calls count are different. Expected: { setup.ExpectedCallsCount }. Actual: { callsCount}.");
-                }
-                setup.ActualCallsCount = callsCount;
+                yield return mockedMemberInfo;
             }
         }
 
-        private void ReplaceInstructions(MethodDefinition currentMethod, FakeSetupPack setup, FieldDefinition field, ref int callsCount)
+        private void ReplaceInstructions(MethodDefinition currentMethod, MockedMemberInfo mockedMemberInfo)
         {
-            var methodToReplace = setup.Method;
+            var methodToReplace = mockedMemberInfo.Setup.Method;
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
                 if (instruction.OpCode.OperandType == OperandType.InlineMethod)
@@ -90,45 +84,55 @@ namespace AutoFake
                     
                     if (AreSameInCurrentType(methodReference, methodToReplace) || AreSameInExternalType(methodReference, methodToReplace))
                     {
-                        Inject(currentMethod.Body.GetILProcessor(), methodToReplace.GetParameters().Count(), field, instruction, setup, callsCount++);
+                        Inject(currentMethod.Body.GetILProcessor(), mockedMemberInfo, instruction);
                     }
                     else if (methodReference.IsDefinition)
                     {
-                        ReplaceInstructions(methodReference.Resolve(), setup, field, ref callsCount);
+                        ReplaceInstructions(methodReference.Resolve(), mockedMemberInfo);
                     }
                 }
             }
         }
 
-        private bool AreSameInCurrentType(MethodReference methodReference, System.Reflection.MethodInfo methodToReplace)
+        private bool AreSameInCurrentType(MethodReference methodReference, MethodInfo methodToReplace)
             => methodToReplace.DeclaringType == typeof(T)
                         && methodReference.DeclaringType.FullName == _typeDefinition.FullName
                         && methodReference.Name == methodToReplace.Name;
 
-        private bool AreSameInExternalType(MethodReference methodReference, System.Reflection.MethodInfo methodToReplace)
+        private bool AreSameInExternalType(MethodReference methodReference, MethodInfo methodToReplace)
             => methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
                         && methodReference.Name == methodToReplace.Name;
 
-        private void Inject(ILProcessor processor, int parametersCount, FieldDefinition field, Instruction instruction, FakeSetupPack setup, int callsCount)
+        private void Inject(ILProcessor processor, MockedMemberInfo mockedMemberInfo, Instruction instruction)
         {
             var methodReference = (MethodReference)instruction.Operand;
+            var parametersCount = mockedMemberInfo.Setup.SetupArguments.Length;
 
             if (parametersCount > 0)
             {
-                for (var i = 0; i < parametersCount; i++)
+                if (mockedMemberInfo.Setup.IsVerifiable)
                 {
-                    if (setup.IsVerifiable)
+                    var argumentFields = new List<FieldDefinition>();
+
+                    for (var i = 0; i < parametersCount; i++)
                     {
                         var idx = parametersCount - i - 1;
-                        var currentArg = setup.SetupArguments[idx];
-                        var fldName = GetArgumentFieldName(setup, parametersCount * callsCount + idx);
-                        var argField = new FieldDefinition(fldName, FieldAttributes.Public | FieldAttributes.Static,
+                        var currentArg = mockedMemberInfo.Setup.SetupArguments[idx];
+                        var fieldName = mockedMemberInfo.Setup.Method.Name + "Argument" +
+                            (parametersCount*mockedMemberInfo.ActualCallsCount + idx).ToString();
+                        var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                             _assemblyDefinition.MainModule.Import(currentArg.GetType()));
-                        _typeDefinition.Fields.Add(argField);
+                        _typeDefinition.Fields.Add(field);
 
-                        processor.InsertBefore(instruction, processor.Create(OpCodes.Stsfld, argField));
+                        argumentFields.Insert(0, field);
+                        processor.InsertBefore(instruction, processor.Create(OpCodes.Stsfld, field));
                     }
-                    else
+
+                    mockedMemberInfo.ArgumentFields.Add(argumentFields);
+                }
+                else
+                {
+                    for (var i = 0; i < parametersCount; i++)
                     {
                         processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
                     }
@@ -137,10 +141,12 @@ namespace AutoFake
             if (!methodReference.Resolve().IsStatic)
                 processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
 
-            if (setup.IsVoid)
+            if (mockedMemberInfo.Setup.IsVoid)
                 processor.Remove(instruction);
             else
-                processor.Replace(instruction, processor.Create(OpCodes.Ldsfld, field));
+                processor.Replace(instruction, processor.Create(OpCodes.Ldsfld, mockedMemberInfo.ReturnValueField));
+
+            mockedMemberInfo.ActualCallsCount++;
         }
     }
 }

@@ -60,6 +60,8 @@
     <Compile Include="FakeGenerator.cs" />
     <Compile Include="FakeSetup.cs" />
     <Compile Include="FakeSetupPack.cs" />
+    <Compile Include="GeneratedObject.cs" />
+    <Compile Include="MockedMemberInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
