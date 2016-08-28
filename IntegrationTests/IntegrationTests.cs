@@ -1,5 +1,6 @@
 ﻿using AutoFake;
 using System;
+using AutoFake.Exceptions;
 using Xunit;
 
 namespace UnitTests
@@ -11,9 +12,8 @@ namespace UnitTests
         [Fact]
         public void InstancePropertyMockWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((Calendar c) => c.UtcDate)
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((Calendar c) => c.UtcDate).Returns(_currentDate);
 
             Assert.Equal(_currentDate, calendarFake.Execute(c => c.GetUtcDate()));
         }
@@ -21,9 +21,8 @@ namespace UnitTests
         [Fact]
         public void ExternalPropertyMockWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((DateCalculator dc) => dc.UtcDate)
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((DateCalculator dc) => dc.UtcDate).Returns(_currentDate);
 
             Assert.Equal(_currentDate, calendarFake.Execute(c => c.CalculateUtcDate()));
         }
@@ -31,9 +30,8 @@ namespace UnitTests
         [Fact]
         public void StaticPropertyMockWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup(() => DateTime.Now)
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup(() => DateTime.Now).Returns(_currentDate);
 
             var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
             Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDate()));
@@ -42,9 +40,8 @@ namespace UnitTests
         [Fact]
         public void InstanceMethodMockWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((Calendar c) => c.GetCurrentDate())
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((Calendar c) => c.GetCurrentDate()).Returns(_currentDate);
 
             var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
             Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDateWithInnerCall()));
@@ -54,9 +51,8 @@ namespace UnitTests
         public void ExternalMethodMockWorksFine()
         {
             var offset = 1;
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((DateCalculator dc) => dc.AddHours(_currentDate, offset))
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((DateCalculator dc) => dc.AddHours(_currentDate, offset)).Returns(_currentDate);
 
             Assert.Equal(_currentDate, calendarFake.Execute(c => c.GetDateWithOffset(offset)));
         }
@@ -64,9 +60,8 @@ namespace UnitTests
         [Fact]
         public void StaticMethodMockWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup(() => Calendar.GetTimeZone())
-                .Returns(null);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup(() => Calendar.GetTimeZone()).Returns(null);
 
             Assert.Null(calendarFake.Execute(c => c.GetTimeZoneInfo()));
         }
@@ -74,9 +69,8 @@ namespace UnitTests
         [Fact]
         public void InnerCallOfMockedMethodWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup(() => DateTime.Now)
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup(() => DateTime.Now).Returns(_currentDate);
 
             var expectedDate = TimeZoneInfo.ConvertTime(_currentDate, Calendar.GetTimeZone());
             Assert.Equal(expectedDate, calendarFake.Execute(c => c.GetConvertedDateWithInnerCall()));
@@ -85,9 +79,9 @@ namespace UnitTests
         [Fact]
         public void PropertyCallWorksFine()
         {
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup(() => DateTime.UtcNow)
-                .Returns(_currentDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup(() => DateTime.UtcNow).Returns(_currentDate);
+
             Assert.Equal(_currentDate, calendarFake.Execute(c => c.UtcDate));
         }
 
@@ -95,14 +89,14 @@ namespace UnitTests
         public void InjectingDoesNotCorruptMethodState()
         {
             var todayDate = new DateTime(2016, 8, 11);
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((Calendar c) => c.GetCurrentDate())
-                .Returns(todayDate);
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((Calendar c) => c.GetCurrentDate()).Returns(todayDate);
+
             Assert.Equal(new DateTime(2016, 8, 12), calendarFake.Execute(c => c.GetNextWorkingDate()));
 
-            calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup((Calendar c) => c.GetCurrentDate())
-                .Returns(todayDate.AddDays(1));
+            calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup((Calendar c) => c.GetCurrentDate()).Returns(todayDate.AddDays(1));
+
             Assert.Equal(new DateTime(2016, 8, 15), calendarFake.Execute(c => c.GetNextWorkingDate()));
         }
 
@@ -112,12 +106,12 @@ namespace UnitTests
             var incorrectDate = new DateTime(2016, 5, 5);
 
             var offset = 1;
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone());
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
             calendarFake.Setup((DateCalculator dc) => dc.AddHours(incorrectDate, offset))
                 .Verifiable()
                 .Returns(_currentDate);
 
-            Assert.Throws<InvalidOperationException>(() => calendarFake.Execute(c => c.GetDateWithOffset(offset)));
+            Assert.Throws<VerifiableException>(() => calendarFake.Execute(c => c.GetDateWithOffset(offset)));
 
             calendarFake.Setup(() => DateTime.Now).Returns(incorrectDate);
             calendarFake.Execute(c => c.GetDateWithOffset(offset));
@@ -127,15 +121,15 @@ namespace UnitTests
         public void ExpectedCallsCountWorksFine()
         {
             var todayDate = new DateTime(2016, 8, 11);
-            var calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup(() => DateTime.Now)
+            var calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup(() => DateTime.Now)
                 .ExpectedCallsCount(1)
                 .Returns(todayDate);
 
-            Assert.Throws<InvalidOperationException>(() => calendarFake.Execute(c => c.GetNextWorkingDate()));
+            Assert.Throws<ExpectedCallsException>(() => calendarFake.Execute(c => c.GetNextWorkingDate()));
 
-            calendarFake = Fake.For<Calendar>(Calendar.GetTimeZone())
-                .Setup(() => DateTime.Now)
+            calendarFake = new Fake<Calendar>(Calendar.GetTimeZone());
+            calendarFake.Setup(() => DateTime.Now)
                 .ExpectedCallsCount(2)
                 .Returns(todayDate);
 
@@ -145,37 +139,39 @@ namespace UnitTests
         [Fact]
         public void VerifiableChecksAllCallsInCurrentAssembly()
         {
-            var fake = Fake.For<VerifiableAnalyzer>()
-                .Setup((Calculator calc) => calc.Add(1, 2))
+            var fake = new Fake<VerifiableAnalyzer>();
+            fake.Setup((Calculator calc) => calc.Add(1, 2))
                 .Verifiable()
                 .ExpectedCallsCount(3)
                 .Returns(1);
+
             fake.Execute(f => f.GetAnalyzeValue(1, 2));
         }
 
         [Fact]
         public void VoidCallWorksFine()
         {
-            var fake = Fake.For<VerifiableAnalyzer>()
-                .Setup((Calculator calc) => calc.Add(1, 2))
+            var fake = new Fake<VerifiableAnalyzer>();
+            fake.Setup((Calculator calc) => calc.Add(1, 2))
                 .Verifiable()
                 .ExpectedCallsCount(3)
                 .Returns(1);
+
             fake.Execute(f => f.Analyze(1, 2));
         }
 
         [Fact]
         public void SetupWithoutExpectedReturnValueWorksFine()
         {
-            var fake = Fake.For<VerifiableAnalyzer>();
+            var fake = new Fake<VerifiableAnalyzer>();
             fake.Setup((Calculator calc) => calc.Add(1, 2))
                 .Verifiable()
                 .ExpectedCallsCount(3)
                 .Returns(1);
             fake.Setup((VerifiableAnalyzer v) => v.WriteValues(1, 2))
                 .Verifiable()
-                .ExpectedCallsCount(1)
-                .Void();
+                .ExpectedCallsCount(1);
+
             fake.Execute(f => f.AnalyzeAndWrite(1, 2));
         }
     }

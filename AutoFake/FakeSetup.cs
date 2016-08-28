@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Reflection;
+using AutoFake.Exceptions;
+using GuardExtensions;
 
 namespace AutoFake
 {
     public class FakeSetup<T, TReturn> : FakeSetup
     {
-        private readonly Fake<T> _fake;
-        private bool _isInstalled;
-
         internal FakeSetup(Fake<T> fake, MethodInfo method, object[] setupArguments)
             : base(method, setupArguments)
         {
-            _fake = fake;
+            Guard.AreNotNull(fake, method);
+            fake.Setups.Add(FakeSetupPack);
         }
 
-        public Fake<T> Returns(TReturn returnObject)
+        public void Returns(TReturn returnObject)
         {
-            if (_isInstalled)
-                throw new InvalidOperationException("It is already installed");
-            _isInstalled = true;
             FakeSetupPack.ReturnObject = returnObject;
-            _fake.Setups.Add(FakeSetupPack);
-            return _fake;
         }
 
         public FakeSetup<T, TReturn> Verifiable()
@@ -39,24 +34,14 @@ namespace AutoFake
 
     public class FakeSetup<T> : FakeSetup
     {
-        private readonly Fake<T> _fake;
-        private bool _isInstalled;
-
         internal FakeSetup(Fake<T> fake, MethodInfo method, object[] setupArguments)
             : base(method, setupArguments)
         {
-            _fake = fake;
-        }
+            Guard.AreNotNull(fake, method);
 
-        public Fake<T> Void()
-        {
-            if (_isInstalled)
-                throw new InvalidOperationException("It is already installed");
-            _isInstalled = true;
             FakeSetupPack.ReturnObject = null;
             FakeSetupPack.IsVoid = true;
-            _fake.Setups.Add(FakeSetupPack);
-            return _fake;
+            fake.Setups.Add(FakeSetupPack);
         }
 
         public FakeSetup<T> Verifiable()
@@ -72,7 +57,7 @@ namespace AutoFake
         }
     }
 
-    public class FakeSetup
+    public abstract class FakeSetup
     {
         internal readonly FakeSetupPack FakeSetupPack;
 
@@ -88,17 +73,15 @@ namespace AutoFake
 
         protected void VerifiableImpl()
         {
-            if (FakeSetupPack.IsVerifiable)
-                throw new InvalidOperationException("Verifiable() is already called");
-            if (FakeSetupPack.SetupArguments.Length == 0)
-                throw new InvalidOperationException("Setup expression must contain a method with parameters");
+            if (FakeSetupPack.SetupArguments == null || FakeSetupPack.SetupArguments.Length == 0)
+                throw new VerifiableException("Setup expression must contain a method with parameters");
             FakeSetupPack.IsVerifiable = true;
         }
 
         protected void ExpectedCallsCountImpl(int expectedCallsCount)
         {
             if (expectedCallsCount < 1)
-                throw new InvalidOperationException("ExpectedCallsCount must be greater than 0");
+                throw new ExpectedCallsException("ExpectedCallsCount must be greater than 0");
             FakeSetupPack.ExpectedCallsCount = expectedCallsCount;
         }
     }

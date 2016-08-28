@@ -5,7 +5,9 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoFake", "AutoFake\AutoFake.csproj", "{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{DE4906FF-906E-447E-A915-A6DEE7DC9607}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{DE4906FF-906E-447E-A915-A6DEE7DC9607}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoFake.UnitTests", "AutoFake.UnitTests\AutoFake.UnitTests.csproj", "{C0452B69-74FE-4789-92C1-60ACAA26479E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE4906FF-906E-447E-A915-A6DEE7DC9607}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0452B69-74FE-4789-92C1-60ACAA26479E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0452B69-74FE-4789-92C1-60ACAA26479E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0452B69-74FE-4789-92C1-60ACAA26479E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0452B69-74FE-4789-92C1-60ACAA26479E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,50 +5,47 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using GuardExtensions;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 
 namespace AutoFake
 {
-    internal class FakeGenerator<T>
+    internal class FakeGenerator
     {
-        private const string FAKE_NAMESPACE = "AutoFake.Fakes";
+        private readonly TypeInfo _typeInfo;
 
-        private readonly object[] _constructorArgs;
-        private AssemblyDefinition _assemblyDefinition;
-        private TypeDefinition _typeDefinition;
-
-        public FakeGenerator(object[] constructorArgs)
+        public FakeGenerator(TypeInfo typeInfo)
         {
-            _constructorArgs = constructorArgs;
+            Guard.IsNotNull(typeInfo);
+            _typeInfo = typeInfo;
         }
 
         public GeneratedObject Generate(IList<FakeSetupPack> setups, MethodInfo executeFunc)
         {
+            Guard.IsNotEmpty(setups);
+            Guard.IsNotNull(executeFunc);
+
+            _typeInfo.Load();
+
             var generatedObject = new GeneratedObject();
-
-            var type = typeof(T);
-            _assemblyDefinition = AssemblyDefinition.ReadAssembly(type.Assembly.GetFiles().Single());
-            _typeDefinition = _assemblyDefinition.MainModule.Types.Single(t => t.FullName == type.FullName);
-            _typeDefinition.Name = _typeDefinition.Name + "Fake";
-            _typeDefinition.Namespace = FAKE_NAMESPACE;
-
             generatedObject.MockedMembers = MockSetups(setups, executeFunc).ToList();
 
             using (var memoryStream = new MemoryStream())
             {
-                _assemblyDefinition.Write(memoryStream);
+                _typeInfo.WriteAssembly(memoryStream);
                 var assembly = Assembly.Load(memoryStream.ToArray());
-                generatedObject.Type = assembly.GetType(_typeDefinition.FullName);
-                generatedObject.Instance = Activator.CreateInstance(generatedObject.Type, _constructorArgs);
+                generatedObject.Type = assembly.GetType(_typeInfo.FullTypeName);
+                generatedObject.Instance = Activator.CreateInstance(generatedObject.Type, _typeInfo.ContructorArguments);
                 return generatedObject;
             }
         }
 
         public void Save(string fileName)
         {
+            Guard.IsNotNull(fileName);
             using (var fileStream = File.Create(fileName))
             {
-                _assemblyDefinition.Write(fileStream);
+                _typeInfo.WriteAssembly(fileStream);
             }
         }
 
@@ -63,11 +60,11 @@ namespace AutoFake
                 {
                     var fieldName = setup.Method.Name + counter++;
                     mockedMemberInfo.ReturnValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                        _assemblyDefinition.MainModule.Import(setup.Method.ReturnType));
-                    _typeDefinition.Fields.Add(mockedMemberInfo.ReturnValueField);
+                        _typeInfo.ModuleDefinition.Import(setup.Method.ReturnType));
+                    _typeInfo.AddField(mockedMemberInfo.ReturnValueField);
                 }
                 
-                ReplaceInstructions(_typeDefinition.Methods.Single(m => m.Name == executeFunc.Name), mockedMemberInfo);
+                ReplaceInstructions(_typeInfo.SearchMethod(executeFunc.Name), mockedMemberInfo);
 
                 yield return mockedMemberInfo;
             }
@@ -95,8 +92,8 @@ namespace AutoFake
         }
 
         private bool AreSameInCurrentType(MethodReference methodReference, MethodInfo methodToReplace)
-            => methodToReplace.DeclaringType == typeof(T)
-                        && methodReference.DeclaringType.FullName == _typeDefinition.FullName
+            => methodToReplace.DeclaringType == _typeInfo.SourceType
+                        && methodReference.DeclaringType.FullName == _typeInfo.FullTypeName
                         && methodReference.Name == methodToReplace.Name;
 
         private bool AreSameInExternalType(MethodReference methodReference, MethodInfo methodToReplace)
@@ -121,8 +118,8 @@ namespace AutoFake
                         var fieldName = mockedMemberInfo.Setup.Method.Name + "Argument" +
                             (parametersCount*mockedMemberInfo.ActualCallsCount + idx).ToString();
                         var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                            _assemblyDefinition.MainModule.Import(currentArg.GetType()));
-                        _typeDefinition.Fields.Add(field);
+                            _typeInfo.ModuleDefinition.Import(currentArg.GetType()));
+                        _typeInfo.AddField(field);
 
                         argumentFields.Insert(0, field);
                         processor.InsertBefore(instruction, processor.Create(OpCodes.Stsfld, field));
