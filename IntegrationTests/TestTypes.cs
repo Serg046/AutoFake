@@ -73,7 +73,7 @@ namespace UnitTests
 
     public class VerifiableAnalyzer
     {
-        readonly Calculator _calculator = new Calculator();
+        private readonly Calculator _calculator = new Calculator();
 
         public int GetAnalyzeValue(int a, int b)
         {
@@ -102,6 +102,14 @@ namespace UnitTests
         public void WriteValues(int a, int b)
         {
             Console.WriteLine(a + " " + b);
+        }
+
+        public void AnalyzeTwoWays(int a, int b)
+        {
+            if (a > 0)
+                Analyze(a, b);
+            else
+                Analyze(0, 0);
         }
     }
 

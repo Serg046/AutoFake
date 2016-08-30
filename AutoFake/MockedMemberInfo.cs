@@ -5,15 +5,24 @@ namespace AutoFake
 {
     internal class MockedMemberInfo
     {
+        private readonly IList<IList<FieldDefinition>> _argumentFields;
+
         public MockedMemberInfo(FakeSetupPack setup)
         {
             Setup = setup;
-            ArgumentFields = new List<IList<FieldDefinition>>();
+            _argumentFields = new List<IList<FieldDefinition>>();
         }
 
         public FakeSetupPack Setup { get; }
         public FieldDefinition ReturnValueField { get; internal set; }
-        public int ActualCallsCount { get; internal set; }
-        public IList<IList<FieldDefinition>> ArgumentFields { get; }
+        public FieldDefinition ActualCallsIdsField { get; internal set; }
+        public int SourceCodeCallsCount { get; internal set; }
+
+        public IList<FieldDefinition> GetArguments(int index) => _argumentFields[index];
+
+        public void AddArguments(IList<FieldDefinition> arguments)
+        {
+            _argumentFields.Add(arguments);
+        }
     }
 }

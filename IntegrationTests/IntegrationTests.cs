@@ -174,5 +174,30 @@ namespace UnitTests
 
             fake.Execute(f => f.AnalyzeAndWrite(1, 2));
         }
+
+        [Fact]
+        public void ExpectedCallsCount_TwoWaysOfCode_ReturnsOne()
+        {
+            var fake = new Fake<VerifiableAnalyzer>();
+            fake.Setup((VerifiableAnalyzer a) => a.Analyze(1, 2))
+                .ExpectedCallsCount(1);
+
+            fake.Execute(f => f.AnalyzeTwoWays(1, 2));
+        }
+
+        [Fact]
+        public void Verifiable_TwoWaysOfCode_Success()
+        {
+            var fake = new Fake<VerifiableAnalyzer>();
+            fake.Setup((VerifiableAnalyzer a) => a.Analyze(1, 2))
+                .Verifiable();
+            fake.Execute(f => f.AnalyzeTwoWays(1, 2));
+
+            fake = new Fake<VerifiableAnalyzer>();
+            fake.Setup((VerifiableAnalyzer a) => a.Analyze(0, 0))
+                .Verifiable();
+
+            fake.Execute(f => f.AnalyzeTwoWays(0, 2));
+        }
     }
 }

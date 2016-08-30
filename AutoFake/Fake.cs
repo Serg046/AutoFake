@@ -107,23 +107,21 @@ namespace AutoFake
         {
             foreach (var mockedMemberInfo in generatedObject.MockedMembers)
             {
-                if (mockedMemberInfo.Setup.ExpectedCallsCount != -1 && mockedMemberInfo.Setup.ExpectedCallsCount != mockedMemberInfo.ActualCallsCount)
-                {
-                    throw new ExpectedCallsException(
-                        $"Setup and actual calls count are different. Expected: {mockedMemberInfo.Setup.ExpectedCallsCount}. Actual: {mockedMemberInfo.ActualCallsCount}.");
-                }
                 if (mockedMemberInfo.Setup.IsVerifiable)
                 {
-                    foreach (var argumentFieldsList in mockedMemberInfo.ArgumentFields)
+                    var ids = GetActualCallsIds(generatedObject, mockedMemberInfo);
+
+                    foreach (var index in ids)
                     {
-                        for (int i = 0; i < argumentFieldsList.Count; i++)
+                        var argumentFields = mockedMemberInfo.GetArguments(index);
+                        for (int i = 0; i < argumentFields.Count; i++)
                         {
                             var setupArg = mockedMemberInfo.Setup.SetupArguments[i];
-                            var field = generatedObject.Type.GetField(argumentFieldsList[i].Name,
+                            var field = generatedObject.Type.GetField(argumentFields[i].Name,
                                 BindingFlags.NonPublic | BindingFlags.Static);
 
                             if (field == null)
-                                throw new FakeGeneretingException($"'{argumentFieldsList[i].Name}' is not found in the generated object");
+                                throw new FakeGeneretingException($"'{argumentFields[i].Name}' is not found in the generated object");
 
                             var realArg = field.GetValue(null);
                             if (!setupArg.Equals(realArg))
@@ -131,8 +129,32 @@ namespace AutoFake
                                     $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
                         }
                     }
+
+                    if (mockedMemberInfo.Setup.ExpectedCallsCount != -1)
+                        VerifyExpectedCallsCount(mockedMemberInfo.Setup.ExpectedCallsCount, ids.Count);
+                }
+                else if (mockedMemberInfo.Setup.ExpectedCallsCount != -1)
+                {
+                    var actualCallsCount = GetActualCallsIds(generatedObject, mockedMemberInfo).Count;
+                    VerifyExpectedCallsCount(mockedMemberInfo.Setup.ExpectedCallsCount, actualCallsCount);
                 }
             }
+        }
+
+        private List<int> GetActualCallsIds(GeneratedObject generatedObject, MockedMemberInfo mockedMemberInfo)
+        {
+            var field = generatedObject.Type.GetField(mockedMemberInfo.ActualCallsIdsField.Name,
+                BindingFlags.NonPublic | BindingFlags.Static);
+            if (field == null)
+                throw new FakeGeneretingException($"'{mockedMemberInfo.ActualCallsIdsField.Name}' is not found in the generated object");
+            return (List<int>)field.GetValue(null);
+        }
+
+        private void VerifyExpectedCallsCount(int expectedCallsCount, int actualCallsCount)
+        {
+            if (expectedCallsCount != actualCallsCount)
+                throw new ExpectedCallsException(
+                    $"Setup and actual calls count are different. Expected: {expectedCallsCount}. Actual: {actualCallsCount}.");
         }
 
         private object GetInvocationResult(Expression executeFunc, GeneratedObject generatedObject)

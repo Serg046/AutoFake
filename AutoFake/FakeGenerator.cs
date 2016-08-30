@@ -55,12 +55,30 @@ namespace AutoFake
             foreach (var setup in setups)
             {
                 var mockedMemberInfo = new MockedMemberInfo(setup);
+                var returnValueFieldName = setup.Method.Name + counter++;
+
+                var collectionType = typeof(List<int>);
+                mockedMemberInfo.ActualCallsIdsField = new FieldDefinition(returnValueFieldName + "_ActualIds", FieldAttributes.Assembly | FieldAttributes.Static,
+                        _typeInfo.ModuleDefinition.Import(collectionType));
+                _typeInfo.AddField(mockedMemberInfo.ActualCallsIdsField);
+
+                foreach (var ctor in _typeInfo.SearchMethods(".ctor"))
+                {
+                    var processor = ctor.Body.GetILProcessor();
+                    var constructor = collectionType.GetConstructor(new Type[0]);
+
+                    processor.Remove(processor.Body.Instructions.Last()); //remove Ret
+                    processor.Append(processor.Create(OpCodes.Newobj, _typeInfo.ModuleDefinition.Import(constructor)));
+                    processor.Append(processor.Create(OpCodes.Stsfld, mockedMemberInfo.ActualCallsIdsField));
+                    processor.Append(processor.Create(OpCodes.Ret));
+                }
 
                 if (!setup.IsVoid)
                 {
-                    var fieldName = setup.Method.Name + counter++;
-                    mockedMemberInfo.ReturnValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
+
+                    mockedMemberInfo.ReturnValueField = new FieldDefinition(returnValueFieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                         _typeInfo.ModuleDefinition.Import(setup.Method.ReturnType));
+
                     _typeInfo.AddField(mockedMemberInfo.ReturnValueField);
                 }
                 
@@ -116,7 +134,7 @@ namespace AutoFake
                         var idx = parametersCount - i - 1;
                         var currentArg = mockedMemberInfo.Setup.SetupArguments[idx];
                         var fieldName = mockedMemberInfo.Setup.Method.Name + "Argument" +
-                            (parametersCount*mockedMemberInfo.ActualCallsCount + idx).ToString();
+                            (parametersCount*mockedMemberInfo.SourceCodeCallsCount + idx).ToString();
                         var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                             _typeInfo.ModuleDefinition.Import(currentArg.GetType()));
                         _typeInfo.AddField(field);
@@ -125,7 +143,7 @@ namespace AutoFake
                         processor.InsertBefore(instruction, processor.Create(OpCodes.Stsfld, field));
                     }
 
-                    mockedMemberInfo.ArgumentFields.Add(argumentFields);
+                    mockedMemberInfo.AddArguments(argumentFields);
                 }
                 else
                 {
@@ -138,12 +156,17 @@ namespace AutoFake
             if (!methodReference.Resolve().IsStatic)
                 processor.InsertBefore(instruction, processor.Create(OpCodes.Pop));
 
+            processor.InsertBefore(instruction, processor.Create(OpCodes.Ldsfld, mockedMemberInfo.ActualCallsIdsField));
+            processor.InsertBefore(instruction, processor.Create(OpCodes.Ldc_I4, mockedMemberInfo.SourceCodeCallsCount));
+            var methodInfo = typeof(List<int>).GetMethod("Add");
+            processor.InsertBefore(instruction, processor.Create(OpCodes.Callvirt, _typeInfo.ModuleDefinition.Import(methodInfo)));
+
             if (mockedMemberInfo.Setup.IsVoid)
                 processor.Remove(instruction);
             else
                 processor.Replace(instruction, processor.Create(OpCodes.Ldsfld, mockedMemberInfo.ReturnValueField));
 
-            mockedMemberInfo.ActualCallsCount++;
+            mockedMemberInfo.SourceCodeCallsCount++;
         }
     }
 }

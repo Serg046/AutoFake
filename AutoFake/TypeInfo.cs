@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Mono.Cecil;
@@ -41,6 +42,11 @@ namespace AutoFake
             if (method == null)
                 throw new MissingMethodException($"Method '{methodName}' is not found");
             return method;
+        }
+
+        public IEnumerable<MethodDefinition> SearchMethods(string methodName)
+        {
+            return _typeDefinition.Methods.Where(m => m.Name == methodName);
         }
 
         public void WriteAssembly(Stream stream)
