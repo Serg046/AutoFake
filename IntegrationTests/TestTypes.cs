@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace UnitTests
+namespace IntegrationTests
 {
     public class Calendar
     {
@@ -74,6 +74,11 @@ namespace UnitTests
     public class VerifiableAnalyzer
     {
         private readonly Calculator _calculator = new Calculator();
+
+        static VerifiableAnalyzer()
+        {
+            Console.WriteLine(1);
+        }
 
         public int GetAnalyzeValue(int a, int b)
         {

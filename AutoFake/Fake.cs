@@ -110,25 +110,7 @@ namespace AutoFake
                 if (mockedMemberInfo.Setup.IsVerifiable)
                 {
                     var ids = GetActualCallsIds(generatedObject, mockedMemberInfo);
-
-                    foreach (var index in ids)
-                    {
-                        var argumentFields = mockedMemberInfo.GetArguments(index);
-                        for (int i = 0; i < argumentFields.Count; i++)
-                        {
-                            var setupArg = mockedMemberInfo.Setup.SetupArguments[i];
-                            var field = generatedObject.Type.GetField(argumentFields[i].Name,
-                                BindingFlags.NonPublic | BindingFlags.Static);
-
-                            if (field == null)
-                                throw new FakeGeneretingException($"'{argumentFields[i].Name}' is not found in the generated object");
-
-                            var realArg = field.GetValue(null);
-                            if (!setupArg.Equals(realArg))
-                                throw new VerifiableException(
-                                    $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
-                        }
-                    }
+                    VerifyMethodArguments(generatedObject, mockedMemberInfo, ids);
 
                     if (mockedMemberInfo.Setup.ExpectedCallsCount != -1)
                         VerifyExpectedCallsCount(mockedMemberInfo.Setup.ExpectedCallsCount, ids.Count);
@@ -137,6 +119,28 @@ namespace AutoFake
                 {
                     var actualCallsCount = GetActualCallsIds(generatedObject, mockedMemberInfo).Count;
                     VerifyExpectedCallsCount(mockedMemberInfo.Setup.ExpectedCallsCount, actualCallsCount);
+                }
+            }
+        }
+
+        private static void VerifyMethodArguments(GeneratedObject generatedObject, MockedMemberInfo mockedMemberInfo, IEnumerable<int> actualCallsIds)
+        {
+            foreach (var index in actualCallsIds)
+            {
+                var argumentFields = mockedMemberInfo.GetArguments(index);
+                for (var i = 0; i < argumentFields.Count; i++)
+                {
+                    var setupArg = mockedMemberInfo.Setup.SetupArguments[i];
+                    var field = generatedObject.Type.GetField(argumentFields[i].Name,
+                        BindingFlags.NonPublic | BindingFlags.Static);
+
+                    if (field == null)
+                        throw new FakeGeneretingException($"'{argumentFields[i].Name}' is not found in the generated object");
+
+                    var realArg = field.GetValue(null);
+                    if (!setupArg.Equals(realArg))
+                        throw new VerifiableException(
+                            $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
                 }
             }
         }

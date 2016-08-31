@@ -3,7 +3,7 @@ using System;
 using AutoFake.Exceptions;
 using Xunit;
 
-namespace UnitTests
+namespace IntegrationTests
 {
     public class IntegrationTests
     {
