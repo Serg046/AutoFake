@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using AutoFake.Setup;
 using Mono.Cecil;
 
 namespace AutoFake

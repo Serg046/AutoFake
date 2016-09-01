@@ -17,46 +17,46 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Setup_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Setup((Expression<Func<bool>>)null));
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Setup((Expression<Func<int, bool>>)null));
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Setup((Expression<Action<int>>)null));
+            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Replace((Expression<Func<bool>>)null));
+            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Replace((Expression<Func<int, bool>>)null));
+            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Replace((Expression<Action<int>>)null));
         }
 
         [Fact]
         public void Setup_PropertyCallExpression_Success()
         {
             var fake = new Fake<SomeType>();
-            fake.Setup(() => SomeProperty);
+            fake.Replace(() => SomeProperty);
 
             Assert.Equal(1, fake.Setups.Count);
             Assert.Equal(GetProperty(nameof(SomeProperty)).GetMethod, fake.Setups[0].Method);
             Assert.Equal(0, fake.Setups[0].SetupArguments.Length);
-            Assert.Equal(-1, fake.Setups[0].ExpectedCallsCount);
+            Assert.False(fake.Setups[0].NeedCheckCallsCount);
         }
 
         [Fact]
         public void Setup_MethodCallExpression_Success()
         {
             var fake = new Fake<SomeType>();
-            fake.Setup((SomeType someType) => SomeMethod(0));
+            fake.Replace((SomeType someType) => SomeMethod(0));
 
             Assert.Equal(1, fake.Setups.Count);
             Assert.Equal(GetMethod(nameof(SomeMethod), new [] {typeof(object)}), fake.Setups[0].Method);
             Assert.Equal(1, fake.Setups[0].SetupArguments.Length);
             Assert.Equal(0, fake.Setups[0].SetupArguments[0]);
-            Assert.Equal(-1, fake.Setups[0].ExpectedCallsCount);
+            Assert.False(fake.Setups[0].NeedCheckCallsCount);
         }
 
         [Fact]
         public void Setup_VoidMethodCallExpression_Success()
         {
             var fake = new Fake<SomeType>();
-            fake.Setup((SomeType someType) => SomeMethod());
+            fake.Replace((SomeType someType) => SomeMethod());
 
             Assert.Equal(1, fake.Setups.Count);
             Assert.Equal(GetMethod(nameof(SomeMethod)), fake.Setups[0].Method);
             Assert.Equal(0, fake.Setups[0].SetupArguments.Length);
-            Assert.Equal(-1, fake.Setups[0].ExpectedCallsCount);
+            Assert.False(fake.Setups[0].NeedCheckCallsCount);
         }
 
         [Fact]

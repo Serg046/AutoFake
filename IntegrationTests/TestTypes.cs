@@ -73,6 +73,7 @@ namespace IntegrationTests
 
     public class VerifiableAnalyzer
     {
+        public bool IsAnalyzeExecuted;
         private readonly Calculator _calculator = new Calculator();
 
         static VerifiableAnalyzer()
@@ -86,7 +87,11 @@ namespace IntegrationTests
             return ProcessValue(currentValue, a, b);
         }
 
-        public void Analyze(int a, int b) => GetAnalyzeValue(a, b);
+        public void Analyze(int a, int b)
+        {
+            IsAnalyzeExecuted = true;
+            GetAnalyzeValue(a, b);
+        }
 
         private int ProcessValue(int currentValue, int a, int b)
         {

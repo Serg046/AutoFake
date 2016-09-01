@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Setup;
 using GuardExtensions;
 using Xunit;
 
@@ -9,15 +11,15 @@ namespace AutoFake.UnitTests
 {
     public class FakeSetupTests : ExpressionUnitTest
     {
-        public delegate dynamic BuildFakeSetup(dynamic fake, MethodInfo method, object[] setupArgs);
+        public delegate dynamic BuildFakeSetup(ICollection setups, MethodInfo method, object[] setupArgs);
 
         public static IEnumerable<object> FakeSetupBuilders
         {
             get
             {
-                BuildFakeSetup buildFunc = (fake, method, args) => new FakeSetup<SomeType, int>(fake, method, args);
+                BuildFakeSetup buildFunc = (setups, method, args) => new ReplaceableMockInstaller<int>((dynamic)setups, method, args);
                 yield return new object[] {buildFunc};
-                buildFunc = (fake, method, args) => new FakeSetup<SomeType>(fake, method, args);
+                buildFunc = (setups, method, args) => new ReplaceableMockInstaller((dynamic)setups, method, args);
                 yield return new object[] { buildFunc };
             }
         }
@@ -37,7 +39,7 @@ namespace AutoFake.UnitTests
             var someMethodInfo = GetMethodInfo();
 
             Assert.Throws<ContractFailedException>(() => buildFakeSetup(null, someMethodInfo, null));
-            Assert.Throws<ContractFailedException>(() => buildFakeSetup(new Fake<SomeType>(), null, null));
+            Assert.Throws<ContractFailedException>(() => buildFakeSetup(new Fake<SomeType>().Setups, null, null));
         }
 
         [Theory]
@@ -48,13 +50,13 @@ namespace AutoFake.UnitTests
             var fake = new Fake<SomeType>();
             var args = new object[] {1};
 
-            var setup = buildFakeSetup(fake, someMethodInfo, args);
+            var setup = buildFakeSetup(fake.Setups, someMethodInfo, args);
 
             Assert.Equal(1, fake.Setups.Count);
             Assert.Equal(setup.FakeSetupPack, fake.Setups[0]);
             Assert.Equal(someMethodInfo, fake.Setups[0].Method);
             Assert.Equal(args, fake.Setups[0].SetupArguments);
-            Assert.Equal(-1, fake.Setups[0].ExpectedCallsCount);
+            Assert.False(fake.Setups[0].NeedCheckCallsCount);
         }
 
         [Fact]
@@ -64,13 +66,13 @@ namespace AutoFake.UnitTests
             var fake = new Fake<SomeType>();
             var args = new object[] { 1 };
 
-            var setup = new FakeSetup<SomeType>(fake, someMethodInfo, args);
+            var setup = new ReplaceableMockInstaller(fake.Setups, someMethodInfo, args);
 
             Assert.Equal(1, fake.Setups.Count);
             Assert.Equal(setup.FakeSetupPack, fake.Setups[0]);
             Assert.Equal(someMethodInfo, fake.Setups[0].Method);
             Assert.Equal(args, fake.Setups[0].SetupArguments);
-            Assert.Equal(-1, fake.Setups[0].ExpectedCallsCount);
+            Assert.False(fake.Setups[0].NeedCheckCallsCount);
             Assert.True(fake.Setups[0].IsVoid);
         }
 
@@ -80,7 +82,7 @@ namespace AutoFake.UnitTests
             var someMethodInfo = GetMethodInfo();
             var fake = new Fake<SomeType>();
 
-            var setup = new FakeSetup<SomeType, object>(fake, someMethodInfo, null);
+            var setup = new ReplaceableMockInstaller<object>(fake.Setups, someMethodInfo, null);
 
             setup.Returns(null);
             Assert.Equal(null, setup.FakeSetupPack.ReturnObject);
@@ -95,9 +97,9 @@ namespace AutoFake.UnitTests
         {
             var someMethodInfo = GetMethodInfo();
             var fake = new Fake<SomeType>();
-            var setup = buildFakeSetup(fake, someMethodInfo, null);
+            var setup = buildFakeSetup(fake.Setups, someMethodInfo, null);
 
-            Assert.Throws<VerifiableException>(() => setup.Verifiable());
+            Assert.Throws<VerifiableException>(() => setup.CheckArguments());
         }
 
         [Theory]
@@ -107,11 +109,11 @@ namespace AutoFake.UnitTests
             var someMethodInfo = GetMethodInfo();
             var fake = new Fake<SomeType>();
             var args = new object[] {1};
-            var setup = buildFakeSetup(fake, someMethodInfo, args);
+            var setup = buildFakeSetup(fake.Setups, someMethodInfo, args);
 
-            setup.Verifiable();
+            setup.CheckArguments();
 
-            Assert.True(setup.FakeSetupPack.IsVerifiable);
+            Assert.True(setup.FakeSetupPack.NeedCheckArguments);
         }
 
         [Theory]
@@ -120,7 +122,7 @@ namespace AutoFake.UnitTests
         {
             var someMethodInfo = GetMethodInfo();
             var fake = new Fake<SomeType>();
-            var setup = buildFakeSetup(fake, someMethodInfo, null);
+            var setup = buildFakeSetup(fake.Setups, someMethodInfo, null);
 
             Assert.Throws<ExpectedCallsException>(() => setup.ExpectedCallsCount(-1));
         }
@@ -131,11 +133,11 @@ namespace AutoFake.UnitTests
         {
             var someMethodInfo = GetMethodInfo();
             var fake = new Fake<SomeType>();
-            var setup = buildFakeSetup(fake, someMethodInfo, null);
+            var setup = buildFakeSetup(fake.Setups, someMethodInfo, null);
 
             setup.ExpectedCallsCount(1);
 
-            Assert.Equal(1, setup.FakeSetupPack.ExpectedCallsCount);
+            Assert.True(setup.FakeSetupPack.ExpectedCallsCountFunc(1));
         }
     }
 }

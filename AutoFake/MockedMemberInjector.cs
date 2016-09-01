@@ -24,17 +24,23 @@ namespace AutoFake
         {
             var methodReference = (MethodReference)instruction.Operand;
 
+            MarkCurrentMethodPosition(instruction);
             ProcessMethodArguments(instruction);
 
-            if (!methodReference.Resolve().IsStatic)
-                _ilProcessor.InsertBefore(instruction, _ilProcessor.Create(OpCodes.Pop));
+            if (!_mockedMemberInfo.Setup.IsVerification)
+            {
+                if (!methodReference.Resolve().IsStatic)
+                    _ilProcessor.InsertBefore(instruction, _ilProcessor.Create(OpCodes.Pop));
 
-            MarkCurrentMethodPosition(instruction);
 
-            if (_mockedMemberInfo.Setup.IsVoid)
-                _ilProcessor.Remove(instruction);
-            else
-                _ilProcessor.Replace(instruction, _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ReturnValueField));
+                if (_mockedMemberInfo.Setup.IsVoid)
+                    _ilProcessor.Remove(instruction);
+                else
+                {
+                    _ilProcessor.Replace(instruction,
+                        _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ReturnValueField));
+                }
+            }
 
             _mockedMemberInfo.SourceCodeCallsCount++;
         }
@@ -44,7 +50,7 @@ namespace AutoFake
             var parametersCount = _mockedMemberInfo.Setup.SetupArguments.Length;
             if (parametersCount > 0)
             {
-                if (_mockedMemberInfo.Setup.IsVerifiable)
+                if (_mockedMemberInfo.Setup.NeedCheckArguments)
                 {
                     ExtractMethodArguments(instruction);
                 }
@@ -77,19 +83,27 @@ namespace AutoFake
                 _ilProcessor.InsertBefore(instruction, _ilProcessor.Create(OpCodes.Stsfld, field));
             }
 
+            if (_mockedMemberInfo.Setup.IsVerification)
+            {
+                foreach (var field in argumentFields)
+                {
+                    _ilProcessor.InsertBefore(instruction, _ilProcessor.Create(OpCodes.Ldsfld, field));
+                }
+            }
+
             _mockedMemberInfo.AddArguments(argumentFields);
         }
 
         private void MarkCurrentMethodPosition(Instruction instruction)
         {
-            if (_mockedMemberInfo.Setup.IsVerifiable || _mockedMemberInfo.Setup.ExpectedCallsCount != -1)
+            if (_mockedMemberInfo.Setup.NeedCheckArguments || _mockedMemberInfo.Setup.NeedCheckCallsCount)
             {
-                _ilProcessor.InsertBefore(instruction,
-                    _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ActualCallsIdsField));
-                _ilProcessor.InsertBefore(instruction,
-                    _ilProcessor.Create(OpCodes.Ldc_I4, _mockedMemberInfo.SourceCodeCallsCount));
-                _ilProcessor.InsertBefore(instruction,
+                _ilProcessor.InsertAfter(instruction,
                     _ilProcessor.Create(OpCodes.Callvirt, _typeInfo.AddToListMethodInfo));
+                _ilProcessor.InsertAfter(instruction,
+                    _ilProcessor.Create(OpCodes.Ldc_I4, _mockedMemberInfo.SourceCodeCallsCount));
+                _ilProcessor.InsertAfter(instruction,
+                    _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ActualCallsIdsField));
             }
         }
     }

@@ -77,5 +77,46 @@ namespace AutoFake
             var lambda = Expression.Lambda<Func<object>>(convertExpr);
             return lambda.Compile().Invoke();
         }
+
+        public static object GetInvocationResult(GeneratedObject generatedObject, Expression executeFunc)
+        {
+            object result;
+            if (executeFunc is MethodCallExpression)
+            {
+                var methodCallExpression = (MethodCallExpression)executeFunc;
+                var method = generatedObject.Type.GetMethod(methodCallExpression.Method.Name,
+                    methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
+
+                var callExpression = Expression
+                    .Call(Expression.Constant(generatedObject.Instance), method, methodCallExpression.Arguments);
+
+                result = Expression.Lambda(callExpression).Compile().DynamicInvoke();
+            }
+            else if (executeFunc is MemberExpression)
+            {
+                var propInfo = ((MemberExpression)executeFunc).Member as PropertyInfo;
+                if (propInfo != null)
+                {
+                    var property = generatedObject.Type.GetProperty(propInfo.Name);
+                    result = property.GetValue(generatedObject.Instance, null);
+                }
+                else
+                {
+                    var fieldInfo = ((MemberExpression)executeFunc).Member as FieldInfo;
+                    if (fieldInfo == null)
+                        throw new FakeGeneretingException($"Cannot execute provided expression: {executeFunc}");
+
+                    var field = generatedObject.Type.GetField(fieldInfo.Name);
+                    result = field.GetValue(generatedObject.Instance);
+                }
+            }
+            else if (executeFunc is UnaryExpression)
+            {
+                result = GetInvocationResult(generatedObject, ((UnaryExpression)executeFunc).Operand);
+            }
+            else
+                throw new NotSupportedExpressionException($"Ivalid expression format. Type {executeFunc.GetType().FullName}. Source: {executeFunc}.");
+            return result;
+        }
     }
 }
