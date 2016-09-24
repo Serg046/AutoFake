@@ -23,7 +23,8 @@ namespace AutoFake
         public Type SourceType { get; }
         public object[] ContructorArguments { get; }
         
-        public string FullTypeName => _typeDefinition.FullName;
+        public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
+        public string CilFullTypeName => _typeDefinition.FullName;
         public MethodReference AddToListMethodInfo => _addToListMethodInfo;
 
         public void Load()

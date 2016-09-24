@@ -62,8 +62,9 @@ namespace AutoFake
                 {
                     mocker.GenerateRetValueField();
                 }
-                
-                ReplaceInstructions(_typeInfo.Methods.Single(m => m.Name == executeFunc.Name), mocker);
+
+                var method = _typeInfo.Methods.Single(m => m.Name == executeFunc.Name);
+                ReplaceInstructions(method, mocker);
 
                 yield return mocker.MemberInfo;
             }
