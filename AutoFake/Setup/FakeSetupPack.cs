@@ -7,6 +7,7 @@ namespace AutoFake.Setup
     {
         public MethodInfo Method { get; internal set; }
         public object ReturnObject { get; internal set; }
+        public string ReturnObjectFieldName { get; internal set; }
         public object[] SetupArguments { get; internal set; }
         public bool NeedCheckArguments { get; internal set; }
         public bool NeedCheckCallsCount { get; internal set; }

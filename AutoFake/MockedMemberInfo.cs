@@ -15,8 +15,8 @@ namespace AutoFake
         }
 
         public FakeSetupPack Setup { get; }
-        public FieldDefinition ReturnValueField { get; internal set; }
-        public FieldDefinition ActualCallsIdsField { get; internal set; }
+        public FieldDefinition RetValueField { get; internal set; }
+        public FieldDefinition ActualCallsField { get; internal set; }
         public int SourceCodeCallsCount { get; internal set; }
 
         public IList<FieldDefinition> GetArguments(int index) => _argumentFields[index];

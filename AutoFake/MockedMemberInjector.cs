@@ -38,7 +38,7 @@ namespace AutoFake
                 else
                 {
                     _ilProcessor.Replace(instruction,
-                        _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ReturnValueField));
+                        _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.RetValueField));
                 }
             }
 
@@ -103,7 +103,7 @@ namespace AutoFake
                 _ilProcessor.InsertAfter(instruction,
                     _ilProcessor.Create(OpCodes.Ldc_I4, _mockedMemberInfo.SourceCodeCallsCount));
                 _ilProcessor.InsertAfter(instruction,
-                    _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ActualCallsIdsField));
+                    _ilProcessor.Create(OpCodes.Ldsfld, _mockedMemberInfo.ActualCallsField));
             }
         }
     }

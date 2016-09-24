@@ -7,24 +7,31 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup;
 using GuardExtensions;
-using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace AutoFake
 {
     internal class FakeGenerator
     {
-        private const string CONSTRUCTOR_METHOD_NAME = ".cctor";
-
         private readonly TypeInfo _typeInfo;
+        private readonly MockerFactory _mockerFactory;
 
-        public FakeGenerator(TypeInfo typeInfo)
+        public FakeGenerator(TypeInfo typeInfo, MockerFactory mockerFactory)
         {
-            Guard.IsNotNull(typeInfo);
+            Guard.AreNotNull(typeInfo, mockerFactory);
             _typeInfo = typeInfo;
+            _mockerFactory = mockerFactory;
         }
 
-        public GeneratedObject Generate(IList<FakeSetupPack> setups, MethodInfo executeFunc)
+        public void Save(string fileName)
+        {
+            Guard.IsNotNull(fileName);
+            using (var fileStream = File.Create(fileName))
+            {
+                _typeInfo.WriteAssembly(fileStream);
+            }
+        }
+
+        public GeneratedObject Generate(SetupCollection setups, MethodInfo executeFunc)
         {
             Guard.IsNotEmpty(setups);
             Guard.IsNotNull(executeFunc);
@@ -44,110 +51,46 @@ namespace AutoFake
             }
         }
 
-        public void Save(string fileName)
+        private IEnumerable<MockedMemberInfo> MockSetups(SetupCollection setups, MethodInfo executeFunc)
         {
-            Guard.IsNotNull(fileName);
-            using (var fileStream = File.Create(fileName))
-            {
-                _typeInfo.WriteAssembly(fileStream);
-            }
-        }
-
-        private IEnumerable<MockedMemberInfo> MockSetups(IList<FakeSetupPack> setups, MethodInfo executeFunc)
-        {
-            var counter = 0;
             foreach (var setup in setups)
             {
-                var mockedMemberInfo = new MockedMemberInfo(setup);
-                var returnValueFieldName = setup.Method.Name + counter++;
-
-                InitializeFieldFromStaticConstructor(mockedMemberInfo, returnValueFieldName);
+                var mocker = _mockerFactory.CreateMocker(_typeInfo, setup);
+                mocker.GenerateCallsCounter();
 
                 if (!setup.IsVoid)
                 {
-                    mockedMemberInfo.ReturnValueField = new FieldDefinition(returnValueFieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                        _typeInfo.Import(setup.Method.ReturnType));
-                    _typeInfo.AddField(mockedMemberInfo.ReturnValueField);
+                    mocker.GenerateRetValueField();
                 }
                 
-                ReplaceInstructions(_typeInfo.SearchMethod(executeFunc.Name), mockedMemberInfo);
+                ReplaceInstructions(_typeInfo.Methods.Single(m => m.Name == executeFunc.Name), mocker);
 
-                yield return mockedMemberInfo;
+                yield return mocker.MemberInfo;
             }
         }
 
-        private void InitializeFieldFromStaticConstructor(MockedMemberInfo mockedMemberInfo, string returnValueFieldName)
+        private void ReplaceInstructions(MethodDefinition currentMethod, IMocker mocker)
         {
-            var collectionType = typeof(List<int>);
-            mockedMemberInfo.ActualCallsIdsField = new FieldDefinition(returnValueFieldName + "_ActualIds",
-                FieldAttributes.Assembly | FieldAttributes.Static,
-                _typeInfo.Import(collectionType));
-            _typeInfo.AddField(mockedMemberInfo.ActualCallsIdsField);
-
-            var listConstructor = collectionType.GetConstructor(new Type[0]);
-            var processor = GetProcessor();
-
-            processor.Append(processor.Create(OpCodes.Newobj, _typeInfo.Import(listConstructor)));
-            processor.Append(processor.Create(OpCodes.Stsfld, mockedMemberInfo.ActualCallsIdsField));
-            processor.Append(processor.Create(OpCodes.Ret));
-        }
-
-        private ILProcessor GetProcessor()
-        {
-            var ctor = _typeInfo.SearchMethod(CONSTRUCTOR_METHOD_NAME);
-            if (ctor == null)
-            {
-                ctor = AddStaticCtor();
-                return ctor.Body.GetILProcessor();
-            }
-            else
-            {
-                var processor = ctor.Body.GetILProcessor();
-                processor.Remove(processor.Body.Instructions.Last()); //remove Ret
-                return processor;
-            }
-        }
-
-        private MethodDefinition AddStaticCtor()
-        {
-            var ctor = new MethodDefinition(CONSTRUCTOR_METHOD_NAME,
-                MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName |
-                MethodAttributes.RTSpecialName,
-                _typeInfo.Import(typeof(void)));
-
-            _typeInfo.AddMethod(ctor);
-            return ctor;
-        }
-
-        private void ReplaceInstructions(MethodDefinition currentMethod, MockedMemberInfo mockedMemberInfo)
-        {
-            var methodToReplace = mockedMemberInfo.Setup.Method;
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
                 if (instruction.OpCode.OperandType == OperandType.InlineMethod)
                 {
-                    var methodReference = (MethodReference)instruction.Operand;
+                    var method = (MethodReference)instruction.Operand;
                     
-                    if (AreSameInCurrentType(methodReference, methodToReplace) || AreSameInExternalType(methodReference, methodToReplace))
+                    var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
+                    if (methodInjector.IsInstalledMethod(method))
                     {
-                        var injector = new MockedMemberInjector(_typeInfo, currentMethod.Body.GetILProcessor(), mockedMemberInfo);
-                        injector.Process(instruction);
+                        var proc = currentMethod.Body.GetILProcessor();
+                        methodInjector.Process(proc, instruction);
                     }
-                    else if (methodReference.IsDefinition)
+                    else if (IsClientSourceCode(method))
                     {
-                        ReplaceInstructions(methodReference.Resolve(), mockedMemberInfo);
+                        ReplaceInstructions(method.Resolve(), mocker);
                     }
                 }
             }
         }
 
-        private bool AreSameInCurrentType(MethodReference methodReference, MethodInfo methodToReplace)
-            => methodToReplace.DeclaringType == _typeInfo.SourceType
-                        && methodReference.DeclaringType.FullName == _typeInfo.FullTypeName
-                        && methodReference.Name == methodToReplace.Name;
-
-        private bool AreSameInExternalType(MethodReference methodReference, MethodInfo methodToReplace)
-            => methodReference.DeclaringType.FullName == methodToReplace.DeclaringType.FullName
-                        && methodReference.Name == methodToReplace.Name;
+        private bool IsClientSourceCode(MethodReference methodReference) => methodReference.IsDefinition;
     }
 }

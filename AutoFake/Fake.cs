@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using AutoFake.Exceptions;
@@ -19,12 +18,13 @@ namespace AutoFake
             Guard.IsNotNull(contructorArgs);
 
             var typeInfo = new TypeInfo(typeof(T), contructorArgs);
-            _fakeGenerator = new FakeGenerator(typeInfo);
+            var mockerFactory = new MockerFactory();
+            _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory);
 
-            Setups = new List<FakeSetupPack>();
+            Setups = new SetupCollection();
         }
 
-        internal List<FakeSetupPack> Setups { get; }
+        internal SetupCollection Setups { get; }
 
         private object[] GetSetupArguments(Expression expression)
         {
@@ -124,7 +124,7 @@ namespace AutoFake
         public TReturn CheckState<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            var result = ExpressionUtils.GetInvocationResult(_currentGeneratedObject, executeFunc.Body);
+            var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject.Instance, executeFunc.Body);
             return (TReturn)result;
         }
 

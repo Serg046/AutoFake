@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 
@@ -29,9 +28,10 @@ namespace AutoFake
 
         public void Load()
         {
-            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Assembly.GetFiles().Single());
+            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName);
 
-            _typeDefinition = _assemblyDefinition.MainModule.Types.Single(t => t.FullName == SourceType.FullName);
+            var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, true);
+            _typeDefinition = type.Resolve();
             _typeDefinition.Name = _typeDefinition.Name + "Fake";
             _typeDefinition.Namespace = FAKE_NAMESPACE;
 
@@ -44,8 +44,8 @@ namespace AutoFake
         public void AddField(FieldDefinition field) => _typeDefinition.Fields.Add(field);
         public void AddMethod(MethodDefinition method) => _typeDefinition.Methods.Add(method);
 
-        public MethodDefinition SearchMethod(string methodName)
-            => _typeDefinition.Methods.SingleOrDefault(m => m.Name == methodName);
+        public IEnumerable<FieldDefinition> Fields => _typeDefinition.Fields; 
+        public IEnumerable<MethodDefinition> Methods => _typeDefinition.Methods;
 
         public void WriteAssembly(Stream stream)
         {

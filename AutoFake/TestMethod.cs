@@ -21,7 +21,7 @@ namespace AutoFake
         public object Execute(LambdaExpression invocationExpression)
         {
             SetReturnObjects();
-            var result = ExpressionUtils.GetInvocationResult(_generatedObject, invocationExpression.Body);
+            var result = ExpressionUtils.ExecuteExpression(_generatedObject.Instance, invocationExpression.Body);
             VerifySetups();
 
             return result;
@@ -31,9 +31,9 @@ namespace AutoFake
         {
             foreach (var mockedMemberInfo in _generatedObject.MockedMembers.Where(m => !m.Setup.IsVoid))
             {
-                var field = _generatedObject.Type.GetField(mockedMemberInfo.ReturnValueField.Name, BindingFlags.NonPublic | BindingFlags.Static);
+                var field = _generatedObject.Type.GetField(mockedMemberInfo.RetValueField.Name, BindingFlags.NonPublic | BindingFlags.Static);
                 if (field == null)
-                    throw new FakeGeneretingException($"'{mockedMemberInfo.ReturnValueField.Name}' is not found in the generated object");
+                    throw new FakeGeneretingException($"'{mockedMemberInfo.RetValueField.Name}' is not found in the generated object");
                 field.SetValue(null, mockedMemberInfo.Setup.ReturnObject);
             }
         }
@@ -82,10 +82,10 @@ namespace AutoFake
 
         private List<int> GetActualCallsIds(MockedMemberInfo mockedMemberInfo)
         {
-            var field = _generatedObject.Type.GetField(mockedMemberInfo.ActualCallsIdsField.Name,
+            var field = _generatedObject.Type.GetField(mockedMemberInfo.ActualCallsField.Name,
                 BindingFlags.NonPublic | BindingFlags.Static);
             if (field == null)
-                throw new FakeGeneretingException($"'{mockedMemberInfo.ActualCallsIdsField.Name}' is not found in the generated object");
+                throw new FakeGeneretingException($"'{mockedMemberInfo.ActualCallsField.Name}' is not found in the generated object");
             return (List<int>)field.GetValue(null);
         }
 

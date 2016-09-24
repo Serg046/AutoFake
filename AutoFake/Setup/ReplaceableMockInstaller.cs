@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using GuardExtensions;
 
 namespace AutoFake.Setup
 {
     public class ReplaceableMockInstaller<TReturn> : MockInstaller
     {
-        internal ReplaceableMockInstaller(ICollection<FakeSetupPack> setups, MethodInfo method, object[] setupArguments)
+        internal ReplaceableMockInstaller(SetupCollection setups, MethodInfo method, object[] setupArguments)
             : base(method, setupArguments)
         {
             Guard.AreNotNull(setups, method);
@@ -34,7 +33,7 @@ namespace AutoFake.Setup
 
     public class ReplaceableMockInstaller : MockInstaller
     {
-        internal ReplaceableMockInstaller(ICollection<FakeSetupPack> setups, MethodInfo method, object[] setupArguments)
+        internal ReplaceableMockInstaller(SetupCollection setups, MethodInfo method, object[] setupArguments)
             : base(method, setupArguments)
         {
             Guard.AreNotNull(setups, method);

@@ -78,17 +78,18 @@ namespace AutoFake
             return lambda.Compile().Invoke();
         }
 
-        public static object GetInvocationResult(GeneratedObject generatedObject, Expression executeFunc)
+        public static object ExecuteExpression(object instance, Expression executeFunc)
         {
             object result;
+            var type = instance.GetType();
             if (executeFunc is MethodCallExpression)
             {
                 var methodCallExpression = (MethodCallExpression)executeFunc;
-                var method = generatedObject.Type.GetMethod(methodCallExpression.Method.Name,
+                var method = type.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
 
                 var callExpression = Expression
-                    .Call(Expression.Constant(generatedObject.Instance), method, methodCallExpression.Arguments);
+                    .Call(Expression.Constant(instance), method, methodCallExpression.Arguments);
 
                 result = Expression.Lambda(callExpression).Compile().DynamicInvoke();
             }
@@ -97,8 +98,8 @@ namespace AutoFake
                 var propInfo = ((MemberExpression)executeFunc).Member as PropertyInfo;
                 if (propInfo != null)
                 {
-                    var property = generatedObject.Type.GetProperty(propInfo.Name);
-                    result = property.GetValue(generatedObject.Instance, null);
+                    var property = type.GetProperty(propInfo.Name);
+                    result = property.GetValue(instance, null);
                 }
                 else
                 {
@@ -106,13 +107,13 @@ namespace AutoFake
                     if (fieldInfo == null)
                         throw new FakeGeneretingException($"Cannot execute provided expression: {executeFunc}");
 
-                    var field = generatedObject.Type.GetField(fieldInfo.Name);
-                    result = field.GetValue(generatedObject.Instance);
+                    var field = type.GetField(fieldInfo.Name);
+                    result = field.GetValue(instance);
                 }
             }
             else if (executeFunc is UnaryExpression)
             {
-                result = GetInvocationResult(generatedObject, ((UnaryExpression)executeFunc).Operand);
+                result = ExecuteExpression(instance, ((UnaryExpression)executeFunc).Operand);
             }
             else
                 throw new NotSupportedExpressionException($"Ivalid expression format. Type {executeFunc.GetType().FullName}. Source: {executeFunc}.");
