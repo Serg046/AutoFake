@@ -67,11 +67,9 @@ namespace AutoFake
         {
             Guard.IsNotNull(method);
 
-            var typeName = _setup.Method.DeclaringType == _methodMocker.TypeInfo.SourceType
-                ? _methodMocker.TypeInfo.CilFullTypeName
-                : _setup.Method.DeclaringType.FullName;
-
-            return method.DeclaringType.FullName == typeName && method.Name == _setup.Method.Name && IsCorrectMethodOverload(method);
+            return method.DeclaringType.FullName == _methodMocker.TypeInfo.GetInstalledMethodTypeName(_setup)
+                && method.Name == _setup.Method.Name
+                && IsCorrectMethodOverload(method);
         }
 
         private bool IsCorrectMethodOverload(MethodReference method)

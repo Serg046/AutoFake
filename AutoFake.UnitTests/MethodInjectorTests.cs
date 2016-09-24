@@ -17,6 +17,13 @@ namespace AutoFake.UnitTests
 {
     public class MethodInjectorTests
     {
+        private class SomeType
+        {
+            public void InstanceMethod()
+            {
+            }
+        }
+
         private void InstanceMethod()
         {
         }
@@ -41,6 +48,13 @@ namespace AutoFake.UnitTests
             InstanceMethod();
             var x = DateTime.Now;
             InstanceMethod(0);
+        }
+
+        private void MethodWithExternalMethodOfNestedType()
+        {
+            InstanceMethod();
+            var x = DateTime.Now;
+            new SomeType().InstanceMethod();
         }
 
         private ILProcessor GetILProcessor() => new MethodBody(null).GetILProcessor();
@@ -342,6 +356,26 @@ namespace AutoFake.UnitTests
 
             var instructions = method.Body.GetILProcessor().Body.Instructions
                 .Where(i => i.OpCode.OperandType == OperandType.InlineMethod)
+                .ToList();
+
+            Assert.Equal(3, instructions.Count);
+            Assert.False(_methodInjector.IsInstalledMethod((dynamic)instructions[0].Operand));
+            Assert.False(_methodInjector.IsInstalledMethod((dynamic)instructions[1].Operand));
+            Assert.True(_methodInjector.IsInstalledMethod((dynamic)instructions[2].Operand));
+        }
+
+        [Fact]
+        public void IsInstalledMethod_MethodFromExternalNestedType_Success()
+        {
+            var typeInfo = new TypeInfo(GetType(), null);
+            typeInfo.Load();
+            _methodMockerMock.SetupGet(m => m.TypeInfo).Returns(typeInfo);
+            var method = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithExternalMethodOfNestedType));
+
+            _setup.Method = typeof(SomeType).GetMethod(nameof(InstanceMethod));
+
+            var instructions = method.Body.GetILProcessor().Body.Instructions
+                .Where(i => i.OpCode.OperandType == OperandType.InlineMethod && i.OpCode != OpCodes.Newobj)
                 .ToList();
 
             Assert.Equal(3, instructions.Count);
