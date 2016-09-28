@@ -190,17 +190,22 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        [InlineData(null, false, false)]
-        [InlineData(null, true, false)]
-        [InlineData(1, false, true)]
-        [InlineData(1, true, false)]
-        public void Process_SomeArgsAndNotNeedCheck_ArgumentsRemoved(object arg, bool needCheckArgs, bool mustBeRemoved)
+        [InlineData(null, false, false, false)]
+        [InlineData(null, false, true, false)]
+        [InlineData(null, true, false, false)]
+        [InlineData(null, true, true, false)]
+        [InlineData(1, false, false, true)]
+        [InlineData(1, false, true, false)]
+        [InlineData(1, true, false, false)]
+        [InlineData(1, true, true, false)]
+        public void Process_SomeArgsAndNotNeedCheck_ArgumentsRemoved(object arg, bool needCheckArgs, bool isVerification, bool mustBeRemoved)
         {
             var cmd = GetInstruction();
             var proc = GetILProcessor();
             if (arg != null)
                 _setup.SetupArguments = new[] { arg };
             _setup.NeedCheckArguments = needCheckArgs;
+            _setup.IsVerification = isVerification;
 
             _methodInjector.Process(proc, cmd);
 

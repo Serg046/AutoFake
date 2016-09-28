@@ -56,7 +56,7 @@ namespace AutoFake
                     if (_setup.IsVerification)
                         _methodMocker.PushMethodArguments(ilProcessor, instruction, arguments);
                 }
-                else
+                else if (!_setup.IsVerification)
                 {
                     _methodMocker.RemoveMethodArguments(ilProcessor, instruction);
                 }
