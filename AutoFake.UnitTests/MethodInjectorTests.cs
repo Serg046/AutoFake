@@ -68,7 +68,6 @@ namespace AutoFake.UnitTests
             return Instruction.Create(OpCodes.Call, typeInfo.Import(method));
         }
 
-        private readonly TypeInfo _typeInfo;
         private readonly FakeSetupPack _setup;
         private readonly Mock<IMethodMocker> _methodMockerMock;
         private readonly MockedMemberInfo _memberInfo;

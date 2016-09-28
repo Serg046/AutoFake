@@ -86,10 +86,10 @@ namespace AutoFake.UnitTests
 
             _mocker.GenerateRetValueField();
 
-            Assert.Equal("Test", _mocker.MemberInfo.RetValueField.Name);
+            Assert.Equal("Test_RetValue", _mocker.MemberInfo.RetValueField.Name);
             Assert.True(_mocker.MemberInfo.RetValueField.Attributes.HasFlag(FieldAttributes.Assembly));
             Assert.True(_mocker.MemberInfo.RetValueField.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Contains(_typeInfo.Fields, f => f.Name == "Test");
+            Assert.Contains(_typeInfo.Fields, f => f.Name == "Test_RetValue");
         }
 
         [Fact]
