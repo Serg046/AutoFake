@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 
@@ -12,6 +13,8 @@ namespace AutoFake
 {
     internal class FakeGenerator
     {
+        private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
+
         private readonly TypeInfo _typeInfo;
         private readonly MockerFactory _mockerFactory;
 
@@ -72,6 +75,8 @@ namespace AutoFake
 
         private void ReplaceInstructions(MethodDefinition currentMethod, IMocker mocker)
         {
+            ProcessAsyncMethod(currentMethod, mocker);
+
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
                 if (instruction.OpCode.OperandType == OperandType.InlineMethod)
@@ -89,6 +94,21 @@ namespace AutoFake
                         ReplaceInstructions(method.Resolve(), mocker);
                     }
                 }
+            }
+        }
+
+        private void ProcessAsyncMethod(MethodDefinition currentMethod, IMocker mocker)
+        {
+            //for .net 4, it is available in .net 4.5
+            dynamic asyncAttribute = currentMethod.CustomAttributes
+                .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
+            if (asyncAttribute != null)
+            {
+                if (asyncAttribute.ConstructorArguments.Count != 1)
+                    throw new FakeGeneretingException("Unexpected exception. AsyncStateMachine have several arguments or 0.");
+                TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
+                var asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
+                ReplaceInstructions(asyncMethod, mocker);
             }
         }
 

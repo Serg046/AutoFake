@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AutoFake.IntegrationTests
@@ -101,6 +102,19 @@ namespace AutoFake.IntegrationTests
             public static int DynamicStaticValue() => 5;
         }
 
+        private class AsyncTestClass
+        {
+            public async Task<int> GetDynamicValueAsync()
+            {
+                await Task.Delay(1);
+                var value = 5;
+                await Task.Delay(1);
+                return value;
+            }
+
+            public async Task<int> GetValueAsync() => await GetDynamicValueAsync();
+        }
+
         [Fact]
         public void OwnInstanceTest()
         {
@@ -196,6 +210,16 @@ namespace AutoFake.IntegrationTests
             fake.Replace((TestClass t) => t.DynamicValue(5)).Returns(7);
 
             Assert.Equal(14, fake.Execute(f => f.GetDynValueByOveloadedMethodCalls()));
+        }
+
+        [Fact]
+        public async void AsyncMethodTest()
+        {
+            var fake = new Fake<AsyncTestClass>();
+
+            fake.Replace((AsyncTestClass a) => a.GetDynamicValueAsync()).Returns(Task.FromResult(7));
+
+            Assert.Equal(7, await fake.Execute(f => f.GetValueAsync()));
         }
     }
 }

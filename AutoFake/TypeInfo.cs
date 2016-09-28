@@ -30,7 +30,8 @@ namespace AutoFake
 
         public void Load()
         {
-            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName);
+            //TODO: remove reading mode parameter when a new version of mono.cecil will be available, see https://github.com/jbevain/cecil/issues/295
+            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, new ReaderParameters(ReadingMode.Immediate));
 
             var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, true);
             _typeDefinition = type.Resolve();
