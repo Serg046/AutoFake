@@ -7,17 +7,49 @@ using GuardExtensions;
 
 namespace AutoFake
 {
-    public class Fake<T>
+    public class Fake<T> : Fake
+    {
+        public Fake(params object[] contructorArgs) : base(typeof(T), contructorArgs)
+        {
+        }
+
+        public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            return (TReturn)Execute((LambdaExpression)executeFunc);
+        }
+
+        public void Execute(Expression<Action<T>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            Execute((LambdaExpression)executeFunc);
+        }
+
+        public TReturn CheckState<TReturn>(Expression<Func<T, TReturn>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject, executeFunc.Body);
+            return (TReturn)result;
+        }
+
+        public void CheckState(Expression<Action<T>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            Execute((LambdaExpression)executeFunc);
+        }
+    }
+
+    public class Fake
     {
         private readonly FakeGenerator _fakeGenerator;
         private string _assemblyFileName;
-        private GeneratedObject _currentGeneratedObject;
+        internal GeneratedObject _currentGeneratedObject;
 
-        public Fake(params object[] contructorArgs)
+        public Fake(Type type, params object[] contructorArgs)
         {
             Guard.IsNotNull(contructorArgs);
 
-            var typeInfo = new TypeInfo(typeof(T), contructorArgs);
+            var typeInfo = new TypeInfo(type, contructorArgs);
             var mockerFactory = new MockerFactory();
             _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory);
 
@@ -42,7 +74,7 @@ namespace AutoFake
             return result;
         }
 
-        private object Execute(LambdaExpression expression)
+        protected object Execute(LambdaExpression expression)
         {
             if (Setups.Count == 0)
                 throw new FakeGeneretingException("Setup pack is not found");
@@ -85,6 +117,12 @@ namespace AutoFake
             return new ReplaceableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
         }
 
+        public ReplaceableMockInstaller Replace(Expression<Action> voidInstanceSetupFunc)
+        {
+            Guard.IsNotNull(voidInstanceSetupFunc);
+            return new ReplaceableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+        }
+
         //---------------------------------------------------------------------------------------------------------
 
         public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> setupFunc)
@@ -113,28 +151,7 @@ namespace AutoFake
             return (TReturn)Execute((LambdaExpression)executeFunc);
         }
 
-        public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
-        {
-            Guard.IsNotNull(executeFunc);
-            return (TReturn)Execute((LambdaExpression)executeFunc);
-        }
-
-        public void Execute(Expression<Action<T>> executeFunc)
-        {
-            Guard.IsNotNull(executeFunc);
-            Execute((LambdaExpression)executeFunc);
-        }
-
-        //---------------------------------------------------------------------------------------------------------
-
-        public TReturn CheckState<TReturn>(Expression<Func<T, TReturn>> executeFunc)
-        {
-            Guard.IsNotNull(executeFunc);
-            var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject.Instance, executeFunc.Body);
-            return (TReturn)result;
-        }
-
-        public void CheckState(Expression<Action<T>> executeFunc)
+        public void Execute(Expression<Action> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
             Execute((LambdaExpression)executeFunc);

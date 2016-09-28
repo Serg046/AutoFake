@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.IntegrationTests.InstanceTests
 {
     public class PropertyMockTests
     {

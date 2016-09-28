@@ -78,17 +78,18 @@ namespace AutoFake
             return lambda.Compile().Invoke();
         }
 
-        public static object ExecuteExpression(object instance, Expression executeFunc)
+        public static object ExecuteExpression(GeneratedObject generatedObject, Expression executeFunc)
         {
             object result;
-            var type = instance.GetType();
+            var type = generatedObject.Type;
+            var instance = generatedObject.Instance;
             if (executeFunc is MethodCallExpression)
             {
                 var methodCallExpression = (MethodCallExpression)executeFunc;
                 var method = type.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
 
-                var instanceExpr = method.IsStatic ? null : Expression.Constant(instance);
+                var instanceExpr = instance == null || method.IsStatic ? null : Expression.Constant(instance);
                 var callExpression = Expression.Call(instanceExpr, method, methodCallExpression.Arguments);
 
                 result = Expression.Lambda(callExpression).Compile().DynamicInvoke();
@@ -113,7 +114,7 @@ namespace AutoFake
             }
             else if (executeFunc is UnaryExpression)
             {
-                result = ExecuteExpression(instance, ((UnaryExpression)executeFunc).Operand);
+                result = ExecuteExpression(generatedObject, ((UnaryExpression)executeFunc).Operand);
             }
             else
                 throw new NotSupportedExpressionException($"Ivalid expression format. Type {executeFunc.GetType().FullName}. Source: {executeFunc}.");

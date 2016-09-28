@@ -6,21 +6,20 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.IntegrationTests.InstanceTests
 {
     public class MethodMockTests
     {
         private class TestClass
         {
             public int DynamicValue() => 5;
+            public int DynamicValue(int value) => value;
             public static int DynamicStaticValue() => 5;
 
             public void ThrowException()
             {
                 throw new NotImplementedException();
             }
-
-            public int DynamicValue(int value) => value;
 
             public int GetDynamicValue()
             {
@@ -112,7 +111,16 @@ namespace AutoFake.IntegrationTests
                 return value;
             }
 
+            public static async Task<int> GetStaticDynamicValueAsync()
+            {
+                await Task.Delay(1);
+                var value = 5;
+                await Task.Delay(1);
+                return value;
+            }
+
             public async Task<int> GetValueAsync() => await GetDynamicValueAsync();
+            public static async Task<int> GetStaticValueAsync() => await GetStaticDynamicValueAsync();
         }
 
         [Fact]
@@ -213,13 +221,23 @@ namespace AutoFake.IntegrationTests
         }
 
         [Fact]
-        public async void AsyncMethodTest()
+        public async void AsyncInstanceMethodTest()
         {
             var fake = new Fake<AsyncTestClass>();
 
             fake.Replace((AsyncTestClass a) => a.GetDynamicValueAsync()).Returns(Task.FromResult(7));
 
             Assert.Equal(7, await fake.Execute(f => f.GetValueAsync()));
+        }
+
+        [Fact]
+        public async void AsyncStaticMethodTest()
+        {
+            var fake = new Fake<AsyncTestClass>();
+
+            fake.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Returns(Task.FromResult(7));
+
+            Assert.Equal(7, await fake.Execute(() => AsyncTestClass.GetStaticValueAsync()));
         }
     }
 }

@@ -49,10 +49,14 @@ namespace AutoFake
                 _typeInfo.WriteAssembly(memoryStream);
                 var assembly = Assembly.Load(memoryStream.ToArray());
                 generatedObject.Type = assembly.GetType(_typeInfo.FullTypeName);
-                generatedObject.Instance = Activator.CreateInstance(generatedObject.Type, _typeInfo.ContructorArguments);
+                generatedObject.Instance = IsStatic(_typeInfo.SourceType)
+                    ? null
+                    : Activator.CreateInstance(generatedObject.Type, _typeInfo.ContructorArguments);
                 return generatedObject;
             }
         }
+
+        private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
 
         private IEnumerable<MockedMemberInfo> MockSetups(SetupCollection setups, MethodInfo executeFunc)
         {

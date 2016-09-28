@@ -21,7 +21,7 @@ namespace AutoFake
         public object Execute(LambdaExpression invocationExpression)
         {
             SetReturnObjects();
-            var result = ExpressionUtils.ExecuteExpression(_generatedObject.Instance, invocationExpression.Body);
+            var result = ExpressionUtils.ExecuteExpression(_generatedObject, invocationExpression.Body);
             VerifySetups();
 
             return result;
