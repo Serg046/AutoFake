@@ -61,9 +61,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestTypes.cs" />
-    <Compile Include="IntegrationTests.cs" />
+    <Compile Include="MethodMockTests.cs" />
+    <Compile Include="ReplacementTests.cs" />
+    <Compile Include="PropertyMockTests.cs" />
+    <Compile Include="TestMethodCallTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VerifiableTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

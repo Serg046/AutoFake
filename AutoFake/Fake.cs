@@ -107,6 +107,12 @@ namespace AutoFake
 
         //---------------------------------------------------------------------------------------------------------
 
+        public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            return (TReturn)Execute((LambdaExpression)executeFunc);
+        }
+
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);

@@ -88,8 +88,8 @@ namespace AutoFake
                 var method = type.GetMethod(methodCallExpression.Method.Name,
                     methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
 
-                var callExpression = Expression
-                    .Call(Expression.Constant(instance), method, methodCallExpression.Arguments);
+                var instanceExpr = method.IsStatic ? null : Expression.Constant(instance);
+                var callExpression = Expression.Call(instanceExpr, method, methodCallExpression.Arguments);
 
                 result = Expression.Lambda(callExpression).Compile().DynamicInvoke();
             }
