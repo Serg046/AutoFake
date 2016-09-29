@@ -78,5 +78,16 @@ namespace AutoFake.UnitTests.Setup
 
             Assert.Equal(1, _setups.Count);
         }
+
+        [Fact]
+        public void Clear_ResetsCollection()
+        {
+            _setups.Add(GetFakeSetupPack());
+            _setups.Add(GetFakeSetupPack());
+
+            _setups.Clear();
+
+            Assert.Empty(_setups);
+        }
     }
 }

@@ -25,17 +25,10 @@ namespace AutoFake
             Execute((LambdaExpression)executeFunc);
         }
 
-        public TReturn CheckState<TReturn>(Expression<Func<T, TReturn>> executeFunc)
+        public TReturn GetStateValue<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject, executeFunc.Body);
-            return (TReturn)result;
-        }
-
-        public void CheckState(Expression<Action<T>> executeFunc)
-        {
-            Guard.IsNotNull(executeFunc);
-            Execute((LambdaExpression)executeFunc);
+            return GetStateValue<TReturn>(executeFunc.Body);
         }
     }
 
@@ -43,7 +36,8 @@ namespace AutoFake
     {
         private readonly FakeGenerator _fakeGenerator;
         private string _assemblyFileName;
-        internal GeneratedObject _currentGeneratedObject;
+        private GeneratedObject _currentGeneratedObject;
+        private bool _isTestMethodExecuted;
 
         public Fake(Type type, params object[] contructorArgs)
         {
@@ -70,21 +64,6 @@ namespace AutoFake
             {
                 result = ExpressionUtils.GetArguments((MethodCallExpression)expression).ToArray();
             }
-
-            return result;
-        }
-
-        protected object Execute(LambdaExpression expression)
-        {
-            if (Setups.Count == 0)
-                throw new FakeGeneretingException("Setup pack is not found");
-
-            _currentGeneratedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
-            var testMethod = new TestMethod(_currentGeneratedObject);
-            var result = testMethod.Execute(expression);
-
-            if (_assemblyFileName != null)
-                _fakeGenerator.Save(_assemblyFileName);
 
             return result;
         }
@@ -145,6 +124,23 @@ namespace AutoFake
 
         //---------------------------------------------------------------------------------------------------------
 
+        protected object Execute(LambdaExpression expression)
+        {
+            if (_isTestMethodExecuted)
+                throw new InvalidOperationException("Please call ResetSetups() method to clear state");
+
+            _currentGeneratedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            var testMethod = new TestMethod(_currentGeneratedObject);
+            var result = testMethod.Execute(expression);
+
+            if (_assemblyFileName != null)
+                _fakeGenerator.Save(_assemblyFileName);
+
+            _isTestMethodExecuted = true;
+
+            return result;
+        }
+
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
@@ -155,6 +151,28 @@ namespace AutoFake
         {
             Guard.IsNotNull(executeFunc);
             Execute((LambdaExpression)executeFunc);
+        }
+
+        //---------------------------------------------------------------------------------------------------------
+
+        protected TReturn GetStateValue<TReturn>(Expression executeFunc)
+        {
+            var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject, executeFunc);
+            return (TReturn)result;
+        }
+
+        public TReturn GetStateValue<TReturn>(Expression<Func<TReturn>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            return GetStateValue<TReturn>(executeFunc.Body);
+        }
+
+        //---------------------------------------------------------------------------------------------------------
+
+        public void ResetSetups()
+        {
+            Setups.Clear();
+            _isTestMethodExecuted = false;
         }
     }
 }

@@ -36,8 +36,7 @@ namespace AutoFake
 
         public GeneratedObject Generate(SetupCollection setups, MethodInfo executeFunc)
         {
-            Guard.IsNotEmpty(setups);
-            Guard.IsNotNull(executeFunc);
+            Guard.AreNotNull(setups, executeFunc);
 
             _typeInfo.Load();
 

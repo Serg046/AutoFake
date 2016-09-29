@@ -71,13 +71,5 @@ namespace AutoFake.UnitTests
             Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Execute((Expression<Func<FakeTests, bool>>)null));
             Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Execute((Expression<Action<FakeTests>>)null));
         }
-
-        [Fact]
-        public void Execute_NoSetups_Throws()
-        {
-            Assert.Throws<FakeGeneretingException>(() => new Fake<FakeTests>().Execute(f => f.Execute_Null_Throws()));
-        }
-
-        //please find more tests for Execute() in the integration tests
     }
 }

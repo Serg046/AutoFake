@@ -32,5 +32,7 @@ namespace AutoFake.Setup
         public IEnumerator<FakeSetupPack> GetEnumerator() => _setups.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public void Clear() => _setups.Clear();
     }
 }

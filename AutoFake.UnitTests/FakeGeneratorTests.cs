@@ -45,7 +45,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Save_Null_Throws()
         {
-            var typeInfo = new TypeInfo(null, null);
+            var typeInfo = new TypeInfo(GetType(), null);
             var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
             Assert.Throws<ContractFailedException>(() => fakeGen.Save(null));
         }
@@ -53,7 +53,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Generate_InvalidInput_Throws()
         {
-            var typeInfo = new TypeInfo(null, null);
+            var typeInfo = new TypeInfo(GetType(), null);
             var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
 
             var someMethodInfo = GetType().GetMethods()[0];
@@ -64,7 +64,6 @@ namespace AutoFake.UnitTests
             setups.Add(new FakeSetupPack() {Method = someMethodInfo});
 
             Assert.Throws<ContractFailedException>(() => fakeGen.Generate(null, someMethodInfo));
-            Assert.Throws<ContractFailedException>(() => fakeGen.Generate(new SetupCollection(), someMethodInfo));
             Assert.Throws<ContractFailedException>(() => fakeGen.Generate(setups, null));
         }
 

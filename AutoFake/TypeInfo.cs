@@ -18,6 +18,7 @@ namespace AutoFake
 
         public TypeInfo(Type sourceType, object[] contructorArgs)
         {
+            Guard.IsNotNull(sourceType);
             SourceType = sourceType;
             ContructorArguments = contructorArgs;
         }
