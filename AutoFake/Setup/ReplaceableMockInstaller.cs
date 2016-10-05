@@ -14,6 +14,7 @@ namespace AutoFake.Setup
 
         public ReplaceableMockInstaller<TReturn> Returns(TReturn returnObject)
         {
+            FakeSetupPack.IsReturnObjectSet = true;
             FakeSetupPack.ReturnObject = returnObject;
             return this;
         }

@@ -59,6 +59,7 @@ namespace AutoFake.UnitTests.Setup
             installer.Returns(7);
 
             Assert.Equal(7, installer.FakeSetupPack.ReturnObject);
+            Assert.True(installer.FakeSetupPack.IsReturnObjectSet);
         }
 
         public static IEnumerable<object[]> GetMockInstallerTestData(object argument)
@@ -80,7 +81,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetMockInstallerTestData), null)]
         public void CheckArguments_InvalidInput_Throws(MockInstaller installer)
         {
-            Assert.Throws<VerifiableException>(() => ((dynamic)installer).CheckArguments());
+            Assert.Throws<SetupException>(() => ((dynamic)installer).CheckArguments());
         }
 
         [Theory]
@@ -96,7 +97,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetMockInstallerTestData), 1)]
         public void ExpectedCallsCount_InvalidInput_Throws(MockInstaller installer)
         {
-            Assert.Throws<ExpectedCallsException>(() => ((dynamic)installer).ExpectedCallsCount(0));
+            Assert.Throws<SetupException>(() => ((dynamic)installer).ExpectedCallsCount(0));
         }
 
         [Theory]

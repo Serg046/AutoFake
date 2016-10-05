@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 
@@ -33,6 +34,9 @@ namespace AutoFake
         public GeneratedObject Generate(SetupCollection setups, MethodInfo executeFunc)
         {
             Guard.AreNotNull(setups, executeFunc);
+
+            if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
+                throw new SetupException("At least one non-void installed member do not have a return value.");
 
             _typeInfo.Load();
 

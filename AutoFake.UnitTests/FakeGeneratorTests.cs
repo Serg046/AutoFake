@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 using Mono.Cecil;
@@ -56,7 +57,8 @@ namespace AutoFake.UnitTests
         private FakeSetupPack GetFakeSetupPack(MethodInfo method) => new FakeSetupPack()
         {
             Method = method,
-            SetupArguments = new object[0]
+            SetupArguments = new object[0],
+            IsReturnObjectSet = true
         };
 
         private readonly Mock<IMocker> _mockerMock;
@@ -113,6 +115,23 @@ namespace AutoFake.UnitTests
 
             Assert.Throws<ContractFailedException>(() => fakeGen.Generate(null, someMethodInfo));
             Assert.Throws<ContractFailedException>(() => fakeGen.Generate(setups, null));
+        }
+
+        [Fact]
+        public void Generate_IncorrectSetup_Throws()
+        {
+            var typeInfo = new TypeInfo(GetType(), null);
+
+            var someMethodInfo = GetType().GetMethods()[0];
+            if (someMethodInfo == null)
+                throw new InvalidOperationException("MethodInfo is not found");
+
+            var setups = new SetupCollection();
+            setups.Add(new FakeSetupPack() { Method = someMethodInfo, IsVoid = false, IsReturnObjectSet = false, IsVerification = false});
+
+            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
+
+            Assert.Throws<SetupException>(() => fakeGen.Generate(setups, someMethodInfo));
         }
 
         [Fact]

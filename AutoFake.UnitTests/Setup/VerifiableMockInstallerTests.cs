@@ -40,7 +40,7 @@ namespace AutoFake.UnitTests.Setup
             var method = GetType().GetMethod(nameof(SomeMethod));
             var installer = new VerifiableMockInstaller(new SetupCollection(), method, new object[0], true);
 
-            Assert.Throws<VerifiableException>(() => installer.CheckArguments());
+            Assert.Throws<SetupException>(() => installer.CheckArguments());
         }
 
         [Fact]
@@ -60,7 +60,7 @@ namespace AutoFake.UnitTests.Setup
             var method = GetType().GetMethod(nameof(SomeMethod));
             var installer = new VerifiableMockInstaller(new SetupCollection(), method, new object[0], true);
 
-            Assert.Throws<ExpectedCallsException>(() => installer.ExpectedCallsCount(0));
+            Assert.Throws<SetupException>(() => installer.ExpectedCallsCount(0));
         }
 
         [Fact]

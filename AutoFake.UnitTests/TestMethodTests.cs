@@ -75,14 +75,16 @@ namespace AutoFake.UnitTests
                 Method = GetType().GetMethod(nameof(SomeMethod)),
                 SetupArguments = new object[] {1},
                 ReturnObject = 7,
-                ReturnObjectFieldName = nameof(SomeMethod)
+                ReturnObjectFieldName = nameof(SomeMethod),
+                IsReturnObjectSet = true
             });
 
             setupCollection.Add(new FakeSetupPack()
             {
                 Method = GetType().GetProperty(nameof(SomeProperty)).GetMethod,
                 ReturnObject = 7,
-                ReturnObjectFieldName = nameof(SomeProperty)
+                ReturnObjectFieldName = nameof(SomeProperty),
+                IsReturnObjectSet = true
             });
 
             var generateObject = _fakeGenerator.Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
@@ -111,7 +113,8 @@ namespace AutoFake.UnitTests
                 Method = GetType().GetMethod(nameof(SomeMethod)),
                 ReturnObjectFieldName = nameof(SomeMethod),
                 SetupArguments = new object[] {1},
-                NeedCheckArguments = true
+                NeedCheckArguments = true,
+                IsReturnObjectSet = true
             });
             
             var generateObject = _fakeGenerator.Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
@@ -134,7 +137,8 @@ namespace AutoFake.UnitTests
                 Method = GetType().GetMethod(nameof(SomeMethod)),
                 ReturnObjectFieldName = nameof(SomeMethod),
                 SetupArguments = new object[] { argument },
-                NeedCheckArguments = true
+                NeedCheckArguments = true,
+                IsReturnObjectSet = true
             });
 
             var generateObject = _fakeGenerator.Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
@@ -161,7 +165,8 @@ namespace AutoFake.UnitTests
                 ReturnObjectFieldName = nameof(SomeMethod),
                 NeedCheckCallsCount = true,
                 SetupArguments = new object[] {1},
-                ExpectedCallsCountFunc = i => i == expectedCalls
+                ExpectedCallsCountFunc = i => i == expectedCalls,
+                IsReturnObjectSet = true
             });
 
             var generateObject = _fakeGenerator.Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));

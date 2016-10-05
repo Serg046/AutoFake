@@ -14,5 +14,6 @@ namespace AutoFake.Setup
         public Func<int, bool> ExpectedCallsCountFunc { get; internal set; }
         public bool IsVoid { get; internal set; }
         public bool IsVerification { get; internal set; }
+        internal bool IsReturnObjectSet { get; set; }
     }
 }

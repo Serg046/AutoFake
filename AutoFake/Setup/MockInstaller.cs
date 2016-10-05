@@ -19,14 +19,14 @@ namespace AutoFake.Setup
         protected void CheckArgumentsImpl()
         {
             if (FakeSetupPack.SetupArguments == null || FakeSetupPack.SetupArguments.Length == 0)
-                throw new VerifiableException("Setup expression must contain a method with parameters");
+                throw new SetupException("Setup expression must contain a method with parameters");
             FakeSetupPack.NeedCheckArguments = true;
         }
 
         protected void ExpectedCallsCountImpl(int expectedCallsCount)
         {
             if (expectedCallsCount < 1)
-                throw new ExpectedCallsException("ExpectedCallsCount must be greater than 0");
+                throw new SetupException("ExpectedCallsCount must be greater than 0");
             FakeSetupPack.NeedCheckCallsCount = true;
             FakeSetupPack.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
         }
