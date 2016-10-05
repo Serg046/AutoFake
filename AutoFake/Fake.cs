@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 
@@ -122,6 +121,12 @@ namespace AutoFake
             return new VerifiableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body), true);
         }
 
+        public VerifiableMockInstaller Verify(Expression<Action> voidInstanceSetupFunc)
+        {
+            Guard.IsNotNull(voidInstanceSetupFunc);
+            return new VerifiableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body), true);
+        }
+
         //---------------------------------------------------------------------------------------------------------
 
         protected object Execute(LambdaExpression expression)
@@ -157,6 +162,9 @@ namespace AutoFake
 
         protected TReturn GetStateValue<TReturn>(Expression executeFunc)
         {
+            if (!_isTestMethodExecuted)
+                throw new InvalidOperationException("The test method is not executed yet.");
+
             var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject, executeFunc);
             return (TReturn)result;
         }

@@ -1,11 +1,9 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 
@@ -13,8 +11,6 @@ namespace AutoFake
 {
     internal class FakeGenerator
     {
-        private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
-
         private readonly TypeInfo _typeInfo;
         private readonly MockerFactory _mockerFactory;
 
@@ -69,24 +65,27 @@ namespace AutoFake
                     mocker.GenerateRetValueField();
                 }
 
+
+                var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
                 var method = _typeInfo.Methods.Single(m => m.Name == executeFunc.Name);
-                ReplaceInstructions(method, mocker);
+                ReplaceInstructions(method, methodInjector);
 
                 yield return mocker.MemberInfo;
             }
         }
 
-        private void ReplaceInstructions(MethodDefinition currentMethod, IMocker mocker)
+        private void ReplaceInstructions(MethodDefinition currentMethod, IMethodInjector methodInjector)
         {
-            ProcessAsyncMethod(currentMethod, mocker);
-
+            MethodDefinition asyncMethod;
+            if (methodInjector.IsAsyncMethod(currentMethod, out asyncMethod))
+                ReplaceInstructions(asyncMethod, methodInjector);
+            
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
-                if (instruction.OpCode.OperandType == OperandType.InlineMethod)
+                if (methodInjector.IsMethodInstruction(instruction))
                 {
                     var method = (MethodReference)instruction.Operand;
                     
-                    var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
                     if (methodInjector.IsInstalledMethod(method))
                     {
                         var proc = currentMethod.Body.GetILProcessor();
@@ -94,24 +93,9 @@ namespace AutoFake
                     }
                     else if (IsClientSourceCode(method))
                     {
-                        ReplaceInstructions(method.Resolve(), mocker);
+                        ReplaceInstructions(method.Resolve(), methodInjector);
                     }
                 }
-            }
-        }
-
-        private void ProcessAsyncMethod(MethodDefinition currentMethod, IMocker mocker)
-        {
-            //for .net 4, it is available in .net 4.5
-            dynamic asyncAttribute = currentMethod.CustomAttributes
-                .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
-            if (asyncAttribute != null)
-            {
-                if (asyncAttribute.ConstructorArguments.Count != 1)
-                    throw new FakeGeneretingException("Unexpected exception. AsyncStateMachine have several arguments or 0.");
-                TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
-                var asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
-                ReplaceInstructions(asyncMethod, mocker);
             }
         }
 

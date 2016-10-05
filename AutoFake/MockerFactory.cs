@@ -11,7 +11,7 @@ namespace AutoFake
             return new Mocker(typeInfo, setup);
         }
 
-        public MethodInjector CreateMethodInjector(IMethodMocker mocker)
+        public virtual IMethodInjector CreateMethodInjector(IMethodMocker mocker)
         {
             Guard.IsNotNull(mocker);
             return new MethodInjector(mocker);

@@ -7,8 +7,10 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
-    internal class MethodInjector
+    internal class MethodInjector : IMethodInjector
     {
+        private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
+
         private readonly IMethodMocker _methodMocker;
         private readonly FakeSetupPack _setup;
 
@@ -22,7 +24,7 @@ namespace AutoFake
         public void Process(ILProcessor ilProcessor, Instruction instruction)
         {
             Guard.AreNotNull(ilProcessor, instruction);
-            Guard.That(instruction).Satisfy(i => i.OpCode.OperandType == OperandType.InlineMethod);
+            Guard.That(instruction).Satisfy(IsMethodInstruction);
 
             _methodMocker.InjectCurrentPositionSaving(ilProcessor, instruction);
             ProcessArguments(ilProcessor, instruction);
@@ -75,5 +77,25 @@ namespace AutoFake
         private bool IsCorrectMethodOverload(MethodReference method)
             => method.Parameters.Select(p => p.ParameterType.FullName)
                 .SequenceEqual(_setup.Method.GetParameters().Select(p => p.ParameterType.FullName));
+
+        public bool IsMethodInstruction(Instruction instruction)
+            => instruction.OpCode.OperandType == OperandType.InlineMethod;
+
+        public bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
+        {
+            //for .net 4, it is available in .net 4.5
+            dynamic asyncAttribute = method.CustomAttributes
+                .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
+            if (asyncAttribute != null)
+            {
+                if (asyncAttribute.ConstructorArguments.Count != 1)
+                    throw new FakeGeneretingException("Unexpected exception. AsyncStateMachine have several arguments or 0.");
+                TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
+                asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
+                return true;
+            }
+            asyncMethod = null;
+            return false;
+        }
     }
 }

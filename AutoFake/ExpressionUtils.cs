@@ -29,7 +29,8 @@ namespace AutoFake
             {
                 var member = ((MemberExpression)expression).Member as PropertyInfo;
                 if (member == null)
-                    throw new InvalidOperationException($"MemberExpression must be a property expression. Source: {expression}.");
+                    throw new InvalidOperationException(
+                        $"MemberExpression must be a property expression. Source: {expression}.");
                 method = member.GetGetMethod() ?? member.GetGetMethod(true);
             }
             else if (expression is UnaryExpression)
@@ -37,10 +38,13 @@ namespace AutoFake
                 method = GetMethodInfo(((UnaryExpression)expression).Operand);
             }
             else
-                throw new NotSupportedExpressionException($"Ivalid expression format. Type {expression.GetType().FullName}. Source: {expression}.");
+                throw new NotSupportedExpressionException(
+                    $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
 
             return method;
         }
+
+        //------------------------------------------------------------------------------------------------------------
 
         public static IEnumerable<object> GetArguments(MethodCallExpression expression)
         {
@@ -57,7 +61,8 @@ namespace AutoFake
             }
             catch (RuntimeBinderException)
             {
-                throw new NotSupportedExpressionException($"Ivalid expression format. Type {expression.GetType().FullName}. Source: {expression}.");
+                throw new NotSupportedExpressionException(
+                    $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
             }
         }
 
@@ -78,47 +83,67 @@ namespace AutoFake
             return lambda.Compile().Invoke();
         }
 
+        //------------------------------------------------------------------------------------------------------------
+
         public static object ExecuteExpression(GeneratedObject generatedObject, Expression executeFunc)
         {
-            object result;
-            var type = generatedObject.Type;
-            var instance = generatedObject.Instance;
-            if (executeFunc is MethodCallExpression)
-            {
-                var methodCallExpression = (MethodCallExpression)executeFunc;
-                var method = type.GetMethod(methodCallExpression.Method.Name,
-                    methodCallExpression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
+            Guard.AreNotNull(generatedObject, executeFunc);
+            return ExecuteExpressionImpl(generatedObject, () => executeFunc);
+        }
 
-                var instanceExpr = instance == null || method.IsStatic ? null : Expression.Constant(instance);
-                var callExpression = Expression.Call(instanceExpr, method, methodCallExpression.Arguments);
-
-                result = Expression.Lambda(callExpression).Compile().DynamicInvoke();
-            }
-            else if (executeFunc is MemberExpression)
+        private static object ExecuteExpressionImpl(GeneratedObject generatedObject, Func<Expression> executeFunc)
+        {
+            var expression = executeFunc();
+            try
             {
-                var propInfo = ((MemberExpression)executeFunc).Member as PropertyInfo;
-                if (propInfo != null)
-                {
-                    var property = type.GetProperty(propInfo.Name);
-                    result = property.GetValue(instance, null);
-                }
-                else
-                {
-                    var fieldInfo = ((MemberExpression)executeFunc).Member as FieldInfo;
-                    if (fieldInfo == null)
-                        throw new FakeGeneretingException($"Cannot execute provided expression: {executeFunc}");
-
-                    var field = type.GetField(fieldInfo.Name);
-                    result = field.GetValue(instance);
-                }
+                return ExecuteExpressionImpl(generatedObject, (dynamic)expression);
             }
-            else if (executeFunc is UnaryExpression)
+            catch (RuntimeBinderException)
             {
-                result = ExecuteExpression(generatedObject, ((UnaryExpression)executeFunc).Operand);
+                throw new NotSupportedExpressionException(
+                    $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
             }
-            else
-                throw new NotSupportedExpressionException($"Ivalid expression format. Type {executeFunc.GetType().FullName}. Source: {executeFunc}.");
-            return result;
+        }
+
+        private static object ExecuteExpressionImpl(GeneratedObject generatedObject, UnaryExpression executeFunc)
+        {
+            return ExecuteExpressionImpl(generatedObject, () => executeFunc.Operand);
+        }
+
+        private static object ExecuteExpressionImpl(GeneratedObject generatedObject, MethodCallExpression executeFunc)
+        {
+            var method = generatedObject.Type.GetMethod(executeFunc.Method.Name,
+                executeFunc.Method.GetParameters().Select(p => p.ParameterType).ToArray());
+
+            var instanceExpr = generatedObject.Instance == null || method.IsStatic ? null : Expression.Constant(generatedObject.Instance);
+            var callExpression = Expression.Call(instanceExpr, method, executeFunc.Arguments);
+
+            return Expression.Lambda(callExpression).Compile().DynamicInvoke();
+        }
+
+        private static object ExecuteExpressionImpl(GeneratedObject generatedObject, MemberExpression executeFunc)
+        {
+            try
+            {
+                return ExecuteMemberExpressionImpl(generatedObject, (dynamic)executeFunc.Member);
+            }
+            catch (RuntimeBinderException)
+            {
+                throw new NotSupportedExpressionException(
+                    $"Ivalid MemberExpression format. Type '{executeFunc.Member.GetType().FullName}'. Source: {executeFunc}.");
+            }
+        }
+
+        private static object ExecuteMemberExpressionImpl(GeneratedObject generatedObject, PropertyInfo propertyInfo)
+        {
+            var property = generatedObject.Type.GetProperty(propertyInfo.Name);
+            return property.GetValue(generatedObject.Instance, null);
+        }
+
+        private static object ExecuteMemberExpressionImpl(GeneratedObject generatedObject, FieldInfo fieldInfo)
+        {
+            var field = generatedObject.Type.GetField(fieldInfo.Name);
+            return field.GetValue(generatedObject.Instance);
         }
     }
 }

@@ -9,7 +9,6 @@ namespace AutoFake.Setup
 
         internal MockInstaller(MethodInfo method, object[] setupArguments)
         {
-
             FakeSetupPack = new FakeSetupPack()
             {
                 Method = method,
@@ -24,7 +23,7 @@ namespace AutoFake.Setup
             FakeSetupPack.NeedCheckArguments = true;
         }
 
-        public void ExpectedCallsCountImpl(int expectedCallsCount)
+        protected void ExpectedCallsCountImpl(int expectedCallsCount)
         {
             if (expectedCallsCount < 1)
                 throw new ExpectedCallsException("ExpectedCallsCount must be greater than 0");

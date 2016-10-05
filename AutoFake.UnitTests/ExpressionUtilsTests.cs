@@ -1,14 +1,72 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using AutoFake.Exceptions;
 using GuardExtensions;
 using Xunit;
 
 namespace AutoFake.UnitTests
 {
-    public class ExpressionUtilsTests : ExpressionUnitTest
+    public class ExpressionUtilsTests
     {
+        private MethodInfo GetMethod(string name)
+            => GetMethod(name, new Type[0]);
+
+        private MethodInfo GetMethod(string name, Type[] types)
+            => GetMethod<ExpressionUtilsTests>(name, types);
+
+        private MethodInfo GetMethod<T>(string name, Type[] types)
+            => typeof(T).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic, null, types, null);
+
+        public int SomeProperty { get; } = 1;
+        public int SomeIntProperty { get; } = 1;
+        
+        public static int SomeStaticProperty { get; } = 1;
+
+        public int SomeField = 1;
+        public static int SomeStaticField = 1;
+
+        private void SomeMethod()
+        {
+        }
+
+        public object SomeMethod(object a) => a;
+        public static object SomeStaticMethod(object a) => a;
+
+        private void SomeMethod(int a, string b, string c, Type d)
+        {
+        }
+
+        private void SomeMethod(int a, int[] args1, params object[] args2)
+        {
+        }
+
+        private MethodCallExpression GetMethodCallExpression(Expression<Action> expression)
+            => (MethodCallExpression)expression.Body;
+
+        private MethodCallExpression GetMethodCallExpression<T>(Expression<Action<T>> expression)
+            => (MethodCallExpression)expression.Body;
+
+        private class SomeType
+        {
+            public void SomeMethod()
+            {
+            }
+
+            public void SomeMethod(SomeType self)
+            {
+            }
+        }
+
+        private static class SomeStaticType
+        {
+            public static int SomeStaticMethod(int a) => a + 1;
+            public static int SomeStaticProperty { get; } = 2;
+            public static int SomeStaticField = 2;
+        }
+
         [Fact]
         public void GetMethodInfo_Null_Throws()
         {
@@ -22,31 +80,38 @@ namespace AutoFake.UnitTests
             Assert.Throws<NotSupportedExpressionException>(() => ExpressionUtils.GetMethodInfo(expression));
         }
 
-        [Fact]
-        public void GetMethodInfo_MethodCallExpression_Success()
+        public static IEnumerable<object[]> GetMethodInfoTestData()
         {
-            var methodInfo = GetMethod(nameof(SomeMethod));
+            var method = typeof(ExpressionUtilsTests).GetMethod(nameof(SomeMethod));
+            Expression<Func<ExpressionUtilsTests, object>> instanceExpr = e => e.SomeMethod(1);
+            yield return new object[] { instanceExpr, method };
 
-            Expression<Action> expression = () => SomeMethod();
-            Assert.Equal(methodInfo, ExpressionUtils.GetMethodInfo(expression));
+            method = typeof(ExpressionUtilsTests).GetMethod(nameof(SomeStaticMethod));
+            Expression<Func<object>> staticExpr = () => ExpressionUtilsTests.SomeStaticMethod(1);
+            yield return new object[] { staticExpr, method };
+
+            method = typeof(ExpressionUtilsTests).GetProperty(nameof(SomeProperty)).GetMethod;
+            instanceExpr = e => e.SomeProperty;
+            yield return new object[] { instanceExpr, method };
+
+            method = typeof(ExpressionUtilsTests).GetProperty(nameof(SomeStaticProperty)).GetMethod;
+            staticExpr = () => ExpressionUtilsTests.SomeStaticProperty;
+            yield return new object[] { staticExpr, method };
+
+            method = typeof(SomeStaticType).GetMethod(nameof(SomeStaticMethod));
+            staticExpr = () => SomeStaticType.SomeStaticMethod(1);
+            yield return new object[] { staticExpr, method };
+
+            method = typeof(SomeStaticType).GetProperty(nameof(SomeStaticProperty)).GetMethod;
+            staticExpr = () => SomeStaticType.SomeStaticProperty;
+            yield return new object[] { staticExpr, method };
         }
 
-        [Fact]
-        public void GetMethodInfo_MemberExpression_Success()
+        [Theory]
+        [MemberData(nameof(GetMethodInfoTestData))]
+        public void GetMethodInfo_ValidData_Success(LambdaExpression expression, MethodInfo expectedMethodInfo)
         {
-            var propertyInfo = GetProperty(nameof(SomeProperty));
-
-            Expression<Func<int>> expression = () => SomeProperty;
-            Assert.Equal(propertyInfo.GetMethod, ExpressionUtils.GetMethodInfo(expression));
-        }
-
-        [Fact]
-        public void GetMethodInfo_UnaryExpression_Success()
-        {
-            var propertyInfo = GetProperty(nameof(SomeProperty));
-
-            Expression<Func<object>> expression = () => SomeProperty;
-            Assert.Equal(propertyInfo.GetMethod, ExpressionUtils.GetMethodInfo(expression));
+            Assert.Equal(expectedMethodInfo, ExpressionUtils.GetMethodInfo(expression));
         }
 
         [Fact]
@@ -178,6 +243,73 @@ namespace AutoFake.UnitTests
 
             Assert.Equal(1, arguments.Count);
             Assert.NotEqual(new SomeType(), arguments[0]);
+        }
+
+        [Fact]
+        public void ExecuteExpression_InvalidInput_Throws()
+        {
+            Assert.Throws<ContractFailedException>(() => ExpressionUtils.ExecuteExpression(null, Expression.Constant(0)));
+            Assert.Throws<ContractFailedException>(() => ExpressionUtils.ExecuteExpression(new GeneratedObject(), null));
+        }
+
+        [Fact]
+        public void ExecuteExpression_InvalidExpression_Throws()
+        {
+            Assert.Throws<NotSupportedExpressionException>(
+                () => ExpressionUtils.ExecuteExpression(new GeneratedObject(), Expression.Constant(0)));
+        }
+
+        public static IEnumerable<object[]> ExecuteExpressionTestData()
+        {
+            var generatedObject = new GeneratedObject()
+            {
+                Instance = new ExpressionUtilsTests(),
+                Type = typeof(ExpressionUtilsTests)
+            };
+
+            Expression<Func<ExpressionUtilsTests, object>> instanceExpr = e => e.SomeMethod(1);
+            yield return new object[] { generatedObject, instanceExpr.Body, 1 };
+
+            Expression<Func<object>> staticExpr = () => ExpressionUtilsTests.SomeStaticMethod(1);
+            yield return new object[] { generatedObject, staticExpr.Body, 1 };
+
+            instanceExpr = e => e.SomeProperty;
+            yield return new object[] { generatedObject, instanceExpr.Body, 1 };
+
+            staticExpr = () => ExpressionUtilsTests.SomeStaticProperty;
+            yield return new object[] { generatedObject, staticExpr.Body, 1 };
+
+            instanceExpr = e => e.SomeField;
+            yield return new object[] { generatedObject, instanceExpr.Body, 1 };
+
+            staticExpr = () => ExpressionUtilsTests.SomeStaticField;
+            yield return new object[] { generatedObject, staticExpr.Body, 1 };
+
+            generatedObject = new GeneratedObject()
+            {
+                Instance = null,
+                Type = typeof(SomeStaticType)
+            };
+
+            staticExpr = () => SomeStaticType.SomeStaticMethod(1);
+            yield return new object[] { generatedObject, staticExpr.Body, 2 };
+
+            staticExpr = () => SomeStaticType.SomeStaticProperty;
+            yield return new object[] { generatedObject, staticExpr.Body, 2 };
+
+            staticExpr = () => SomeStaticType.SomeStaticField;
+            yield return new object[] { generatedObject, staticExpr.Body, 2 };
+        } 
+
+        [Theory]
+        [MemberData(nameof(ExecuteExpressionTestData))]
+        internal void ExecuteExpression_ValidData_Success(GeneratedObject generatedObject, Expression expression, int expectedResult)
+        {
+            if (generatedObject.Instance == null)
+            {
+                
+            }
+            Assert.Equal(expectedResult, ExpressionUtils.ExecuteExpression(generatedObject, expression));
         }
     }
 }

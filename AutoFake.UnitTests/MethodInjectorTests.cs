@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
@@ -10,7 +11,6 @@ using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.UnitTests
@@ -57,15 +57,21 @@ namespace AutoFake.UnitTests
             new SomeType().InstanceMethod();
         }
 
+        private async void MethodWithAsyncMethod()
+        {
+        }
+
         private ILProcessor GetILProcessor() => new MethodBody(null).GetILProcessor();
 
-        private Instruction GetInstruction()
+        private Instruction GetInstruction() => GetInstruction(OpCodes.Call);
+
+        private Instruction GetInstruction(OpCode opCode)
         {
             var type = GetType();
             var method = type.GetMethod(nameof(InstanceMethod), BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[0], null);
             var typeInfo = new TypeInfo(type, null);
             typeInfo.Load();
-            return Instruction.Create(OpCodes.Call, typeInfo.Import(method));
+            return Instruction.Create(opCode, typeInfo.Import(method));
         }
 
         private readonly FakeSetupPack _setup;
@@ -386,6 +392,32 @@ namespace AutoFake.UnitTests
             Assert.False(_methodInjector.IsInstalledMethod((dynamic)instructions[0].Operand));
             Assert.False(_methodInjector.IsInstalledMethod((dynamic)instructions[1].Operand));
             Assert.True(_methodInjector.IsInstalledMethod((dynamic)instructions[2].Operand));
+        }
+
+        [Fact]
+        public void IsMethodInstruction_Instruction_TrueIfMethodInvocation()
+        {
+            Assert.False(_methodInjector.IsMethodInstruction(GetILProcessor().Create(OpCodes.Nop)));
+            Assert.True(_methodInjector.IsMethodInstruction(GetInstruction(OpCodes.Call)));
+            Assert.True(_methodInjector.IsMethodInstruction(GetInstruction(OpCodes.Callvirt)));
+        }
+
+        [Fact]
+        public void IsAsyncMethod_AsyncMethod_True()
+        {
+            var typeInfo = new TypeInfo(GetType(), null);
+            typeInfo.Load();
+            var methodDef = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithBody));
+            var asyncMethodDef = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithAsyncMethod));
+
+
+            MethodDefinition asyncMethod;
+
+            Assert.False(_methodInjector.IsAsyncMethod(methodDef.Body.Method.Resolve(), out asyncMethod));
+            Assert.Null(asyncMethod);
+
+            Assert.True(_methodInjector.IsAsyncMethod(asyncMethodDef.Body.Method.Resolve(), out asyncMethod));
+            Assert.NotNull(asyncMethod);
         }
     }
 }

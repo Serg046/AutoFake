@@ -74,7 +74,6 @@
   <ItemGroup>
     <Compile Include="Cil.cs" />
     <Compile Include="CilUtils.cs" />
-    <Compile Include="ExpressionUnitTest.cs" />
     <Compile Include="ExpressionUtilsTests.cs" />
     <Compile Include="FakeGeneratorTests.cs" />
     <Compile Include="FakeTests.cs" />
@@ -82,7 +81,10 @@
     <Compile Include="MockerFactoryTests.cs" />
     <Compile Include="MockerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Setup\ReplaceableMockInstallerTests.cs" />
     <Compile Include="Setup\SetupCollectionTests.cs" />
+    <Compile Include="Setup\VerifiableMockInstallerTests.cs" />
+    <Compile Include="TestMethodTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoFake\AutoFake.csproj">

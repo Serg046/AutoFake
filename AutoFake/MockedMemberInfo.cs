@@ -20,10 +20,7 @@ namespace AutoFake
         public int SourceCodeCallsCount { get; internal set; }
 
         public IList<FieldDefinition> GetArguments(int index) => _argumentFields[index];
-
-        public void AddArguments(IList<FieldDefinition> arguments)
-        {
-            _argumentFields.Add(arguments);
-        }
+        public void AddArguments(IList<FieldDefinition> arguments) => _argumentFields.Add(arguments);
+        public int ArgumentsCount => _argumentFields.Count;
     }
 }
