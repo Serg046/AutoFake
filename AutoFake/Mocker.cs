@@ -102,12 +102,12 @@ namespace AutoFake
 
             var result = new List<FieldDefinition>();
             var parametersCount = MemberInfo.Setup.SetupArguments.Length;
+            var installedMethodArguments = MemberInfo.Setup.Method.GetParameters();
             for (var i = parametersCount - 1; i >= 0; i--)
             {
-                var currentArg = MemberInfo.Setup.SetupArguments[i];
                 var fieldName = MemberInfo.Setup.Method.Name + "Argument" + (parametersCount * MemberInfo.SourceCodeCallsCount + i);
                 var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                    TypeInfo.Import(currentArg.GetType()));
+                    TypeInfo.Import(installedMethodArguments[i].ParameterType));
                 TypeInfo.AddField(field);
 
                 result.Insert(0, field);

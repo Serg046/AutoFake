@@ -75,7 +75,7 @@ namespace AutoFake
                         throw new FakeGeneretingException($"'{argumentFields[i].Name}' is not found in the generated object");
 
                     var realArg = field.GetValue(null);
-                    if (!setupArg.Equals(realArg))
+                    if (!object.Equals(setupArg, realArg))
                         throw new VerifiableException(
                             $"Setup and real arguments are different. Expected: {setupArg}. Actual: {realArg}.");
                 }

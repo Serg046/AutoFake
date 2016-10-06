@@ -16,12 +16,14 @@ namespace AutoFake.UnitTests
     {
         public void SomeVoidMethod() { }
         public int SomeMethod(int a) => a;
+        public object SomeMethodWithObjectArg(object a) => a;
         public int SomeProperty => 1;
         private static List<int> ActualCallsField = new List<int>() {0};
 
         public void TestMethod()
         {
             SomeMethod(1);
+            SomeMethodWithObjectArg(null);
         }
 
         private readonly FakeGenerator _fakeGenerator;
@@ -150,6 +152,28 @@ namespace AutoFake.UnitTests
                 Assert.Throws<VerifiableException>(() => new TestMethod(generateObject).Execute(expr));
             else
                 new TestMethod(generateObject).Execute(expr);
+        }
+
+        [Fact]
+        public void Execute_NullArgument_Success()
+        {
+            var setupCollection = new SetupCollection();
+
+            setupCollection.Add(new FakeSetupPack()
+            {
+                Method = GetType().GetMethod(nameof(SomeMethodWithObjectArg)),
+                ReturnObjectFieldName = nameof(SomeMethodWithObjectArg),
+                SetupArguments = new object[] { null },
+                NeedCheckArguments = true,
+                IsReturnObjectSet = true
+            });
+
+            var generateObject = _fakeGenerator.Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            generateObject.MockedMembers[0].ActualCallsField =
+                new FieldDefinition(nameof(ActualCallsField), FieldAttributes.Public, new FunctionPointerType());
+
+            Expression<Action> expr = () => TestMethod();
+            new TestMethod(generateObject).Execute(expr);
         }
 
         [Theory]

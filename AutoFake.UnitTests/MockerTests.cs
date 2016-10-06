@@ -28,6 +28,10 @@ namespace AutoFake.UnitTests
             public void SomeMethodWithArguments(int a, int b)
             {
             }
+
+            public void SomeMethodWithTwoObjectArguments(object a, object b)
+            {
+            }
         }
 
         private class SomeTypeWithStaticConstructor
@@ -255,6 +259,21 @@ namespace AutoFake.UnitTests
                 Cil.Cmd(OpCodes.Stsfld, fields[0]),
                 Cil.Cmd(cmd.OpCode, cmd.Operand)
                 ));
+        }
+
+        [Theory]
+        [InlineData(null, null)]
+        [InlineData(1, null)]
+        [InlineData(null, 1)]
+        public void PopMethodArguments_NullAsInstalledArg_Success(object arg1, object arg2)
+        {
+            var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithTwoObjectArguments));
+            var proc = method.Body.GetILProcessor();
+            var cmd = proc.Body.Instructions[0];
+            _setup.Method = GetMethodInfo(nameof(SomeType.SomeMethodWithTwoObjectArguments));
+            _setup.SetupArguments = new [] { arg1, arg2 };
+
+            _mocker.PopMethodArguments(proc, cmd);
         }
 
         [Fact]
