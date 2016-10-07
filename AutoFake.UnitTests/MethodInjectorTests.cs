@@ -57,9 +57,11 @@ namespace AutoFake.UnitTests
             new SomeType().InstanceMethod();
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private async void MethodWithAsyncMethod()
         {
         }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         private ILProcessor GetILProcessor() => new MethodBody(null).GetILProcessor();
 
@@ -69,7 +71,7 @@ namespace AutoFake.UnitTests
         {
             var type = GetType();
             var method = type.GetMethod(nameof(InstanceMethod), BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[0], null);
-            var typeInfo = new TypeInfo(type, null);
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             typeInfo.Load();
             return Instruction.Create(opCode, typeInfo.Import(method));
         }
@@ -231,7 +233,7 @@ namespace AutoFake.UnitTests
             var type = GetType();
             var method = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static,
                 null, new Type[0], null);
-            var typeInfo = new TypeInfo(type, null);
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             typeInfo.Load();
             var cmd = Instruction.Create(OpCodes.Call, typeInfo.Import(method));
             var proc = GetILProcessor();
@@ -247,7 +249,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Process_IsNotVerificationAndNotStaticAndIncorrectInstruction_Throws()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             typeInfo.Load();
             var cmd = Instruction.Create(OpCodes.Call, typeInfo.Methods.First());
             cmd.Operand = typeInfo.Fields.First();
@@ -315,7 +317,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void IsInstalledMethod_ValidInput_Success()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             typeInfo.Load();
             _methodMockerMock.SetupGet(m => m.TypeInfo).Returns(typeInfo);
             var method = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithBody));
@@ -335,7 +337,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void IsInstalledMethod_InternalInstalledMethod_Success()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             typeInfo.Load();
             _methodMockerMock.SetupGet(m => m.TypeInfo).Returns(typeInfo);
             var method = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithBody));
@@ -356,7 +358,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void IsInstalledMethod_OverloadedInstalledMethod_Success()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             typeInfo.Load();
             _methodMockerMock.SetupGet(m => m.TypeInfo).Returns(typeInfo);
             var method = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithOverloadedMethod));
@@ -377,7 +379,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void IsInstalledMethod_MethodFromExternalNestedType_Success()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             typeInfo.Load();
             _methodMockerMock.SetupGet(m => m.TypeInfo).Returns(typeInfo);
             var method = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithExternalMethodOfNestedType));
@@ -405,7 +407,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void IsAsyncMethod_AsyncMethod_True()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             typeInfo.Load();
             var methodDef = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithBody));
             var asyncMethodDef = typeInfo.Methods.Single(m => m.Name == nameof(MethodWithAsyncMethod));

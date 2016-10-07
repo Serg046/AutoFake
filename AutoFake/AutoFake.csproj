@@ -67,6 +67,7 @@
     <Compile Include="Exceptions\VerifiableException.cs" />
     <Compile Include="ExpressionUtils.cs" />
     <Compile Include="Fake.cs" />
+    <Compile Include="FakeDependency.cs" />
     <Compile Include="FakeGenerator.cs" />
     <Compile Include="IMethodInjector.cs" />
     <Compile Include="IMethodMocker.cs" />

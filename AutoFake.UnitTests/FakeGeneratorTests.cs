@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
@@ -38,10 +39,12 @@ namespace AutoFake.UnitTests
 
         private class TestClass
         {
+#pragma warning disable CS0219
             public void SimpleMethod()
             {
                 var a = 5;
             }
+#pragma warning restore CS0219
 
             public void GetDateNow()
             {
@@ -67,7 +70,7 @@ namespace AutoFake.UnitTests
 
         public FakeGeneratorTests()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), null);
+            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var mockedMemberInfo = new MockedMemberInfo(GetFakeSetupPack());
 
             _mockerMock = new Mock<IMocker>();
@@ -95,7 +98,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Save_Null_Throws()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
             Assert.Throws<ContractFailedException>(() => fakeGen.Save(null));
         }
@@ -103,7 +106,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Generate_InvalidInput_Throws()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
 
             var someMethodInfo = GetType().GetMethods()[0];
@@ -120,7 +123,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Generate_IncorrectSetup_Throws()
         {
-            var typeInfo = new TypeInfo(GetType(), null);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
 
             var someMethodInfo = GetType().GetMethods()[0];
             if (someMethodInfo == null)

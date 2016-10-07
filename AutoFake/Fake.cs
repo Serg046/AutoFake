@@ -40,9 +40,16 @@ namespace AutoFake
 
         public Fake(Type type, params object[] contructorArgs)
         {
-            Guard.IsNotNull(contructorArgs);
+            if (contructorArgs == null || contructorArgs.Any(c => c == null))
+                throw new ContractFailedException("At least one dependency is null. Please use FakeDependency.Null<T>() instead.");
 
-            var typeInfo = new TypeInfo(type, contructorArgs);
+            var dependencies = contructorArgs.Select(c =>
+            {
+                var dependecy = c as FakeDependency;
+                return dependecy ?? FakeDependency.Create(c.GetType(), c);
+            }).ToList();
+
+            var typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
             _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory);
 

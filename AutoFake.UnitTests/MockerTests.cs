@@ -53,7 +53,7 @@ namespace AutoFake.UnitTests
 
         public MockerTests()
         {
-            _typeInfo = new TypeInfo(typeof(SomeType), null);
+            _typeInfo = new TypeInfo(typeof(SomeType), new List<FakeDependency>());
             _setup = new FakeSetupPack();
             _mocker = new Mocker(_typeInfo, _setup);
 
@@ -143,7 +143,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void GenerateCallsCounter_FieldName_CounterFieldInitialized()
         {
-            var typeInfo = new TypeInfo(typeof(SomeTypeWithStaticConstructor), null);
+            var typeInfo = new TypeInfo(typeof(SomeTypeWithStaticConstructor), new List<FakeDependency>());
             typeInfo.Load();
             var setup = new FakeSetupPack();
             setup.ReturnObjectFieldName = "TestCounter";

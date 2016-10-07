@@ -30,7 +30,7 @@ namespace AutoFake.UnitTests
 
         public TestMethodTests()
         {
-            var typeInfo = new TypeInfo(GetType(), new object[0]);
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
             _fakeGenerator = new FakeGenerator(typeInfo, new MockerFactory());
         }
 

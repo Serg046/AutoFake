@@ -50,7 +50,7 @@ namespace AutoFake
                 generatedObject.Type = assembly.GetType(_typeInfo.FullTypeName);
                 generatedObject.Instance = IsStatic(_typeInfo.SourceType)
                     ? null
-                    : Activator.CreateInstance(generatedObject.Type, _typeInfo.ContructorArguments);
+                    : _typeInfo.CreateInstance(generatedObject.Type);
                 return generatedObject;
             }
         }

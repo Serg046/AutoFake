@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 using Mono.Cecil;
@@ -15,16 +17,17 @@ namespace AutoFake
         private AssemblyDefinition _assemblyDefinition;
         private TypeDefinition _typeDefinition;
         private MethodReference _addToListMethodInfo;
+        private readonly IList<FakeDependency> _dependencies;
 
-        public TypeInfo(Type sourceType, object[] contructorArgs)
+        public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
         {
-            Guard.IsNotNull(sourceType);
+            Guard.AreNotNull(sourceType, dependencies);
             SourceType = sourceType;
-            ContructorArguments = contructorArgs;
+
+            _dependencies = dependencies;
         }
 
         public Type SourceType { get; }
-        public object[] ContructorArguments { get; }
         
         public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
         public MethodReference AddToListMethodInfo => _addToListMethodInfo;
@@ -75,6 +78,17 @@ namespace AutoFake
         public void WriteAssembly(Stream stream)
         {
             _assemblyDefinition.Write(stream);
+        }
+
+        public object CreateInstance(Type type)
+        {
+            var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, _dependencies.Select(d => d.Type).ToArray(), null);
+
+            if (constructor == null)
+                throw new FakeGeneretingException("Constructor is not found");
+
+            return constructor.Invoke(_dependencies.Select(d => d.Instance).ToArray());
         }
     }
 }

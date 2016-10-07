@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 using Xunit;
@@ -18,12 +20,67 @@ namespace AutoFake.UnitTests
         public int SomeField = 0;
         public static int SomeStaticField = 0;
 
-        [Fact]
-        public void Ctor_Null_Throws()
+        private class TestClass
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>(null));
-            Assert.Throws<ContractFailedException>(() => new Fake(typeof(FakeTests), null));
-            new Fake<FakeTests>(new object[] {null});
+            public TestClass(StringBuilder dependency1, StringBuilder dependency2)
+            {
+            }
+
+            public void TestMethod()
+            {
+            }
+        }
+
+        internal class InternalTestClass
+        {
+            internal InternalTestClass()
+            {
+            }
+        }
+
+        protected class ProtectedTestClass
+        {
+            protected ProtectedTestClass()
+            {
+            }
+        }
+
+        private class PrivateTestClass
+        {
+            private PrivateTestClass()
+            {
+            }
+        }
+
+        [Fact]
+        public void Ctor_NullAsDependency_Throws()
+        {
+            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(null));
+            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(new object[] { null }));
+            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(null, null));
+            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(new StringBuilder(), null));
+            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(null, new StringBuilder()));
+            new Fake<TestClass>(FakeDependency.Null<StringBuilder>(), FakeDependency.Null<StringBuilder>());
+        }
+
+        [Fact]
+        public void Ctor_InvalidInput_Throws()
+        {
+            Assert.Throws<FakeGeneretingException>(() 
+                => new Fake<TestClass>(new StringBuilder()).Execute(t => t.TestMethod()));
+            Assert.Throws<FakeGeneretingException>(()
+                => new Fake<TestClass>(new StringBuilder(), new StringBuilder(), new StringBuilder()).Execute(t => t.TestMethod()));
+            Assert.Throws<FakeGeneretingException>(()
+                => new Fake<TestClass>(1, 1).Execute(t => t.TestMethod()));
+            new Fake<TestClass>(new StringBuilder(), new StringBuilder()).Execute(t => t.TestMethod());
+        }
+
+        [Fact]
+        public void Ctor_NonPublicConstructor_Success()
+        {
+            new Fake<InternalTestClass>().Execute(t => t.ToString());
+            new Fake<ProtectedTestClass>().Execute(t => t.ToString());
+            new Fake<PrivateTestClass>().Execute(t => t.ToString());
         }
 
         [Fact]
