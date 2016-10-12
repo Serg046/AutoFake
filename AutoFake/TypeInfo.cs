@@ -13,6 +13,7 @@ namespace AutoFake
     internal class TypeInfo
     {
         private const string FAKE_NAMESPACE = "AutoFake.Fakes";
+        private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private AssemblyDefinition _assemblyDefinition;
         private TypeDefinition _typeDefinition;
@@ -82,7 +83,21 @@ namespace AutoFake
 
         public object CreateInstance(Type type)
         {
-            var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            if (_dependencies.Any(d => d.Type == null))
+            {
+                try
+                {
+                    var args = _dependencies.Select(d => d.Instance).ToArray();
+                    return Activator.CreateInstance(type, CONSTRUCTOR_FLAGS, null, args, null);
+                }
+                catch (AmbiguousMatchException)
+                {
+                    throw new FakeGeneretingException(
+                        "Ambiguous null-invocation. Please use FakeDependency.Null<T>() instead of null.");
+                }
+            }
+
+            var constructor = type.GetConstructor(CONSTRUCTOR_FLAGS,
                 null, _dependencies.Select(d => d.Type).ToArray(), null);
 
             if (constructor == null)

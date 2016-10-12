@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using AutoFake.Exceptions;
@@ -52,19 +53,23 @@ namespace AutoFake.UnitTests
             }
         }
 
-        [Fact]
-        public void Ctor_NullAsDependency_Throws()
+        private class AmbiguousCtorTestClass
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(null));
-            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(new object[] { null }));
-            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(null, null));
-            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(new StringBuilder(), null));
-            Assert.Throws<ContractFailedException>(() => new Fake<TestClass>(null, new StringBuilder()));
-            new Fake<TestClass>(FakeDependency.Null<StringBuilder>(), FakeDependency.Null<StringBuilder>());
+            public AmbiguousCtorTestClass(StreamReader reader)
+            {
+            }
+
+            public AmbiguousCtorTestClass(StreamWriter writer)
+            {
+            }
+
+            public void TestMethod()
+            {
+            }
         }
 
         [Fact]
-        public void Ctor_InvalidInput_Throws()
+        public void Ctor_InvalidDependenciesCount_Throws()
         {
             Assert.Throws<FakeGeneretingException>(() 
                 => new Fake<TestClass>(new StringBuilder()).Execute(t => t.TestMethod()));
@@ -81,6 +86,18 @@ namespace AutoFake.UnitTests
             new Fake<InternalTestClass>().Execute(t => t.ToString());
             new Fake<ProtectedTestClass>().Execute(t => t.ToString());
             new Fake<PrivateTestClass>().Execute(t => t.ToString());
+        }
+
+        [Fact]
+        public void Ctor_AmbiguousCtorAndNullAsDependency_ForcesToUseFakeDependency()
+        {
+            Assert.Throws<FakeGeneretingException>(
+                () => new Fake<AmbiguousCtorTestClass>(null).Execute(a => a.TestMethod()));
+            new Fake<AmbiguousCtorTestClass>(FakeDependency.Null<StreamReader>()).Execute(a => a.TestMethod());
+            new Fake<AmbiguousCtorTestClass>(FakeDependency.Null<StreamWriter>()).Execute(a => a.TestMethod());
+
+            new Fake<TestClass>(null, null);
+            new Fake<TestClass>(null, null).Execute(t => t.TestMethod());
         }
 
         [Fact]

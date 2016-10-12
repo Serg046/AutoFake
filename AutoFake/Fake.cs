@@ -40,13 +40,13 @@ namespace AutoFake
 
         public Fake(Type type, params object[] contructorArgs)
         {
-            if (contructorArgs == null || contructorArgs.Any(c => c == null))
-                throw new ContractFailedException("At least one dependency is null. Please use FakeDependency.Null<T>() instead.");
+            if (contructorArgs == null)
+                contructorArgs = new object[] {null};
 
             var dependencies = contructorArgs.Select(c =>
             {
                 var dependecy = c as FakeDependency;
-                return dependecy ?? FakeDependency.Create(c.GetType(), c);
+                return dependecy ?? FakeDependency.Create(c?.GetType(), c);
             }).ToList();
 
             var typeInfo = new TypeInfo(type, dependencies);
