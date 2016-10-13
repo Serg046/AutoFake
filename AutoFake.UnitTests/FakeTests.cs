@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 using Xunit;
@@ -20,85 +17,6 @@ namespace AutoFake.UnitTests
         public static int SomeStaticProperty => 1;
         public int SomeField = 0;
         public static int SomeStaticField = 0;
-
-        private class TestClass
-        {
-            public TestClass(StringBuilder dependency1, StringBuilder dependency2)
-            {
-            }
-
-            public void TestMethod()
-            {
-            }
-        }
-
-        internal class InternalTestClass
-        {
-            internal InternalTestClass()
-            {
-            }
-        }
-
-        protected class ProtectedTestClass
-        {
-            protected ProtectedTestClass()
-            {
-            }
-        }
-
-        private class PrivateTestClass
-        {
-            private PrivateTestClass()
-            {
-            }
-        }
-
-        private class AmbiguousCtorTestClass
-        {
-            public AmbiguousCtorTestClass(StreamReader reader)
-            {
-            }
-
-            public AmbiguousCtorTestClass(StreamWriter writer)
-            {
-            }
-
-            public void TestMethod()
-            {
-            }
-        }
-
-        [Fact]
-        public void Ctor_InvalidDependenciesCount_Throws()
-        {
-            Assert.Throws<FakeGeneretingException>(() 
-                => new Fake<TestClass>(new StringBuilder()).Execute(t => t.TestMethod()));
-            Assert.Throws<FakeGeneretingException>(()
-                => new Fake<TestClass>(new StringBuilder(), new StringBuilder(), new StringBuilder()).Execute(t => t.TestMethod()));
-            Assert.Throws<FakeGeneretingException>(()
-                => new Fake<TestClass>(1, 1).Execute(t => t.TestMethod()));
-            new Fake<TestClass>(new StringBuilder(), new StringBuilder()).Execute(t => t.TestMethod());
-        }
-
-        [Fact]
-        public void Ctor_NonPublicConstructor_Success()
-        {
-            new Fake<InternalTestClass>().Execute(t => t.ToString());
-            new Fake<ProtectedTestClass>().Execute(t => t.ToString());
-            new Fake<PrivateTestClass>().Execute(t => t.ToString());
-        }
-
-        [Fact]
-        public void Ctor_AmbiguousCtorAndNullAsDependency_ForcesToUseFakeDependency()
-        {
-            Assert.Throws<FakeGeneretingException>(
-                () => new Fake<AmbiguousCtorTestClass>(null).Execute(a => a.TestMethod()));
-            new Fake<AmbiguousCtorTestClass>(FakeDependency.Null<StreamReader>()).Execute(a => a.TestMethod());
-            new Fake<AmbiguousCtorTestClass>(FakeDependency.Null<StreamWriter>()).Execute(a => a.TestMethod());
-
-            new Fake<TestClass>(null, null);
-            new Fake<TestClass>(null, null).Execute(t => t.TestMethod());
-        }
 
         [Fact]
         public void SaveFakeAssembly_Null_Throws()

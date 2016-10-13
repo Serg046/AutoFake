@@ -85,6 +85,7 @@
     <Compile Include="Setup\SetupCollectionTests.cs" />
     <Compile Include="Setup\VerifiableMockInstallerTests.cs" />
     <Compile Include="TestMethodTests.cs" />
+    <Compile Include="TypeInfoTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoFake\AutoFake.csproj">
