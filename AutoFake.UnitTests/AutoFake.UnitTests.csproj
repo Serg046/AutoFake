@@ -77,6 +77,8 @@
     <Compile Include="ExpressionUtilsTests.cs" />
     <Compile Include="FakeGeneratorTests.cs" />
     <Compile Include="FakeTests.cs" />
+    <Compile Include="GeneratedObjectTests.cs" />
+    <Compile Include="GetValueMemberVisitorTests.cs" />
     <Compile Include="MethodInjectorTests.cs" />
     <Compile Include="MockerFactoryTests.cs" />
     <Compile Include="MockerTests.cs" />
@@ -84,6 +86,7 @@
     <Compile Include="Setup\ReplaceableMockInstallerTests.cs" />
     <Compile Include="Setup\SetupCollectionTests.cs" />
     <Compile Include="Setup\VerifiableMockInstallerTests.cs" />
+    <Compile Include="SetValueMemberVisitorTests.cs" />
     <Compile Include="TestMethodTests.cs" />
     <Compile Include="TypeInfoTests.cs" />
   </ItemGroup>

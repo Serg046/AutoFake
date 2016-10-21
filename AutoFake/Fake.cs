@@ -29,6 +29,12 @@ namespace AutoFake
             Guard.IsNotNull(executeFunc);
             return GetStateValue<TReturn>(executeFunc.Body);
         }
+
+        public void SetStateValue<TReturn>(Expression<Func<T, TReturn>> executeFunc, TReturn value)
+        {
+            Guard.IsNotNull(executeFunc);
+            SetStateValue(executeFunc.Body, value);
+        }
     }
 
     public class Fake
@@ -139,7 +145,7 @@ namespace AutoFake
         protected object Execute(LambdaExpression expression)
         {
             if (_isTestMethodExecuted)
-                throw new InvalidOperationException("Please call ResetSetups() method to clear state");
+                throw new InvalidOperationException($"Please call {nameof(ClearState)}() method to clear state");
 
             _currentGeneratedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
             var testMethod = new TestMethod(_currentGeneratedObject);
@@ -169,11 +175,17 @@ namespace AutoFake
 
         protected TReturn GetStateValue<TReturn>(Expression executeFunc)
         {
+            ThrowIfTestMethodIsNotExecuted();
+
+            var visitor = new GetValueMemberVisitor(_currentGeneratedObject);
+            _currentGeneratedObject.AcceptMemberVisitor(executeFunc, visitor);
+            return (TReturn)visitor.RuntimeValue;
+        }
+
+        private void ThrowIfTestMethodIsNotExecuted()
+        {
             if (!_isTestMethodExecuted)
                 throw new InvalidOperationException("The test method is not executed yet.");
-
-            var result = ExpressionUtils.ExecuteExpression(_currentGeneratedObject, executeFunc);
-            return (TReturn)result;
         }
 
         public TReturn GetStateValue<TReturn>(Expression<Func<TReturn>> executeFunc)
@@ -184,7 +196,28 @@ namespace AutoFake
 
         //---------------------------------------------------------------------------------------------------------
 
-        public void ResetSetups()
+        protected void SetStateValue<TReturn>(Expression executeFunc, TReturn value)
+        {
+            if (!_isTestMethodExecuted)
+            {
+
+            }
+            else
+            {
+                var visitor = new SetValueMemberVisitor(_currentGeneratedObject, value);
+                _currentGeneratedObject.AcceptMemberVisitor(executeFunc, visitor);
+            }
+        }
+
+        public void SetStateValue<TReturn>(Expression<Func<TReturn>> executeFunc, TReturn value)
+        {
+            Guard.IsNotNull(executeFunc);
+            SetStateValue(executeFunc.Body, value);
+        }
+
+        //---------------------------------------------------------------------------------------------------------
+
+        public void ClearState()
         {
             Setups.Clear();
             _isTestMethodExecuted = false;

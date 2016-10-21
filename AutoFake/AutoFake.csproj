@@ -65,10 +65,13 @@
     <Compile Include="Exceptions\NotSupportedExpressionException.cs" />
     <Compile Include="Exceptions\SetupException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
+    <Compile Include="GetValueMemberVisitor.cs" />
+    <Compile Include="SetValueMemberVisitor.cs" />
     <Compile Include="ExpressionUtils.cs" />
     <Compile Include="Fake.cs" />
     <Compile Include="FakeDependency.cs" />
     <Compile Include="FakeGenerator.cs" />
+    <Compile Include="IMemberVisitor.cs" />
     <Compile Include="IMethodInjector.cs" />
     <Compile Include="IMethodMocker.cs" />
     <Compile Include="IMocker.cs" />

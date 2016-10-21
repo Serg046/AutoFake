@@ -200,11 +200,11 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void ResetSetups_ResetsState()
+        public void ClearState_ResetsState()
         {
             var fake = new Fake<FakeTests>();
             fake.Execute(f => f.SomeVoidMethod());
-            fake.ResetSetups();
+            fake.ClearState();
             fake.Execute(f => f.SomeVoidMethod());
         }
 
@@ -214,19 +214,19 @@ namespace AutoFake.UnitTests
             var fake = new Fake<FakeTests>();
             fake.Execute(f => f.SomeMethod(1));
 
-            fake.ResetSetups();
+            fake.ClearState();
             fake.Execute(() => FakeTests.SomeStaticMethod(1));
 
-            fake.ResetSetups();
+            fake.ClearState();
             fake.Execute(f => f.SomeVoidMethod());
 
-            fake.ResetSetups();
+            fake.ClearState();
             fake.Execute(() => FakeTests.SomeStaticVoidMethod());
 
-            fake.ResetSetups();
+            fake.ClearState();
             fake.Execute(f => f.SomeProperty);
 
-            fake.ResetSetups();
+            fake.ClearState();
             fake.Execute(() => FakeTests.SomeStaticProperty);
         }
 
@@ -253,6 +253,23 @@ namespace AutoFake.UnitTests
             fake.GetStateValue(() => FakeTests.SomeStaticProperty);
             fake.GetStateValue(f => f.SomeField);
             fake.GetStateValue(() => FakeTests.SomeStaticField);
+        }
+
+        [Fact]
+        public void SetStateValue_Null_Throws()
+        {
+            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().SetStateValue<int>(null, 1));
+        }
+
+        [Fact]
+        public void SetStateValue__ProvidesAbilityToExecute()
+        {
+            var fake = new Fake<FakeTests>();
+
+            fake.SetStateValue(f => f.SomeProperty, 1);
+            fake.SetStateValue(() => FakeTests.SomeStaticProperty, 1);
+            fake.SetStateValue(f => f.SomeField, 1);
+            fake.SetStateValue(() => FakeTests.SomeStaticField, 1);
         }
     }
 }

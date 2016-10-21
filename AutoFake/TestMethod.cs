@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -23,7 +22,9 @@ namespace AutoFake
         {
             Guard.IsNotNull(invocationExpression);
             SetReturnObjects();
-            var result = ExpressionUtils.ExecuteExpression(_generatedObject, invocationExpression.Body);
+            var visitor = new GetValueMemberVisitor(_generatedObject);
+            _generatedObject.AcceptMemberVisitor(invocationExpression.Body, visitor);
+            var result = visitor.RuntimeValue;
             VerifySetups();
 
             return result;
