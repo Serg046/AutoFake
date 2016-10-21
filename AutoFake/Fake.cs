@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using AutoFake.Setup;
@@ -43,6 +44,7 @@ namespace AutoFake
         private string _assemblyFileName;
         private GeneratedObject _currentGeneratedObject;
         private bool _isTestMethodExecuted;
+        private readonly Stack<KeyValuePair<Expression, object>> _setStateValuExpressions; 
 
         public Fake(Type type, params object[] contructorArgs)
         {
@@ -58,6 +60,7 @@ namespace AutoFake
             var typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
             _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory);
+            _setStateValuExpressions = new Stack<KeyValuePair<Expression, object>>();
 
             Setups = new SetupCollection();
         }
@@ -148,6 +151,8 @@ namespace AutoFake
                 throw new InvalidOperationException($"Please call {nameof(ClearState)}() method to clear state");
 
             _currentGeneratedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            SetRequestedData(_currentGeneratedObject);
+
             var testMethod = new TestMethod(_currentGeneratedObject);
             var result = testMethod.Execute(expression);
 
@@ -157,6 +162,16 @@ namespace AutoFake
             _isTestMethodExecuted = true;
 
             return result;
+        }
+
+        private void SetRequestedData(GeneratedObject generatedObject)
+        {
+            while (_setStateValuExpressions.Count > 0)
+            {
+                var requestedData = _setStateValuExpressions.Pop();
+                var visitor = new SetValueMemberVisitor(generatedObject, requestedData.Value);
+                _currentGeneratedObject.AcceptMemberVisitor(requestedData.Key, visitor);
+            }
         }
 
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)
@@ -200,7 +215,7 @@ namespace AutoFake
         {
             if (!_isTestMethodExecuted)
             {
-
+                _setStateValuExpressions.Push(new KeyValuePair<Expression, object>(executeFunc, value));
             }
             else
             {

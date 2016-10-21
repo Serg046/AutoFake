@@ -13,8 +13,10 @@ namespace AutoFake.IntegrationTests
 
             public void StateValueTest()
             {
-                Field1 = 7;
-                Prop2 = 7;
+                if (Field1 != -1)
+                    Field1 = 7;
+                if (Prop2 != -1)
+                    Prop2 = 7;
                 Prop3 = DateTime.Now;
             }
         }
@@ -51,6 +53,18 @@ namespace AutoFake.IntegrationTests
             fake.Execute(f => f.StateValueTest());
             fake.SetStateValue(f => f.Field1, -1);
             fake.SetStateValue(f => f.Prop2, -1);
+
+            Assert.Equal(-1, fake.GetStateValue(f => f.Field1));
+            Assert.Equal(-1, fake.GetStateValue(f => f.Prop2));
+        }
+
+        [Fact]
+        public void SetStateValueBeforeGeneratingTest()
+        {
+            var fake = new Fake<TestClass>();
+            fake.SetStateValue(f => f.Field1, -1);
+            fake.SetStateValue(f => f.Prop2, -1);
+            fake.Execute(f => f.StateValueTest());
 
             Assert.Equal(-1, fake.GetStateValue(f => f.Field1));
             Assert.Equal(-1, fake.GetStateValue(f => f.Prop2));
