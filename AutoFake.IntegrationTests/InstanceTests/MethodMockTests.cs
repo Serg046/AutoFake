@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -10,119 +11,6 @@ namespace AutoFake.IntegrationTests.InstanceTests
 {
     public class MethodMockTests
     {
-        private class TestClass
-        {
-            public int DynamicValue() => 5;
-            public int DynamicValue(int value) => value;
-            public static int DynamicStaticValue() => 5;
-
-            public void ThrowException()
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetDynamicValue()
-            {
-                Debug.WriteLine("Started");
-                var value = DynamicValue();
-                Debug.WriteLine("Finished");
-                return value;
-            }
-
-            public int GetHelperDynamicValue()
-            {
-                Debug.WriteLine("Started");
-                var helper = new HelperClass();
-                var value = helper.DynamicValue();
-                Debug.WriteLine("Finished");
-                return value;
-            }
-
-            public int GetDynamicStaticValue()
-            {
-                Debug.WriteLine("Started");
-                var value = DynamicStaticValue();
-                Debug.WriteLine("Finished");
-                return value;
-            }
-
-            public int GetHelperDynamicStaticValue()
-            {
-                Debug.WriteLine("Started");
-                var value = HelperClass.DynamicStaticValue();
-                Debug.WriteLine("Finished");
-                return value;
-            }
-
-            public object GetFrameworkValue()
-            {
-                Debug.WriteLine("Started");
-                var cmd = new SqlCommand();
-                var vaue = cmd.ExecuteScalar();
-                Debug.WriteLine("Finished");
-                return vaue;
-            }
-
-            public Hashtable GetFrameworkStaticValue()
-            {
-                Debug.WriteLine("Started");
-                var value = CollectionsUtil.CreateCaseInsensitiveHashtable();
-                Debug.WriteLine("Finished");
-                return value;
-            }
-
-            public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
-            {
-                Debug.WriteLine("Started");
-                var value = TimeZoneInfo.ConvertTimeFromUtc(dateTime, zone);
-                Debug.WriteLine("Finished");
-                return value;
-            }
-
-            public void UnsafeMethod()
-            {
-                Debug.WriteLine("Started");
-                ThrowException();
-                Debug.WriteLine("Finished");
-            }
-
-            public int GetDynValueByOveloadedMethodCalls()
-            {
-                Debug.WriteLine("Started");
-                var value = DynamicValue() + DynamicValue(5);
-                Debug.WriteLine("Finished");
-                return value;
-            }
-        }
-
-        private class HelperClass
-        {
-            public int DynamicValue() => 5;
-            public static int DynamicStaticValue() => 5;
-        }
-
-        private class AsyncTestClass
-        {
-            public async Task<int> GetDynamicValueAsync()
-            {
-                await Task.Delay(1);
-                var value = 5;
-                await Task.Delay(1);
-                return value;
-            }
-
-            public static async Task<int> GetStaticDynamicValueAsync()
-            {
-                await Task.Delay(1);
-                var value = 5;
-                await Task.Delay(1);
-                return value;
-            }
-
-            public async Task<int> GetValueAsync() => await GetDynamicValueAsync();
-            public static async Task<int> GetStaticValueAsync() => await GetStaticDynamicValueAsync();
-        }
-
         [Fact]
         public void OwnInstanceTest()
         {
@@ -238,6 +126,148 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Returns(Task.FromResult(7));
 
             Assert.Equal(7, await fake.Execute(() => AsyncTestClass.GetStaticValueAsync()));
+        }
+
+        [Fact]
+        public void ParamsMethodTest()
+        {
+            var fake = new Fake<ParamsTestClass>();
+
+            fake.Replace((ParamsTestClass p) => p.GetValue(1, 2, 3)).Returns(-1);
+
+            Assert.Equal(-1, fake.Execute(f => f.Test()));
+
+            fake.ClearState();
+            var values = new[] {1, 2, 3};
+            fake.Replace((ParamsTestClass p) => p.GetValue(values)).Returns(-1);
+
+            Assert.Equal(-1, fake.Execute(f => f.Test()));
+        }
+
+        private class TestClass
+        {
+            public int DynamicValue() => 5;
+            public int DynamicValue(int value) => value;
+            public static int DynamicStaticValue() => 5;
+
+            public void ThrowException()
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetDynamicValue()
+            {
+                Debug.WriteLine("Started");
+                var value = DynamicValue();
+                Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public int GetHelperDynamicValue()
+            {
+                Debug.WriteLine("Started");
+                var helper = new HelperClass();
+                var value = helper.DynamicValue();
+                Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public int GetDynamicStaticValue()
+            {
+                Debug.WriteLine("Started");
+                var value = DynamicStaticValue();
+                Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public int GetHelperDynamicStaticValue()
+            {
+                Debug.WriteLine("Started");
+                var value = HelperClass.DynamicStaticValue();
+                Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public object GetFrameworkValue()
+            {
+                Debug.WriteLine("Started");
+                var cmd = new SqlCommand();
+                var vaue = cmd.ExecuteScalar();
+                Debug.WriteLine("Finished");
+                return vaue;
+            }
+
+            public Hashtable GetFrameworkStaticValue()
+            {
+                Debug.WriteLine("Started");
+                var value = CollectionsUtil.CreateCaseInsensitiveHashtable();
+                Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
+            {
+                Debug.WriteLine("Started");
+                var value = TimeZoneInfo.ConvertTimeFromUtc(dateTime, zone);
+                Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public void UnsafeMethod()
+            {
+                Debug.WriteLine("Started");
+                ThrowException();
+                Debug.WriteLine("Finished");
+            }
+
+            public int GetDynValueByOveloadedMethodCalls()
+            {
+                Debug.WriteLine("Started");
+                var value = DynamicValue() + DynamicValue(5);
+                Debug.WriteLine("Finished");
+                return value;
+            }
+        }
+
+        private class HelperClass
+        {
+            public int DynamicValue() => 5;
+            public static int DynamicStaticValue() => 5;
+        }
+
+        private class AsyncTestClass
+        {
+            public async Task<int> GetDynamicValueAsync()
+            {
+                await Task.Delay(1);
+                var value = 5;
+                await Task.Delay(1);
+                return value;
+            }
+
+            public static async Task<int> GetStaticDynamicValueAsync()
+            {
+                await Task.Delay(1);
+                var value = 5;
+                await Task.Delay(1);
+                return value;
+            }
+
+            public async Task<int> GetValueAsync() => await GetDynamicValueAsync();
+            public static async Task<int> GetStaticValueAsync() => await GetStaticDynamicValueAsync();
+        }
+
+        private class ParamsTestClass
+        {
+            public int GetValue(params int[] values) => values.Sum();
+
+            public int Test()
+            {
+                Debug.WriteLine("Started");
+                var value = GetValue();
+                Debug.WriteLine("Finished");
+                return value;
+            }
         }
     }
 }

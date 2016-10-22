@@ -59,7 +59,7 @@ namespace AutoFake
             {
                 return GetArgument((dynamic)expression);
             }
-            catch (RuntimeBinderException)
+            catch
             {
                 throw new NotSupportedExpressionException(
                     $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
@@ -70,13 +70,7 @@ namespace AutoFake
 
         private static object GetArgument(UnaryExpression expression) => GetArgument(() => expression.Operand);
 
-        private static object GetArgument(MemberExpression expression) => CompileAndRun(expression);
-
-        private static object GetArgument(NewExpression expression) => CompileAndRun(expression);
-
-        private static object GetArgument(MethodCallExpression expression) => CompileAndRun(expression);
-
-        private static object CompileAndRun(Expression expression)
+        private static object GetArgument(Expression expression)
         {
             var convertExpr = Expression.Convert(expression, typeof(object));
             var lambda = Expression.Lambda<Func<object>>(convertExpr);
