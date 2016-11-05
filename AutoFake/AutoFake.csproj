@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EqualityArgumentChecker.cs" />
     <Compile Include="Exceptions\ExpectedCallsException.cs" />
     <Compile Include="Exceptions\FakeGeneretingException.cs" />
     <Compile Include="Exceptions\MissedSetupContextException.cs" />

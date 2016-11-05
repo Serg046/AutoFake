@@ -75,6 +75,7 @@
     <Compile Include="ArgTests.cs" />
     <Compile Include="Cil.cs" />
     <Compile Include="CilUtils.cs" />
+    <Compile Include="EqualityArgumentChecker.cs" />
     <Compile Include="ExpressionUtilsTests.cs" />
     <Compile Include="FakeArgumentTests.cs" />
     <Compile Include="FakeGeneratorTests.cs" />

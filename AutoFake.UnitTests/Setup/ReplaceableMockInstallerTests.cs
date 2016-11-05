@@ -16,19 +16,22 @@ namespace AutoFake.UnitTests.Setup
         public void Ctor_InvalidInput_Throws()
         {
             var method = GetType().GetMethod(nameof(SomeRetValueMethod));
-            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller<int>(null, method, new object[0]));
-            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller<int>(new SetupCollection(), null, new object[0]));
+            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller<int>(null, method, new List<FakeArgument>()));
+            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller<int>(new SetupCollection(), null, new List<FakeArgument>()));
 
             method = GetType().GetMethod(nameof(SomeVoidMethod));
-            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller(null, method, new object[0]));
-            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller(new SetupCollection(), null, new object[0]));
+            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller(null, method, new List<FakeArgument>()));
+            Assert.Throws<ContractFailedException>(() => new ReplaceableMockInstaller(new SetupCollection(), null, new List<FakeArgument>()));
         }
+
+        private static FakeArgument GetFakeArgument(dynamic value)
+            => new FakeArgument(new EqualityArgumentChecker(value));
 
         [Fact]
         public void Ctor_RetValueMethod_SetupInitialized()
         {
             var method = GetType().GetMethod(nameof(SomeRetValueMethod));
-            var arguments = new object[] {1};
+            var arguments = new List<FakeArgument> {GetFakeArgument(1)};
 
             var installer = new ReplaceableMockInstaller<int>(new SetupCollection(), method, arguments);
 
@@ -40,7 +43,7 @@ namespace AutoFake.UnitTests.Setup
         public void Ctor_VoidMethod_SetupInitialized()
         {
             var method = GetType().GetMethod(nameof(SomeVoidMethod));
-            var arguments = new object[] { 1 };
+            var arguments = new List<FakeArgument> { GetFakeArgument(1) };
 
             var installer = new ReplaceableMockInstaller(new SetupCollection(), method, arguments);
 
@@ -54,7 +57,7 @@ namespace AutoFake.UnitTests.Setup
         public void Returns_ValidInput_ReturnObjectIsSet()
         {
             var method = GetType().GetMethod(nameof(SomeRetValueMethod));
-            var installer = new ReplaceableMockInstaller<int>(new SetupCollection(), method, new object[0]);
+            var installer = new ReplaceableMockInstaller<int>(new SetupCollection(), method, new List<FakeArgument>());
 
             installer.Returns(7);
 
@@ -65,8 +68,8 @@ namespace AutoFake.UnitTests.Setup
         public static IEnumerable<object[]> GetMockInstallerTestData(object argument)
         {
             var arguments = argument == null
-                ? new object[0]
-                : new [] {argument};
+                ? new List<FakeArgument>()
+                : new List<FakeArgument> { GetFakeArgument(argument)};
 
             var method = typeof(ReplaceableMockInstallerTests).GetMethod(nameof(SomeRetValueMethod));
             yield return

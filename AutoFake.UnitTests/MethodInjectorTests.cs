@@ -84,7 +84,7 @@ namespace AutoFake.UnitTests
         public MethodInjectorTests()
         {
             _setup = new FakeSetupPack();
-            _setup.SetupArguments = new object[0];
+            _setup.SetupArguments = new List<FakeArgument>();
 
             _memberInfo = new MockedMemberInfo(_setup);
 
@@ -118,6 +118,9 @@ namespace AutoFake.UnitTests
             _methodMockerMock.Verify(m => m.InjectCurrentPositionSaving(proc, cmd));
         }
 
+        private static FakeArgument GetFakeArgument(dynamic value)
+           => new FakeArgument(new EqualityArgumentChecker(value));
+
         [Theory]
         [InlineData(null, false, false)]
         [InlineData(null, true, false)]
@@ -128,7 +131,7 @@ namespace AutoFake.UnitTests
             var cmd = GetInstruction();
             var proc = GetILProcessor();
             if (arg != null)
-                _setup.SetupArguments = new [] {arg};
+                _setup.SetupArguments = new List<FakeArgument> {GetFakeArgument(arg)};
             _setup.NeedCheckArguments = needCheckArgs;
 
             _methodInjector.Process(proc, cmd);
@@ -154,7 +157,7 @@ namespace AutoFake.UnitTests
             var cmd = GetInstruction();
             var proc = GetILProcessor();
             if (arg != null)
-                _setup.SetupArguments = new[] { arg };
+                _setup.SetupArguments = new List<FakeArgument> {GetFakeArgument(arg)};
             _setup.NeedCheckArguments = needCheckArgs;
             _setup.IsVerification = justVerification;
 
@@ -176,7 +179,7 @@ namespace AutoFake.UnitTests
             var cmd = GetInstruction();
             var proc = GetILProcessor();
             if (arg != null)
-                _setup.SetupArguments = new[] { arg };
+                _setup.SetupArguments = new List<FakeArgument> {GetFakeArgument(arg)};
             _setup.NeedCheckArguments = needCheckArgs;
 
             var fields = new List<FieldDefinition>();
@@ -210,7 +213,7 @@ namespace AutoFake.UnitTests
             var cmd = GetInstruction();
             var proc = GetILProcessor();
             if (arg != null)
-                _setup.SetupArguments = new[] { arg };
+                _setup.SetupArguments = new List<FakeArgument> {GetFakeArgument(arg)};
             _setup.NeedCheckArguments = needCheckArgs;
             _setup.IsVerification = isVerification;
 

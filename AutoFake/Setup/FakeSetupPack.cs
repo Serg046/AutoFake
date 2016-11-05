@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace AutoFake.Setup
@@ -8,7 +9,7 @@ namespace AutoFake.Setup
         public MethodInfo Method { get; internal set; }
         public object ReturnObject { get; internal set; }
         public string ReturnObjectFieldName { get; internal set; }
-        public object[] SetupArguments { get; internal set; }
+        public List<FakeArgument> SetupArguments { get; internal set; }
         public bool NeedCheckArguments { get; internal set; }
         public bool NeedCheckCallsCount { get; internal set; }
         public Func<int, bool> ExpectedCallsCountFunc { get; internal set; }

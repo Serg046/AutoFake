@@ -192,6 +192,14 @@ namespace AutoFake.UnitTests
             Assert.Throws<ContractFailedException>(() => _mocker.PopMethodArguments(GetILProcessor(), null));
         }
 
+        private static FakeArgument GetFakeArgument(dynamic value)
+            => new FakeArgument(new EqualityArgumentChecker(value));
+
+        private List<FakeArgument> GetSetupArguments()
+        {
+            return new List<FakeArgument> { GetFakeArgument(0), GetFakeArgument(0) };
+        }
+
         [Fact]
         public void PopMethodArguments_MethodWithTwoArgs_ReturnNewTwoFields()
         {
@@ -199,7 +207,7 @@ namespace AutoFake.UnitTests
             var proc = method.Body.GetILProcessor();
             var cmd = proc.Body.Instructions[1];
             _setup.Method = GetMethodInfo(nameof(SomeType.SomeMethodWithArguments));
-            _setup.SetupArguments = new object[] {0, 0};
+            _setup.SetupArguments = GetSetupArguments();
 
             var fields = _mocker.PopMethodArguments(proc, cmd);
 
@@ -213,7 +221,7 @@ namespace AutoFake.UnitTests
             var proc = method.Body.GetILProcessor();
             var cmd = proc.Body.Instructions[1];
             _setup.Method = GetMethodInfo(nameof(SomeType.SomeMethodWithArguments));
-            _setup.SetupArguments = new object[] { 0, 0 };
+            _setup.SetupArguments = GetSetupArguments();
 
             var fields = _mocker.PopMethodArguments(proc, cmd);
 
@@ -234,7 +242,7 @@ namespace AutoFake.UnitTests
             var proc = method.Body.GetILProcessor();
             var cmd = proc.Body.Instructions[1];
             _setup.Method = GetMethodInfo(nameof(SomeType.SomeMethodWithArguments));
-            _setup.SetupArguments = new object[] { 0, 0 };
+            _setup.SetupArguments = GetSetupArguments();
             _mocker.MemberInfo.SourceCodeCallsCount = sourceCallsCount;
 
             var fields = _mocker.PopMethodArguments(proc, cmd);
@@ -250,7 +258,7 @@ namespace AutoFake.UnitTests
             var proc = method.Body.GetILProcessor();
             var cmd = proc.Body.Instructions[1];
             _setup.Method = GetMethodInfo(nameof(SomeType.SomeMethodWithArguments));
-            _setup.SetupArguments = new object[] { 0, 0 };
+            _setup.SetupArguments = GetSetupArguments();
 
             var fields = _mocker.PopMethodArguments(proc, cmd);
 
@@ -271,7 +279,7 @@ namespace AutoFake.UnitTests
             var proc = method.Body.GetILProcessor();
             var cmd = proc.Body.Instructions[0];
             _setup.Method = GetMethodInfo(nameof(SomeType.SomeMethodWithTwoObjectArguments));
-            _setup.SetupArguments = new [] { arg1, arg2 };
+            _setup.SetupArguments = new List<FakeArgument>{ GetFakeArgument(arg1), GetFakeArgument(arg2) };
 
             _mocker.PopMethodArguments(proc, cmd);
         }
@@ -289,7 +297,7 @@ namespace AutoFake.UnitTests
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
             var cmd = proc.Body.Instructions[1];
-            _setup.SetupArguments = new object[] { 0, 0 };
+            _setup.SetupArguments = GetSetupArguments();
 
             _mocker.RemoveMethodArguments(proc, cmd);
 

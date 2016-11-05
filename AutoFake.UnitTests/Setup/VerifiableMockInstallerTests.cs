@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
@@ -14,9 +15,12 @@ namespace AutoFake.UnitTests.Setup
         public void Ctor_InvalidInput_Throws()
         {
             var method = GetType().GetMethod(nameof(SomeMethod));
-            Assert.Throws<ContractFailedException>(() => new VerifiableMockInstaller(null, method, new object[0], true));
-            Assert.Throws<ContractFailedException>(() => new VerifiableMockInstaller(new SetupCollection(), null, new object[0], true));
+            Assert.Throws<ContractFailedException>(() => new VerifiableMockInstaller(null, method, new List<FakeArgument>(), true));
+            Assert.Throws<ContractFailedException>(() => new VerifiableMockInstaller(new SetupCollection(), null, new List<FakeArgument>(), true));
         }
+
+        private static FakeArgument GetFakeArgument(dynamic value)
+            => new FakeArgument(new EqualityArgumentChecker(value));
 
         [Theory]
         [InlineData(true)]
@@ -24,7 +28,7 @@ namespace AutoFake.UnitTests.Setup
         public void Ctor_ValidInpit_SetupInitialized(bool isVoid)
         {
             var method = GetType().GetMethod(nameof(SomeMethod));
-            var arguments = new object[] {1};
+            var arguments = new List<FakeArgument> {GetFakeArgument(1)};
 
             var installer = new VerifiableMockInstaller(new SetupCollection(), method, arguments, isVoid);
 
@@ -38,7 +42,7 @@ namespace AutoFake.UnitTests.Setup
         public void CheckArguments_InvalidInput_Throws()
         {
             var method = GetType().GetMethod(nameof(SomeMethod));
-            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new object[0], true);
+            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new List<FakeArgument>(), true);
 
             Assert.Throws<SetupException>(() => installer.CheckArguments());
         }
@@ -47,7 +51,8 @@ namespace AutoFake.UnitTests.Setup
         public void CheckArguments_ValidInput_Success()
         {
             var method = GetType().GetMethod(nameof(SomeMethod));
-            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new object[1], true);
+            var installer = new VerifiableMockInstaller(new SetupCollection(), method,
+                new List<FakeArgument> {GetFakeArgument(1)}, true);
 
             installer.CheckArguments();
 
@@ -58,7 +63,7 @@ namespace AutoFake.UnitTests.Setup
         public void ExpectedCallsCount_InvalidInput_Throws()
         {
             var method = GetType().GetMethod(nameof(SomeMethod));
-            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new object[0], true);
+            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new List<FakeArgument>(), true);
 
             Assert.Throws<SetupException>(() => installer.ExpectedCallsCount(0));
         }
@@ -67,7 +72,7 @@ namespace AutoFake.UnitTests.Setup
         public void ExpectedCallsCount_ValidInput_Success()
         {
             var method = GetType().GetMethod(nameof(SomeMethod));
-            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new object[0], true);
+            var installer = new VerifiableMockInstaller(new SetupCollection(), method, new List<FakeArgument>(), true);
 
             installer.ExpectedCallsCount(2);
 

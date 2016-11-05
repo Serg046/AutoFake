@@ -67,9 +67,9 @@ namespace AutoFake
 
         internal SetupCollection Setups { get; }
 
-        private object[] GetSetupArguments(Expression expression)
+        private List<FakeArgument> GetSetupArguments(Expression expression)
         {
-            var result = new object[0];
+            var result = new List<FakeArgument>();
 
             if (expression is UnaryExpression)
             {
@@ -77,7 +77,14 @@ namespace AutoFake
             }
             else if (expression is MethodCallExpression)
             {
-                result = ExpressionUtils.GetArguments((MethodCallExpression)expression).ToArray();
+                using (var setupContext = new SetupContext())
+                {
+                    foreach (var argument in ExpressionUtils.GetArguments((MethodCallExpression)expression))
+                    {
+                        var fakeArgument = new FakeArgument(new EqualityArgumentChecker(argument));
+                        result.Add(fakeArgument);
+                    }
+                }
             }
 
             return result;

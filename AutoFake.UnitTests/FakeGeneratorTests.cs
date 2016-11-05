@@ -60,7 +60,7 @@ namespace AutoFake.UnitTests
         private FakeSetupPack GetFakeSetupPack(MethodInfo method) => new FakeSetupPack()
         {
             Method = method,
-            SetupArguments = new object[0],
+            SetupArguments = new List<FakeArgument>(),
             IsReturnObjectSet = true
         };
 

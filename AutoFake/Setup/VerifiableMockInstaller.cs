@@ -1,11 +1,12 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using GuardExtensions;
 
 namespace AutoFake.Setup
 {
     public class VerifiableMockInstaller : MockInstaller
     {
-        internal VerifiableMockInstaller(SetupCollection setups, MethodInfo method, object[] setupArguments, bool isVoid)
+        internal VerifiableMockInstaller(SetupCollection setups, MethodInfo method, List<FakeArgument> setupArguments, bool isVoid)
             : base(method, setupArguments)
         {
             Guard.AreNotNull(setups, method);

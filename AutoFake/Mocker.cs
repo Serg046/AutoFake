@@ -101,7 +101,7 @@ namespace AutoFake
             Guard.AreNotNull(ilProcessor, instruction);
 
             var result = new List<FieldDefinition>();
-            var parametersCount = MemberInfo.Setup.SetupArguments.Length;
+            var parametersCount = MemberInfo.Setup.SetupArguments.Count;
             var installedMethodArguments = MemberInfo.Setup.Method.GetParameters();
             for (var i = parametersCount - 1; i >= 0; i--)
             {
@@ -122,8 +122,7 @@ namespace AutoFake
         {
             Guard.AreNotNull(ilProcessor, instruction);
 
-            Array.ForEach(MemberInfo.Setup.SetupArguments,
-                arg => RemoveStackArgument(ilProcessor, instruction));
+            MemberInfo.Setup.SetupArguments.ForEach(arg => RemoveStackArgument(ilProcessor, instruction));
         }
 
         public void RemoveStackArgument(ILProcessor ilProcessor, Instruction instruction)

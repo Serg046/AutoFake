@@ -60,6 +60,9 @@ namespace AutoFake.UnitTests
             Assert.Throws<FakeGeneretingException>(() => new TestMethod(generateObject).Execute(expr));
         }
 
+        private static FakeArgument GetFakeArgument(dynamic value)
+            => new FakeArgument(new EqualityArgumentChecker(value));
+
         [Fact]
         public void Execute_ValidInput_RetFieldsAreSet()
         {
@@ -75,7 +78,7 @@ namespace AutoFake.UnitTests
             setupCollection.Add(new FakeSetupPack()
             {
                 Method = GetType().GetMethod(nameof(SomeMethod)),
-                SetupArguments = new object[] {1},
+                SetupArguments = new List<FakeArgument>() {GetFakeArgument(1)},
                 ReturnObject = 7,
                 ReturnObjectFieldName = nameof(SomeMethod),
                 IsReturnObjectSet = true
@@ -114,7 +117,7 @@ namespace AutoFake.UnitTests
             {
                 Method = GetType().GetMethod(nameof(SomeMethod)),
                 ReturnObjectFieldName = nameof(SomeMethod),
-                SetupArguments = new object[] {1},
+                SetupArguments = new List<FakeArgument>() { GetFakeArgument(1) },
                 NeedCheckArguments = true,
                 IsReturnObjectSet = true
             });
@@ -138,7 +141,7 @@ namespace AutoFake.UnitTests
             {
                 Method = GetType().GetMethod(nameof(SomeMethod)),
                 ReturnObjectFieldName = nameof(SomeMethod),
-                SetupArguments = new object[] { argument },
+                SetupArguments = new List<FakeArgument> { GetFakeArgument(argument) },
                 NeedCheckArguments = true,
                 IsReturnObjectSet = true
             });
@@ -163,7 +166,7 @@ namespace AutoFake.UnitTests
             {
                 Method = GetType().GetMethod(nameof(SomeMethodWithObjectArg)),
                 ReturnObjectFieldName = nameof(SomeMethodWithObjectArg),
-                SetupArguments = new object[] { null },
+                SetupArguments = new List<FakeArgument>() { GetFakeArgument(null) },
                 NeedCheckArguments = true,
                 IsReturnObjectSet = true
             });
@@ -188,7 +191,7 @@ namespace AutoFake.UnitTests
                 Method = GetType().GetMethod(nameof(SomeMethod)),
                 ReturnObjectFieldName = nameof(SomeMethod),
                 NeedCheckCallsCount = true,
-                SetupArguments = new object[] {1},
+                SetupArguments = new List<FakeArgument>() { GetFakeArgument(1) },
                 ExpectedCallsCountFunc = i => i == expectedCalls,
                 IsReturnObjectSet = true
             });

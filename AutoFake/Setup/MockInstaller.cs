@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using AutoFake.Exceptions;
 
 namespace AutoFake.Setup
@@ -7,7 +8,7 @@ namespace AutoFake.Setup
     {
         internal readonly FakeSetupPack FakeSetupPack;
 
-        internal MockInstaller(MethodInfo method, object[] setupArguments)
+        internal MockInstaller(MethodInfo method, List<FakeArgument> setupArguments)
         {
             FakeSetupPack = new FakeSetupPack()
             {
@@ -18,7 +19,7 @@ namespace AutoFake.Setup
 
         protected void CheckArgumentsImpl()
         {
-            if (FakeSetupPack.SetupArguments == null || FakeSetupPack.SetupArguments.Length == 0)
+            if (FakeSetupPack.SetupArguments == null || FakeSetupPack.SetupArguments.Count == 0)
                 throw new SetupException("Setup expression must contain a method with parameters");
             FakeSetupPack.NeedCheckArguments = true;
         }

@@ -29,7 +29,17 @@ namespace AutoFake.UnitTests
               && setup1.IsVoid == setup2.IsVoid
               && setup1.Method == setup2.Method
               && setup1.ReturnObject == setup2.ReturnObject
-              && setup1.SetupArguments.SequenceEqual(setup2.SetupArguments);
+              && Equals(setup1.SetupArguments, setup2.SetupArguments);
+
+        private bool Equals(List<FakeArgument> arguments1, List<FakeArgument> arguments2)
+        {
+            const int valueForChecking = 1;
+            return arguments1.Select(a => a.Check(valueForChecking))
+                .SequenceEqual(arguments2.Select(a => a.Check(valueForChecking)));
+        }
+
+        private static FakeArgument GetFakeArgument(dynamic value)
+            => new FakeArgument(new EqualityArgumentChecker(value)); 
 
         public static IEnumerable<object[]> GetReplaceTestData()
         {
@@ -40,7 +50,7 @@ namespace AutoFake.UnitTests
                 new Fake(type).Replace((FakeTests f) => f.SomeMethod(1)), new FakeSetupPack()
                 {
                     Method = type.GetMethod(nameof(SomeMethod)),
-                    SetupArguments = new object[] {1}
+                    SetupArguments = new List<FakeArgument> { GetFakeArgument(1)}
                 }
             };
 
@@ -49,7 +59,7 @@ namespace AutoFake.UnitTests
                 new Fake(type).Replace(() => FakeTests.SomeStaticMethod(1)), new FakeSetupPack()
                 {
                     Method = type.GetMethod(nameof(SomeStaticMethod)),
-                    SetupArguments = new object[] {1}
+                    SetupArguments = new List<FakeArgument> { GetFakeArgument(1)}
                 }
             };
 
@@ -59,7 +69,7 @@ namespace AutoFake.UnitTests
                 {
                     IsVoid = true,
                     Method = type.GetMethod(nameof(SomeVoidMethod)),
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
 
@@ -69,7 +79,7 @@ namespace AutoFake.UnitTests
                 {
                     IsVoid = true,
                     Method = type.GetMethod(nameof(SomeStaticVoidMethod)),
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
 
@@ -78,7 +88,7 @@ namespace AutoFake.UnitTests
                 new Fake(type).Replace((FakeTests f) => f.SomeProperty), new FakeSetupPack()
                 {
                     Method = type.GetProperty(nameof(SomeProperty)).GetMethod,
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
 
@@ -87,7 +97,7 @@ namespace AutoFake.UnitTests
                 new Fake(type).Replace(() => FakeTests.SomeStaticProperty), new FakeSetupPack()
                 {
                     Method = type.GetProperty(nameof(SomeStaticProperty)).GetMethod,
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
         }
@@ -115,7 +125,7 @@ namespace AutoFake.UnitTests
                 {
                     IsVerification = true,
                     Method = type.GetMethod(nameof(SomeMethod)),
-                    SetupArguments = new object[] {1}
+                    SetupArguments = new List<FakeArgument> { GetFakeArgument(1)}
                 }
             };
 
@@ -125,7 +135,7 @@ namespace AutoFake.UnitTests
                 {
                     IsVerification = true,
                     Method = type.GetMethod(nameof(SomeStaticMethod)),
-                    SetupArguments = new object[] {1}
+                    SetupArguments = new List<FakeArgument> { GetFakeArgument(1)}
                 }
             };
 
@@ -136,7 +146,7 @@ namespace AutoFake.UnitTests
                     IsVerification = true,
                     IsVoid = true,
                     Method = type.GetMethod(nameof(SomeVoidMethod)),
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
 
@@ -147,7 +157,7 @@ namespace AutoFake.UnitTests
                     IsVerification = true,
                     IsVoid = true,
                     Method = type.GetMethod(nameof(SomeStaticVoidMethod)),
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
 
@@ -157,7 +167,7 @@ namespace AutoFake.UnitTests
                 {
                     IsVerification = true,
                     Method = type.GetProperty(nameof(SomeProperty)).GetMethod,
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
 
@@ -167,7 +177,7 @@ namespace AutoFake.UnitTests
                 {
                     IsVerification = true,
                     Method = type.GetProperty(nameof(SomeStaticProperty)).GetMethod,
-                    SetupArguments = new object[0]
+                    SetupArguments = new List<FakeArgument>()
                 }
             };
         }
