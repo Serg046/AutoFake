@@ -221,7 +221,7 @@ namespace AutoFake.UnitTests
         public void GetArguments_ExternalType_UsingLambdaParameter_Fails()
         {
             var expression = GetMethodCallExpression<SomeType>(s => s.SomeMethod(s));
-            Assert.Throws<NotSupportedExpressionException>(() => ExpressionUtils.GetArguments(expression).ToList());
+            Assert.Throws<InvalidOperationException>(() => ExpressionUtils.GetArguments(expression).ToList());
         }
 
         [Fact]

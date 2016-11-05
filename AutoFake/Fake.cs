@@ -77,17 +77,25 @@ namespace AutoFake
             }
             else if (expression is MethodCallExpression)
             {
-                using (var setupContext = new SetupContext())
-                {
-                    foreach (var argument in ExpressionUtils.GetArguments((MethodCallExpression)expression))
-                    {
-                        var fakeArgument = new FakeArgument(new EqualityArgumentChecker(argument));
-                        result.Add(fakeArgument);
-                    }
-                }
+                FillSetupArguments(expression, result);
             }
 
             return result;
+        }
+
+        private static void FillSetupArguments(Expression expression, List<FakeArgument> result)
+        {
+            using (var setupContext = new SetupContext())
+            {
+                foreach (var argument in ExpressionUtils.GetArguments((MethodCallExpression)expression))
+                {
+                    var argumentChecker = setupContext.IsCheckerSet
+                        ? setupContext.PopChecker()
+                        : new EqualityArgumentChecker(argument);
+                    var fakeArgument = new FakeArgument(argumentChecker);
+                    result.Add(fakeArgument);
+                }
+            }
         }
 
         //---------------------------------------------------------------------------------------------------------

@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoFake.Exceptions;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.InstanceTests
@@ -142,6 +143,21 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace((ParamsTestClass p) => p.GetValue(values)).Returns(-1);
 
             Assert.Equal(-1, fake.Execute(f => f.Test()));
+        }
+
+        [Fact]
+        public void LambdaArgumentTest()
+        {
+            var asserDate = new DateTime(2016, 11, 04);
+            var fake = new Fake<TestClass>();
+
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.Is<DateTime>(d => d > asserDate),
+                Arg.Is<TimeZoneInfo>(t => !Equals(t, TimeZoneInfo.Local)))).CheckArguments();
+
+            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(new DateTime(2016, 11, 05), TimeZoneInfo.Local)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(new DateTime(2016, 11, 03), TimeZoneInfo.Utc)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(new DateTime(2016, 11, 03), TimeZoneInfo.Local)));
+            fake.Execute(f => f.GetValueByArguments(new DateTime(2016, 11, 05), TimeZoneInfo.Utc));
         }
 
         private class TestClass

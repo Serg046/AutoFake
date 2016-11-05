@@ -59,7 +59,7 @@ namespace AutoFake
             {
                 return GetArgument((dynamic)expression);
             }
-            catch
+            catch (RuntimeBinderException)
             {
                 throw new NotSupportedExpressionException(
                     $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
