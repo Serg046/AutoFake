@@ -62,10 +62,16 @@
   <ItemGroup>
     <Compile Include="Exceptions\ExpectedCallsException.cs" />
     <Compile Include="Exceptions\FakeGeneretingException.cs" />
+    <Compile Include="Exceptions\MissedSetupContextException.cs" />
     <Compile Include="Exceptions\NotSupportedExpressionException.cs" />
+    <Compile Include="Exceptions\SetupContextStateException.cs" />
     <Compile Include="Exceptions\SetupException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
+    <Compile Include="FakeArgument.cs" />
     <Compile Include="GetValueMemberVisitor.cs" />
+    <Compile Include="IEventRecorder.cs" />
+    <Compile Include="IFakeArgumentChecker.cs" />
+    <Compile Include="Setup\SetupContext.cs" />
     <Compile Include="SetValueMemberVisitor.cs" />
     <Compile Include="ExpressionUtils.cs" />
     <Compile Include="Fake.cs" />

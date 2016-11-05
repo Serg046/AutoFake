@@ -75,6 +75,7 @@
     <Compile Include="Cil.cs" />
     <Compile Include="CilUtils.cs" />
     <Compile Include="ExpressionUtilsTests.cs" />
+    <Compile Include="FakeArgumentTests.cs" />
     <Compile Include="FakeGeneratorTests.cs" />
     <Compile Include="FakeTests.cs" />
     <Compile Include="GeneratedObjectTests.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="MockerFactoryTests.cs" />
     <Compile Include="MockerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Setup\SetupContextTests.cs" />
     <Compile Include="Setup\ReplaceableMockInstallerTests.cs" />
     <Compile Include="Setup\SetupCollectionTests.cs" />
     <Compile Include="Setup\VerifiableMockInstallerTests.cs" />
