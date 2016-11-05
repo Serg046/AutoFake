@@ -51,7 +51,7 @@ namespace AutoFake.UnitTests
         }
 
         private IList<FakeDependency> GetDependencies(params object[] args)
-            => args.Select(a => FakeDependency.Create(a?.GetType(), a)).ToList();
+            => args.Select(a => new FakeDependency(a?.GetType(), a)).ToList();
 
         [Fact]
         public void Ctor_Null_Throws()
@@ -84,14 +84,14 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void CreateInstance_AmbiguousCtorAndNullAsDependency_ForcesToUseFakeDependency()
+        public void CreateInstance_AmbiguousCtorAndNullAsDependency_ForcesToUseArgIsNull()
         {
             var type = typeof(AmbiguousCtorTestClass);
 
             Assert.Throws<FakeGeneretingException>(
                 () => new TypeInfo(type, GetDependencies(new object[] {null})).CreateInstance(type));
-            new TypeInfo(type, new[] {FakeDependency.Null<StreamReader>()}).CreateInstance(type);
-            new TypeInfo(type, new[] {FakeDependency.Null<StreamWriter>()}).CreateInstance(type);
+            new TypeInfo(type, new[] {Arg.IsNull<StreamReader>()}).CreateInstance(type);
+            new TypeInfo(type, new[] {Arg.IsNull<StreamWriter>()}).CreateInstance(type);
 
             new TypeInfo(typeof(TestClass), GetDependencies(null, null)).CreateInstance(typeof(TestClass));
         }

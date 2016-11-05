@@ -54,7 +54,7 @@ namespace AutoFake
             var dependencies = contructorArgs.Select(c =>
             {
                 var dependecy = c as FakeDependency;
-                return dependecy ?? FakeDependency.Create(c?.GetType(), c);
+                return dependecy ?? new FakeDependency(c?.GetType(), c);
             }).ToList();
 
             var typeInfo = new TypeInfo(type, dependencies);

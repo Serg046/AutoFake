@@ -93,7 +93,7 @@ namespace AutoFake
                 catch (AmbiguousMatchException)
                 {
                     throw new FakeGeneretingException(
-                        "Ambiguous null-invocation. Please use FakeDependency.Null<T>() instead of null.");
+                        $"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
                 }
             }
 

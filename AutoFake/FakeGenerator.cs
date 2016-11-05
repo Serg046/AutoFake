@@ -36,7 +36,7 @@ namespace AutoFake
             Guard.AreNotNull(setups, executeFunc);
 
             if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
-                throw new SetupException("At least one non-void installed member do not have a return value.");
+                throw new SetupException("At least one non-void installed member does not have a return value.");
 
             _typeInfo.Load();
 

@@ -7,20 +7,6 @@ namespace AutoFake.UnitTests
     public class FakeArgumentTests
     {
         [Fact]
-        public void Satisfies_Func_CheckerIsSet()
-        {
-            using (var setupContext = new SetupContext())
-            {
-                FakeArgument.Satisfies((int arg) => arg == 7);
-
-                Assert.True(setupContext.IsCheckerSet);
-                var checker = setupContext.PopChecker();
-                Assert.False(checker.Check(-7));
-                Assert.True(checker.Check(7));
-            }
-        }
-
-        [Fact]
         public void Check_SimpleChecker_Checks()
         {
             var checker = new Mock<IFakeArgumentChecker>();
@@ -36,7 +22,7 @@ namespace AutoFake.UnitTests
         {
             using (var setupContext = new SetupContext())
             {
-                FakeArgument.Satisfies((int arg) => arg > 0);
+                Arg.Is((int arg) => arg > 0);
                 var checker = setupContext.PopChecker();
                 var argument = new FakeArgument(checker);
 

@@ -71,6 +71,7 @@
     <Compile Include="GetValueMemberVisitor.cs" />
     <Compile Include="IEventRecorder.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
+    <Compile Include="Arg.cs" />
     <Compile Include="Setup\SetupContext.cs" />
     <Compile Include="SetValueMemberVisitor.cs" />
     <Compile Include="ExpressionUtils.cs" />
