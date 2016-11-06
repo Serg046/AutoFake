@@ -75,7 +75,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             fake.Replace((TestClass t) => t.DynamicValue).Returns(7);
 
-            Assert.Equal(7, fake.Execute(f => f.GetDynamicValue()));
+            Assert.Equal(7, fake.Rewrite(f => f.GetDynamicValue()).Execute());
         }
 
         [Fact]
@@ -85,7 +85,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             fake.Replace((HelperClass h) => h.DynamicValue).Returns(7);
 
-            Assert.Equal(7, fake.Execute(f => f.GetHelperDynamicValue()));
+            Assert.Equal(7, fake.Rewrite(f => f.GetHelperDynamicValue()).Execute());
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             fake.Replace(() => TestClass.DynamicStaticValue).Returns(7);
 
-            Assert.Equal(7, fake.Execute(f => f.GetDynamicStaticValue()));
+            Assert.Equal(7, fake.Rewrite(f => f.GetDynamicStaticValue()).Execute());
         }
 
         [Fact]
@@ -105,7 +105,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             fake.Replace(() => HelperClass.DynamicStaticValue).Returns(7);
 
-            Assert.Equal(7, fake.Execute(f => f.GetHelperDynamicStaticValue()));
+            Assert.Equal(7, fake.Rewrite(f => f.GetHelperDynamicStaticValue()).Execute());
         }
 
         [Fact]
@@ -116,7 +116,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var cmd = "select * from Test";
             fake.Replace((SqlCommand c) => c.CommandText).Returns(cmd);
 
-            Assert.Equal(cmd, fake.Execute(f => f.GetFrameworkValue()));
+            Assert.Equal(cmd, fake.Rewrite(f => f.GetFrameworkValue()).Execute());
         }
 
         [Fact]
@@ -127,7 +127,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var date = new DateTime(2016, 9, 25);
             fake.Replace(() => DateTime.Now).Returns(date);
 
-            Assert.Equal(date, fake.Execute(f => f.GetFrameworkStaticValue()));
+            Assert.Equal(date, fake.Rewrite(f => f.GetFrameworkStaticValue()).Execute());
         }
     }
 }

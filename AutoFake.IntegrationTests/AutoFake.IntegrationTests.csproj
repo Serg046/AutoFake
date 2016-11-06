@@ -74,7 +74,6 @@
     <Compile Include="InstanceTests\PropertyMockTests.cs" />
     <Compile Include="SetupContextMultithreadingTests.cs" />
     <Compile Include="SingleStringEventRecorder.cs" />
-    <Compile Include="StateTests.cs" />
     <Compile Include="StaticTests\MethodMockTests.cs" />
     <Compile Include="StaticTests\PropertyMockTests.cs" />
     <Compile Include="TestMethodCallTests.cs" />

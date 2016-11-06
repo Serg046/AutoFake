@@ -56,8 +56,6 @@ namespace AutoFake.UnitTests
             _typeInfo = new TypeInfo(typeof(SomeType), new List<FakeDependency>());
             _setup = new FakeSetupPack();
             _mocker = new Mocker(_typeInfo, _setup);
-
-            _typeInfo.Load();
         }
 
         private ILProcessor GetILProcessor() => new Mono.Cecil.Cil.MethodBody(null).GetILProcessor();
@@ -144,7 +142,6 @@ namespace AutoFake.UnitTests
         public void GenerateCallsCounter_FieldName_CounterFieldInitialized()
         {
             var typeInfo = new TypeInfo(typeof(SomeTypeWithStaticConstructor), new List<FakeDependency>());
-            typeInfo.Load();
             var setup = new FakeSetupPack();
             setup.ReturnObjectFieldName = "TestCounter";
             var mocker = new Mocker(typeInfo, setup);

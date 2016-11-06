@@ -91,7 +91,7 @@
     <Compile Include="Setup\SetupCollectionTests.cs" />
     <Compile Include="Setup\VerifiableMockInstallerTests.cs" />
     <Compile Include="SetValueMemberVisitorTests.cs" />
-    <Compile Include="TestMethodTests.cs" />
+    <Compile Include="ExecutorTests.cs" />
     <Compile Include="TypeInfoTests.cs" />
   </ItemGroup>
   <ItemGroup>

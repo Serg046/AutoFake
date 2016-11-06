@@ -20,6 +20,8 @@ namespace AutoFake
             return default(T);
         }
 
+        public static T DefaultOf<T>() => default(T);
+
         private class Checker : IFakeArgumentChecker
         {
             private readonly dynamic _checker;

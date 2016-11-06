@@ -19,7 +19,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => TestClass.DynamicStaticValue()).Returns(7);
 
-            Assert.Equal(7, fake.Execute(() => TestClass.GetDynamicStaticValue()));
+            Assert.Equal(7, fake.Rewrite(() => TestClass.GetDynamicStaticValue()).Execute());
         }
 
         [Fact]
@@ -29,7 +29,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => HelperClass.DynamicStaticValue()).Returns(7);
 
-            Assert.Equal(7, fake.Execute(() => TestClass.GetHelperDynamicStaticValue()));
+            Assert.Equal(7, fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue()).Execute());
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace((SqlCommand c) => c.ExecuteScalar()).Returns(7);
 
-            Assert.Equal(7, fake.Execute(() => TestClass.GetFrameworkValue()));
+            Assert.Equal(7, fake.Rewrite(() => TestClass.GetFrameworkValue()).Execute());
         }
 
         [Fact]
@@ -51,7 +51,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             collection.Add(1, 1);
             fake.Replace(() => CollectionsUtil.CreateCaseInsensitiveHashtable()).Returns(collection);
 
-            Assert.Equal(collection, fake.Execute(() => TestClass.GetFrameworkStaticValue()));
+            Assert.Equal(collection, fake.Rewrite(() => TestClass.GetFrameworkStaticValue()).Execute());
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             var zone = TimeZoneInfo.Local;
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone)).Returns(DateTime.MinValue);
 
-            Assert.Equal(DateTime.MinValue, fake.Execute(() => TestClass.GetValueByArguments(date, zone)));
+            Assert.Equal(DateTime.MinValue, fake.Rewrite(() => TestClass.GetValueByArguments(date, zone)).Execute());
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => TestClass.ThrowException());
 
-            fake.Execute(() => TestClass.UnsafeMethod());
+            fake.Rewrite(() => TestClass.UnsafeMethod()).Execute();
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Replace(() => TestClass.DynamicStaticValue()).Returns(7);
             fake.Replace(() => TestClass.DynamicStaticValue(5)).Returns(7);
 
-            Assert.Equal(14, fake.Execute(() => TestClass.GetDynValueByOveloadedMethodCalls()));
+            Assert.Equal(14, fake.Rewrite(() => TestClass.GetDynValueByOveloadedMethodCalls()).Execute());
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Returns(Task.FromResult(7));
 
-            Assert.Equal(7, await fake.Execute(() => AsyncTestClass.GetStaticValueAsync()));
+            Assert.Equal(7, await fake.Rewrite(() => AsyncTestClass.GetStaticValueAsync()).Execute());
         }
 
         [Fact]
@@ -106,13 +106,13 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => ParamsTestClass.GetValue(1, 2, 3)).Returns(-1);
 
-            Assert.Equal(-1, fake.Execute(() => ParamsTestClass.Test()));
+            Assert.Equal(-1, fake.Rewrite(() => ParamsTestClass.Test()).Execute());
 
-            fake.ClearState();
+            fake = new Fake(typeof(ParamsTestClass));
             var values = new[] { 1, 2, 3 };
             fake.Replace(() => ParamsTestClass.GetValue(values)).Returns(-1);
 
-            Assert.Equal(-1, fake.Execute(() => ParamsTestClass.Test()));
+            Assert.Equal(-1, fake.Rewrite(() => ParamsTestClass.Test()).Execute());
         }
 
         [Fact]
@@ -123,6 +123,8 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.Is<DateTime>(d => d > asserDate),
                 Arg.Is<TimeZoneInfo>(t => !Equals(t, TimeZoneInfo.Local)))).CheckArguments();
+
+            fake.Rewrite(() => TestClass.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
             Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 05), TimeZoneInfo.Local)));
             Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 03), TimeZoneInfo.Utc)));

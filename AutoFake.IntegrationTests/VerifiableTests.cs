@@ -42,6 +42,8 @@ namespace AutoFake.IntegrationTests
             fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
                 .CheckArguments();
 
+            fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
+
             Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, zone)));
             Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(date, TimeZoneInfo.Utc)));
 
@@ -58,13 +60,13 @@ namespace AutoFake.IntegrationTests
             fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
                 .ExpectedCallsCount(2);
 
-            Assert.Throws<ExpectedCallsException>(() => fake.Execute(f => f.GetValueByArguments(date, zone)));
+            Assert.Throws<ExpectedCallsException>(() => fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
 
             fake = new Fake<TestClass>();
             fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
                 .ExpectedCallsCount(1);
 
-            Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, zone), fake.Execute(f => f.GetValueByArguments(date, zone)));
+            Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, zone), fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
         }
 
         [Fact]
@@ -74,13 +76,13 @@ namespace AutoFake.IntegrationTests
             fake.Verify((TestClass t) => t.CodeBranch(1, 2))
                 .ExpectedCallsCount(2);
 
-            Assert.Equal(6, fake.Execute(f => f.Sum(1, 2)));
+            Assert.Equal(6, fake.Rewrite(f => f.Sum(1, 2)).Execute());
 
             fake = new Fake<TestClass>();
             fake.Verify((TestClass t) => t.CodeBranch(0, 0))
                 .ExpectedCallsCount(1);
 
-            Assert.Equal(0, fake.Execute(f => f.Sum(0, 1)));
+            Assert.Equal(0, fake.Rewrite(f => f.Sum(0, 1)).Execute());
         }
     }
 }

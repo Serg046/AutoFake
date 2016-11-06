@@ -93,7 +93,7 @@
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMockInstaller.cs" />
     <Compile Include="Setup\SetupCollection.cs" />
-    <Compile Include="TestMethod.cs" />
+    <Compile Include="Executor.cs" />
     <Compile Include="TypeInfo.cs" />
     <Compile Include="Setup\VerifiableMockInstaller.cs" />
   </ItemGroup>

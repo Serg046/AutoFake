@@ -56,7 +56,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => TestClass.DynamicStaticValue).Returns(7);
 
-            Assert.Equal(7, fake.Execute(() => TestClass.GetDynamicStaticValue()));
+            Assert.Equal(7, fake.Rewrite(() => TestClass.GetDynamicStaticValue()).Execute());
         }
 
         [Fact]
@@ -66,7 +66,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Replace(() => HelperClass.DynamicStaticValue).Returns(7);
 
-            Assert.Equal(7, fake.Execute(() => TestClass.GetHelperDynamicStaticValue()));
+            Assert.Equal(7, fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue()).Execute());
         }
 
         [Fact]
@@ -77,7 +77,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             var cmd = "select * from Test";
             fake.Replace((SqlCommand c) => c.CommandText).Returns(cmd);
 
-            Assert.Equal(cmd, fake.Execute(() => TestClass.GetFrameworkValue()));
+            Assert.Equal(cmd, fake.Rewrite(() => TestClass.GetFrameworkValue()).Execute());
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             var date = new DateTime(2016, 9, 25);
             fake.Replace(() => DateTime.Now).Returns(date);
 
-            Assert.Equal(date, fake.Execute(() => TestClass.GetFrameworkStaticValue()));
+            Assert.Equal(date, fake.Rewrite(() => TestClass.GetFrameworkStaticValue()).Execute());
         }
     }
 }

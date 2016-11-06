@@ -16,25 +16,25 @@ namespace AutoFake
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            return (TReturn)Execute((LambdaExpression)executeFunc);
+            return ExecuteImpl<TReturn>(executeFunc);
         }
 
         public void Execute(Expression<Action<T>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            Execute((LambdaExpression)executeFunc);
+            ExecuteImpl(executeFunc);
         }
 
-        public TReturn GetStateValue<TReturn>(Expression<Func<T, TReturn>> executeFunc)
+        public Executor<TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            return GetStateValue<TReturn>(executeFunc.Body);
+            return RewriteImpl<TReturn>(executeFunc);
         }
 
-        public void SetStateValue<TReturn>(Expression<Func<T, TReturn>> executeFunc, TReturn value)
+        public Executor Rewrite(Expression<Action<T>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            SetStateValue(executeFunc.Body, value);
+            return RewriteImpl(executeFunc);
         }
     }
 
@@ -42,9 +42,7 @@ namespace AutoFake
     {
         private readonly FakeGenerator _fakeGenerator;
         private string _assemblyFileName;
-        private GeneratedObject _currentGeneratedObject;
-        private bool _isTestMethodExecuted;
-        private readonly Stack<KeyValuePair<Expression, object>> _setStateValuExpressions; 
+        private GeneratedObject _generatedObject;
 
         public Fake(Type type, params object[] contructorArgs)
         {
@@ -60,7 +58,6 @@ namespace AutoFake
             var typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
             _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory);
-            _setStateValuExpressions = new Stack<KeyValuePair<Expression, object>>();
 
             Setups = new SetupCollection();
         }
@@ -160,97 +157,62 @@ namespace AutoFake
 
         //---------------------------------------------------------------------------------------------------------
 
-        protected object Execute(LambdaExpression expression)
+        protected Executor RewriteImpl(LambdaExpression expression)
         {
-            if (_isTestMethodExecuted)
-                throw new InvalidOperationException($"Please call {nameof(ClearState)}() method to clear state");
+            _generatedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            return new Executor(_generatedObject, expression);
+        }
 
-            _currentGeneratedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
-            SetRequestedData(_currentGeneratedObject);
+        protected Executor<T> RewriteImpl<T>(LambdaExpression expression)
+        {
+            _generatedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            return new Executor<T>(_generatedObject, expression);
+        }
 
-            var testMethod = new TestMethod(_currentGeneratedObject);
-            var result = testMethod.Execute(expression);
+        public Executor<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            return RewriteImpl<TReturn>(executeFunc);
+        }
+
+        public Executor Rewrite(Expression<Action> executeFunc)
+        {
+            Guard.IsNotNull(executeFunc);
+            return RewriteImpl(executeFunc);
+        }
+
+        //---------------------------------------------------------------------------------------------------------
+
+        protected T ExecuteImpl<T>(LambdaExpression expression)
+        {
+            var executor = new Executor<T>(_generatedObject, expression);
+            var result = executor.Execute();
 
             if (_assemblyFileName != null)
                 _fakeGenerator.Save(_assemblyFileName);
 
-            _isTestMethodExecuted = true;
-
             return result;
         }
 
-        private void SetRequestedData(GeneratedObject generatedObject)
+        protected void ExecuteImpl(LambdaExpression expression)
         {
-            while (_setStateValuExpressions.Count > 0)
-            {
-                var requestedData = _setStateValuExpressions.Pop();
-                var visitor = new SetValueMemberVisitor(generatedObject, requestedData.Value);
-                _currentGeneratedObject.AcceptMemberVisitor(requestedData.Key, visitor);
-            }
+            var executor = new Executor(_generatedObject, expression);
+            executor.Execute();
+
+            if (_assemblyFileName != null)
+                _fakeGenerator.Save(_assemblyFileName);
         }
 
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            return (TReturn)Execute((LambdaExpression)executeFunc);
+            return ExecuteImpl<TReturn>(executeFunc);
         }
 
         public void Execute(Expression<Action> executeFunc)
         {
             Guard.IsNotNull(executeFunc);
-            Execute((LambdaExpression)executeFunc);
-        }
-
-        //---------------------------------------------------------------------------------------------------------
-
-        protected TReturn GetStateValue<TReturn>(Expression executeFunc)
-        {
-            ThrowIfTestMethodIsNotExecuted();
-
-            var visitor = new GetValueMemberVisitor(_currentGeneratedObject);
-            _currentGeneratedObject.AcceptMemberVisitor(executeFunc, visitor);
-            return (TReturn)visitor.RuntimeValue;
-        }
-
-        private void ThrowIfTestMethodIsNotExecuted()
-        {
-            if (!_isTestMethodExecuted)
-                throw new InvalidOperationException("The test method is not executed yet.");
-        }
-
-        public TReturn GetStateValue<TReturn>(Expression<Func<TReturn>> executeFunc)
-        {
-            Guard.IsNotNull(executeFunc);
-            return GetStateValue<TReturn>(executeFunc.Body);
-        }
-
-        //---------------------------------------------------------------------------------------------------------
-
-        protected void SetStateValue<TReturn>(Expression executeFunc, TReturn value)
-        {
-            if (!_isTestMethodExecuted)
-            {
-                _setStateValuExpressions.Push(new KeyValuePair<Expression, object>(executeFunc, value));
-            }
-            else
-            {
-                var visitor = new SetValueMemberVisitor(_currentGeneratedObject, value);
-                _currentGeneratedObject.AcceptMemberVisitor(executeFunc, visitor);
-            }
-        }
-
-        public void SetStateValue<TReturn>(Expression<Func<TReturn>> executeFunc, TReturn value)
-        {
-            Guard.IsNotNull(executeFunc);
-            SetStateValue(executeFunc.Body, value);
-        }
-
-        //---------------------------------------------------------------------------------------------------------
-
-        public void ClearState()
-        {
-            Setups.Clear();
-            _isTestMethodExecuted = false;
+            ExecuteImpl(executeFunc);
         }
     }
 }

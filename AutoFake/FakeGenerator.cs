@@ -38,8 +38,6 @@ namespace AutoFake
             if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
                 throw new SetupException("At least one non-void installed member does not have a return value.");
 
-            _typeInfo.Load();
-
             var generatedObject = new GeneratedObject();
             generatedObject.MockedMembers = MockSetups(setups, executeFunc).ToList();
 
@@ -68,7 +66,6 @@ namespace AutoFake
                 {
                     mocker.GenerateRetValueField();
                 }
-
 
                 var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
                 var method = _typeInfo.Methods.Single(m => m.Name == executeFunc.Name);

@@ -43,5 +43,13 @@ namespace AutoFake.UnitTests
                 Assert.True(checker.Check(7));
             }
         }
+
+        [Fact]
+        public void DefaultOf_ReturnsDefaultValueOfType()
+        {
+            Assert.Equal(0, Arg.DefaultOf<int>());
+            Assert.Equal(null, Arg.DefaultOf<int?>());
+            Assert.Equal(null, Arg.DefaultOf<string>());
+        }
     }
 }

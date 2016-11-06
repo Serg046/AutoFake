@@ -8,22 +8,47 @@ using AutoFake.Setup;
 
 namespace AutoFake
 {
-    internal class TestMethod
+    public class Executor<T>
     {
-        private readonly GeneratedObject _generatedObject;
+        private readonly ExecutorImpl _executor;
 
-        public TestMethod(GeneratedObject generatedObject)
+        internal Executor(GeneratedObject generatedObject, LambdaExpression invocationExpression)
         {
-            Guard.IsNotNull(generatedObject);
-            _generatedObject = generatedObject;
+            _executor = new ExecutorImpl(generatedObject, invocationExpression);
         }
 
-        public object Execute(LambdaExpression invocationExpression)
+        public T Execute() => (T)_executor.Execute();
+    }
+
+    public class Executor
+    {
+        private readonly ExecutorImpl _executor;
+
+        internal Executor(GeneratedObject generatedObject, LambdaExpression invocationExpression)
         {
-            Guard.IsNotNull(invocationExpression);
+            _executor = new ExecutorImpl(generatedObject, invocationExpression);
+        }
+
+        public void Execute() => _executor.Execute();
+    }
+
+    internal class ExecutorImpl
+    {
+        private readonly GeneratedObject _generatedObject;
+        private readonly LambdaExpression _invocationExpression;
+
+        public ExecutorImpl(GeneratedObject generatedObject, LambdaExpression invocationExpression)
+        {
+            Guard.AreNotNull(generatedObject, invocationExpression);
+            _generatedObject = generatedObject;
+            _invocationExpression = invocationExpression;
+        }
+
+        public object Execute()
+        {
             SetReturnObjects();
             var visitor = new GetValueMemberVisitor(_generatedObject);
-            _generatedObject.AcceptMemberVisitor(invocationExpression.Body, visitor);
+            _generatedObject.AcceptMemberVisitor(_invocationExpression.Body, visitor);
             var result = visitor.RuntimeValue;
             VerifySetups();
 

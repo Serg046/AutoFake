@@ -42,37 +42,37 @@ namespace AutoFake.IntegrationTests
         [Fact]
         public void InstancePropertyCallTest()
         {
-            Assert.Equal(7, _fake.Execute(f => f.DynamicValue));
+            Assert.Equal(7, _fake.Rewrite(f => f.DynamicValue).Execute());
         }
 
         [Fact]
         public void StaticPropertyCallTest()
         {
-            Assert.Equal(7, _fake.Execute(() => TestClass.StaticDynamicValue));
+            Assert.Equal(7, _fake.Rewrite(() => TestClass.StaticDynamicValue).Execute());
         }
 
         [Fact]
         public void InstanceMethodCallTest()
         {
-            Assert.Equal(7, _fake.Execute(f => f.GetDynamicValue()));
+            Assert.Equal(7, _fake.Rewrite(f => f.GetDynamicValue()).Execute());
         }
 
         [Fact]
         public void StaticMethodCallTest()
         {
-            Assert.Equal(7, _fake.Execute(() => TestClass.GetStaticDynamicValue()));
+            Assert.Equal(7, _fake.Rewrite(() => TestClass.GetStaticDynamicValue()).Execute());
         }
 
         [Fact]
         public async void InstanceAsyncMethodCallTest()
         {
-            Assert.Equal(7, await _fake.Execute(f => f.GetDynamicValueAsync()));
+            Assert.Equal(7, await _fake.Rewrite(f => f.GetDynamicValueAsync()).Execute());
         }
 
         [Fact]
         public async void StaticAsyncMethodCallTest()
         {
-            Assert.Equal(7, await _fake.Execute(() => TestClass.GetStaticDynamicValueAsync()));
+            Assert.Equal(7, await _fake.Rewrite(() => TestClass.GetStaticDynamicValueAsync()).Execute());
         }
     }
 }

@@ -43,6 +43,8 @@ namespace AutoFake.IntegrationTests
                 .CheckArguments()
                 .Returns(DateTime.MinValue);
 
+            fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
+
             Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, zone)));
             Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(date, TimeZoneInfo.Utc)));
 
@@ -57,14 +59,14 @@ namespace AutoFake.IntegrationTests
                 .ExpectedCallsCount(2)
                 .Returns(DateTime.MinValue);
 
-            Assert.Throws<ExpectedCallsException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, null)));
+            Assert.Throws<ExpectedCallsException>(() => fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null)).Execute());
 
             fake = new Fake<TestClass>();
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
                 .ExpectedCallsCount(1)
                 .Returns(DateTime.MinValue);
 
-            Assert.Equal(DateTime.MinValue, fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, null)));
+            Assert.Equal(DateTime.MinValue, fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null)).Execute());
         }
 
         [Fact]
@@ -76,7 +78,7 @@ namespace AutoFake.IntegrationTests
                 .ExpectedCallsCount(2)
                 .Returns(6);
 
-            Assert.Equal(12, fake.Execute(f => f.Sum(1, 2)));
+            Assert.Equal(12, fake.Rewrite(f => f.Sum(1, 2)).Execute());
 
             fake = new Fake<TestClass>();
             fake.Replace((TestClass t) => t.CodeBranch(0, 0))
@@ -84,7 +86,7 @@ namespace AutoFake.IntegrationTests
                 .ExpectedCallsCount(1)
                 .Returns(6);
 
-            Assert.Equal(6, fake.Execute(f => f.Sum(0, 1)));
+            Assert.Equal(6, fake.Rewrite(f => f.Sum(0, 1)).Execute());
         }
     }
 }
