@@ -1,14 +1,13 @@
-﻿using AutoFake.Setup;
-using GuardExtensions;
+﻿using GuardExtensions;
 
 namespace AutoFake
 {
     internal class MockerFactory
     {
-        public virtual IMocker CreateMocker(TypeInfo typeInfo, FakeSetupPack setup)
+        public virtual IMocker CreateMocker(TypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
         {
-            Guard.AreNotNull(typeInfo, setup);
-            return new Mocker(typeInfo, setup);
+            Guard.AreNotNull(typeInfo, mockedMemberInfo);
+            return new Mocker(typeInfo, mockedMemberInfo);
         }
 
         public virtual IMethodInjector CreateMethodInjector(IMethodMocker mocker)

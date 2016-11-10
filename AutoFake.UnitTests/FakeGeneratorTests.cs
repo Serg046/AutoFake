@@ -71,7 +71,7 @@ namespace AutoFake.UnitTests
         public FakeGeneratorTests()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var mockedMemberInfo = new MockedMemberInfo(GetFakeSetupPack());
+            var mockedMemberInfo = new MockedMemberInfo(GetFakeSetupPack(), GetType().GetMethods().First(), null);
 
             _mockerMock = new Mock<IMocker>();
             _mockerMock.Setup(m => m.TypeInfo).Returns(typeInfo);
@@ -81,25 +81,26 @@ namespace AutoFake.UnitTests
             _methodInjectorMock.Object.MethodMocker = _mockerMock.Object;
 
             var factoryMock = new Mock<MockerFactory>();
-            factoryMock.Setup(f => f.CreateMocker(It.IsAny<TypeInfo>(), It.IsAny<FakeSetupPack>()))
+            factoryMock.Setup(f => f.CreateMocker(It.IsAny<TypeInfo>(), It.IsAny<MockedMemberInfo>()))
                 .Returns(_mockerMock.Object);
             factoryMock.Setup(f => f.CreateMethodInjector(It.IsAny<IMethodMocker>())).Returns(_methodInjectorMock.Object);
 
-            _fakeGenerator = new FakeGenerator(typeInfo, factoryMock.Object);
+            _fakeGenerator = new FakeGenerator(typeInfo, factoryMock.Object, new GeneratedObject());
         }
 
         [Fact]
         public void Ctor_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new FakeGenerator(null, new MockerFactory()));
-            Assert.Throws<ContractFailedException>(() => new FakeGenerator(new TypeInfo(typeof(DateTime), null), null));
+            Assert.Throws<ContractFailedException>(() => new FakeGenerator(null, new MockerFactory(), new GeneratedObject()));
+            Assert.Throws<ContractFailedException>(() => new FakeGenerator(new TypeInfo(typeof(DateTime), null), null, new GeneratedObject()));
+            Assert.Throws<ContractFailedException>(() => new FakeGenerator(new TypeInfo(typeof(DateTime), null), new MockerFactory(), null));
         }
 
         [Fact]
         public void Save_Null_Throws()
         {
             var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
+            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
             Assert.Throws<ContractFailedException>(() => fakeGen.Save(null));
         }
 
@@ -107,7 +108,7 @@ namespace AutoFake.UnitTests
         public void Generate_InvalidInput_Throws()
         {
             var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
+            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
 
             var someMethodInfo = GetType().GetMethods()[0];
             if (someMethodInfo == null)
@@ -132,7 +133,7 @@ namespace AutoFake.UnitTests
             var setups = new SetupCollection();
             setups.Add(new FakeSetupPack() { Method = someMethodInfo, IsVoid = false, IsReturnObjectSet = false, IsVerification = false});
 
-            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory());
+            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
 
             Assert.Throws<SetupException>(() => fakeGen.Generate(setups, someMethodInfo));
         }
@@ -173,7 +174,7 @@ namespace AutoFake.UnitTests
             var setups = new SetupCollection { setup };
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
 
-            _mockerMock.Setup(m => m.MemberInfo).Returns(new MockedMemberInfo(setup));
+            _mockerMock.Setup(m => m.MemberInfo).Returns(new MockedMemberInfo(setup, GetType().GetMethods().First(), null));
             _methodInjectorMock.Object.MethodMocker = _mockerMock.Object;
 
             _fakeGenerator.Generate(setups, testMethod);
@@ -188,7 +189,7 @@ namespace AutoFake.UnitTests
             var setups = new SetupCollection {setup};
             var testMethod = GetMethodInfo(nameof(TestClass.GetDateNow));
 
-            _mockerMock.Setup(m => m.MemberInfo).Returns(new MockedMemberInfo(setup));
+            _mockerMock.Setup(m => m.MemberInfo).Returns(new MockedMemberInfo(setup, GetType().GetMethods().First(), null));
             _methodInjectorMock.Object.MethodMocker = _mockerMock.Object;
 
             _fakeGenerator.Generate(setups, testMethod);
@@ -203,7 +204,7 @@ namespace AutoFake.UnitTests
             var setups = new SetupCollection { setup };
             var testMethod = GetMethodInfo(nameof(TestClass.GetDateNow));
 
-            _mockerMock.Setup(m => m.MemberInfo).Returns(new MockedMemberInfo(setup));
+            _mockerMock.Setup(m => m.MemberInfo).Returns(new MockedMemberInfo(setup, GetType().GetMethods().First(), null));
             _methodInjectorMock.Object.MethodMocker = _mockerMock.Object;
 
             _fakeGenerator.Generate(setups, testMethod);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
@@ -85,7 +84,7 @@ namespace AutoFake.UnitTests
             _setup = new FakeSetupPack();
             _setup.SetupArguments = new List<FakeArgument>();
 
-            _memberInfo = new MockedMemberInfo(_setup);
+            _memberInfo = new MockedMemberInfo(_setup, GetType().GetMethods().First(), null);
 
             _methodMockerMock = new Mock<IMethodMocker>();
             _methodMockerMock.Setup(m => m.MemberInfo).Returns(_memberInfo);

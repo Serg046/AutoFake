@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Setup;
 using GuardExtensions;
@@ -199,6 +198,19 @@ namespace AutoFake.UnitTests
         public void Execute_Null_Throws()
         {
             Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Execute(null));
+        }
+
+        [Fact]
+        public void Reset_ClearsSetups()
+        {
+            var fake = new Fake<FakeTests>();
+
+            fake.Verify((FakeTests f) => f.Reset_ClearsSetups())
+                .ExpectedCallsCount(1);
+            Assert.NotEmpty(fake.Setups);
+
+            fake.Reset();
+            Assert.Empty(fake.Setups);
         }
     }
 }

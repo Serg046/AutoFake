@@ -44,6 +44,8 @@ namespace AutoFake.UnitTests
             }
         }
 
+        private const string MOCKER_MEMBER_SUFFIX_NAME = "suffix";
+
         private MethodInfo GetMethodInfo(string name) => GetMethodInfo<SomeType>(name);
         private MethodInfo GetMethodInfo<T>(string name) => typeof(T).GetMethod(name);
 
@@ -55,7 +57,7 @@ namespace AutoFake.UnitTests
         {
             _typeInfo = new TypeInfo(typeof(SomeType), new List<FakeDependency>());
             _setup = new FakeSetupPack();
-            _mocker = new Mocker(_typeInfo, _setup);
+            _mocker = new Mocker(_typeInfo, new MockedMemberInfo(_setup, GetType().GetMethods().First(), MOCKER_MEMBER_SUFFIX_NAME));
         }
 
         private ILProcessor GetILProcessor() => new Mono.Cecil.Cil.MethodBody(null).GetILProcessor();
@@ -63,7 +65,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Ctor_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new Mocker(null, new FakeSetupPack()));
+            Assert.Throws<ContractFailedException>(() => new Mocker(null, new MockedMemberInfo(null, null, null)));
             Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, null));
         }
 
@@ -73,11 +75,11 @@ namespace AutoFake.UnitTests
             var setup = new FakeSetupPack();
             setup.ReturnObjectFieldName = null;
             setup.IsVoid = false;
-            Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, setup).GenerateRetValueField());
+            Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, new MockedMemberInfo(setup, GetType().GetMethods().First(), null)).GenerateRetValueField());
 
             setup.ReturnObjectFieldName = string.Empty;
             setup.IsVoid = true;
-            Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, setup).GenerateRetValueField());
+            Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, new MockedMemberInfo(setup, GetType().GetMethods().First(), null)).GenerateRetValueField());
         }
 
         [Fact]
@@ -88,10 +90,11 @@ namespace AutoFake.UnitTests
 
             _mocker.GenerateRetValueField();
 
-            Assert.Equal("Test_RetValue", _mocker.MemberInfo.RetValueField.Name);
+            var expectedFieldName = $"Test_{MOCKER_MEMBER_SUFFIX_NAME}_RetValue";
+            Assert.Equal(expectedFieldName, _mocker.MemberInfo.RetValueField.Name);
             Assert.True(_mocker.MemberInfo.RetValueField.Attributes.HasFlag(FieldAttributes.Assembly));
             Assert.True(_mocker.MemberInfo.RetValueField.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Contains(_typeInfo.Fields, f => f.Name == "Test_RetValue");
+            Assert.Contains(_typeInfo.Fields, f => f.Name == expectedFieldName);
         }
 
         [Fact]
@@ -108,10 +111,11 @@ namespace AutoFake.UnitTests
 
             _mocker.GenerateCallsCounter();
 
-            Assert.Equal("TestCounter_ActualIds", _mocker.MemberInfo.ActualCallsField.Name);
+            var expectedFieldName = $"TestCounter_{MOCKER_MEMBER_SUFFIX_NAME}_ActualIds";
+            Assert.Equal(expectedFieldName, _mocker.MemberInfo.ActualCallsField.Name);
             Assert.True(_mocker.MemberInfo.ActualCallsField.Attributes.HasFlag(FieldAttributes.Assembly));
             Assert.True(_mocker.MemberInfo.ActualCallsField.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Contains(_typeInfo.Fields, f => f.Name == "TestCounter_ActualIds");
+            Assert.Contains(_typeInfo.Fields, f => f.Name == expectedFieldName);
         }
 
         [Fact]
@@ -121,7 +125,7 @@ namespace AutoFake.UnitTests
 
             _mocker.GenerateCallsCounter();
 
-            var field = _typeInfo.Fields.Single(f => f.Name == "TestCounter_ActualIds");
+            var field = _typeInfo.Fields.Single(f => f.Name == $"TestCounter_{MOCKER_MEMBER_SUFFIX_NAME}_ActualIds");
             var cctor = _typeInfo.Methods.Single(m => m.Name == ".cctor");
 
             Assert.Contains(cctor.Body.Instructions, i => i.OpCode == OpCodes.Stsfld && i.Operand == field);
@@ -144,11 +148,11 @@ namespace AutoFake.UnitTests
             var typeInfo = new TypeInfo(typeof(SomeTypeWithStaticConstructor), new List<FakeDependency>());
             var setup = new FakeSetupPack();
             setup.ReturnObjectFieldName = "TestCounter";
-            var mocker = new Mocker(typeInfo, setup);
+            var mocker = new Mocker(typeInfo, new MockedMemberInfo(setup, GetType().GetMethods().First(), MOCKER_MEMBER_SUFFIX_NAME));
 
             mocker.GenerateCallsCounter();
 
-            var field = typeInfo.Fields.Single(f => f.Name == "TestCounter_ActualIds");
+            var field = typeInfo.Fields.Single(f => f.Name == $"TestCounter_{MOCKER_MEMBER_SUFFIX_NAME}_ActualIds");
             var cctor = typeInfo.Methods.Single(m => m.Name == ".cctor");
 
             Assert.True(cctor.Body.Instructions.Ordered(

@@ -29,7 +29,7 @@ namespace AutoFake.UnitTests
         private FakeGenerator GetFakeGenerator()
         {
             var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            return new FakeGenerator(typeInfo, new MockerFactory());
+            return new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
         }
 
         [Fact]
@@ -44,12 +44,12 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_IncorrectField_Throws()
         {
-            var mockedMemberInfo = new MockedMemberInfo(new FakeSetupPack());
+            var mockedMemberInfo = new MockedMemberInfo(new FakeSetupPack(), GetType().GetMethods().First(), null);
             mockedMemberInfo.RetValueField = new FieldDefinition("Test", FieldAttributes.Public, new FunctionPointerType());
 
             var generateObject = new GeneratedObject();
             generateObject.Type = GetType();
-            generateObject.MockedMembers = new List<MockedMemberInfo>() { mockedMemberInfo };
+            generateObject.MockedMembers.Add(mockedMemberInfo);
 
             Expression<Action> expr = () => TestMethod();
             Assert.Throws<FakeGeneretingException>(() => new Executor(generateObject, expr).Execute());

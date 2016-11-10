@@ -77,12 +77,14 @@
     <Compile Include="CilUtils.cs" />
     <Compile Include="EqualityArgumentChecker.cs" />
     <Compile Include="ExpressionUtilsTests.cs" />
+    <Compile Include="ExtensionsTests.cs" />
     <Compile Include="FakeArgumentTests.cs" />
     <Compile Include="FakeGeneratorTests.cs" />
     <Compile Include="FakeTests.cs" />
     <Compile Include="GeneratedObjectTests.cs" />
     <Compile Include="GetValueMemberVisitorTests.cs" />
     <Compile Include="MethodInjectorTests.cs" />
+    <Compile Include="MockedMemberInfoTests.cs" />
     <Compile Include="MockerFactoryTests.cs" />
     <Compile Include="MockerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

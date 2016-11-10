@@ -70,13 +70,8 @@ namespace AutoFake
             Guard.IsNotNull(method);
 
             return method.DeclaringType.FullName == _methodMocker.TypeInfo.GetInstalledMethodTypeName(_setup)
-                && method.Name == _setup.Method.Name
-                && IsCorrectMethodOverload(method);
+                && method.EquivalentTo(_setup.Method);
         }
-
-        private bool IsCorrectMethodOverload(MethodReference method)
-            => method.Parameters.Select(p => p.ParameterType.FullName)
-                .SequenceEqual(_setup.Method.GetParameters().Select(p => p.ParameterType.FullName));
 
         public bool IsMethodInstruction(Instruction instruction)
             => instruction.OpCode.OperandType == OperandType.InlineMethod;

@@ -29,6 +29,12 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
+        public void Ctor_MockedMembersInitialized()
+        {
+            Assert.NotNull(new GeneratedObject().MockedMembers);
+        }
+
+        [Fact]
         public void AcceptMemberVisitor_Null_Throws()
         {
             Assert.Throws<ContractFailedException>(

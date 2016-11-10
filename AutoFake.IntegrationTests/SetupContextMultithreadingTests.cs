@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
+using AutoFake.IntegrationTests.Helpers;
 using AutoFake.Setup;
 using Xunit;
 using Moq;

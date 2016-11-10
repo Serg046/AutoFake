@@ -5,6 +5,8 @@ using GuardExtensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
+using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace AutoFake
 {
@@ -16,13 +18,13 @@ namespace AutoFake
 
         private readonly FakeSetupPack _setup;
 
-        public Mocker(TypeInfo typeInfo, FakeSetupPack setup)
+        public Mocker(TypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
         {
-            Guard.AreNotNull(typeInfo, setup);
+            Guard.AreNotNull(typeInfo, mockedMemberInfo);
             TypeInfo = typeInfo;
-            _setup = setup;
+            MemberInfo = mockedMemberInfo;
 
-            MemberInfo = new MockedMemberInfo(setup);
+            _setup = mockedMemberInfo.Setup;
         }
 
         public TypeInfo TypeInfo { get; }
@@ -33,8 +35,9 @@ namespace AutoFake
             Guard.IsNotNull(_setup.ReturnObjectFieldName);
             Guard.IsFalse(_setup.IsVoid);
 
-            MemberInfo.RetValueField = new FieldDefinition(_setup.ReturnObjectFieldName + RET_VALUE_FLD_SUFFIX, FieldAttributes.Assembly | FieldAttributes.Static,
-                        TypeInfo.Import(_setup.Method.ReturnType));
+            var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
+            MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
+                TypeInfo.Import(_setup.Method.ReturnType));
             TypeInfo.AddField(MemberInfo.RetValueField);
         }
 
@@ -42,10 +45,9 @@ namespace AutoFake
         {
             Guard.IsNotNull(_setup.ReturnObjectFieldName);
 
-            var fieldName = _setup.ReturnObjectFieldName + CALLS_COUNTER_FLD_SUFFIX;
+            var fieldName = MemberInfo.EvaluateRetValueFieldName() + CALLS_COUNTER_FLD_SUFFIX;
             var collectionType = typeof(List<int>);
-            MemberInfo.ActualCallsField = new FieldDefinition(fieldName,
-                FieldAttributes.Assembly | FieldAttributes.Static,
+            MemberInfo.ActualCallsField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                 TypeInfo.Import(collectionType));
             TypeInfo.AddField(MemberInfo.ActualCallsField);
 

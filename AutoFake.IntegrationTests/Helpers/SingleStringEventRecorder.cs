@@ -1,4 +1,4 @@
-﻿namespace AutoFake.IntegrationTests
+﻿namespace AutoFake.IntegrationTests.Helpers
 {
     internal class SingleStringEventRecorder : IEventRecorder
     {

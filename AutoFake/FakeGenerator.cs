@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,12 +13,14 @@ namespace AutoFake
     {
         private readonly TypeInfo _typeInfo;
         private readonly MockerFactory _mockerFactory;
+        private readonly GeneratedObject _generatedObject;
 
-        public FakeGenerator(TypeInfo typeInfo, MockerFactory mockerFactory)
+        public FakeGenerator(TypeInfo typeInfo, MockerFactory mockerFactory, GeneratedObject generatedObject)
         {
-            Guard.AreNotNull(typeInfo, mockerFactory);
+            Guard.AreNotNull(typeInfo, mockerFactory, generatedObject);
             _typeInfo = typeInfo;
             _mockerFactory = mockerFactory;
+            _generatedObject = generatedObject;
         }
 
         public void Save(string fileName)
@@ -38,28 +39,28 @@ namespace AutoFake
             if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
                 throw new SetupException("At least one non-void installed member does not have a return value.");
 
-            var generatedObject = new GeneratedObject();
-            generatedObject.MockedMembers = MockSetups(setups, executeFunc).ToList();
+            MockSetups(setups, executeFunc);
 
             using (var memoryStream = new MemoryStream())
             {
                 _typeInfo.WriteAssembly(memoryStream);
                 var assembly = Assembly.Load(memoryStream.ToArray());
-                generatedObject.Type = assembly.GetType(_typeInfo.FullTypeName);
-                generatedObject.Instance = IsStatic(_typeInfo.SourceType)
+                _generatedObject.Type = assembly.GetType(_typeInfo.FullTypeName);
+                _generatedObject.Instance = IsStatic(_typeInfo.SourceType)
                     ? null
-                    : _typeInfo.CreateInstance(generatedObject.Type);
-                return generatedObject;
+                    : _typeInfo.CreateInstance(_generatedObject.Type);
+                return _generatedObject;
             }
         }
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
 
-        private IEnumerable<MockedMemberInfo> MockSetups(SetupCollection setups, MethodInfo executeFunc)
+        private void MockSetups(SetupCollection setups, MethodInfo executeFunc)
         {
             foreach (var setup in setups)
             {
-                var mocker = _mockerFactory.CreateMocker(_typeInfo, setup);
+                var mocker = _mockerFactory.CreateMocker(_typeInfo,
+                    new MockedMemberInfo(setup, executeFunc, GetExecuteFuncSuffixName(executeFunc)));
                 mocker.GenerateCallsCounter();
 
                 if (!setup.IsVoid)
@@ -68,11 +69,20 @@ namespace AutoFake
                 }
 
                 var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
-                var method = _typeInfo.Methods.Single(m => m.Name == executeFunc.Name);
+                var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
                 ReplaceInstructions(method, methodInjector);
 
-                yield return mocker.MemberInfo;
+                _generatedObject.MockedMembers.Add(mocker.MemberInfo);
             }
+        }
+
+        private string GetExecuteFuncSuffixName(MethodInfo executeFunc)
+        {
+            var suffixName = executeFunc.Name;
+            var installedCount = _generatedObject.MockedMembers.Count(g => g.TestMethodInfo.Name == executeFunc.Name);
+            if (installedCount > 0)
+                suffixName += installedCount;
+            return suffixName;
         }
 
         private void ReplaceInstructions(MethodDefinition currentMethod, IMethodInjector methodInjector)

@@ -13,7 +13,7 @@ namespace AutoFake
     {
         public object Instance { get; internal set; }
         public Type Type { get; internal set; }
-        public IList<MockedMemberInfo> MockedMembers { get; internal set; }
+        public IList<MockedMemberInfo> MockedMembers { get; } = new List<MockedMemberInfo>();
 
         public void AcceptMemberVisitor(Expression expression, IMemberVisitor visitor)
         {

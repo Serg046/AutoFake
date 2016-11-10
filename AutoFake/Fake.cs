@@ -42,7 +42,7 @@ namespace AutoFake
     {
         private readonly FakeGenerator _fakeGenerator;
         private string _assemblyFileName;
-        private GeneratedObject _generatedObject;
+        private readonly GeneratedObject _generatedObject;
 
         public Fake(Type type, params object[] contructorArgs)
         {
@@ -57,7 +57,8 @@ namespace AutoFake
 
             var typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
-            _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory);
+            _generatedObject = new GeneratedObject();
+            _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory, _generatedObject);
 
             Setups = new SetupCollection();
         }
@@ -159,13 +160,13 @@ namespace AutoFake
 
         protected Executor RewriteImpl(LambdaExpression expression)
         {
-            _generatedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
             return new Executor(_generatedObject, expression);
         }
 
         protected Executor<T> RewriteImpl<T>(LambdaExpression expression)
         {
-            _generatedObject = _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
+            _fakeGenerator.Generate(Setups, ExpressionUtils.GetMethodInfo(expression));
             return new Executor<T>(_generatedObject, expression);
         }
 
@@ -214,5 +215,9 @@ namespace AutoFake
             Guard.IsNotNull(executeFunc);
             ExecuteImpl(executeFunc);
         }
+
+        //---------------------------------------------------------------------------------------------------------
+
+        public void Reset() => Setups.Clear();
     }
 }

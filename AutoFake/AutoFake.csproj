@@ -68,6 +68,7 @@
     <Compile Include="Exceptions\SetupContextStateException.cs" />
     <Compile Include="Exceptions\SetupException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="FakeArgument.cs" />
     <Compile Include="GetValueMemberVisitor.cs" />
     <Compile Include="IEventRecorder.cs" />
