@@ -92,20 +92,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => new MethodInjector(null));
-        }
-
-        [Fact]
-        public void Process_InvalidInput_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _methodInjector.Process(null, GetInstruction()));
-            Assert.Throws<ContractFailedException>(() => _methodInjector.Process(GetILProcessor(), null));
-            Assert.Throws<ContractFailedException>(() => _methodInjector.Process(GetILProcessor(), Instruction.Create(OpCodes.Nop)));
-        }
-
-        [Fact]
         public void Process_ValidInput_SavesCurrentPosition()
         {
             var cmd = GetInstruction();
@@ -305,12 +291,6 @@ namespace AutoFake.UnitTests
 
             _methodInjector.Process(GetILProcessor(), GetInstruction());
             Assert.Equal(2, _memberInfo.SourceCodeCallsCount);
-        }
-
-        [Fact]
-        public void IsInstalledMethod_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _methodInjector.IsInstalledMethod(null));
         }
 
         [Fact]

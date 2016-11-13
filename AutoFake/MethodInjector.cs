@@ -16,14 +16,12 @@ namespace AutoFake
 
         public MethodInjector(IMethodMocker methodMocker)
         {
-            Guard.IsNotNull(methodMocker);
             _methodMocker = methodMocker;
             _setup = methodMocker.MemberInfo.Setup;
         }
 
         public void Process(ILProcessor ilProcessor, Instruction instruction)
         {
-            Guard.AreNotNull(ilProcessor, instruction);
             Guard.That(instruction).Satisfy(IsMethodInstruction);
 
             _methodMocker.InjectCurrentPositionSaving(ilProcessor, instruction);
@@ -67,8 +65,6 @@ namespace AutoFake
 
         public bool IsInstalledMethod(MethodReference method)
         {
-            Guard.IsNotNull(method);
-
             return method.DeclaringType.FullName == _methodMocker.TypeInfo.GetInstalledMethodTypeName(_setup)
                 && method.EquivalentTo(_setup.Method);
         }

@@ -11,11 +11,7 @@ namespace AutoFake
 {
     internal static class ExpressionUtils
     {
-        public static MethodInfo GetMethodInfo(LambdaExpression expression)
-        {
-            Guard.IsNotNull(expression);
-            return GetMethodInfo(expression.Body);
-        }
+        public static MethodInfo GetMethodInfo(LambdaExpression expression) => GetMethodInfo(expression.Body);
 
         private static MethodInfo GetMethodInfo(Expression expression)
         {
@@ -46,11 +42,7 @@ namespace AutoFake
 
         //------------------------------------------------------------------------------------------------------------
 
-        public static IEnumerable<object> GetArguments(MethodCallExpression expression)
-        {
-            Guard.IsNotNull(expression);
-            return expression.Arguments.Select(expr => GetArgument(() => expr));
-        }
+        public static IEnumerable<object> GetArguments(MethodCallExpression expression) => expression.Arguments.Select(expr => GetArgument(() => expr));
 
         private static object GetArgument(Func<Expression> expressionFunc)
         {

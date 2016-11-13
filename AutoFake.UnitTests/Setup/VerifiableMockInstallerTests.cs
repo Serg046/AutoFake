@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
-using GuardExtensions;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -10,14 +9,6 @@ namespace AutoFake.UnitTests.Setup
     public class VerifiableMockInstallerTests
     {
         public void SomeMethod() { }
-
-        [Fact]
-        public void Ctor_InvalidInput_Throws()
-        {
-            var method = GetType().GetMethod(nameof(SomeMethod));
-            Assert.Throws<ContractFailedException>(() => new VerifiableMockInstaller(null, method, new List<FakeArgument>(), true));
-            Assert.Throws<ContractFailedException>(() => new VerifiableMockInstaller(new SetupCollection(), null, new List<FakeArgument>(), true));
-        }
 
         private static FakeArgument GetFakeArgument(dynamic value)
             => new FakeArgument(new EqualityArgumentChecker(value));

@@ -63,13 +63,6 @@ namespace AutoFake.UnitTests
         private ILProcessor GetILProcessor() => new Mono.Cecil.Cil.MethodBody(null).GetILProcessor();
 
         [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => new Mocker(null, new MockedMemberInfo(null, null, null)));
-            Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, null));
-        }
-
-        [Fact]
         public void GenerateRetValueField_InvalidInput_Throws()
         {
             var setup = new FakeSetupPack();
@@ -161,13 +154,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void InjectCurrentPositionSaving_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _mocker.InjectCurrentPositionSaving(null, Instruction.Create(OpCodes.Nop)));
-            Assert.Throws<ContractFailedException>(() => _mocker.InjectCurrentPositionSaving(GetILProcessor(), null));
-        }
-
-        [Fact]
         public void InjectCurrentPositionSaving_ValidInput_InjectedAfterInstruction()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithBody));
@@ -184,13 +170,6 @@ namespace AutoFake.UnitTests
                 Cil.Cmd(OpCodes.Callvirt, (MethodReference m) => m.Name == "Add" && m.DeclaringType.Name == "List`1"),
                 Cil.AnyCmd() //last instruction, see SomeType::SomeMethodWithBody()
                 ));
-        }
-
-        [Fact]
-        public void PopMethodArguments_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _mocker.PopMethodArguments(null, Instruction.Create(OpCodes.Nop)));
-            Assert.Throws<ContractFailedException>(() => _mocker.PopMethodArguments(GetILProcessor(), null));
         }
 
         private static FakeArgument GetFakeArgument(dynamic value)
@@ -286,13 +265,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void RemoveMethodArguments_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _mocker.RemoveMethodArguments(null, Instruction.Create(OpCodes.Nop)));
-            Assert.Throws<ContractFailedException>(() => _mocker.RemoveMethodArguments(GetILProcessor(), null));
-        }
-
-        [Fact]
         public void RemoveMethodArguments_ValidInput_InjectedArgumentsRemoving()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithBody));
@@ -310,13 +282,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void RemoveStackArgument_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _mocker.RemoveStackArgument(null, Instruction.Create(OpCodes.Nop)));
-            Assert.Throws<ContractFailedException>(() => _mocker.RemoveStackArgument(GetILProcessor(), null));
-        }
-
-        [Fact]
         public void RemoveStackArgument_ValidInput_InjectedStackArgumentRemoving()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithBody));
@@ -329,21 +294,6 @@ namespace AutoFake.UnitTests
                 Cil.Cmd(OpCodes.Pop),
                 Cil.Cmd(cmd.OpCode, cmd.Operand)
                 ));
-        }
-
-        [Fact]
-        public void PushMethodArguments_IncorrectInput_Throws()
-        {
-            var fields = new[] {new FieldDefinition("Test", FieldAttributes.Private, _typeInfo.Import(typeof(int)))};
-
-            Assert.Throws<ContractFailedException>(
-                () => _mocker.PushMethodArguments(null, Instruction.Create(OpCodes.Nop), fields));
-            Assert.Throws<ContractFailedException>(
-                () => _mocker.PushMethodArguments(GetILProcessor(), null, fields));
-            Assert.Throws<ContractFailedException>(
-                () => _mocker.PushMethodArguments(GetILProcessor(), Instruction.Create(OpCodes.Nop), null));
-            Assert.Throws<ContractFailedException>(
-                () => _mocker.PushMethodArguments(GetILProcessor(), Instruction.Create(OpCodes.Nop), Enumerable.Empty<FieldDefinition>()));
         }
 
         [Fact]
@@ -373,13 +323,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void RemoveInstruction_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _mocker.RemoveInstruction(null, Instruction.Create(OpCodes.Nop)));
-            Assert.Throws<ContractFailedException>(() => _mocker.RemoveInstruction(GetILProcessor(), null));
-        }
-
-        [Fact]
         public void RemoveInstruction_ValidInput_InstructionRemoved()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithBody));
@@ -389,13 +332,6 @@ namespace AutoFake.UnitTests
             _mocker.RemoveInstruction(proc, cmd);
 
             Assert.DoesNotContain(proc.Body.Instructions, i => i.Equals(cmd));
-        }
-
-        [Fact]
-        public void ReplaceToRetValueField_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _mocker.ReplaceToRetValueField(null, Instruction.Create(OpCodes.Nop)));
-            Assert.Throws<ContractFailedException>(() => _mocker.ReplaceToRetValueField(GetILProcessor(), null));
         }
 
         [Fact]

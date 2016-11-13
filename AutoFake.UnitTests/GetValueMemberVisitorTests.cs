@@ -44,12 +44,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => new GetValueMemberVisitor(null));
-        }
-
-        [Fact]
         public void RuntimeValue_ThrowsIfIsNotVisited()
         {
             var visitor = new GetValueMemberVisitor(new GeneratedObject()

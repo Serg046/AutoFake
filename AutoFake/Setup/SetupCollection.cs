@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using GuardExtensions;
 
 namespace AutoFake.Setup
 {
@@ -18,9 +17,6 @@ namespace AutoFake.Setup
 
         public void Add(FakeSetupPack setup)
         {
-            Guard.IsNotNull(setup);
-            Guard.IsNotNull(setup.Method);
-
             var count = _setups.Count(s => s.Method.Name == setup.Method.Name);
             setup.ReturnObjectFieldName = count > 0
                 ? setup.Method.Name + count

@@ -68,12 +68,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void GetMethodInfo_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => ExpressionUtils.GetMethodInfo(null));
-        }
-
-        [Fact]
         public void GetMethodInfo_UnsupportedExpression_Throws()
         {
             Expression<Func<int>> expression = () => 0;
@@ -112,12 +106,6 @@ namespace AutoFake.UnitTests
         public void GetMethodInfo_ValidData_Success(LambdaExpression expression, MethodInfo expectedMethodInfo)
         {
             Assert.Equal(expectedMethodInfo, ExpressionUtils.GetMethodInfo(expression));
-        }
-
-        [Fact]
-        public void GetArguments_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => ExpressionUtils.GetArguments(null));
         }
 
         [Fact]

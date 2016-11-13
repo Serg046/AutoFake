@@ -1,6 +1,5 @@
 ﻿using System;
 using AutoFake.Exceptions;
-using GuardExtensions;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -20,12 +19,6 @@ namespace AutoFake.UnitTests
         {
             public static int SomeStaticProperty { get; set; } = 2;
             public static int SomeStaticField = 2;
-        }
-
-        [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => new SetValueMemberVisitor(null, 1));
         }
 
         [Fact]

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
-using GuardExtensions;
 using AutoFake.Setup;
 
 namespace AutoFake
@@ -39,7 +38,6 @@ namespace AutoFake
 
         public ExecutorImpl(GeneratedObject generatedObject, LambdaExpression invocationExpression)
         {
-            Guard.AreNotNull(generatedObject, invocationExpression);
             _generatedObject = generatedObject;
             _invocationExpression = invocationExpression;
         }

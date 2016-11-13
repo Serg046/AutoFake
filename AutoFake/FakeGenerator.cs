@@ -17,7 +17,6 @@ namespace AutoFake
 
         public FakeGenerator(TypeInfo typeInfo, MockerFactory mockerFactory, GeneratedObject generatedObject)
         {
-            Guard.AreNotNull(typeInfo, mockerFactory, generatedObject);
             _typeInfo = typeInfo;
             _mockerFactory = mockerFactory;
             _generatedObject = generatedObject;
@@ -25,7 +24,6 @@ namespace AutoFake
 
         public void Save(string fileName)
         {
-            Guard.IsNotNull(fileName);
             using (var fileStream = File.Create(fileName))
             {
                 _typeInfo.WriteAssembly(fileStream);
@@ -34,8 +32,6 @@ namespace AutoFake
 
         public GeneratedObject Generate(SetupCollection setups, MethodInfo executeFunc)
         {
-            Guard.AreNotNull(setups, executeFunc);
-
             if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
                 throw new SetupException("At least one non-void installed member does not have a return value.");
 

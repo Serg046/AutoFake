@@ -54,14 +54,6 @@ namespace AutoFake.UnitTests
             => args.Select(a => new FakeDependency(a?.GetType(), a)).ToList();
 
         [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => new TypeInfo(typeof(TestClass), null));
-            Assert.Throws<ContractFailedException>(() => new TypeInfo(null, GetDependencies()));
-            new TypeInfo(typeof(TestClass), GetDependencies());
-        }
-
-        [Fact]
         public void CreateInstance_InvalidDependencies_Throws()
         {
             var type = typeof(TestClass);

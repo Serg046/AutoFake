@@ -32,14 +32,6 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Fact]
-        public void Add_InvalidInput_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => _setups.Add(null));
-            Assert.Throws<ContractFailedException>(() => _setups.Add(new FakeSetupPack()));
-            Assert.Throws<ContractFailedException>(() => _setups.Add(new FakeSetupPack() { ReturnObjectFieldName = string.Empty}));
-        }
-
-        [Fact]
         public void Add_Setup_Added()
         {
             _setups.Add(GetFakeSetupPack());

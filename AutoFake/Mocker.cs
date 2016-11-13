@@ -20,7 +20,6 @@ namespace AutoFake
 
         public Mocker(TypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
         {
-            Guard.AreNotNull(typeInfo, mockedMemberInfo);
             TypeInfo = typeInfo;
             MemberInfo = mockedMemberInfo;
 
@@ -32,8 +31,8 @@ namespace AutoFake
 
         public void GenerateRetValueField()
         {
-            Guard.IsNotNull(_setup.ReturnObjectFieldName);
-            Guard.IsFalse(_setup.IsVoid);
+            Guard.NotNull(_setup.ReturnObjectFieldName);
+            Guard.False(_setup.IsVoid);
 
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
             MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
@@ -43,7 +42,7 @@ namespace AutoFake
 
         public void GenerateCallsCounter()
         {
-            Guard.IsNotNull(_setup.ReturnObjectFieldName);
+            Guard.NotNull(_setup.ReturnObjectFieldName);
 
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + CALLS_COUNTER_FLD_SUFFIX;
             var collectionType = typeof(List<int>);
@@ -88,8 +87,6 @@ namespace AutoFake
 
         public void InjectCurrentPositionSaving(ILProcessor ilProcessor, Instruction instruction)
         {
-            Guard.AreNotNull(ilProcessor, instruction);
-
             ilProcessor.InsertAfter(instruction,
                     ilProcessor.Create(OpCodes.Callvirt, TypeInfo.AddToListMethodInfo));
             ilProcessor.InsertAfter(instruction,
@@ -100,8 +97,6 @@ namespace AutoFake
 
         public IList<FieldDefinition> PopMethodArguments(ILProcessor ilProcessor, Instruction instruction)
         {
-            Guard.AreNotNull(ilProcessor, instruction);
-
             var result = new List<FieldDefinition>();
             var parametersCount = MemberInfo.Setup.SetupArguments.Count;
             var installedMethodArguments = MemberInfo.Setup.Method.GetParameters();
@@ -121,40 +116,23 @@ namespace AutoFake
         }
 
         public void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction)
-        {
-            Guard.AreNotNull(ilProcessor, instruction);
-
-            MemberInfo.Setup.SetupArguments.ForEach(arg => RemoveStackArgument(ilProcessor, instruction));
-        }
+            => MemberInfo.Setup.SetupArguments.ForEach(arg => RemoveStackArgument(ilProcessor, instruction));
 
         public void RemoveStackArgument(ILProcessor ilProcessor, Instruction instruction)
-        {
-            Guard.AreNotNull(ilProcessor, instruction);
-            ilProcessor.InsertBefore(instruction, ilProcessor.Create(OpCodes.Pop));
-        }
+            => ilProcessor.InsertBefore(instruction, ilProcessor.Create(OpCodes.Pop));
 
         public void PushMethodArguments(ILProcessor ilProcessor, Instruction instruction, IEnumerable<FieldDefinition> arguments)
         {
-            Guard.AreNotNull(ilProcessor, instruction);
-            Guard.IsNotEmpty(arguments);
-
             foreach (var field in arguments)
             {
                ilProcessor.InsertBefore(instruction, ilProcessor.Create(OpCodes.Ldsfld, field));
             }
         }
 
-        public void RemoveInstruction(ILProcessor ilProcessor, Instruction instruction)
-        {
-            Guard.AreNotNull(ilProcessor, instruction);
-            ilProcessor.Remove(instruction);
-        }
+        public void RemoveInstruction(ILProcessor ilProcessor, Instruction instruction) => ilProcessor.Remove(instruction);
 
         public void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction)
-        {
-            Guard.AreNotNull(ilProcessor, instruction);
-            ilProcessor.Replace(instruction,
-                        ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.RetValueField));
-        }
+            => ilProcessor.Replace(instruction,
+                ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.RetValueField));
     }
 }

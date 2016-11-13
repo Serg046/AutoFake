@@ -33,15 +33,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Expression<Action> expr = () => TestMethod();
-            Assert.Throws<ContractFailedException>(() => new Executor(null, null));
-            Assert.Throws<ContractFailedException>(() => new Executor(new GeneratedObject(), null));
-            Assert.Throws<ContractFailedException>(() => new Executor(null, expr));
-        }
-
-        [Fact]
         public void Execute_IncorrectField_Throws()
         {
             var mockedMemberInfo = new MockedMemberInfo(new FakeSetupPack(), GetType().GetMethods().First(), null);

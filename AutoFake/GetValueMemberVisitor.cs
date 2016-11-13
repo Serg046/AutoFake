@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using GuardExtensions;
 
 namespace AutoFake
 {
@@ -13,7 +12,6 @@ namespace AutoFake
 
         public GetValueMemberVisitor(GeneratedObject generatedObject)
         {
-            Guard.IsNotNull(generatedObject);
             _instance = generatedObject.Instance;
         }
 

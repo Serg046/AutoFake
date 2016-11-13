@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
-using GuardExtensions;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -22,7 +21,6 @@ namespace AutoFake
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
         {
-            Guard.AreNotNull(sourceType, dependencies);
             SourceType = sourceType;
             _dependencies = dependencies;
 
@@ -49,8 +47,6 @@ namespace AutoFake
 
         public string GetInstalledMethodTypeName(FakeSetupPack setup)
         {
-            Guard.IsNotNull(setup);
-
             string result = null;
             var type = setup.Method.DeclaringType;
 

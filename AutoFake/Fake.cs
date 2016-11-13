@@ -15,25 +15,25 @@ namespace AutoFake
 
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             return ExecuteImpl<TReturn>(executeFunc);
         }
 
         public void Execute(Expression<Action<T>> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             ExecuteImpl(executeFunc);
         }
 
         public Executor<TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             return RewriteImpl<TReturn>(executeFunc);
         }
 
         public Executor Rewrite(Expression<Action<T>> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             return RewriteImpl(executeFunc);
         }
     }
@@ -100,7 +100,7 @@ namespace AutoFake
 
         public void SaveFakeAssembly(string fileName)
         {
-            Guard.IsNotNull(fileName);
+            Guard.NotNull(fileName);
             _assemblyFileName = fileName;
         }
 
@@ -108,25 +108,25 @@ namespace AutoFake
 
         public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> setupFunc)
         {
-            Guard.IsNotNull(setupFunc);
+            Guard.NotNull(setupFunc);
             return new ReplaceableMockInstaller<TReturn>(Setups, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
         }
 
         public ReplaceableMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
         {
-            Guard.IsNotNull(instanceSetupFunc);
+            Guard.NotNull(instanceSetupFunc);
             return new ReplaceableMockInstaller<TReturn>(Setups, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body));
         }
 
         public ReplaceableMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
         {
-            Guard.IsNotNull(voidInstanceSetupFunc);
+            Guard.NotNull(voidInstanceSetupFunc);
             return new ReplaceableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
         }
 
         public ReplaceableMockInstaller Replace(Expression<Action> voidInstanceSetupFunc)
         {
-            Guard.IsNotNull(voidInstanceSetupFunc);
+            Guard.NotNull(voidInstanceSetupFunc);
             return new ReplaceableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
         }
 
@@ -134,25 +134,25 @@ namespace AutoFake
 
         public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> setupFunc)
         {
-            Guard.IsNotNull(setupFunc);
+            Guard.NotNull(setupFunc);
             return new VerifiableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body), false);
         }
 
         public VerifiableMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
         {
-            Guard.IsNotNull(instanceSetupFunc);
+            Guard.NotNull(instanceSetupFunc);
             return new VerifiableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body), false);
         }
 
         public VerifiableMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
         {
-            Guard.IsNotNull(voidInstanceSetupFunc);
+            Guard.NotNull(voidInstanceSetupFunc);
             return new VerifiableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body), true);
         }
 
         public VerifiableMockInstaller Verify(Expression<Action> voidInstanceSetupFunc)
         {
-            Guard.IsNotNull(voidInstanceSetupFunc);
+            Guard.NotNull(voidInstanceSetupFunc);
             return new VerifiableMockInstaller(Setups, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body), true);
         }
 
@@ -172,13 +172,13 @@ namespace AutoFake
 
         public Executor<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             return RewriteImpl<TReturn>(executeFunc);
         }
 
         public Executor Rewrite(Expression<Action> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             return RewriteImpl(executeFunc);
         }
 
@@ -206,13 +206,13 @@ namespace AutoFake
 
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             return ExecuteImpl<TReturn>(executeFunc);
         }
 
         public void Execute(Expression<Action> executeFunc)
         {
-            Guard.IsNotNull(executeFunc);
+            Guard.NotNull(executeFunc);
             ExecuteImpl(executeFunc);
         }
 

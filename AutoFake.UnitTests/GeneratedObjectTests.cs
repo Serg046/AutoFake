@@ -34,15 +34,6 @@ namespace AutoFake.UnitTests
             Assert.NotNull(new GeneratedObject().MockedMembers);
         }
 
-        [Fact]
-        public void AcceptMemberVisitor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(
-                () => new GeneratedObject().AcceptMemberVisitor(null, new GetValueMemberVisitor(new GeneratedObject())));
-            Assert.Throws<ContractFailedException>(
-                () => new GeneratedObject().AcceptMemberVisitor(Expression.Constant(null), null));
-        }
-
         public static IEnumerable<object[]> AcceptMemberVisitorTestData()
         {
             var generatedObject = new GeneratedObject()

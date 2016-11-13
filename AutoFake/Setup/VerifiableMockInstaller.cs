@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-using GuardExtensions;
 
 namespace AutoFake.Setup
 {
@@ -9,8 +8,6 @@ namespace AutoFake.Setup
         internal VerifiableMockInstaller(SetupCollection setups, MethodInfo method, List<FakeArgument> setupArguments, bool isVoid)
             : base(method, setupArguments)
         {
-            Guard.AreNotNull(setups, method);
-
             FakeSetupPack.IsVerification = true;
             FakeSetupPack.IsVoid = isVoid;
             setups.Add(FakeSetupPack);

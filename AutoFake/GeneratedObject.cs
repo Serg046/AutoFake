@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
-using GuardExtensions;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace AutoFake
@@ -15,11 +14,7 @@ namespace AutoFake
         public Type Type { get; internal set; }
         public IList<MockedMemberInfo> MockedMembers { get; } = new List<MockedMemberInfo>();
 
-        public void AcceptMemberVisitor(Expression expression, IMemberVisitor visitor)
-        {
-            Guard.AreNotNull(expression, visitor);
-            VisitExpression(expression, visitor);
-        }
+        public void AcceptMemberVisitor(Expression expression, IMemberVisitor visitor) => VisitExpression(expression, visitor);
 
         private void VisitExpression(Expression expression, IMemberVisitor visitor)
         {

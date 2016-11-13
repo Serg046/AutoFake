@@ -9,7 +9,6 @@ namespace AutoFake.Setup
         internal ReplaceableMockInstaller(SetupCollection setups, MethodInfo method, List<FakeArgument> setupArguments)
             : base(method, setupArguments)
         {
-            Guard.AreNotNull(setups, method);
             setups.Add(FakeSetupPack);
         }
 
@@ -38,8 +37,6 @@ namespace AutoFake.Setup
         internal ReplaceableMockInstaller(SetupCollection setups, MethodInfo method, List<FakeArgument> setupArguments)
             : base(method, setupArguments)
         {
-            Guard.AreNotNull(setups, method);
-
             FakeSetupPack.ReturnObject = null;
             FakeSetupPack.IsVoid = true;
             setups.Add(FakeSetupPack);

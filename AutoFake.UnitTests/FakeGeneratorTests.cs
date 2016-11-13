@@ -89,39 +89,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Ctor_Null_Throws()
-        {
-            Assert.Throws<ContractFailedException>(() => new FakeGenerator(null, new MockerFactory(), new GeneratedObject()));
-            Assert.Throws<ContractFailedException>(() => new FakeGenerator(new TypeInfo(typeof(DateTime), null), null, new GeneratedObject()));
-            Assert.Throws<ContractFailedException>(() => new FakeGenerator(new TypeInfo(typeof(DateTime), null), new MockerFactory(), null));
-        }
-
-        [Fact]
-        public void Save_Null_Throws()
-        {
-            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
-            Assert.Throws<ContractFailedException>(() => fakeGen.Save(null));
-        }
-
-        [Fact]
-        public void Generate_InvalidInput_Throws()
-        {
-            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
-
-            var someMethodInfo = GetType().GetMethods()[0];
-            if (someMethodInfo == null)
-                throw new InvalidOperationException("MethodInfo is not found");
-
-            var setups = new SetupCollection();
-            setups.Add(new FakeSetupPack() {Method = someMethodInfo});
-
-            Assert.Throws<ContractFailedException>(() => fakeGen.Generate(null, someMethodInfo));
-            Assert.Throws<ContractFailedException>(() => fakeGen.Generate(setups, null));
-        }
-
-        [Fact]
         public void Generate_IncorrectSetup_Throws()
         {
             var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
