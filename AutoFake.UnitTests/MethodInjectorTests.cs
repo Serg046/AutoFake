@@ -105,6 +105,21 @@ namespace AutoFake.UnitTests
         private static FakeArgument GetFakeArgument(dynamic value)
            => new FakeArgument(new EqualityArgumentChecker(value));
 
+        [Fact]
+        public void Process_ValidInput_CurrentPosSAvingInjectedBeforeArgumentProcessing()
+        {
+            var cmd = GetInstruction();
+            var proc = GetILProcessor();
+            _setup.SetupArguments = new List<FakeArgument> { GetFakeArgument(1) };
+            _setup.NeedCheckArguments = true;
+            _methodMockerMock.Setup(m => m.PopMethodArguments(proc, cmd))
+                .Callback(() => { throw new InvalidOperationException(); });
+
+            Assert.Throws<InvalidOperationException>(() => _methodInjector.Process(proc, cmd));
+
+            _methodMockerMock.Verify(m => m.InjectCurrentPositionSaving(proc, cmd));
+        }
+
         [Theory]
         [InlineData(null, false, false)]
         [InlineData(null, true, false)]
@@ -394,6 +409,44 @@ namespace AutoFake.UnitTests
 
             Assert.True(_methodInjector.IsAsyncMethod(asyncMethodDef.Body.Method.Resolve(), out asyncMethod));
             Assert.NotNull(asyncMethod);
+        }
+
+        [Theory]
+        [InlineData(false, false, false)]
+        [InlineData(false, true, true)]
+        [InlineData(true, false, false)]
+        public void Process_IsNotVerificationAndCallbackInstalled_CallbackInjected(bool isVerification,
+            bool isCallbackInstalled, bool mustBeInjected)
+        {
+            var cmd = GetInstruction();
+            var proc = GetILProcessor();
+            _setup.IsVerification = isVerification;
+            if (isCallbackInstalled)
+                _setup.Callback = () => Console.WriteLine(0);
+
+            _methodInjector.Process(proc, cmd);
+
+            if (mustBeInjected)
+                _methodMockerMock.Verify(m => m.InjectCallback(proc, cmd));
+            else
+                _methodMockerMock.Verify(m => m.InjectCallback(proc, cmd), Times.Never);
+        }
+
+        [Fact]
+        public void Process_ValidInput_CallbackInjectedBeforeArgumentProcessing()
+        {
+            var cmd = GetInstruction();
+            var proc = GetILProcessor();
+            _setup.IsVerification = false;
+            _setup.Callback = () => Console.WriteLine(0);
+            _setup.SetupArguments = new List<FakeArgument> { GetFakeArgument(1) };
+            _setup.NeedCheckArguments = true;
+            _methodMockerMock.Setup(m => m.PopMethodArguments(proc, cmd))
+                .Callback(() => { throw new InvalidOperationException(); });
+
+            Assert.Throws<InvalidOperationException>(() => _methodInjector.Process(proc, cmd));
+
+            _methodMockerMock.Verify(m => m.InjectCallback(proc, cmd));
         }
     }
 }

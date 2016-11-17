@@ -60,9 +60,9 @@ namespace AutoFake
                 mocker.GenerateCallsCounter();
 
                 if (!setup.IsVoid)
-                {
                     mocker.GenerateRetValueField();
-                }
+                if (setup.Callback != null)
+                    mocker.GenerateCallbackField();
 
                 var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));

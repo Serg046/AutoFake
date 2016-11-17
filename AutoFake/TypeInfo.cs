@@ -16,7 +16,6 @@ namespace AutoFake
 
         private readonly Lazy<AssemblyDefinition> _assemblyDefinition;
         private readonly Lazy<TypeDefinition> _typeDefinition;
-        private readonly Lazy<MethodReference> _addToListMethodInfo;
         private readonly IList<FakeDependency> _dependencies;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
@@ -36,14 +35,11 @@ namespace AutoFake
                 typeDefinition.Namespace = FAKE_NAMESPACE;
                 return typeDefinition;
             });
-
-            _addToListMethodInfo = new Lazy<MethodReference>(() => Import(typeof(List<int>).GetMethod("Add")));
         }
 
         public Type SourceType { get; }
         
         public string FullTypeName => _typeDefinition.Value.FullName.Replace('/', '+');
-        public MethodReference AddToListMethodInfo => _addToListMethodInfo.Value;
 
         public string GetInstalledMethodTypeName(FakeSetupPack setup)
         {

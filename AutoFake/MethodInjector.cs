@@ -25,6 +25,9 @@ namespace AutoFake
             Guard.That(instruction).Satisfy(IsMethodInstruction);
 
             _methodMocker.InjectCurrentPositionSaving(ilProcessor, instruction);
+            if (!_setup.IsVerification && _setup.Callback != null)
+                _methodMocker.InjectCallback(ilProcessor, instruction);
+
             ProcessArguments(ilProcessor, instruction);
 
             if (!_setup.IsVerification)

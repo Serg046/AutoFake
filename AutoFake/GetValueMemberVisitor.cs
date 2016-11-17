@@ -31,14 +31,27 @@ namespace AutoFake
             var instanceExpr = _instance == null || methodInfo.IsStatic ? null : Expression.Constant(_instance);
             var callExpression = Expression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
 
-            RuntimeValue = Expression.Lambda(callExpression).Compile().DynamicInvoke();
+            RuntimeValue = GetValueSafe(() => Expression.Lambda(callExpression).Compile().DynamicInvoke());
+
             _isRuntimeValueSet = true;
         }
 
         public void Visit(PropertyInfo propertyInfo)
         {
-            RuntimeValue = propertyInfo.GetValue(_instance, null);
+            RuntimeValue = GetValueSafe(() => propertyInfo.GetValue(_instance, null));
             _isRuntimeValueSet = true;
+        }
+
+        private object GetValueSafe(Func<object> func)
+        {
+            try
+            {
+                return func();
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+                throw ex.InnerException;
+            }
         }
 
         public void Visit(FieldInfo fieldInfo)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
 
@@ -30,6 +31,13 @@ namespace AutoFake.Setup
                 throw new SetupException("ExpectedCallsCount must be greater than 0");
             FakeSetupPack.NeedCheckCallsCount = true;
             FakeSetupPack.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
+        }
+
+        protected void CallbackImpl(Action callback)
+        {
+            if (callback == null)
+                throw new SetupException("Callback must be not null");
+            FakeSetupPack.Callback = callback;
         }
     }
 }

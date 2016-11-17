@@ -22,6 +22,7 @@ namespace AutoFake
         public MethodInfo TestMethodInfo { get; }
         public FieldDefinition RetValueField { get; internal set; }
         public FieldDefinition ActualCallsField { get; internal set; }
+        public FieldDefinition CallbackField { get; internal set; }
         public int SourceCodeCallsCount { get; internal set; }
 
         public IList<FieldDefinition> GetArguments(int index) => _argumentFields[index];

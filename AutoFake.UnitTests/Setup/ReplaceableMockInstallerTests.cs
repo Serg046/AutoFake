@@ -101,5 +101,12 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(callsCountFunc(2), installer.FakeSetupPack.ExpectedCallsCountFunc(2));
             Assert.Equal(callsCountFunc(22), installer.FakeSetupPack.ExpectedCallsCountFunc(22));
         }
+
+        [Theory]
+        [MemberData(nameof(GetMockInstallerTestData), null)]
+        public void Callback_InvalidInput_Throws(MockInstaller installer)
+        {
+            Assert.Throws<SetupException>(() => ((dynamic)installer).Callback(null));
+        }
     }
 }

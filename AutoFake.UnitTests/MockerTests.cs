@@ -66,12 +66,9 @@ namespace AutoFake.UnitTests
         public void GenerateRetValueField_InvalidInput_Throws()
         {
             var setup = new FakeSetupPack();
-            setup.ReturnObjectFieldName = null;
-            setup.IsVoid = false;
-            Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, new MockedMemberInfo(setup, GetType().GetMethods().First(), null)).GenerateRetValueField());
-
             setup.ReturnObjectFieldName = string.Empty;
             setup.IsVoid = true;
+
             Assert.Throws<ContractFailedException>(() => new Mocker(_typeInfo, new MockedMemberInfo(setup, GetType().GetMethods().First(), null)).GenerateRetValueField());
         }
 
@@ -88,13 +85,6 @@ namespace AutoFake.UnitTests
             Assert.True(_mocker.MemberInfo.RetValueField.Attributes.HasFlag(FieldAttributes.Assembly));
             Assert.True(_mocker.MemberInfo.RetValueField.Attributes.HasFlag(FieldAttributes.Static));
             Assert.Contains(_typeInfo.Fields, f => f.Name == expectedFieldName);
-        }
-
-        [Fact]
-        public void GenerateCallsCounter_InvalidInput_Throws()
-        {
-            _setup.ReturnObjectFieldName = null;
-            Assert.Throws<ContractFailedException>(() => _mocker.GenerateCallsCounter());
         }
 
         [Fact]
@@ -349,6 +339,37 @@ namespace AutoFake.UnitTests
             Assert.DoesNotContain(proc.Body.Instructions, i => i.Equals(cmd));
             Assert.Equal(OpCodes.Ldsfld, replacedCmd.OpCode);
             Assert.Equal(_mocker.MemberInfo.RetValueField, replacedCmd.Operand);
+        }
+
+        [Fact]
+        public void GenerateCallbackField_FieldName_CallbackFieldAdded()
+        {
+            _setup.ReturnObjectFieldName = "TestCallback";
+
+            _mocker.GenerateCallbackField();
+
+            var expectedFieldName = $"TestCallback_{MOCKER_MEMBER_SUFFIX_NAME}_Callback";
+            Assert.Equal(expectedFieldName, _mocker.MemberInfo.CallbackField.Name);
+            Assert.True(_mocker.MemberInfo.CallbackField.Attributes.HasFlag(FieldAttributes.Assembly));
+            Assert.True(_mocker.MemberInfo.CallbackField.Attributes.HasFlag(FieldAttributes.Static));
+            Assert.Contains(_typeInfo.Fields, f => f.Name == expectedFieldName);
+        }
+
+        [Fact]
+        public void InjectCallback_ValidInput_InjectedAfterInstruction()
+        {
+            var method = _typeInfo.Methods.Single(m => m.Name == nameof(SomeType.SomeMethodWithBody));
+            var proc = method.Body.GetILProcessor();
+            var cmd = proc.Body.Instructions[1];
+            _mocker.MemberInfo.CallbackField = new FieldDefinition("Test", FieldAttributes.Private, _typeInfo.Import(typeof(int)));
+
+            _mocker.InjectCallback(proc, cmd);
+
+            Assert.True(proc.Body.Instructions.Ordered(
+                Cil.Cmd(cmd.OpCode, cmd.Operand),
+                Cil.Cmd(OpCodes.Ldsfld, _mocker.MemberInfo.CallbackField),
+                Cil.Cmd(OpCodes.Callvirt, (MethodReference m) => m.Name == "Invoke" && m.DeclaringType.Name == "Action")
+                ));
         }
     }
 }

@@ -15,5 +15,6 @@ namespace AutoFake
         void PushMethodArguments(ILProcessor ilProcessor, Instruction instruction, IEnumerable<FieldDefinition> arguments);
         void RemoveInstruction(ILProcessor ilProcessor, Instruction instruction);
         void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction);
+        void InjectCallback(ILProcessor ilProcessor, Instruction instruction);
     }
 }

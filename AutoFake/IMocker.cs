@@ -4,5 +4,6 @@
     {
         void GenerateRetValueField();
         void GenerateCallsCounter();
+        void GenerateCallbackField();
     }
 }

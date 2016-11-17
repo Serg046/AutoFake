@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
-using GuardExtensions;
 
 namespace AutoFake.Setup
 {
@@ -30,6 +30,12 @@ namespace AutoFake.Setup
             ExpectedCallsCountImpl(expectedCallsCount);
             return this;
         }
+
+        public ReplaceableMockInstaller<TReturn> Callback(Action callback)
+        {
+            CallbackImpl(callback);
+            return this;
+        }
     }
 
     public class ReplaceableMockInstaller : MockInstaller
@@ -51,6 +57,12 @@ namespace AutoFake.Setup
         public ReplaceableMockInstaller ExpectedCallsCount(int expectedCallsCount)
         {
             ExpectedCallsCountImpl(expectedCallsCount);
+            return this;
+        }
+
+        public ReplaceableMockInstaller Callback(Action callback)
+        {
+            CallbackImpl(callback);
             return this;
         }
     }

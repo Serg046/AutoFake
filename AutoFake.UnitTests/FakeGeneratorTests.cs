@@ -178,5 +178,28 @@ namespace AutoFake.UnitTests
 
             _methodInjectorMock.Verify(m => m.Process(It.IsAny<ILProcessor>(), It.IsAny<Instruction>()), Times.Never);
         }
+
+        public static IEnumerable<object[]> GetCallbackFieldTestData()
+        {
+            yield return new object[] {null, false};
+            yield return new object[] {new Action(() => Console.WriteLine(0)), true};
+        }
+
+        [Theory]
+        [MemberData(nameof(GetCallbackFieldTestData))]
+        public void Generate_ValidInput_CallbackFieldGenerated(Action installedAction, bool  mustBeCalled)
+        {
+            var setups = new SetupCollection();
+            var setup = GetFakeSetupPack();
+            setup.Callback = installedAction;
+            setups.Add(setup);
+
+            _fakeGenerator.Generate(setups, GetMethodInfo());
+
+            if (mustBeCalled)
+                _mockerMock.Verify(m => m.GenerateCallbackField());
+            else
+                _mockerMock.Verify(m => m.GenerateCallbackField(), Times.Never);
+        }
     }
 }

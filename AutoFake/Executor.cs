@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
@@ -44,7 +43,7 @@ namespace AutoFake
 
         public object Execute()
         {
-            SetReturnObjects();
+            InitializeInstanceState();
             var visitor = new GetValueMemberVisitor(_generatedObject);
             _generatedObject.AcceptMemberVisitor(_invocationExpression.Body, visitor);
             var result = visitor.RuntimeValue;
@@ -53,14 +52,39 @@ namespace AutoFake
             return result;
         }
 
-        private void SetReturnObjects()
+        private void InitializeInstanceState()
         {
-            foreach (var mockedMemberInfo in _generatedObject.MockedMembers.Where(m => !m.Setup.IsVoid))
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
             {
-                var field = _generatedObject.Type.GetField(mockedMemberInfo.RetValueField.Name, BindingFlags.NonPublic | BindingFlags.Static);
+                SetReturnObject(mockedMemberInfo);
+                SetCallback(mockedMemberInfo);
+            }
+        }
+
+        private void SetReturnObject(MockedMemberInfo mockedMemberInfo)
+        {
+            if (!mockedMemberInfo.Setup.IsVoid)
+            {
+                var field = GetField(mockedMemberInfo.RetValueField.Name);
                 if (field == null)
-                    throw new FakeGeneretingException($"'{mockedMemberInfo.RetValueField.Name}' is not found in the generated object");
+                    throw new FakeGeneretingException(
+                        $"'{mockedMemberInfo.RetValueField.Name}' is not found in the generated object");
                 field.SetValue(null, mockedMemberInfo.Setup.ReturnObject);
+            }
+        }
+
+        private FieldInfo GetField(string fieldName)
+            => _generatedObject.Type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
+
+        private void SetCallback(MockedMemberInfo mockedMemberInfo)
+        {
+            if (mockedMemberInfo.Setup.Callback != null)
+            {
+                var field = GetField(mockedMemberInfo.CallbackField.Name);
+                if (field == null)
+                    throw new FakeGeneretingException(
+                        $"'{mockedMemberInfo.CallbackField.Name}' is not found in the generated object");
+                field.SetValue(null, mockedMemberInfo.Setup.Callback);
             }
         }
 
@@ -92,9 +116,7 @@ namespace AutoFake
                 for (var i = 0; i < argumentFields.Count; i++)
                 {
                     var argumentChecker = mockedMemberInfo.Setup.SetupArguments[i];
-                    var field = _generatedObject.Type.GetField(argumentFields[i].Name,
-                        BindingFlags.NonPublic | BindingFlags.Static);
-
+                    var field = GetField(argumentFields[i].Name);
                     if (field == null)
                         throw new FakeGeneretingException($"'{argumentFields[i].Name}' is not found in the generated object");
 
@@ -108,8 +130,7 @@ namespace AutoFake
 
         private List<int> GetActualCallsIds(MockedMemberInfo mockedMemberInfo)
         {
-            var field = _generatedObject.Type.GetField(mockedMemberInfo.ActualCallsField.Name,
-                BindingFlags.NonPublic | BindingFlags.Static);
+            var field = GetField(mockedMemberInfo.ActualCallsField.Name);
             if (field == null)
                 throw new FakeGeneretingException($"'{mockedMemberInfo.ActualCallsField.Name}' is not found in the generated object");
             return (List<int>)field.GetValue(null);

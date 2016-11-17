@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using GuardExtensions;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -30,6 +29,13 @@ namespace AutoFake.UnitTests
         {
             public int SomeMethod(int a) => a + 1;
             public int SomeProperty { get; } = 3;
+            public int FailMethod() { throw new InvalidOperationException(); }
+
+            public int FailProperty
+            {
+                get { throw new InvalidOperationException(); }
+            }
+
             public int SomeField = 3;
             public static int SomeStaticMethod(int a) => a + 1;
             public static int SomeStaticProperty { get; } = 3;
@@ -142,6 +148,29 @@ namespace AutoFake.UnitTests
             visitor.Visit(fieldInfo);
 
             Assert.Equal(expectedValue, visitor.RuntimeValue);
+        }
+
+        [Fact]
+        public void Visit_MethodWithException_ThrowsTheSameException()
+        {
+            var generatedObject = GetGeneratedObject(new SomeInstanceTypeFake(), typeof(SomeInstanceTypeFake));
+            Expression<Action<SomeInstanceTypeFake>> expr = s => s.FailMethod();
+            var method = generatedObject.Type.GetMethod(nameof(SomeInstanceTypeFake.FailMethod));
+
+            var visitor = new GetValueMemberVisitor(generatedObject);
+
+            Assert.Throws<InvalidOperationException>(() => visitor.Visit((MethodCallExpression)expr.Body, method));
+        }
+
+        [Fact]
+        public void Visit_PropertyWithException_ThrowsTheSameException()
+        {
+            var generatedObject = GetGeneratedObject(new SomeInstanceTypeFake(), typeof(SomeInstanceTypeFake));
+            var property = generatedObject.Type.GetProperty(nameof(SomeInstanceTypeFake.FailProperty));
+
+            var visitor = new GetValueMemberVisitor(generatedObject);
+
+            Assert.Throws<InvalidOperationException>(() => visitor.Visit(property));
         }
     }
 }

@@ -15,8 +15,11 @@ namespace AutoFake
         private const string STATIC_CONSTRUCTOR_METHOD_NAME = ".cctor";
         private const string RET_VALUE_FLD_SUFFIX = "_RetValue";
         private const string CALLS_COUNTER_FLD_SUFFIX = "_ActualIds";
+        private const string CALLBACK_FLD_SUFFIX = "_Callback";
 
         private readonly FakeSetupPack _setup;
+        private readonly MethodReference _addToListMethodInfo;
+        private readonly MethodReference _invokeActionMethod;
 
         public Mocker(TypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
         {
@@ -24,6 +27,8 @@ namespace AutoFake
             MemberInfo = mockedMemberInfo;
 
             _setup = mockedMemberInfo.Setup;
+            _addToListMethodInfo = typeInfo.Import(typeof(List<int>).GetMethod(nameof(List<int>.Add)));
+            _invokeActionMethod = typeInfo.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
         }
 
         public TypeInfo TypeInfo { get; }
@@ -31,7 +36,6 @@ namespace AutoFake
 
         public void GenerateRetValueField()
         {
-            Guard.NotNull(_setup.ReturnObjectFieldName);
             Guard.False(_setup.IsVoid);
 
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
@@ -42,8 +46,6 @@ namespace AutoFake
 
         public void GenerateCallsCounter()
         {
-            Guard.NotNull(_setup.ReturnObjectFieldName);
-
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + CALLS_COUNTER_FLD_SUFFIX;
             var collectionType = typeof(List<int>);
             MemberInfo.ActualCallsField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
@@ -88,7 +90,7 @@ namespace AutoFake
         public void InjectCurrentPositionSaving(ILProcessor ilProcessor, Instruction instruction)
         {
             ilProcessor.InsertAfter(instruction,
-                    ilProcessor.Create(OpCodes.Callvirt, TypeInfo.AddToListMethodInfo));
+                    ilProcessor.Create(OpCodes.Callvirt, _addToListMethodInfo));
             ilProcessor.InsertAfter(instruction,
                 ilProcessor.Create(OpCodes.Ldc_I4, MemberInfo.SourceCodeCallsCount));
             ilProcessor.InsertAfter(instruction,
@@ -134,5 +136,21 @@ namespace AutoFake
         public void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction)
             => ilProcessor.Replace(instruction,
                 ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.RetValueField));
+
+        public void GenerateCallbackField()
+        {
+            var fieldName = MemberInfo.EvaluateRetValueFieldName() + CALLBACK_FLD_SUFFIX;
+            MemberInfo.CallbackField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
+                TypeInfo.Import(typeof(Action)));
+            TypeInfo.AddField(MemberInfo.CallbackField);
+        }
+
+        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction)
+        {
+            ilProcessor.InsertAfter(instruction,
+                    ilProcessor.Create(OpCodes.Callvirt, _invokeActionMethod));
+            ilProcessor.InsertAfter(instruction,
+                ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.CallbackField));
+        }
     }
 }

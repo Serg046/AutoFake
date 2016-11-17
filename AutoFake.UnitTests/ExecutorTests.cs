@@ -192,5 +192,33 @@ namespace AutoFake.UnitTests
             else
                 new Executor(generateObject, expr).Execute();
         }
+
+        [Fact]
+        public void Execute_ValidInput_CallbackIsSet()
+        {
+            var setupCollection = new SetupCollection();
+
+            setupCollection.Add(new FakeSetupPack()
+            {
+                Method = GetType().GetProperty(nameof(SomeProperty)).GetMethod,
+                ReturnObject = 7,
+                Callback = () => { throw new InvalidOperationException(); },
+                ReturnObjectFieldName = nameof(SomeProperty),
+                IsReturnObjectSet = true
+            });
+
+            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+
+            //act
+            Expression<Action> expr = () => TestMethod();
+            new Executor(generateObject, expr).Execute();
+
+            //assert
+            var mockedMemberInfo = generateObject.MockedMembers.Single();
+            var field = generateObject.Type
+                .GetField(mockedMemberInfo.CallbackField.Name, BindingFlags.NonPublic | BindingFlags.Static);
+            var callback = field.GetValue(null) as Action;
+            Assert.Throws<InvalidOperationException>(() => callback());
+        }
     }
 }

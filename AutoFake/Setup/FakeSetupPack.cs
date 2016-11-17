@@ -16,5 +16,6 @@ namespace AutoFake.Setup
         public bool IsVoid { get; internal set; }
         public bool IsVerification { get; internal set; }
         internal bool IsReturnObjectSet { get; set; }
+        public Action Callback { get; set; }
     }
 }
