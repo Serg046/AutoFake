@@ -1,11 +1,9 @@
 ﻿using Mono.Cecil;
-using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
-using GuardExtensions;
 
 namespace AutoFake
 {
@@ -30,26 +28,16 @@ namespace AutoFake
             }
         }
 
-        public GeneratedObject Generate(SetupCollection setups, MethodInfo executeFunc)
+        public void Generate(SetupCollection setups, MethodInfo executeFunc)
         {
             if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
                 throw new SetupException("At least one non-void installed member does not have a return value.");
+            if (_generatedObject.IsBuilt)
+                throw new FakeGeneretingException("Fake is already build. Please use another instance.");
 
             MockSetups(setups, executeFunc);
-
-            using (var memoryStream = new MemoryStream())
-            {
-                _typeInfo.WriteAssembly(memoryStream);
-                var assembly = Assembly.Load(memoryStream.ToArray());
-                _generatedObject.Type = assembly.GetType(_typeInfo.FullTypeName);
-                _generatedObject.Instance = IsStatic(_typeInfo.SourceType)
-                    ? null
-                    : _typeInfo.CreateInstance(_generatedObject.Type);
-                return _generatedObject;
-            }
         }
 
-        private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
 
         private void MockSetups(SetupCollection setups, MethodInfo executeFunc)
         {

@@ -52,7 +52,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void RuntimeValue_ThrowsIfIsNotVisited()
         {
-            var visitor = new GetValueMemberVisitor(new GeneratedObject()
+            var visitor = new GetValueMemberVisitor(new GeneratedObject(null)
             {
                 Instance = new SomeInstanceType(),
                 Type = typeof(SomeInstanceType)
@@ -66,7 +66,7 @@ namespace AutoFake.UnitTests
         }
 
         private static GeneratedObject GetGeneratedObject(object instance, Type type)
-            => new GeneratedObject()
+            => new GeneratedObject(null)
             {
                 Instance = instance,
                 Type = type

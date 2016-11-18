@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Exceptions;
 using AutoFake.Setup;
 using GuardExtensions;
 using Xunit;
@@ -211,6 +212,15 @@ namespace AutoFake.UnitTests
 
             fake.Reset();
             Assert.Empty(fake.Setups);
+        }
+
+        [Fact]
+        public void Rewrite_AfterExecuteInvocation_Throws()
+        {
+            var fake = new Fake<FakeTests>();
+            fake.Execute(f => f.SomeMethod(0));
+
+            Assert.Throws<FakeGeneretingException>(() => fake.Rewrite(f => f.SomeMethod(0)));
         }
     }
 }

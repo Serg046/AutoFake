@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
-using GuardExtensions;
 using Mono.Cecil;
 using Xunit;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
@@ -19,6 +18,7 @@ namespace AutoFake.UnitTests
         public object SomeMethodWithObjectArg(object a) => a;
         public int SomeProperty => 1;
         private static readonly List<int> _actualCallsField = new List<int>() { 0 };
+        private GeneratedObject _generatedObject;
 
         public void TestMethod()
         {
@@ -29,7 +29,8 @@ namespace AutoFake.UnitTests
         private FakeGenerator GetFakeGenerator()
         {
             var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            return new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
+            _generatedObject = new GeneratedObject(typeInfo);
+            return new FakeGenerator(typeInfo, new MockerFactory(), _generatedObject);
         }
 
         [Fact]
@@ -38,8 +39,7 @@ namespace AutoFake.UnitTests
             var mockedMemberInfo = new MockedMemberInfo(new FakeSetupPack(), GetType().GetMethods().First(), null);
             mockedMemberInfo.RetValueField = new FieldDefinition("Test", FieldAttributes.Public, new FunctionPointerType());
 
-            var generateObject = new GeneratedObject();
-            generateObject.Type = GetType();
+            var generateObject = new GeneratedObject(new TypeInfo(GetType(), new List<FakeDependency>()));
             generateObject.MockedMembers.Add(mockedMemberInfo);
 
             Expression<Action> expr = () => TestMethod();
@@ -78,16 +78,16 @@ namespace AutoFake.UnitTests
                 IsReturnObjectSet = true
             });
 
-            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
 
             //act
             Expression<Action> expr = () => TestMethod();
-            new Executor(generateObject, expr).Execute();
+            new Executor(_generatedObject, expr).Execute();
 
             //assert
-            foreach (var mockedMemberInfo in generateObject.MockedMembers.Where(m => !m.Setup.IsVoid))
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers.Where(m => !m.Setup.IsVoid))
             {
-                var field = generateObject.Type
+                var field = _generatedObject.Type
                     .GetField(mockedMemberInfo.RetValueField.Name, BindingFlags.NonPublic | BindingFlags.Static);
 
                 Assert.Equal(7, field.GetValue(null));
@@ -108,12 +108,12 @@ namespace AutoFake.UnitTests
                 IsReturnObjectSet = true
             });
 
-            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
-            generateObject.MockedMembers[0].ActualCallsField =
+            GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            _generatedObject.MockedMembers[0].ActualCallsField =
                 new FieldDefinition("Test", FieldAttributes.Public, new FunctionPointerType());
 
             Expression<Action> expr = () => TestMethod();
-            Assert.Throws<FakeGeneretingException>(() => new Executor(generateObject, expr).Execute());
+            Assert.Throws<FakeGeneretingException>(() => new Executor(_generatedObject, expr).Execute());
         }
 
         [Theory]
@@ -132,15 +132,15 @@ namespace AutoFake.UnitTests
                 IsReturnObjectSet = true
             });
 
-            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
-            generateObject.MockedMembers[0].ActualCallsField =
+            GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            _generatedObject.MockedMembers[0].ActualCallsField =
                 new FieldDefinition(nameof(_actualCallsField), FieldAttributes.Public, new FunctionPointerType());
 
             Expression<Action> expr = () => TestMethod();
             if (shoudBeFailed)
-                Assert.Throws<VerifiableException>(() => new Executor(generateObject, expr).Execute());
+                Assert.Throws<VerifiableException>(() => new Executor(_generatedObject, expr).Execute());
             else
-                new Executor(generateObject, expr).Execute();
+                new Executor(_generatedObject, expr).Execute();
         }
 
         [Fact]
@@ -157,12 +157,12 @@ namespace AutoFake.UnitTests
                 IsReturnObjectSet = true
             });
 
-            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
-            generateObject.MockedMembers[0].ActualCallsField =
+            GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            _generatedObject.MockedMembers[0].ActualCallsField =
                 new FieldDefinition(nameof(_actualCallsField), FieldAttributes.Public, new FunctionPointerType());
 
             Expression<Action> expr = () => TestMethod();
-            new Executor(generateObject, expr).Execute();
+            new Executor(_generatedObject, expr).Execute();
         }
 
         [Theory]
@@ -182,15 +182,15 @@ namespace AutoFake.UnitTests
                 IsReturnObjectSet = true
             });
 
-            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
-            generateObject.MockedMembers[0].ActualCallsField =
+            GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            _generatedObject.MockedMembers[0].ActualCallsField =
                 new FieldDefinition(nameof(_actualCallsField), FieldAttributes.Public, new FunctionPointerType());
 
             Expression<Action> expr = () => TestMethod();
             if (shoudBeFailed)
-                Assert.Throws<ExpectedCallsException>(() => new Executor(generateObject, expr).Execute());
+                Assert.Throws<ExpectedCallsException>(() => new Executor(_generatedObject, expr).Execute());
             else
-                new Executor(generateObject, expr).Execute();
+                new Executor(_generatedObject, expr).Execute();
         }
 
         [Fact]
@@ -207,15 +207,15 @@ namespace AutoFake.UnitTests
                 IsReturnObjectSet = true
             });
 
-            var generateObject = GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
+            GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
 
             //act
             Expression<Action> expr = () => TestMethod();
-            new Executor(generateObject, expr).Execute();
+            new Executor(_generatedObject, expr).Execute();
 
             //assert
-            var mockedMemberInfo = generateObject.MockedMembers.Single();
-            var field = generateObject.Type
+            var mockedMemberInfo = _generatedObject.MockedMembers.Single();
+            var field = _generatedObject.Type
                 .GetField(mockedMemberInfo.CallbackField.Name, BindingFlags.NonPublic | BindingFlags.Static);
             var callback = field.GetValue(null) as Action;
             Assert.Throws<InvalidOperationException>(() => callback());

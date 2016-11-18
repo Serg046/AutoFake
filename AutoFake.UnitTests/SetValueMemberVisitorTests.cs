@@ -24,11 +24,11 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Visit_Method_Throws()
         {
-            Assert.Throws<NotSupportedExpressionException>(() => new SetValueMemberVisitor(new GeneratedObject(), null).Visit(null, null));
+            Assert.Throws<NotSupportedExpressionException>(() => new SetValueMemberVisitor(new GeneratedObject(null), null).Visit(null, null));
         }
 
         private static GeneratedObject GetGeneratedObject(object instance, Type type)
-            => new GeneratedObject()
+            => new GeneratedObject(null)
             {
                 Instance = instance,
                 Type = type

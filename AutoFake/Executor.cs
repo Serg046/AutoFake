@@ -43,7 +43,11 @@ namespace AutoFake
 
         public object Execute()
         {
-            InitializeInstanceState();
+            if (!_generatedObject.IsBuilt)
+            {
+                _generatedObject.Build();
+                InitializeInstanceState();
+            }
             var visitor = new GetValueMemberVisitor(_generatedObject);
             _generatedObject.AcceptMemberVisitor(_invocationExpression.Body, visitor);
             var result = visitor.RuntimeValue;

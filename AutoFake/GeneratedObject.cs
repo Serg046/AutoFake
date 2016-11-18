@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,9 +11,17 @@ namespace AutoFake
 {
     internal class GeneratedObject
     {
+        private readonly TypeInfo _typeInfo;
+
+        public GeneratedObject(TypeInfo typeInfo)
+        {
+            _typeInfo = typeInfo;
+        }
+
         public object Instance { get; internal set; }
         public Type Type { get; internal set; }
         public IList<MockedMemberInfo> MockedMembers { get; } = new List<MockedMemberInfo>();
+        public bool IsBuilt { get; private set; }
 
         public void AcceptMemberVisitor(Expression expression, IMemberVisitor visitor) => VisitExpression(expression, visitor);
 
@@ -63,5 +72,21 @@ namespace AutoFake
             var field = Type.GetField(fieldInfo.Name);
             visitor.Visit(field);
         }
+
+        public void Build()
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                _typeInfo.WriteAssembly(memoryStream);
+                var assembly = Assembly.Load(memoryStream.ToArray());
+                Type = assembly.GetType(_typeInfo.FullTypeName, true);
+                Instance = IsStatic(_typeInfo.SourceType)
+                    ? null
+                    : _typeInfo.CreateInstance(Type);
+                IsBuilt = true;
+            }
+        }
+
+        private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
     }
 }

@@ -85,7 +85,7 @@ namespace AutoFake.UnitTests
                 .Returns(_mockerMock.Object);
             factoryMock.Setup(f => f.CreateMethodInjector(It.IsAny<IMethodMocker>())).Returns(_methodInjectorMock.Object);
 
-            _fakeGenerator = new FakeGenerator(typeInfo, factoryMock.Object, new GeneratedObject());
+            _fakeGenerator = new FakeGenerator(typeInfo, factoryMock.Object, new GeneratedObject(typeInfo));
         }
 
         [Fact]
@@ -100,7 +100,7 @@ namespace AutoFake.UnitTests
             var setups = new SetupCollection();
             setups.Add(new FakeSetupPack() { Method = someMethodInfo, IsVoid = false, IsReturnObjectSet = false, IsVerification = false});
 
-            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject());
+            var fakeGen = new FakeGenerator(typeInfo, new MockerFactory(), new GeneratedObject(typeInfo));
 
             Assert.Throws<SetupException>(() => fakeGen.Generate(setups, someMethodInfo));
         }

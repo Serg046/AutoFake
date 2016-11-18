@@ -41,7 +41,6 @@ namespace AutoFake
     public class Fake
     {
         private readonly FakeGenerator _fakeGenerator;
-        private string _assemblyFileName;
         private readonly GeneratedObject _generatedObject;
 
         public Fake(Type type, params object[] contructorArgs)
@@ -57,7 +56,7 @@ namespace AutoFake
 
             var typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
-            _generatedObject = new GeneratedObject();
+            _generatedObject = new GeneratedObject(typeInfo);
             _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory, _generatedObject);
 
             Setups = new SetupCollection();
@@ -101,7 +100,7 @@ namespace AutoFake
         public void SaveFakeAssembly(string fileName)
         {
             Guard.NotNull(fileName);
-            _assemblyFileName = fileName;
+            _fakeGenerator.Save(fileName);
         }
 
         //---------------------------------------------------------------------------------------------------------
@@ -187,21 +186,13 @@ namespace AutoFake
         protected T ExecuteImpl<T>(LambdaExpression expression)
         {
             var executor = new Executor<T>(_generatedObject, expression);
-            var result = executor.Execute();
-
-            if (_assemblyFileName != null)
-                _fakeGenerator.Save(_assemblyFileName);
-
-            return result;
+            return executor.Execute();
         }
 
         protected void ExecuteImpl(LambdaExpression expression)
         {
             var executor = new Executor(_generatedObject, expression);
             executor.Execute();
-
-            if (_assemblyFileName != null)
-                _fakeGenerator.Save(_assemblyFileName);
         }
 
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)

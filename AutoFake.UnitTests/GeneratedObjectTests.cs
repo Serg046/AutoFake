@@ -31,12 +31,12 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Ctor_MockedMembersInitialized()
         {
-            Assert.NotNull(new GeneratedObject().MockedMembers);
+            Assert.NotNull(new GeneratedObject(null).MockedMembers);
         }
 
         public static IEnumerable<object[]> AcceptMemberVisitorTestData()
         {
-            var generatedObject = new GeneratedObject()
+            var generatedObject = new GeneratedObject(null)
             {
                 Instance = new SomeInstanceType(),
                 Type = typeof(SomeInstanceType)
@@ -66,7 +66,7 @@ namespace AutoFake.UnitTests
             staticExpr = () => SomeInstanceType.SomeStaticField;
             yield return new object[] { generatedObject, staticExpr.Body, verification };
 
-            generatedObject = new GeneratedObject()
+            generatedObject = new GeneratedObject(null)
             {
                 Instance = null,
                 Type = typeof(SomeStaticType)
@@ -101,7 +101,19 @@ namespace AutoFake.UnitTests
         public void AcceptMemberVisitor_InvalidExpression_Throws()
         {
             Assert.Throws<NotSupportedExpressionException>(
-                () => new GeneratedObject().AcceptMemberVisitor(Expression.Constant(0), new GetValueMemberVisitor(new GeneratedObject())));
+                () => new GeneratedObject(null).AcceptMemberVisitor(Expression.Constant(0), new GetValueMemberVisitor(new GeneratedObject(null))));
+        }
+
+        [Fact]
+        public void Build_TypeInfo_BuildsFake()
+        {
+            var generatedObject = new GeneratedObject(new TypeInfo(GetType(), new List<FakeDependency>()));
+
+            generatedObject.Build();
+
+            Assert.True(generatedObject.IsBuilt);
+            Assert.NotNull(generatedObject.Type);
+            Assert.NotNull(generatedObject.Instance);
         }
     }
 }
