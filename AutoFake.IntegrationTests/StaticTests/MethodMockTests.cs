@@ -120,16 +120,19 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var asserDate = new DateTime(2016, 11, 04);
             var fake = new Fake(typeof(TestClass));
+            var zones = TimeZoneInfo.GetSystemTimeZones();
+            var correctZone = zones[0];
+            var failedZone = zones[1];
 
             fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.Is<DateTime>(d => d > asserDate),
-                Arg.Is<TimeZoneInfo>(t => !Equals(t, TimeZoneInfo.Local)))).CheckArguments();
+                Arg.Is<TimeZoneInfo>(t => !Equals(t, failedZone)))).CheckArguments();
 
             fake.Rewrite(() => TestClass.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
-            Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 05), TimeZoneInfo.Local)));
-            Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 03), TimeZoneInfo.Utc)));
-            Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 03), TimeZoneInfo.Local)));
-            fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 05), TimeZoneInfo.Utc));
+            Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 05), failedZone)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 03), correctZone)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 03), failedZone)));
+            fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 05), correctZone));
         }
 
         private static class TestClass

@@ -38,17 +38,20 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
 
             var date = DateTime.UtcNow;
-            var zone = TimeZoneInfo.Local;
-            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
+            var zones = TimeZoneInfo.GetSystemTimeZones();
+            var setupZone = zones[0];
+            var failedZone = zones[1];
+
+            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(date, setupZone))
                 .CheckArguments()
                 .Returns(DateTime.MinValue);
 
             fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
-            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, zone)));
-            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(date, TimeZoneInfo.Utc)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, setupZone)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(date, failedZone)));
 
-            Assert.Equal(DateTime.MinValue, fake.Execute(f => f.GetValueByArguments(date, zone)));
+            Assert.Equal(DateTime.MinValue, fake.Execute(f => f.GetValueByArguments(date, setupZone)));
         }
 
         [Fact]

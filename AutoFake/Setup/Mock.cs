@@ -100,7 +100,7 @@ namespace AutoFake.Setup
                     var realArg = field.GetValue(null);
                     if (!argumentChecker.Check(realArg))
                         throw new VerifiableException(
-                            $"Setup and real arguments are different. Expected: {argumentChecker}. Actual: {realArg}.");
+                            $"Setup and real arguments are different. Runtime argument - {realArg}.");
                 }
             }
         }
