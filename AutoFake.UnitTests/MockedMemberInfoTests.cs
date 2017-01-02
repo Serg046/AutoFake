@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using AutoFake.Setup;
 using Mono.Cecil;
 using Xunit;
@@ -45,9 +47,12 @@ namespace AutoFake.UnitTests
         [Fact]
         public void EvaluateRetValueFieldName_Setup_ReturnsCorrectFieldName()
         {
-            var memberInfo = new MockedMemberInfo(new FakeSetupPack { ReturnObjectFieldName = "installed"}, null, "suffix");
+            var memberInfo = new MockedMemberInfo(new ReplaceableMock(GetType().GetMethod(nameof(Test)),
+                new List<FakeArgument>(), null), null, "suffix");
 
-            Assert.Equal("installed_suffix", memberInfo.EvaluateRetValueFieldName());
+            Assert.Equal("SystemInt32_Test_SystemObject_suffix", memberInfo.EvaluateRetValueFieldName());
         }
+
+        public int Test(object arg) => 0;
     }
 }

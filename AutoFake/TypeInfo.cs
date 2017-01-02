@@ -36,7 +36,7 @@ namespace AutoFake
         
         public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
 
-        public string GetInstalledMethodTypeName(FakeSetupPack setup)
+        public string GetInstalledMethodTypeName(Mock setup)
         {
             string result = null;
             var type = setup.Method.DeclaringType;

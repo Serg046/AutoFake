@@ -1,7 +1,7 @@
 ﻿using System;
 using Mono.Cecil.Cil;
 
-namespace AutoFake.UnitTests
+namespace AutoFake.UnitTests.TestUtils
 {
 #pragma warning disable CS0659
     internal class Cil

@@ -158,7 +158,7 @@ namespace AutoFake.IntegrationTests
             SetupContext.SetEventRecorder(eventRecorder);
 
             var currentChecker = _checkerMock.Object;
-            var failChecker = Mock.Of<IFakeArgumentChecker>();
+            var failChecker = Moq.Mock.Of<IFakeArgumentChecker>();
             Assert.False(ReferenceEquals(currentChecker, failChecker));
 
             for (var i = 0; i < PARALLEL_INVOKE_ITERATION_COUNT; i++)

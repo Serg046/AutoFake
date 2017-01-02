@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System.Collections.Generic;
+using Mono.Cecil;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,33 +29,25 @@ namespace AutoFake
             }
         }
 
-        public void Generate(SetupCollection setups, MethodInfo executeFunc)
+        public void Generate(ICollection<Mock> mocks, MethodInfo executeFunc)
         {
-            if (setups.Any(s => !s.IsVerification && !s.IsVoid && !s.IsReturnObjectSet))
-                throw new SetupException("At least one non-void installed member does not have a return value.");
             if (_generatedObject.IsBuilt)
-                throw new FakeGeneretingException("Fake is already build. Please use another instance.");
+                throw new FakeGeneretingException("Fake is already built. Please use another instance.");
 
-            MockSetups(setups, executeFunc);
+            MockSetups(mocks, executeFunc);
         }
 
 
-        private void MockSetups(SetupCollection setups, MethodInfo executeFunc)
+        private void MockSetups(ICollection<Mock> mocks, MethodInfo executeFunc)
         {
-            foreach (var setup in setups)
+            foreach (var mock in mocks)
             {
                 var mocker = _mockerFactory.CreateMocker(_typeInfo,
-                    new MockedMemberInfo(setup, executeFunc, GetExecuteFuncSuffixName(executeFunc)));
-                mocker.GenerateCallsCounter();
+                    new MockedMemberInfo(mock, executeFunc, GetExecuteFuncSuffixName(executeFunc)));
+                mock.PrepareForInjecting(mocker);
 
-                if (!setup.IsVoid)
-                    mocker.GenerateRetValueField();
-                if (setup.Callback != null)
-                    mocker.GenerateCallbackField();
-
-                var methodInjector = _mockerFactory.CreateMethodInjector(mocker);
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
-                ReplaceInstructions(method, methodInjector);
+                ReplaceInstructions(method, mock, mocker);
 
                 _generatedObject.MockedMembers.Add(mocker.MemberInfo);
             }
@@ -69,26 +62,26 @@ namespace AutoFake
             return suffixName;
         }
 
-        private void ReplaceInstructions(MethodDefinition currentMethod, IMethodInjector methodInjector)
+        private void ReplaceInstructions(MethodDefinition currentMethod, Mock mock, IMocker mocker)
         {
             MethodDefinition asyncMethod;
-            if (methodInjector.IsAsyncMethod(currentMethod, out asyncMethod))
-                ReplaceInstructions(asyncMethod, methodInjector);
+            if (mock.IsAsyncMethod(currentMethod, out asyncMethod))
+                ReplaceInstructions(asyncMethod, mock, mocker);
             
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
-                if (methodInjector.IsMethodInstruction(instruction))
+                if (mock.IsMethodInstruction(instruction))
                 {
                     var method = (MethodReference)instruction.Operand;
                     
-                    if (methodInjector.IsInstalledMethod(method))
+                    if (mock.IsInstalledMethod(_typeInfo, method))
                     {
                         var proc = currentMethod.Body.GetILProcessor();
-                        methodInjector.Process(proc, instruction);
+                        mock.Inject(mocker, proc, instruction);
                     }
                     else if (IsClientSourceCode(method))
                     {
-                        ReplaceInstructions(method.Resolve(), methodInjector);
+                        ReplaceInstructions(method.Resolve(), mock, mocker);
                     }
                 }
             }

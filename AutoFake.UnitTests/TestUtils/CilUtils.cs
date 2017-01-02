@@ -4,7 +4,7 @@ using System.Linq;
 using GuardExtensions;
 using Mono.Cecil.Cil;
 
-namespace AutoFake.UnitTests
+namespace AutoFake.UnitTests.TestUtils
 {
     internal static class CilUtils
     {

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Setup;
-using GuardExtensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
@@ -17,7 +16,7 @@ namespace AutoFake
         private const string CALLS_COUNTER_FLD_SUFFIX = "_ActualIds";
         private const string CALLBACK_FLD_SUFFIX = "_Callback";
 
-        private readonly FakeSetupPack _setup;
+        private readonly Mock _setup;
         private readonly MethodReference _addToListMethodInfo;
         private readonly MethodReference _invokeActionMethod;
 
@@ -26,7 +25,7 @@ namespace AutoFake
             TypeInfo = typeInfo;
             MemberInfo = mockedMemberInfo;
 
-            _setup = mockedMemberInfo.Setup;
+            _setup = mockedMemberInfo.Mock;
             _addToListMethodInfo = typeInfo.Import(typeof(List<int>).GetMethod(nameof(List<int>.Add)));
             _invokeActionMethod = typeInfo.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
         }
@@ -36,8 +35,6 @@ namespace AutoFake
 
         public void GenerateRetValueField()
         {
-            Guard.False(_setup.IsVoid);
-
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
             MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                 TypeInfo.Import(_setup.Method.ReturnType));
@@ -100,11 +97,11 @@ namespace AutoFake
         public IList<FieldDefinition> PopMethodArguments(ILProcessor ilProcessor, Instruction instruction)
         {
             var result = new List<FieldDefinition>();
-            var parametersCount = MemberInfo.Setup.SetupArguments.Count;
-            var installedMethodArguments = MemberInfo.Setup.Method.GetParameters();
+            var parametersCount = MemberInfo.Mock.SetupArguments.Count;
+            var installedMethodArguments = MemberInfo.Mock.Method.GetParameters();
             for (var i = parametersCount - 1; i >= 0; i--)
             {
-                var fieldName = MemberInfo.Setup.Method.Name + "Argument" + (parametersCount * MemberInfo.SourceCodeCallsCount + i);
+                var fieldName = MemberInfo.Mock.Method.Name + "Argument" + (parametersCount * MemberInfo.SourceCodeCallsCount + i);
                 var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                     TypeInfo.Import(installedMethodArguments[i].ParameterType));
                 TypeInfo.AddField(field);
@@ -118,7 +115,7 @@ namespace AutoFake
         }
 
         public void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction)
-            => MemberInfo.Setup.SetupArguments.ForEach(arg => RemoveStackArgument(ilProcessor, instruction));
+            => MemberInfo.Mock.SetupArguments.ForEach(arg => RemoveStackArgument(ilProcessor, instruction));
 
         public void RemoveStackArgument(ILProcessor ilProcessor, Instruction instruction)
             => ilProcessor.InsertBefore(instruction, ilProcessor.Create(OpCodes.Pop));
