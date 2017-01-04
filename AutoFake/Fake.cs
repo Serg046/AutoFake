@@ -117,16 +117,16 @@ namespace AutoFake
             return new ReplaceableMockInstaller<TReturn>(Mocks, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body));
         }
 
-        public ReplaceableMockInstaller<object> Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+        public ReplaceableMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc);
-            return new ReplaceableMockInstaller<object>(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            return new ReplaceableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
         }
 
-        public ReplaceableMockInstaller<object> Replace(Expression<Action> voidInstanceSetupFunc)
+        public ReplaceableMockInstaller Replace(Expression<Action> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc);
-            return new ReplaceableMockInstaller<object>(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            return new ReplaceableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
         }
 
         //---------------------------------------------------------------------------------------------------------

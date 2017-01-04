@@ -5,7 +5,7 @@ using AutoFake.Exceptions;
 
 namespace AutoFake.Setup
 {
-    public class ReplaceableMockInstaller<TReturn> : MockInstaller
+    public class ReplaceableMockInstaller<TReturn> : ReplaceableMockInstallerBase
     {
         private readonly MethodInfo _method;
         private readonly List<FakeArgument> _setupArguments;
@@ -43,8 +43,43 @@ namespace AutoFake.Setup
 
         public ReplaceableMockInstaller<TReturn> Callback(Action callback)
         {
-            if (callback == null)
-                throw new SetupException("Callback must be not null");
+            ValidateCallback(callback);
+            _parameters.Callback = callback;
+            return this;
+        }
+    }
+
+    public class ReplaceableMockInstaller : ReplaceableMockInstallerBase
+    {
+        private readonly MethodInfo _method;
+        private readonly List<FakeArgument> _setupArguments;
+        private readonly ReplaceableMock.Parameters _parameters;
+
+        internal ReplaceableMockInstaller(ICollection<Mock> mocks, MethodInfo method, List<FakeArgument> setupArguments)
+        {
+            _method = method;
+            _setupArguments = setupArguments;
+            _parameters = new ReplaceableMock.Parameters();
+            mocks.Add(new ReplaceableMock(method, setupArguments, _parameters));
+        }
+
+        public ReplaceableMockInstaller CheckArguments()
+        {
+            ValidateSetupArguments(_method, _setupArguments);
+            _parameters.NeedCheckArguments = true;
+            return this;
+        }
+
+        public ReplaceableMockInstaller ExpectedCallsCount(int expectedCallsCount)
+        {
+            ValidateExpectedCallsCount(expectedCallsCount);
+            _parameters.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
+            return this;
+        }
+
+        public ReplaceableMockInstaller Callback(Action callback)
+        {
+            ValidateCallback(callback);
             _parameters.Callback = callback;
             return this;
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
 
@@ -16,6 +17,15 @@ namespace AutoFake.Setup
         {
             if (expectedCallsCount < 1)
                 throw new SetupException("ExpectedCallsCount must be greater than 0");
+        }
+    }
+
+    public abstract class ReplaceableMockInstallerBase : MockInstaller
+    {
+        internal void ValidateCallback(Action callback)
+        {
+            if (callback == null)
+                throw new SetupException("Callback must be not null");
         }
     }
 }

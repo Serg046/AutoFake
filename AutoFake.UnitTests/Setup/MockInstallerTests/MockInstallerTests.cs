@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
@@ -18,21 +17,27 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
             Assert.Throws<SetupException>(()
                 => new ReplaceableMockInstaller<int>(new List<Mock>(), method, arguments).CheckArguments());
             Assert.Throws<SetupException>(()
+                => new ReplaceableMockInstaller(new List<Mock>(), method, arguments).CheckArguments());
+            Assert.Throws<SetupException>(()
                 => new VerifiableMockInstaller(new List<Mock>(), method, arguments).CheckArguments());
 
             arguments = new List<FakeArgument>();
-            var replaceableMockInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), method, arguments);
+            var replaceableMockInstaller = new ReplaceableMockInstaller(new List<Mock>(), method, arguments);
+            var replaceableGenericMockInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), method, arguments);
             var verifiableMockInstaller = new VerifiableMockInstaller(new List<Mock>(), method, arguments);
 
             Assert.Throws<SetupException>(() => replaceableMockInstaller.CheckArguments());
+            Assert.Throws<SetupException>(() => replaceableGenericMockInstaller.CheckArguments());
             Assert.Throws<SetupException>(() => verifiableMockInstaller.CheckArguments());
 
             arguments.Add(new FakeArgument(new EqualityArgumentChecker(1)));
             replaceableMockInstaller.CheckArguments();
+            replaceableGenericMockInstaller.CheckArguments();
             verifiableMockInstaller.CheckArguments();
 
             arguments.Add(new FakeArgument(new EqualityArgumentChecker(1)));
             Assert.Throws<SetupException>(() => replaceableMockInstaller.CheckArguments());
+            Assert.Throws<SetupException>(() => replaceableGenericMockInstaller.CheckArguments());
             Assert.Throws<SetupException>(() => verifiableMockInstaller.CheckArguments());
         }
 
@@ -59,14 +64,17 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
         public void Callback_Null_Throws()
         {
             var arguments = new List<FakeArgument> {new FakeArgument(new EqualityArgumentChecker(1))};
+            var genericInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments);
             var installer = new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments);
 
+            Assert.Throws<SetupException>(() => genericInstaller.Callback(null));
             Assert.Throws<SetupException>(() => installer.Callback(null));
         }
 
         public static IEnumerable<object[]> GetInstallers()
         {
             var arguments = new List<FakeArgument> {new FakeArgument(new EqualityArgumentChecker(1))};
+            yield return new object[] {new ReplaceableMockInstaller(new List<Mock>(), GetMethod(), arguments) };
             yield return new object[] {new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments) };
             yield return new object[] {new VerifiableMockInstaller(new List<Mock>(), GetMethod(), arguments) };
         }
