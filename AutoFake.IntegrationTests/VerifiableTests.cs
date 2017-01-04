@@ -76,13 +76,13 @@ namespace AutoFake.IntegrationTests
         public void BranchesTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Verify((TestClass t) => t.CodeBranch(1, 2))
+            fake.Verify(t => t.CodeBranch(1, 2))
                 .ExpectedCallsCount(2);
 
             Assert.Equal(6, fake.Rewrite(f => f.Sum(1, 2)).Execute());
 
             fake = new Fake<TestClass>();
-            fake.Verify((TestClass t) => t.CodeBranch(0, 0))
+            fake.Verify(t => t.CodeBranch(0, 0))
                 .ExpectedCallsCount(1);
 
             Assert.Equal(0, fake.Rewrite(f => f.Sum(0, 1)).Execute());

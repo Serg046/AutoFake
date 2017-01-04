@@ -17,7 +17,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass t) => t.DynamicValue()).Returns(7);
+            fake.Replace(t => t.DynamicValue()).Returns(7);
 
             Assert.Equal(7, fake.Rewrite(f => f.GetDynamicValue()).Execute());
         }
@@ -93,7 +93,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass t) => t.ThrowException());
+            fake.Replace(t => t.ThrowException());
 
             fake.Rewrite(f => f.UnsafeMethod()).Execute();
         }
@@ -103,8 +103,8 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass t) => t.DynamicValue()).Returns(7);
-            fake.Replace((TestClass t) => t.DynamicValue(5)).Returns(7);
+            fake.Replace(t => t.DynamicValue()).Returns(7);
+            fake.Replace(t => t.DynamicValue(5)).Returns(7);
 
             Assert.Equal(14, fake.Rewrite(f => f.GetDynValueByOveloadedMethodCalls()).Execute());
         }
@@ -114,7 +114,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<AsyncTestClass>();
 
-            fake.Replace((AsyncTestClass a) => a.GetDynamicValueAsync()).Returns(Task.FromResult(7));
+            fake.Replace(a => a.GetDynamicValueAsync()).Returns(Task.FromResult(7));
 
             Assert.Equal(7, await fake.Rewrite(f => f.GetValueAsync()).Execute());
         }
@@ -133,13 +133,13 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void ParamsMethodTest()
         {
             var fake = new Fake<ParamsTestClass>();
-            fake.Replace((ParamsTestClass p) => p.GetValue(1, 2, 3)).Returns(-1);
+            fake.Replace(p => p.GetValue(1, 2, 3)).Returns(-1);
 
             Assert.Equal(-1, fake.Rewrite(f => f.Test()).Execute());
 
             fake = new Fake<ParamsTestClass>();
             var values = new[] {1, 2, 3};
-            fake.Replace((ParamsTestClass p) => p.GetValue(values)).Returns(-1);
+            fake.Replace(p => p.GetValue(values)).Returns(-1);
 
             Assert.Equal(-1, fake.Rewrite(f => f.Test()).Execute());
         }

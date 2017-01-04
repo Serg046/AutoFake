@@ -76,7 +76,7 @@ namespace AutoFake.IntegrationTests
         public void BranchesTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace((TestClass t) => t.CodeBranch(1, 2))
+            fake.Replace(t => t.CodeBranch(1, 2))
                 .CheckArguments()
                 .ExpectedCallsCount(2)
                 .Returns(6);
@@ -84,7 +84,7 @@ namespace AutoFake.IntegrationTests
             Assert.Equal(12, fake.Rewrite(f => f.Sum(1, 2)).Execute());
 
             fake = new Fake<TestClass>();
-            fake.Replace((TestClass t) => t.CodeBranch(0, 0))
+            fake.Replace(t => t.CodeBranch(0, 0))
                 .CheckArguments()
                 .ExpectedCallsCount(1)
                 .Returns(6);

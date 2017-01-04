@@ -73,7 +73,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass t) => t.DynamicValue).Returns(7);
+            fake.Replace(t => t.DynamicValue).Returns(7);
 
             Assert.Equal(7, fake.Rewrite(f => f.GetDynamicValue()).Execute());
         }

@@ -9,7 +9,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass m) => m.GetValue())
+            fake.Replace(m => m.GetValue())
                 .Returns(1);
 
             fake.Rewrite(m => m.FirstMethod());
@@ -24,12 +24,12 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass m) => m.GetValue())
+            fake.Replace(m => m.GetValue())
                 .Returns(1);
             fake.Rewrite(m => m.FirstMethod());
 
             fake.Reset();
-            fake.Replace((TestClass m) => m.GetValue())
+            fake.Replace(m => m.GetValue())
                 .Returns(2);
             fake.Rewrite(m => m.SecondMethod());
 
@@ -42,12 +42,12 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((TestClass m) => m.GetValue())
+            fake.Replace(m => m.GetValue())
                 .Returns(1);
             fake.Rewrite(m => m.FirstMethod());
 
             fake.Reset();
-            fake.Replace((TestClass m) => m.GetValue())
+            fake.Replace(m => m.GetValue())
                 .Returns(2);
             fake.Rewrite(m => m.FirstMethod(Arg.DefaultOf<int>()));
 

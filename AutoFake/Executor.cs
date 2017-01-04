@@ -43,8 +43,8 @@ namespace AutoFake
             {
                 _generatedObject.Build();
                 InitializeInstanceState();
-                
             }
+
             var visitor = new GetValueMemberVisitor(_generatedObject);
             _generatedObject.AcceptMemberVisitor(_invocationExpression.Body, visitor);
 
