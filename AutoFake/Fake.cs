@@ -77,8 +77,7 @@ namespace AutoFake
 
         public Fake(Type type, params object[] contructorArgs)
         {
-            if (contructorArgs == null)
-                contructorArgs = new object[] {null};
+            Guard.NotNull(type, contructorArgs);
 
             var dependencies = contructorArgs.Select(c =>
             {
