@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
-using GuardExtensions;
 using Xunit;
 
 namespace AutoFake.UnitTests

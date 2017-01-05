@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using GuardExtensions;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.UnitTests.TestUtils
@@ -10,7 +9,8 @@ namespace AutoFake.UnitTests.TestUtils
     {
         public static bool Ordered(this IEnumerable<Instruction> instructions, params OpCode[] opCodes)
         {
-            Guard.Positive(opCodes.Length);
+            if (opCodes == null || opCodes.Length < 1)
+                throw new ArgumentException("opCodes is empty");
 
             Func<Instruction, bool> filter = i => i.OpCode != opCodes[0];
             var tmp = instructions.SkipWhile(filter);
@@ -29,7 +29,8 @@ namespace AutoFake.UnitTests.TestUtils
 
         public static bool Ordered(this IEnumerable<Instruction> instructions, params Cil[] cilCmds)
         {
-            Guard.Positive(cilCmds.Length);
+            if (cilCmds == null || cilCmds.Length < 1)
+                throw new ArgumentException("cilCmds is empty");
 
             Func<Instruction, bool> filter = i => i.OpCode != cilCmds[0].OpCode && i.Operand != cilCmds[0].Operand;
             var tmp = instructions.SkipWhile(filter);

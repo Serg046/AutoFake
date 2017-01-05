@@ -1,5 +1,5 @@
-﻿using AutoFake.Exceptions;
-using GuardExtensions;
+﻿using System;
+using AutoFake.Exceptions;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -9,25 +9,25 @@ namespace AutoFake.UnitTests
         [Fact]
         public void SaveFakeAssembly_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().SaveFakeAssembly(null));
+            Assert.Throws<ArgumentNullException>(() => new Fake<FakeTests>().SaveFakeAssembly(null));
         }
 
         [Fact]
         public void Replace_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Replace(null));
+            Assert.Throws<ArgumentNullException>(() => new Fake<FakeTests>().Replace(null));
         }
 
         [Fact]
         public void Verify_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Verify(null));
+            Assert.Throws<ArgumentNullException>(() => new Fake<FakeTests>().Verify(null));
         }
 
         [Fact]
         public void Execute_Null_Throws()
         {
-            Assert.Throws<ContractFailedException>(() => new Fake<FakeTests>().Execute(null));
+            Assert.Throws<ArgumentNullException>(() => new Fake<FakeTests>().Execute(null));
         }
 
         [Fact]
