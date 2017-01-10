@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace AutoFake
+namespace AutoFake.Expression
 {
     internal class GetValueMemberVisitor : IMemberVisitor
     {
@@ -20,27 +20,25 @@ namespace AutoFake
             get
             {
                 if (!_isRuntimeValueSet)
-                    throw new InvalidOperationException($"RuntimeValue is not set. Please run {nameof(Visit)}() method.");
+                    throw new InvalidOperationException($"{nameof(RuntimeValue)} is not set. Please run {nameof(Visit)}() method.");
                 return _runtimeValue;
             }
-            private set { _runtimeValue = value; }
+            private set
+            {
+                _runtimeValue = value;
+                _isRuntimeValueSet = true;
+            }
         }
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
         {
-            var instanceExpr = _instance == null || methodInfo.IsStatic ? null : Expression.Constant(_instance);
-            var callExpression = Expression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
+            var instanceExpr = _instance == null || methodInfo.IsStatic ? null : System.Linq.Expressions.Expression.Constant(_instance);
+            var callExpression = System.Linq.Expressions.Expression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
 
-            RuntimeValue = GetValueSafe(() => Expression.Lambda(callExpression).Compile().DynamicInvoke());
-
-            _isRuntimeValueSet = true;
+            RuntimeValue = GetValueSafe(() => System.Linq.Expressions.Expression.Lambda(callExpression).Compile().DynamicInvoke());
         }
 
-        public void Visit(PropertyInfo propertyInfo)
-        {
-            RuntimeValue = GetValueSafe(() => propertyInfo.GetValue(_instance, null));
-            _isRuntimeValueSet = true;
-        }
+        public void Visit(PropertyInfo propertyInfo) => RuntimeValue = GetValueSafe(() => propertyInfo.GetValue(_instance, null));
 
         private object GetValueSafe(Func<object> func)
         {
@@ -54,10 +52,6 @@ namespace AutoFake
             }
         }
 
-        public void Visit(FieldInfo fieldInfo)
-        {
-            RuntimeValue = fieldInfo.GetValue(_instance);
-            _isRuntimeValueSet = true;
-        }
+        public void Visit(FieldInfo fieldInfo) => RuntimeValue = fieldInfo.GetValue(_instance);
     }
 }

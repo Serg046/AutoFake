@@ -19,7 +19,7 @@ namespace AutoFake.Setup
         }
 
         public MethodInfo Method { get; }
-        public List<FakeArgument> SetupArguments { get; }
+        public IList<FakeArgument> SetupArguments { get; }
 
         public abstract void PrepareForInjecting(IMocker mocker);
         public abstract void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);

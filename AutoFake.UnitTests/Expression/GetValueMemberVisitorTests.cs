@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Expression;
 using Xunit;
 
-namespace AutoFake.UnitTests
+namespace AutoFake.UnitTests.Expression
 {
     public class GetValueMemberVisitorTests
     {

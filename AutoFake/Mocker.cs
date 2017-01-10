@@ -115,7 +115,10 @@ namespace AutoFake
         }
 
         public void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction)
-            => MemberInfo.Mock.SetupArguments.ForEach(arg => RemoveStackArgument(ilProcessor, instruction));
+        {
+            foreach (var arg in MemberInfo.Mock.SetupArguments)
+                RemoveStackArgument(ilProcessor, instruction);
+        }
 
         public void RemoveStackArgument(ILProcessor ilProcessor, Instruction instruction)
             => ilProcessor.InsertBefore(instruction, ilProcessor.Create(OpCodes.Pop));

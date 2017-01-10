@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using AutoFake.Exceptions;
-using Microsoft.CSharp.RuntimeBinder;
+using AutoFake.Expression;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
+using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake
 {
@@ -23,54 +22,10 @@ namespace AutoFake
         public IList<MockedMemberInfo> MockedMembers { get; } = new List<MockedMemberInfo>();
         public bool IsBuilt { get; private set; }
 
-        public void AcceptMemberVisitor(Expression expression, IMemberVisitor visitor) => VisitExpression(expression, visitor);
-
-        private void VisitExpression(Expression expression, IMemberVisitor visitor)
+        public void AcceptMemberVisitor(LinqExpression expression, IMemberVisitor visitor)
         {
-            try
-            {
-                VisitExpressionImpl((dynamic)expression, visitor);
-            }
-            catch (RuntimeBinderException)
-            {
-                throw new NotSupportedExpressionException(
-                    $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
-            }
-        }
-
-        private void VisitExpressionImpl(UnaryExpression expression, IMemberVisitor visitor) => VisitExpression(expression.Operand, visitor);
-
-        private void VisitExpressionImpl(MethodCallExpression expression, IMemberVisitor visitor)
-        {
-            var method = Type.GetMethod(expression.Method.Name,
-                expression.Method.GetParameters().Select(p => p.ParameterType).ToArray());
-
-            visitor.Visit(expression, method);
-        }
-
-        private void VisitExpressionImpl(MemberExpression expression, IMemberVisitor visitor)
-        {
-            try
-            {
-                VisitExpressionImpl((dynamic)expression.Member, visitor);
-            }
-            catch (RuntimeBinderException)
-            {
-                throw new NotSupportedExpressionException(
-                    $"Ivalid MemberExpression format. Type '{expression.Member.GetType().FullName}'. Source: {expression}.");
-            }
-        }
-
-        private void VisitExpressionImpl(PropertyInfo propertyInfo, IMemberVisitor visitor)
-        {
-            var property = Type.GetProperty(propertyInfo.Name);
-            visitor.Visit(property);
-        }
-
-        private void VisitExpressionImpl(FieldInfo fieldInfo, IMemberVisitor visitor)
-        {
-            var field = Type.GetField(fieldInfo.Name);
-            visitor.Visit(field);
+            var invocationExpression = new InvocationExpression(expression);
+            invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, Type));
         }
 
         public void Build()

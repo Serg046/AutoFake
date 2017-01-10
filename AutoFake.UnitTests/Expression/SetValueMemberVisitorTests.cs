@@ -1,8 +1,9 @@
 ﻿using System;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using Xunit;
 
-namespace AutoFake.UnitTests
+namespace AutoFake.UnitTests.Expression
 {
     public class SetValueMemberVisitorTests
     {

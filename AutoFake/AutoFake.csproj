@@ -59,19 +59,23 @@
     <Compile Include="Exceptions\SetupContextStateException.cs" />
     <Compile Include="Exceptions\SetupException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
+    <Compile Include="ExpressionUtils.cs" />
+    <Compile Include="Expression\GetArgumentsMemberVisitor.cs" />
+    <Compile Include="Expression\TargetMemberVisitor.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FakeArgument.cs" />
-    <Compile Include="GetValueMemberVisitor.cs" />
+    <Compile Include="Expression\GetSourceMemberVisitor.cs" />
+    <Compile Include="Expression\GetValueMemberVisitor.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IEventRecorder.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
     <Compile Include="Arg.cs" />
+    <Compile Include="Expression\InvocationExpression.cs" />
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
     <Compile Include="Setup\SetupContext.cs" />
     <Compile Include="Setup\VerifiableMock.cs" />
-    <Compile Include="SetValueMemberVisitor.cs" />
-    <Compile Include="ExpressionUtils.cs" />
+    <Compile Include="Expression\SetValueMemberVisitor.cs" />
     <Compile Include="Fake.cs" />
     <Compile Include="FakeDependency.cs" />
     <Compile Include="FakeGenerator.cs" />
@@ -92,6 +96,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

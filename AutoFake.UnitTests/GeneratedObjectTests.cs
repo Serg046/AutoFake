@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using Moq;
 using Xunit;
+using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.UnitTests
 {
@@ -87,7 +89,7 @@ namespace AutoFake.UnitTests
         [Theory]
         [MemberData(nameof(AcceptMemberVisitorTestData))]
         internal void AcceptMemberVisitor_ValidData_Success(GeneratedObject generatedObject,
-            Expression expression, Expression<Action<IMemberVisitor>> verification)
+            LinqExpression expression, Expression<Action<IMemberVisitor>> verification)
         {
             var visitorMock = new Mock<IMemberVisitor>();
 
@@ -100,7 +102,7 @@ namespace AutoFake.UnitTests
         public void AcceptMemberVisitor_InvalidExpression_Throws()
         {
             Assert.Throws<NotSupportedExpressionException>(
-                () => new GeneratedObject(null).AcceptMemberVisitor(Expression.Constant(0), new GetValueMemberVisitor(new GeneratedObject(null))));
+                () => new GeneratedObject(null).AcceptMemberVisitor(LinqExpression.Constant(0), new GetValueMemberVisitor(new GeneratedObject(null))));
         }
 
         [Fact]

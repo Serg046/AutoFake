@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using AutoFake.Setup;
+using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake
 {
@@ -93,35 +94,9 @@ namespace AutoFake
 
         internal ICollection<Mock> Mocks { get; }
 
-        internal List<FakeArgument> GetSetupArguments(Expression expression)
+        internal List<FakeArgument> GetSetupArguments(LinqExpression expression)
         {
-            var result = new List<FakeArgument>();
-
-            if (expression is UnaryExpression)
-            {
-                result = GetSetupArguments(((UnaryExpression)expression).Operand);
-            }
-            else if (expression is MethodCallExpression)
-            {
-                FillSetupArguments(expression, result);
-            }
-
-            return result;
-        }
-
-        private static void FillSetupArguments(Expression expression, List<FakeArgument> result)
-        {
-            using (var setupContext = new SetupContext())
-            {
-                foreach (var argument in ExpressionUtils.GetArguments((MethodCallExpression)expression))
-                {
-                    var argumentChecker = setupContext.IsCheckerSet
-                        ? setupContext.PopChecker()
-                        : new EqualityArgumentChecker(argument);
-                    var fakeArgument = new FakeArgument(argumentChecker);
-                    result.Add(fakeArgument);
-                }
-            }
+            return ExpressionUtils.GetArguments(expression).ToList();
         }
 
         //---------------------------------------------------------------------------------------------------------

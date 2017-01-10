@@ -2,7 +2,7 @@
 using System.Reflection;
 using AutoFake.Exceptions;
 
-namespace AutoFake
+namespace AutoFake.Expression
 {
     internal class SetValueMemberVisitor : IMemberVisitor
     {
