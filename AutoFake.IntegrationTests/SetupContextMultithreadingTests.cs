@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
@@ -94,16 +95,25 @@ namespace AutoFake.IntegrationTests
         [Fact(Skip = "It takes a long time")]
         public void Dispose_ParallelInvoke_ThreadSafe()
         {
+            var eventRecorder = new SingleStringEventRecorder();
+            SetupContext.SetEventRecorder(eventRecorder);
             for (var i = 0; i < PARALLEL_INVOKE_ITERATION_COUNT; i++)
             {
                 var setupContext = new SetupContext();
-                var exceptionCount = 0;
 
-                var t1 = Task.Run(() => RunTestTask<MissedSetupContextException>(ref exceptionCount, () => setupContext.Dispose()));
-                var t2 = Task.Run(() => RunTestTask<MissedSetupContextException>(ref exceptionCount, () => setupContext.Dispose()));
-
-                Task.WaitAll(t1, t2);
-                Assert.True(exceptionCount == 1, $"Failed on {i} iteration. Exception count = {exceptionCount}.");
+                try
+                {
+                    Task.WaitAll(
+                        Task.Run(() => setupContext.Dispose()),
+                        Task.Run(() => new SetupContext()),
+                        Task.Run(() => setupContext.Dispose()));
+                }
+                catch (AggregateException ex) when (ex.Flatten().InnerExceptions.Any(e => e is MissedSetupContextException))
+                {
+                    if (eventRecorder.Events.StartsWith(".ctorDispose.ctor"))
+                        throw new Exception($"Failed on {i} iteration.");
+                }
+                eventRecorder.Reset();
             }
         }
 

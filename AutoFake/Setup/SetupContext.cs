@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Threading;
 using AutoFake.Exceptions;
 
 namespace AutoFake.Setup
 {
     internal class SetupContext : IDisposable
     {
-#pragma warning disable 169
         private static IEventRecorder _eventRecorder;
-#pragma warning restore 169
         private static readonly object _syncObject = new object();
 
         private static volatile IFakeArgumentChecker _currentChecker;
@@ -17,9 +14,13 @@ namespace AutoFake.Setup
 
         public SetupContext()
         {
-#pragma warning disable 420
-            Interlocked.Increment(ref _instanceCount);
-#pragma warning restore 420
+            lock (_syncObject)
+            {
+#if DEBUG
+                _eventRecorder?.Record(".ctor");
+#endif
+                _instanceCount++;
+            }
         }
 
         internal bool IsCheckerSet => _isCheckerSet;
