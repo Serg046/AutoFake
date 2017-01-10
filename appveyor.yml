@@ -1,0 +1,25 @@
+version: 1.0.{build}
+skip_tags: true
+configuration: Release
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+environment:
+  COVERALLS_REPO_TOKEN:
+    secure: efrJRpL9rMlefh6CHBOPYcgmsgwT4IYQz
+before_build:
+  - nuget restore
+build:
+  project: AutoFake.sln
+  verbosity: minimal
+test_script:
+- ps: >-
+    .\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:xunit.console.clr4.exe "-targetargs:""AutoFake.UnitTests\bin\$env:CONFIGURATION\AutoFake.UnitTests.dll"" /noshadow /appveyor" -filter:"+[AutoFake*]*" -output:AutoFakeCoverage.xml
+
+    $coveralls = (Resolve-Path "packages/coveralls.net.*/tools/csmacnz.coveralls.exe").ToString()
+
+    & $coveralls --opencover -i AutoFakeCoverage.xml --repoToken $env:COVERALLS_REPO_TOKEN --commitId $env:APPVEYOR_REPO_COMMIT --commitBranch $env:APPVEYOR_REPO_BRANCH --commitAuthor $env:APPVEYOR_REPO_COMMIT_AUTHOR --commitEmail $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL --commitMessage $env:APPVEYOR_REPO_COMMIT_MESSAGE --jobId $env:APPVEYOR_JOB_ID
+
