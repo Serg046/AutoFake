@@ -36,10 +36,10 @@ namespace AutoFake
         
         public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
 
-        public string GetInstalledMethodTypeName(Mock setup)
+        public string GetInstalledMethodTypeName(Type declaringType)
         {
             string result = null;
-            var type = setup.Method.DeclaringType;
+            var type = declaringType;
 
             Func<string, string> combineFunc = typeName => result == null ? typeName : typeName + "/" + result;
 

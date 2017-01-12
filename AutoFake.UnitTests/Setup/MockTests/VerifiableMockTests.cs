@@ -100,7 +100,10 @@ namespace AutoFake.UnitTests.Setup.MockTests
             => GetVerifiableMock(new List<FakeArgument>() { new FakeArgument(new EqualityArgumentChecker(1)) });
 
         private VerifiableMock GetVerifiableMock(List<FakeArgument> arguments)
-            => new VerifiableMock(typeof(TestClass).GetMethod(nameof(TestClass.TestMethod)), arguments, _parameters);
+            => new VerifiableMock(GetSourceMember(), arguments, _parameters);
+
+        private ISourceMember GetSourceMember()
+            => new SourceMethod(typeof(TestClass).GetMethod(nameof(TestClass.TestMethod)));
 
         private ILProcessor GetILProcessor() => new MethodBody(null).GetILProcessor();
         private Instruction GetInstruction() => GetInstruction(OpCodes.Call);

@@ -5,13 +5,13 @@ using Xunit;
 
 namespace AutoFake.UnitTests.Expression
 {
-    public class GetSourceMemberVisitorTests
+    public class GetTestMethodVisitorTests
     {
-        private readonly GetSourceMemberVisitor _visitor;
+        private readonly GetTestMethodVisitor _visitor;
 
-        public GetSourceMemberVisitorTests()
+        public GetTestMethodVisitorTests()
         {
-            _visitor = new GetSourceMemberVisitor();
+            _visitor = new GetTestMethodVisitor();
         }
 
         [Fact]
@@ -19,12 +19,10 @@ namespace AutoFake.UnitTests.Expression
         {
             Expression<Action<TestClass>> expression = t => t.Method();
             var methodCallExpression = expression.Body as MethodCallExpression;
-            
+
             _visitor.Visit(methodCallExpression, methodCallExpression.Method);
 
-            Assert.Equal(methodCallExpression.Method.Name, _visitor.SourceMember.Name);
-            Assert.Equal(methodCallExpression.Method.ReturnType, _visitor.SourceMember.ReturnType);
-            Assert.Equal(methodCallExpression.Method.GetParameters(), _visitor.SourceMember.GetParameters());
+            Assert.Equal(methodCallExpression.Method, _visitor.Method);
         }
 
         [Fact]
@@ -34,8 +32,7 @@ namespace AutoFake.UnitTests.Expression
 
             _visitor.Visit(property);
 
-            Assert.Equal(property.GetMethod.Name, _visitor.SourceMember.Name);
-            Assert.Equal(property.GetMethod.ReturnType, _visitor.SourceMember.ReturnType);
+            Assert.Equal(property.GetMethod, _visitor.Method);
         }
 
         [Fact]

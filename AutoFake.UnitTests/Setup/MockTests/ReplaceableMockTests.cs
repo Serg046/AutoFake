@@ -41,14 +41,17 @@ namespace AutoFake.UnitTests.Setup.MockTests
         private ReplaceableMock GetReplaceableMock()
             => GetReplaceableMock(new List<FakeArgument>() { new FakeArgument(new EqualityArgumentChecker(1)) });
 
+        private ISourceMember GetSourceMember(string name)
+            => new SourceMethod(typeof(TestClass).GetMethod(name));
+
         private ReplaceableMock GetReplaceableMock(List<FakeArgument> arguments)
-            => new ReplaceableMock(typeof(TestClass).GetMethod(nameof(TestClass.TestMethod)), arguments, _parameters);
+            => new ReplaceableMock(GetSourceMember(nameof(TestClass.TestMethod)), arguments, _parameters);
 
         private FieldDefinition CreateFieldDefinition(string fieldName) => new FieldDefinition(fieldName, Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
 
         private FakeArgument CreateArgument(int arg) => new FakeArgument(new EqualityArgumentChecker(arg));
         
-        private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceableMock, typeof(TestClass).GetMethod(nameof(TestClass.StaticTestMethod)), "suffix");
+        private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceableMock, null, "suffix");
 
         [Theory]
         [InlineData(false, false, false)]

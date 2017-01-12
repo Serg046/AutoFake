@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using AutoFake.Setup;
+using Moq;
 using Xunit;
+using Mock = AutoFake.Setup.Mock;
 
 namespace AutoFake.UnitTests.Setup.MockInstallerTests
 {
@@ -11,20 +14,23 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
         [Fact]
         public void CheckArguments_IncorrectNumberOfArguments_Throws()
         {
-            var method = GetMethod();
+            var method = GetSourceMethod();
+            var invocationExpression = new Mock<IInvocationExpression>();
+            invocationExpression.Setup(e => e.GetSourceMember()).Returns(method);
+            invocationExpression.Setup(e => e.GetArguments()).Returns((IList<FakeArgument>)null);
 
-            List<FakeArgument> arguments = null;
             Assert.Throws<SetupException>(()
-                => new ReplaceableMockInstaller<int>(new List<Mock>(), method, arguments).CheckArguments());
+                => new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object).CheckArguments());
             Assert.Throws<SetupException>(()
-                => new ReplaceableMockInstaller(new List<Mock>(), method, arguments).CheckArguments());
+                => new ReplaceableMockInstaller(new List<Mock>(), invocationExpression.Object).CheckArguments());
             Assert.Throws<SetupException>(()
-                => new VerifiableMockInstaller(new List<Mock>(), method, arguments).CheckArguments());
+                => new VerifiableMockInstaller(new List<Mock>(), invocationExpression.Object).CheckArguments());
 
-            arguments = new List<FakeArgument>();
-            var replaceableMockInstaller = new ReplaceableMockInstaller(new List<Mock>(), method, arguments);
-            var replaceableGenericMockInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), method, arguments);
-            var verifiableMockInstaller = new VerifiableMockInstaller(new List<Mock>(), method, arguments);
+            var arguments = new List<FakeArgument>();
+            invocationExpression.Setup(e => e.GetArguments()).Returns(arguments);
+            var replaceableMockInstaller = new ReplaceableMockInstaller(new List<Mock>(), invocationExpression.Object);
+            var replaceableGenericMockInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object);
+            var verifiableMockInstaller = new VerifiableMockInstaller(new List<Mock>(), invocationExpression.Object);
 
             Assert.Throws<SetupException>(() => replaceableMockInstaller.CheckArguments());
             Assert.Throws<SetupException>(() => replaceableGenericMockInstaller.CheckArguments());
@@ -55,7 +61,10 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
         public void Returns_VoidMethod_Throws()
         {
             var arguments = new List<FakeArgument> {new FakeArgument(new EqualityArgumentChecker(1))};
-            var installer = new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments);
+            var invocationExpression = new Mock<IInvocationExpression>();
+            invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
+            invocationExpression.Setup(e => e.GetArguments()).Returns(arguments);
+            var installer = new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object);
 
             Assert.Throws<SetupException>(() => installer.Returns(5));
         }
@@ -64,8 +73,11 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
         public void Callback_Null_Throws()
         {
             var arguments = new List<FakeArgument> {new FakeArgument(new EqualityArgumentChecker(1))};
-            var genericInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments);
-            var installer = new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments);
+            var invocationExpression = new Mock<IInvocationExpression>();
+            invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
+            invocationExpression.Setup(e => e.GetArguments()).Returns(arguments);
+            var genericInstaller = new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object);
+            var installer = new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object);
 
             Assert.Throws<SetupException>(() => genericInstaller.Callback(null));
             Assert.Throws<SetupException>(() => installer.Callback(null));
@@ -74,12 +86,16 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
         public static IEnumerable<object[]> GetInstallers()
         {
             var arguments = new List<FakeArgument> {new FakeArgument(new EqualityArgumentChecker(1))};
-            yield return new object[] {new ReplaceableMockInstaller(new List<Mock>(), GetMethod(), arguments) };
-            yield return new object[] {new ReplaceableMockInstaller<int>(new List<Mock>(), GetMethod(), arguments) };
-            yield return new object[] {new VerifiableMockInstaller(new List<Mock>(), GetMethod(), arguments) };
+            var invocationExpression = new Mock<IInvocationExpression>();
+            invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
+            invocationExpression.Setup(e => e.GetArguments()).Returns(arguments);
+            yield return new object[] {new ReplaceableMockInstaller(new List<Mock>(), invocationExpression.Object) };
+            yield return new object[] {new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object) };
+            yield return new object[] {new VerifiableMockInstaller(new List<Mock>(), invocationExpression.Object) };
         }
 
-        private static MethodInfo GetMethod() => typeof(TestClass).GetMethod(nameof(TestClass.MockedMethod));
+        private static ISourceMember GetSourceMethod()
+            => new SourceMethod(typeof(TestClass).GetMethod(nameof(TestClass.MockedMethod)));
 
         private class TestClass
         {

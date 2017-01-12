@@ -12,39 +12,9 @@ namespace AutoFake.UnitTests.Setup.MockTests
     public class MockTests
     {
         [Fact]
-        public void IsInstalledMethod_DifferentTypes_False()
-        {
-            var typeInfo = new TypeInfo(typeof(TestClass2), new List<FakeDependency>());
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass2.TestMethod));
-
-            Assert.False(mock.IsInstalledMethod(typeInfo, method));
-        }
-
-        [Fact]
-        public void IsInstalledMethod_DifferentOverloads_False()
-        {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0);
-
-            Assert.False(mock.IsInstalledMethod(typeInfo, method));
-        }
-
-        [Fact]
-        public void IsInstalledMethod_TheSameMethod_True()
-        {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 1);
-
-            Assert.True(mock.IsInstalledMethod(typeInfo, method));
-        }
-
-        [Fact]
         public void IsMethodInstruction_IncorrectInstruction_False()
         {
-            var mock = new MockFake(null);
+            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
 
             Assert.False(mock.IsMethodInstruction(Instruction.Create(OpCodes.Nop)));
         }
@@ -52,8 +22,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         [Fact]
         public void IsMethodInstruction_CorrectInstruction_True()
         {
-            var mock = new MockFake(null);
             var method = GetMethod(nameof(TestClass.TestMethod));
+            var mock = new MockFake(method);
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
 
             Assert.True(mock.IsMethodInstruction(Instruction.Create(OpCodes.Call, typeInfo.Import(method))));
@@ -64,7 +34,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0);
-            var mock = new MockFake(null);
+            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
 
             MethodDefinition methodDefinition;
             Assert.False(mock.IsAsyncMethod(method, out methodDefinition));
@@ -75,7 +45,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.AsyncMethod));
-            var mock = new MockFake(null);
+            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
 
             MethodDefinition methodDefinition;
             Assert.True(mock.IsAsyncMethod(method, out methodDefinition));
@@ -87,7 +57,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
         private class MockFake : Mock
         {
-            public MockFake(MethodInfo method) : base(method, null)
+            public MockFake(MethodInfo method) : base(new SourceMethod(method), null)
             {
             }
 
@@ -123,11 +93,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
             public async void AsyncMethod()
             {
             }
-        }
-
-        private class TestClass2
-        {
-            public int TestMethod(int arg) => 5;
         }
     }
 }

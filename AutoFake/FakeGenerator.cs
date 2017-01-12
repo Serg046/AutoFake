@@ -43,7 +43,7 @@ namespace AutoFake
             foreach (var mock in mocks)
             {
                 var mocker = _mockerFactory.CreateMocker(_typeInfo,
-                    new MockedMemberInfo(mock, executeFunc, GetExecuteFuncSuffixName(executeFunc)));
+                    new MockedMemberInfo(mock, executeFunc.Name, GetExecuteFuncSuffixName(executeFunc)));
                 mock.PrepareForInjecting(mocker);
 
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
@@ -56,7 +56,7 @@ namespace AutoFake
         private string GetExecuteFuncSuffixName(MethodInfo executeFunc)
         {
             var suffixName = executeFunc.Name;
-            var installedCount = _generatedObject.MockedMembers.Count(g => g.TestMethodInfo.Name == executeFunc.Name);
+            var installedCount = _generatedObject.MockedMembers.Count(g => g.TestMethodName == executeFunc.Name);
             if (installedCount > 0)
                 suffixName += installedCount;
             return suffixName;
@@ -74,7 +74,7 @@ namespace AutoFake
                 {
                     var method = (MethodReference)instruction.Operand;
                     
-                    if (mock.IsInstalledMethod(_typeInfo, method))
+                    if (mock.IsInstalledInstruction(_typeInfo, instruction))
                     {
                         var proc = currentMethod.Body.GetILProcessor();
                         mock.Inject(mocker, proc, instruction);

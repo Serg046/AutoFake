@@ -47,7 +47,8 @@ namespace AutoFake.UnitTests
         [Fact]
         public void EvaluateRetValueFieldName_Setup_ReturnsCorrectFieldName()
         {
-            var memberInfo = new MockedMemberInfo(new ReplaceableMock(GetType().GetMethod(nameof(Test)),
+            var sourceMember = new SourceMethod(GetType().GetMethod(nameof(Test)));
+            var memberInfo = new MockedMemberInfo(new ReplaceableMock(sourceMember,
                 new List<FakeArgument>(), null), null, "suffix");
 
             Assert.Equal("SystemInt32_Test_SystemObject_suffix", memberInfo.EvaluateRetValueFieldName());

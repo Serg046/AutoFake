@@ -2,12 +2,13 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Setup;
 using Microsoft.CSharp.RuntimeBinder;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-    internal class InvocationExpression
+    internal class InvocationExpression : IInvocationExpression
     {
         private readonly LinqExpression _expression;
 
@@ -63,7 +64,7 @@ namespace AutoFake.Expression
             return visitor.Arguments;
         }
 
-        public MethodInfo GetSourceMember()
+        public ISourceMember GetSourceMember()
         {
             var memberVisitor = new GetSourceMemberVisitor();
             AcceptMemberVisitor(memberVisitor);

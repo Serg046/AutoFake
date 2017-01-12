@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using AutoFake.Setup;
 using Mono.Cecil;
@@ -12,16 +11,16 @@ namespace AutoFake
         private readonly string _suffixName;
         private readonly IList<IList<FieldDefinition>> _argumentFields;
 
-        public MockedMemberInfo(Mock mock, MethodInfo testMethodInfo, string suffixName)
+        public MockedMemberInfo(Mock mock, string testMethodName, string suffixName)
         {
             _suffixName = suffixName;
             Mock = mock;
-            TestMethodInfo = testMethodInfo;
+            TestMethodName = testMethodName;
             _argumentFields = new List<IList<FieldDefinition>>();
         }
 
         public Mock Mock { get; }
-        public MethodInfo TestMethodInfo { get; }
+        public string TestMethodName { get; }
         public FieldDefinition RetValueField { get; internal set; }
         public FieldDefinition ActualCallsField { get; internal set; }
         public FieldDefinition CallbackField { get; internal set; }
@@ -32,16 +31,16 @@ namespace AutoFake
         public int ArgumentsCount => _argumentFields.Count;
         public string EvaluateRetValueFieldName()
         {
-            return new StringBuilder(Mock.Method.ReturnType.ToString().Replace(".", ""))
-                .Append("_").Append(Mock.Method.Name).Append("_")
-                .Append(ArgumentsToString(Mock.Method))
+            return new StringBuilder(Mock.SourceMember.ReturnType.ToString().Replace(".", ""))
+                .Append("_").Append(Mock.SourceMember.Name).Append("_")
+                .Append(ArgumentsToString(Mock.SourceMember))
                 .Append(_suffixName)
                 .ToString();
         }
 
-        private string ArgumentsToString(MethodInfo method)
+        private string ArgumentsToString(ISourceMember member)
         {
-            var parameters = method.GetParameters();
+            var parameters = member.GetParameters();
             return parameters.Any()
                 ? string.Join(string.Empty, parameters.Select(p => p.ParameterType.ToString().Replace(".", ""))) + "_"
                 : string.Empty;

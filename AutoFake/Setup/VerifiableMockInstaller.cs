@@ -1,25 +1,25 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
+using AutoFake.Expression;
 
 namespace AutoFake.Setup
 {
     public class VerifiableMockInstaller : MockInstaller
     {
-        private readonly MethodInfo _method;
-        private readonly List<FakeArgument> _setupArguments;
+        private readonly ISourceMember _sourceMember;
+        private readonly IList<FakeArgument> _setupArguments;
         private readonly VerifiableMock.Parameters _parameters = new VerifiableMock.Parameters();
 
-        internal VerifiableMockInstaller(ICollection<Mock> mocks, MethodInfo method, List<FakeArgument> setupArguments)
+        internal VerifiableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
-            _method = method;
-            _setupArguments = setupArguments;
+            _sourceMember = invocationExpression.GetSourceMember();
+            _setupArguments = invocationExpression.GetArguments();
 
-            mocks.Add(new VerifiableMock(method, setupArguments, _parameters));
+            mocks.Add(new VerifiableMock(_sourceMember, _setupArguments, _parameters));
         }
 
         public VerifiableMockInstaller CheckArguments()
         {
-            ValidateSetupArguments(_method, _setupArguments);
+            ValidateSetupArguments(_sourceMember, _setupArguments);
             _parameters.NeedCheckArguments = true;
             return this;
         }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using AutoFake.Setup;
 using AutoFake.UnitTests.TestUtils;
 using Mono.Cecil.Cil;
@@ -15,8 +14,8 @@ namespace AutoFake.UnitTests
     {
         private const string MOCKER_MEMBER_SUFFIX_NAME = "suffix";
 
-        private MethodInfo GetMethodInfo(string name) => GetMethodInfo<TestType>(name);
-        private MethodInfo GetMethodInfo<T>(string name) => typeof(T).GetMethod(name);
+        private ISourceMember GetSourceMember(string name) => GetSourceMember<TestType>(name);
+        private ISourceMember GetSourceMember<T>(string name) => new SourceMethod(typeof(T).GetMethod(name));
 
         private readonly TypeInfo _typeInfo;
 
@@ -26,10 +25,11 @@ namespace AutoFake.UnitTests
         }
         
         private Mock GetMock(string methodName) => GetMock(methodName, new List<FakeArgument>());
-        private Mock GetMock(string methodName, List<FakeArgument> arguments) => new ReplaceableMock(GetMethodInfo(methodName), arguments, new ReplaceableMock.Parameters());
+        private Mock GetMock(string methodName, List<FakeArgument> arguments) => new ReplaceableMock(GetSourceMember(methodName), arguments, new ReplaceableMock.Parameters());
 
         private Mocker GetMocker(Mock mock) => GetMocker(_typeInfo, mock);
-        private Mocker GetMocker(TypeInfo typeInfo, Mock mock) => new Mocker(typeInfo, new MockedMemberInfo(mock, GetType().GetMethods().First(), MOCKER_MEMBER_SUFFIX_NAME));
+        private Mocker GetMocker(TypeInfo typeInfo, Mock mock)
+            => new Mocker(typeInfo, new MockedMemberInfo(mock, null, MOCKER_MEMBER_SUFFIX_NAME));
 
         private ILProcessor GetILProcessor() => new Mono.Cecil.Cil.MethodBody(null).GetILProcessor();
         
@@ -89,7 +89,7 @@ namespace AutoFake.UnitTests
         public void GenerateCallsCounter_FieldName_CounterFieldInitialized()
         {
             var typeInfo = new TypeInfo(typeof(TestTypeWithStaticConstructor), new List<FakeDependency>());
-            var mocker = GetMocker(typeInfo, new ReplaceableMock(GetMethodInfo(nameof(TestType.SomeMethod)), new List<FakeArgument>(), new ReplaceableMock.Parameters()));
+            var mocker = GetMocker(typeInfo, new ReplaceableMock(GetSourceMember(nameof(TestType.SomeMethod)), new List<FakeArgument>(), new ReplaceableMock.Parameters()));
 
             mocker.GenerateCallsCounter();
 

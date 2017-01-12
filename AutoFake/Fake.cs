@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using AutoFake.Expression;
 using AutoFake.Setup;
-using LinqExpression = System.Linq.Expressions.Expression;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake
 {
@@ -16,13 +17,15 @@ namespace AutoFake
         public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
         {
             Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            return new ReplaceableMockInstaller<TReturn>(Mocks, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(instanceSetupFunc);
+            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
         public ReplaceableMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            return new ReplaceableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
+            return new ReplaceableMockInstaller(Mocks, invocationExpression);
         }
 
         //---------------------------------------------------------------------------------------------------------
@@ -30,13 +33,15 @@ namespace AutoFake
         public VerifiableMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
         {
             Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            return new VerifiableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(instanceSetupFunc);
+            return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         public VerifiableMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            return new VerifiableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
+            return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         //---------------------------------------------------------------------------------------------------------
@@ -94,11 +99,6 @@ namespace AutoFake
 
         internal ICollection<Mock> Mocks { get; }
 
-        internal List<FakeArgument> GetSetupArguments(LinqExpression expression)
-        {
-            return ExpressionUtils.GetArguments(expression).ToList();
-        }
-
         //---------------------------------------------------------------------------------------------------------
 
         public void SaveFakeAssembly(string fileName)
@@ -112,25 +112,29 @@ namespace AutoFake
         public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> setupFunc)
         {
             Guard.NotNull(setupFunc, nameof(setupFunc));
-            return new ReplaceableMockInstaller<TReturn>(Mocks, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
+            var invocationExpression = new InvocationExpression(setupFunc);
+            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
         public ReplaceableMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
         {
             Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            return new ReplaceableMockInstaller<TReturn>(Mocks, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(instanceSetupFunc);
+            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
         public ReplaceableMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            return new ReplaceableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
+            return new ReplaceableMockInstaller(Mocks, invocationExpression);
         }
 
         public ReplaceableMockInstaller Replace(Expression<Action> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            return new ReplaceableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
+            return new ReplaceableMockInstaller(Mocks, invocationExpression);
         }
 
         //---------------------------------------------------------------------------------------------------------
@@ -138,38 +142,48 @@ namespace AutoFake
         public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> setupFunc)
         {
             Guard.NotNull(setupFunc, nameof(setupFunc));
-            return new VerifiableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(setupFunc), GetSetupArguments(setupFunc.Body));
+            var invocationExpression = new InvocationExpression(setupFunc);
+            return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         public VerifiableMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
         {
             Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            return new VerifiableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(instanceSetupFunc), GetSetupArguments(instanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(instanceSetupFunc);
+            return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         public VerifiableMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            return new VerifiableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
+            return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         public VerifiableMockInstaller Verify(Expression<Action> voidInstanceSetupFunc)
         {
             Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            return new VerifiableMockInstaller(Mocks, ExpressionUtils.GetMethodInfo(voidInstanceSetupFunc), GetSetupArguments(voidInstanceSetupFunc.Body));
+            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
+            return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         //---------------------------------------------------------------------------------------------------------
 
         protected Executor RewriteImpl(LambdaExpression expression)
         {
-            _fakeGenerator.Generate(Mocks, ExpressionUtils.GetMethodInfo(expression));
+            var invocationExpression = new InvocationExpression(expression);
+            var visitor = new GetTestMethodVisitor();
+            invocationExpression.AcceptMemberVisitor(visitor);
+            _fakeGenerator.Generate(Mocks, visitor.Method);
             return new Executor(_generatedObject, expression);
         }
 
         protected Executor<T> RewriteImpl<T>(LambdaExpression expression)
         {
-            _fakeGenerator.Generate(Mocks, ExpressionUtils.GetMethodInfo(expression));
+            var invocationExpression = new InvocationExpression(expression);
+            var visitor = new GetTestMethodVisitor();
+            invocationExpression.AcceptMemberVisitor(visitor);
+            _fakeGenerator.Generate(Mocks, visitor.Method);
             return new Executor<T>(_generatedObject, expression);
         }
 

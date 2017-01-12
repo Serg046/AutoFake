@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Setup;
 
 namespace AutoFake.Expression
 {
     internal class GetSourceMemberVisitor : IMemberVisitor
     {
-        private MethodInfo _sourceMember;
+        private ISourceMember _sourceMember;
         private bool _isRuntimeValueSet;
 
-        public MethodInfo SourceMember
+        public ISourceMember SourceMember
         {
             get
             {
@@ -24,9 +25,9 @@ namespace AutoFake.Expression
             }
         }
 
-        public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => SourceMember = methodInfo;
+        public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => SourceMember = new SourceMethod(methodInfo);
 
-        public void Visit(PropertyInfo propertyInfo) => SourceMember = propertyInfo.GetGetMethod(true);
+        public void Visit(PropertyInfo propertyInfo) => SourceMember = new SourceMethod(propertyInfo.GetGetMethod(true));
 
         public void Visit(FieldInfo fieldInfo)
         {

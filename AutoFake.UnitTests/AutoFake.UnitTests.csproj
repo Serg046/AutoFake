@@ -69,6 +69,7 @@
     <Compile Include="ArgTests.cs" />
     <Compile Include="Expression\GetArgumentsMemberVisitorTests.cs" />
     <Compile Include="Expression\GetSourceMemberVisitorTests.cs" />
+    <Compile Include="Expression\GetTestMethodVisitorTests.cs" />
     <Compile Include="Expression\InvocationExpressionTests.cs" />
     <Compile Include="Expression\TargetMemberVisitorTests.cs" />
     <Compile Include="Setup\MockInstallerTests\MockInstallerTests.cs" />
@@ -76,6 +77,7 @@
     <Compile Include="Setup\MockTests\MockVerifyTests.cs" />
     <Compile Include="Setup\MockTests\ReplaceableMockTests.cs" />
     <Compile Include="Setup\MockTests\VerifiableMockTests.cs" />
+    <Compile Include="Setup\SourceMethodTests.cs" />
     <Compile Include="TestUtils\Cil.cs" />
     <Compile Include="TestUtils\CilUtils.cs" />
     <Compile Include="EqualityArgumentCheckerTests.cs" />

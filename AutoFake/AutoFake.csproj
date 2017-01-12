@@ -59,8 +59,9 @@
     <Compile Include="Exceptions\SetupContextStateException.cs" />
     <Compile Include="Exceptions\SetupException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
-    <Compile Include="ExpressionUtils.cs" />
     <Compile Include="Expression\GetArgumentsMemberVisitor.cs" />
+    <Compile Include="Expression\GetTestMethodVisitor.cs" />
+    <Compile Include="Expression\IInvocationExpression.cs" />
     <Compile Include="Expression\TargetMemberVisitor.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FakeArgument.cs" />
@@ -73,6 +74,8 @@
     <Compile Include="LambdaChecker.cs" />
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
+    <Compile Include="Setup\ISourceMember.cs" />
+    <Compile Include="Setup\SourceMethod.cs" />
     <Compile Include="Setup\VerifiableMock.cs" />
     <Compile Include="Expression\SetValueMemberVisitor.cs" />
     <Compile Include="Fake.cs" />

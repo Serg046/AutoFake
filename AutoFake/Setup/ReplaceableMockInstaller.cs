@@ -1,27 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 
 namespace AutoFake.Setup
 {
     public class ReplaceableMockInstaller<TReturn> : ReplaceableMockInstallerBase
     {
-        private readonly MethodInfo _method;
-        private readonly List<FakeArgument> _setupArguments;
+        private readonly ISourceMember _sourceMember;
+        private readonly IList<FakeArgument> _setupArguments;
         private readonly ReplaceableMock.Parameters _parameters;
 
-        internal ReplaceableMockInstaller(ICollection<Mock> mocks, MethodInfo method, List<FakeArgument> setupArguments)
+        internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
-            _method = method;
-            _setupArguments = setupArguments;
+            _sourceMember = invocationExpression.GetSourceMember();
+            _setupArguments = invocationExpression.GetArguments();
             _parameters = new ReplaceableMock.Parameters();
-            mocks.Add(new ReplaceableMock(method, setupArguments, _parameters));
+            mocks.Add(new ReplaceableMock(_sourceMember, _setupArguments, _parameters));
         }
 
         public ReplaceableMockInstaller<TReturn> Returns(TReturn returnObject)
         {
-            if (_method.ReturnType == typeof(void))
+            if (_sourceMember.ReturnType == typeof(void))
                 throw new SetupException("Setup expression must be non-void method");
             _parameters.ReturnObject = returnObject;
             return this;
@@ -29,7 +29,7 @@ namespace AutoFake.Setup
 
         public ReplaceableMockInstaller<TReturn> CheckArguments()
         {
-            ValidateSetupArguments(_method, _setupArguments);
+            ValidateSetupArguments(_sourceMember, _setupArguments);
             _parameters.NeedCheckArguments = true;
             return this;
         }
@@ -51,21 +51,21 @@ namespace AutoFake.Setup
 
     public class ReplaceableMockInstaller : ReplaceableMockInstallerBase
     {
-        private readonly MethodInfo _method;
-        private readonly List<FakeArgument> _setupArguments;
+        private readonly ISourceMember _sourceMember;
+        private readonly IList<FakeArgument> _setupArguments;
         private readonly ReplaceableMock.Parameters _parameters;
 
-        internal ReplaceableMockInstaller(ICollection<Mock> mocks, MethodInfo method, List<FakeArgument> setupArguments)
+        internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
-            _method = method;
-            _setupArguments = setupArguments;
+            _sourceMember = invocationExpression.GetSourceMember();
+            _setupArguments = invocationExpression.GetArguments();
             _parameters = new ReplaceableMock.Parameters();
-            mocks.Add(new ReplaceableMock(method, setupArguments, _parameters));
+            mocks.Add(new ReplaceableMock(_sourceMember, _setupArguments, _parameters));
         }
 
         public ReplaceableMockInstaller CheckArguments()
         {
-            ValidateSetupArguments(_method, _setupArguments);
+            ValidateSetupArguments(_sourceMember, _setupArguments);
             _parameters.NeedCheckArguments = true;
             return this;
         }

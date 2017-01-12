@@ -52,7 +52,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
         private MockedMemberInfo GetMockedMemberInfo(AutoFake.Setup.Mock mock, List<List<FieldDefinition>> argFields)
         {
-            var mockedMemberInfo = new MockedMemberInfo(mock, typeof(TestClass).GetMethod(nameof(TestClass.MockedMethod)), "suffix");
+            var mockedMemberInfo = new MockedMemberInfo(mock, null, "suffix");
             mockedMemberInfo.ActualCallsField = CreateFieldDefinition(nameof(TestClass.ActualCallsCountField));
             argFields.ForEach(mockedMemberInfo.AddArguments);
             return mockedMemberInfo;
@@ -147,7 +147,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             private readonly ReplaceableMock.Parameters _parameters;
 
-            public MockFake(MethodInfo method, List<FakeArgument> setupArguments, ReplaceableMock.Parameters parameters) : base(method, setupArguments)
+            public MockFake(MethodInfo method, List<FakeArgument> setupArguments, ReplaceableMock.Parameters parameters)
+                : base(new SourceMethod(method), setupArguments)
             {
                 _parameters = parameters;
             }

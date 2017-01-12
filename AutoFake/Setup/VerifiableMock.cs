@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
@@ -10,8 +9,8 @@ namespace AutoFake.Setup
     {
         private readonly Parameters _parameters;
 
-        public VerifiableMock(MethodInfo method, List<FakeArgument> setupArguments, Parameters parameters)
-            : base(method, setupArguments)
+        public VerifiableMock(ISourceMember sourceMember, IList<FakeArgument> setupArguments, Parameters parameters)
+            : base(sourceMember, setupArguments)
         {
             _parameters = parameters;
         }

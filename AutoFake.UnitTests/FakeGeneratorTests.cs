@@ -71,10 +71,7 @@ namespace AutoFake.UnitTests
             yield return new object[] {new Action(() => Console.WriteLine(0)), true};
         }
 
-        private MethodInfo GetMethodInfo() => typeof(TestClass).GetMethods().First();
         private MethodInfo GetMethodInfo(string name) => typeof(TestClass).GetMethod(name);
-        private AutoFake.Setup.Mock GetMock() => GetMock(GetMethodInfo());
-        private AutoFake.Setup.Mock GetMock(MethodInfo method) => new ReplaceableMock(method, new List<FakeArgument>(), null);
 
         private class TestClass
         {
@@ -92,7 +89,8 @@ namespace AutoFake.UnitTests
 
         private class ReplaceableMockFake : ReplaceableMock
         {
-            public ReplaceableMockFake(MethodInfo method, List<FakeArgument> setupArguments, Parameters parameters) : base(method, setupArguments, parameters)
+            public ReplaceableMockFake(MethodInfo method, List<FakeArgument> setupArguments, Parameters parameters)
+                : base(new SourceMethod(method), setupArguments, parameters)
             {
             }
 

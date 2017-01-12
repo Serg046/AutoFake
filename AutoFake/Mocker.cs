@@ -16,7 +16,7 @@ namespace AutoFake
         private const string CALLS_COUNTER_FLD_SUFFIX = "_ActualIds";
         private const string CALLBACK_FLD_SUFFIX = "_Callback";
 
-        private readonly Mock _setup;
+        private readonly Mock _mock;
         private readonly MethodReference _addToListMethodInfo;
         private readonly MethodReference _invokeActionMethod;
 
@@ -25,7 +25,7 @@ namespace AutoFake
             TypeInfo = typeInfo;
             MemberInfo = mockedMemberInfo;
 
-            _setup = mockedMemberInfo.Mock;
+            _mock = mockedMemberInfo.Mock;
             _addToListMethodInfo = typeInfo.Import(typeof(List<int>).GetMethod(nameof(List<int>.Add)));
             _invokeActionMethod = typeInfo.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
         }
@@ -37,7 +37,7 @@ namespace AutoFake
         {
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
             MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Import(_setup.Method.ReturnType));
+                TypeInfo.Import(_mock.SourceMember.ReturnType));
             TypeInfo.AddField(MemberInfo.RetValueField);
         }
 
@@ -98,10 +98,10 @@ namespace AutoFake
         {
             var result = new List<FieldDefinition>();
             var parametersCount = MemberInfo.Mock.SetupArguments.Count;
-            var installedMethodArguments = MemberInfo.Mock.Method.GetParameters();
+            var installedMethodArguments = MemberInfo.Mock.SourceMember.GetParameters();
             for (var i = parametersCount - 1; i >= 0; i--)
             {
-                var fieldName = MemberInfo.Mock.Method.Name + "Argument" + (parametersCount * MemberInfo.SourceCodeCallsCount + i);
+                var fieldName = MemberInfo.Mock.SourceMember.Name + "Argument" + (parametersCount * MemberInfo.SourceCodeCallsCount + i);
                 var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                     TypeInfo.Import(installedMethodArguments[i].ParameterType));
                 TypeInfo.AddField(field);

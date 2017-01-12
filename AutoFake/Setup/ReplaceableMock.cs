@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -12,8 +11,8 @@ namespace AutoFake.Setup
     {
         private readonly Parameters _parameters;
 
-        public ReplaceableMock(MethodInfo method, List<FakeArgument> setupArguments, Parameters parameters)
-            : base(method, setupArguments)
+        public ReplaceableMock(ISourceMember sourceMember, IList<FakeArgument> setupArguments, Parameters parameters)
+            : base(sourceMember, setupArguments)
         {
             _parameters = parameters;
         }

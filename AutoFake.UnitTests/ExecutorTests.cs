@@ -6,8 +6,10 @@ using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using Mono.Cecil;
+using Moq;
 using Xunit;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
+using Mock = AutoFake.Setup.Mock;
 
 namespace AutoFake.UnitTests
 {
@@ -36,8 +38,8 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_IncorrectField_Throws()
         {
-            var mockedMemberInfo = new MockedMemberInfo(new ReplaceableMock(GetType().GetMethod(nameof(SomeVoidMethod)), new List<FakeArgument>(),
-                new ReplaceableMock.Parameters {ReturnObject = null}), GetType().GetMethods().First(), null);
+            var mockedMemberInfo = new MockedMemberInfo(new ReplaceableMock(GetSourceMethod(nameof(SomeVoidMethod)), new List<FakeArgument>(),
+                new ReplaceableMock.Parameters {ReturnObject = null}), null, null);
             mockedMemberInfo.RetValueField = new FieldDefinition("Test", FieldAttributes.Public, new FunctionPointerType());
             var generateObject = new GeneratedObject(new TypeInfo(GetType(), new List<FakeDependency>()));
             generateObject.MockedMembers.Add(mockedMemberInfo);
@@ -52,10 +54,10 @@ namespace AutoFake.UnitTests
         {
             var setupCollection = new List<Mock>();
 
-            setupCollection.Add(new ReplaceableMock(GetType().GetMethod(nameof(SomeVoidMethod)), new List<FakeArgument>(), new ReplaceableMock.Parameters()));
-            setupCollection.Add(new ReplaceableMock(GetType().GetMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(1) },
+            setupCollection.Add(new ReplaceableMock(GetSourceMethod(nameof(SomeVoidMethod)), new List<FakeArgument>(), new ReplaceableMock.Parameters()));
+            setupCollection.Add(new ReplaceableMock(GetSourceMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(1) },
                 new ReplaceableMock.Parameters { ReturnObject = 7 }));
-            setupCollection.Add(new ReplaceableMock(GetType().GetProperty(nameof(SomeProperty)).GetMethod, new List<FakeArgument>(),
+            setupCollection.Add(new ReplaceableMock(GetSourceProperty(nameof(SomeProperty)), new List<FakeArgument>(),
                 new ReplaceableMock.Parameters() { ReturnObject = 7 }));
             GetFakeGenerator().Generate(setupCollection, GetType().GetMethod(nameof(TestMethod)));
 
@@ -64,7 +66,7 @@ namespace AutoFake.UnitTests
             new Executor(_generatedObject, expr).Execute();
 
             //assert
-            foreach (var mockedMemberInfo in _generatedObject.MockedMembers.Where(m => m.Mock.Method.ReturnType != typeof(void)))
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers.Where(m => m.Mock.SourceMember.ReturnType != typeof(void)))
             {
                 var field = _generatedObject.Type
                     .GetField(mockedMemberInfo.RetValueField.Name, BindingFlags.NonPublic | BindingFlags.Static);
@@ -76,7 +78,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_ActualCallsFieldIsMissed_Throws()
         {
-            var mock = new ReplaceableMock(GetType().GetMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(1) },
+            var mock = new ReplaceableMock(GetSourceMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(1) },
                 new ReplaceableMock.Parameters() { NeedCheckArguments = true, ReturnObject = null});
             GetFakeGenerator().Generate(new Mock[] {mock}, GetType().GetMethod(nameof(TestMethod)));
             _generatedObject.MockedMembers[0].ActualCallsField =
@@ -92,7 +94,7 @@ namespace AutoFake.UnitTests
         [InlineData(1, false)]
         public void Execute_InvalidSetupForArguments_Throws(object argument, bool shoudBeFailed)
         {
-            var mock = new ReplaceableMock(GetType().GetMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(argument) },
+            var mock = new ReplaceableMock(GetSourceMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(argument) },
                 new ReplaceableMock.Parameters() { NeedCheckArguments = true, ReturnObject = null });
             GetFakeGenerator().Generate(new Mock[] { mock }, GetType().GetMethod(nameof(TestMethod)));
             _generatedObject.MockedMembers[0].ActualCallsField =
@@ -109,7 +111,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_NullArgument_Success()
         {
-            var mock = new ReplaceableMock(GetType().GetMethod(nameof(SomeMethodWithObjectArg)), new List<FakeArgument>() { GetFakeArgument(null) },
+            var mock = new ReplaceableMock(GetSourceMethod(nameof(SomeMethodWithObjectArg)), new List<FakeArgument>() { GetFakeArgument(null) },
                 new ReplaceableMock.Parameters() { NeedCheckArguments = true, ReturnObject = null });
             GetFakeGenerator().Generate(new Mock[] { mock }, GetType().GetMethod(nameof(TestMethod)));
             _generatedObject.MockedMembers[0].ActualCallsField =
@@ -125,7 +127,7 @@ namespace AutoFake.UnitTests
         [InlineData(1, false)]
         public void Execute_InvalidSetupForExpectedCalls_Throws(int expectedCalls, bool shoudBeFailed)
         {
-            var mock = new ReplaceableMock(GetType().GetMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(1) },
+            var mock = new ReplaceableMock(GetSourceMethod(nameof(SomeMethod)), new List<FakeArgument>() { GetFakeArgument(1) },
                 new ReplaceableMock.Parameters() { ExpectedCallsCountFunc = i => i == expectedCalls, ReturnObject = null });
             GetFakeGenerator().Generate(new Mock[] { mock }, GetType().GetMethod(nameof(TestMethod)));
             _generatedObject.MockedMembers[0].ActualCallsField =
@@ -142,7 +144,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_ValidInput_CallbackIsSet()
         {
-            var mock = new ReplaceableMock(GetType().GetProperty(nameof(SomeProperty)).GetMethod, new List<FakeArgument>(),
+            var mock = new ReplaceableMock(GetSourceProperty(nameof(SomeProperty)), new List<FakeArgument>(),
                 new ReplaceableMock.Parameters() { ReturnObject = 7, Callback = () => { throw new InvalidOperationException(); } });
             GetFakeGenerator().Generate(new Mock[] { mock }, GetType().GetMethod(nameof(TestMethod)));
 
@@ -157,6 +159,12 @@ namespace AutoFake.UnitTests
             var callback = field.GetValue(null) as Action;
             Assert.Throws<InvalidOperationException>(() => callback());
         }
+
+        private ISourceMember GetSourceMethod(string name)
+            => new SourceMethod(GetType().GetMethod(name));
+
+        private ISourceMember GetSourceProperty(string name)
+            => new SourceMethod(GetType().GetProperty(name).GetMethod);
 
         private static FakeArgument GetFakeArgument(dynamic value)
             => new FakeArgument(new EqualityArgumentChecker(value));

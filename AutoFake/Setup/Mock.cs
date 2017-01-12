@@ -12,13 +12,13 @@ namespace AutoFake.Setup
     {
         private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
 
-        protected Mock(MethodInfo method, List<FakeArgument> setupArguments)
+        protected Mock(ISourceMember sourceMember, IList<FakeArgument> setupArguments)
         {
-            Method = method;
+            SourceMember = sourceMember;
             SetupArguments = setupArguments;
         }
 
-        public MethodInfo Method { get; }
+        public ISourceMember SourceMember { get; }
         public IList<FakeArgument> SetupArguments { get; }
 
         public abstract void PrepareForInjecting(IMocker mocker);
@@ -26,11 +26,11 @@ namespace AutoFake.Setup
         public abstract void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject);
         public abstract void Verify(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject);
 
-        public bool IsInstalledMethod(TypeInfo typeInfo, MethodReference method)
-            => method.DeclaringType.FullName == typeInfo.GetInstalledMethodTypeName(this) && method.EquivalentTo(Method);
-
         public bool IsMethodInstruction(Instruction instruction)
             => instruction.OpCode.OperandType == OperandType.InlineMethod;
+
+        public bool IsInstalledInstruction(TypeInfo typeInfo, Instruction instruction)
+            => SourceMember.IsCorrectInstruction(typeInfo, instruction);
 
         public bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
         {
