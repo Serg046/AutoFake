@@ -70,8 +70,6 @@
     <Compile Include="InstanceTests\MethodMockTests.cs" />
     <Compile Include="ReplacementTests.cs" />
     <Compile Include="InstanceTests\PropertyMockTests.cs" />
-    <Compile Include="SetupContextMultithreadingTests.cs" />
-    <Compile Include="Helpers\SingleStringEventRecorder.cs" />
     <Compile Include="StaticTests\MethodMockTests.cs" />
     <Compile Include="StaticTests\PropertyMockTests.cs" />
     <Compile Include="StaticTests\RewriteTests.cs" />

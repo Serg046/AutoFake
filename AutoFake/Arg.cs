@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoFake.Setup;
 
 namespace AutoFake
 {
@@ -14,24 +13,9 @@ namespace AutoFake
             return new FakeDependency(type, null);
         }
 
-        public static T Is<T>(Func<T, bool> checkArgumentFunc)
-        {
-            SetupContext.SetCurrentChecker(new Checker(checkArgumentFunc));
-            return default(T);
-        }
+        //Used by expression's engine, see GetArgumentsMemberVisitor::GetArgument(MethodCallExpression expression)
+        public static T Is<T>(Func<T, bool> checkArgumentFunc) => DefaultOf<T>();
 
         public static T DefaultOf<T>() => default(T);
-
-        private class Checker : IFakeArgumentChecker
-        {
-            private readonly dynamic _checker;
-
-            public Checker(dynamic checker)
-            {
-                _checker = checker;
-            }
-
-            public bool Check(dynamic argument) => _checker(argument);
-        }
     }
 }

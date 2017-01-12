@@ -1,4 +1,4 @@
-﻿using AutoFake.Setup;
+﻿using System;
 using Moq;
 using Xunit;
 
@@ -7,7 +7,7 @@ namespace AutoFake.UnitTests
     public class FakeArgumentTests
     {
         [Fact]
-        public void Check_SimpleChecker_Checks()
+        public void Check_SimpleChecker_Success()
         {
             var checker = new Mock<IFakeArgumentChecker>();
             checker.Setup(c => c.Check(It.IsAny<object>())).Returns((int arg) => arg > 0);
@@ -18,17 +18,14 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Check_DynamicChecker_Checks()
+        public void Check_LambdaChacker_Success()
         {
-            using (var setupContext = new SetupContext())
-            {
-                Arg.Is((int arg) => arg > 0);
-                var checker = setupContext.PopChecker();
-                var argument = new FakeArgument(checker);
+            Func<int, bool> lambda = arg => arg > 0; 
+            var checker = new LambdaChecker(lambda);
+            var argument = new FakeArgument(checker);
 
-                Assert.True(argument.Check(1));
-                Assert.False(argument.Check(-1));
-            }
+            Assert.True(argument.Check(1));
+            Assert.False(argument.Check(-1));
         }
     }
 }

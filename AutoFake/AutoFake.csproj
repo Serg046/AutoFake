@@ -67,13 +67,12 @@
     <Compile Include="Expression\GetSourceMemberVisitor.cs" />
     <Compile Include="Expression\GetValueMemberVisitor.cs" />
     <Compile Include="Guard.cs" />
-    <Compile Include="IEventRecorder.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
     <Compile Include="Arg.cs" />
     <Compile Include="Expression\InvocationExpression.cs" />
+    <Compile Include="LambdaChecker.cs" />
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
-    <Compile Include="Setup\SetupContext.cs" />
     <Compile Include="Setup\VerifiableMock.cs" />
     <Compile Include="Expression\SetValueMemberVisitor.cs" />
     <Compile Include="Fake.cs" />

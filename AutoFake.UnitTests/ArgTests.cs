@@ -31,17 +31,11 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Is_Func_CheckerIsSet()
+        public void Is_ReturnsDefaultValueOfType()
         {
-            using (var setupContext = new SetupContext())
-            {
-                Arg.Is((int arg) => arg == 7);
-
-                Assert.True(setupContext.IsCheckerSet);
-                var checker = setupContext.PopChecker();
-                Assert.False(checker.Check(-7));
-                Assert.True(checker.Check(7));
-            }
+            Assert.Equal(0, Arg.Is<int>(x => x > 5));
+            Assert.Equal(null, Arg.Is<int?>(x => x != 5));
+            Assert.Equal(null, Arg.Is<string>(x => !string.IsNullOrEmpty(x)));
         }
 
         [Fact]

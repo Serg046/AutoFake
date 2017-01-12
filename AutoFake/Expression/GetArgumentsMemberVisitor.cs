@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Setup;
 using Microsoft.CSharp.RuntimeBinder;
 using LinqExpression = System.Linq.Expressions.Expression;
 
@@ -35,23 +34,9 @@ namespace AutoFake.Expression
         public void Visit(FieldInfo fieldInfo) => Arguments = new List<FakeArgument>();
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
-        {
-            using (var setupContext = new SetupContext())
-            {
-                var arguments = new List<FakeArgument>();
-                foreach (var argument in methodExpression.Arguments.Select(expr => GetArgument(() => expr)))
-                {
-                    var argumentChecker = setupContext.IsCheckerSet
-                        ? setupContext.PopChecker()
-                        : new EqualityArgumentChecker(argument);
-                    var fakeArgument = new FakeArgument(argumentChecker);
-                    arguments.Add(fakeArgument);
-                }
-                Arguments = arguments;
-            }
-        }
+            => Arguments = methodExpression.Arguments.Select(expr => GetArgument(() => expr)).ToList();
 
-        private static object GetArgument(Func<LinqExpression> expressionFunc)
+        private FakeArgument GetArgument(Func<LinqExpression> expressionFunc)
         {
             var expression = expressionFunc();
             try
@@ -65,15 +50,34 @@ namespace AutoFake.Expression
             }
         }
 
-        private static object GetArgument(ConstantExpression expression) => expression.Value;
+        private FakeArgument GetArgument(ConstantExpression expression) => CreateFakeArgument(expression.Value);
 
-        private static object GetArgument(UnaryExpression expression) => GetArgument(() => expression.Operand);
+        private FakeArgument GetArgument(UnaryExpression expression) => GetArgument(() => expression.Operand);
 
-        private static object GetArgument(LinqExpression expression)
+        private FakeArgument GetArgument(LinqExpression expression)
         {
             var convertExpr = LinqExpression.Convert(expression, typeof(object));
             var lambda = LinqExpression.Lambda<Func<object>>(convertExpr);
-            return lambda.Compile().Invoke();
+            var arg = lambda.Compile().Invoke();
+            return CreateFakeArgument(arg);
+        }
+
+        private FakeArgument CreateFakeArgument(dynamic arg)
+        {
+            var checker = new EqualityArgumentChecker(arg);
+            return new FakeArgument(checker);
+        }
+
+        private FakeArgument GetArgument(MethodCallExpression expression)
+        {
+            if (expression.Method.DeclaringType == typeof(Arg) && expression.Method.Name == nameof(Arg.Is))
+            {
+                var lambdaExpr = (LambdaExpression)expression.Arguments.Single();
+                var lambda = lambdaExpr.Compile();
+                var checker = new LambdaChecker(lambda);
+                return new FakeArgument(checker);
+            }
+            return GetArgument((LinqExpression)expression);
         }
     }
 }

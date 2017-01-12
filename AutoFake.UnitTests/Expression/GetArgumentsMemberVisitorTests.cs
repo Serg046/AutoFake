@@ -151,6 +151,18 @@ namespace AutoFake.UnitTests.Expression
             Assert.False(_visitor.Arguments[0].Check(new TestClass()));
         }
 
+        [Fact]
+        public void Visit_LambdaArg_Success()
+        {
+            var date = new DateTime(2017, 1, 12);
+            var expression = GetMethodCallExpression(t => t.SomeMethod(Arg.Is<DateTime>(a => a > date)));
+
+            _visitor.Visit(expression, expression.Method);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(date.AddDays(1)));
+        }
+
         private MethodCallExpression GetMethodCallExpression(Expression<Action<TestClass>> expression)
             => (MethodCallExpression)expression.Body;
 
