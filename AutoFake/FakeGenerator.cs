@@ -70,16 +70,16 @@ namespace AutoFake
             
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
-                if (mock.IsMethodInstruction(instruction))
+                if (mock.IsInstalledInstruction(_typeInfo, instruction))
+                {
+                    var proc = currentMethod.Body.GetILProcessor();
+                    mock.Inject(mocker, proc, instruction);
+                }
+                else if (mock.IsMethodInstruction(instruction))
                 {
                     var method = (MethodReference)instruction.Operand;
                     
-                    if (mock.IsInstalledInstruction(_typeInfo, instruction))
-                    {
-                        var proc = currentMethod.Body.GetILProcessor();
-                        mock.Inject(mocker, proc, instruction);
-                    }
-                    else if (IsClientSourceCode(method))
+                    if (IsClientSourceCode(method))
                     {
                         ReplaceInstructions(method.Resolve(), mock, mocker);
                     }

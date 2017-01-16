@@ -7,15 +7,16 @@ namespace AutoFake.Setup
 {
     internal class SourceMethod : ISourceMember
     {
-        private readonly MethodInfo _sourceMethod;
+        private readonly MethodInfo _method;
 
         public SourceMethod(MethodInfo sourceMethod)
         {
-            _sourceMethod = sourceMethod;
+            _method = sourceMethod;
+            Name = sourceMethod.Name;
             ReturnType = sourceMethod.ReturnType;
         }
 
-        public string Name => _sourceMethod.Name;
+        public string Name { get; }
 
         public Type ReturnType { get; }
 
@@ -26,12 +27,12 @@ namespace AutoFake.Setup
             {
                 var method = (MethodReference)instruction.Operand;
                 result = method.DeclaringType.FullName == typeInfo
-                    .GetInstalledMethodTypeName(_sourceMethod.DeclaringType)
-                         && method.EquivalentTo(_sourceMethod);
+                    .GetMonoCecilTypeName(_method.DeclaringType)
+                         && method.EquivalentTo(_method);
             }
             return result;
         }
 
-        public ParameterInfo[] GetParameters() => _sourceMethod.GetParameters();
+        public ParameterInfo[] GetParameters() => _method.GetParameters();
     }
 }

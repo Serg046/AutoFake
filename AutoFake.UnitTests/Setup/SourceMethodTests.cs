@@ -20,7 +20,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Fact]
-        public void ReturnType_MethodInfo_ReturnsName()
+        public void ReturnType_MethodInfo_ReturnsType()
         {
             var method = typeof(TestClass2).GetMethod(nameof(TestClass2.TestMethod));
             var sourceMethod = new SourceMethod(method);

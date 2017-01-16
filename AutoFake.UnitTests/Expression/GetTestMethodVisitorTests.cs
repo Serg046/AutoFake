@@ -40,7 +40,7 @@ namespace AutoFake.UnitTests.Expression
         {
             var field = typeof(TestClass).GetField(nameof(TestClass.Field));
 
-            Assert.Throws<NotImplementedException>(() => _visitor.Visit(field));
+            Assert.Throws<InvalidOperationException>(() => _visitor.Visit(field));
         }
 
         private class TestClass

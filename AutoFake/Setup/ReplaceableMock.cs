@@ -35,10 +35,11 @@ namespace AutoFake.Setup
 
         private void ReplaceInstruction(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
         {
-            var methodReference = instruction.Operand as MethodReference;
-            if (methodReference == null)
-                throw new FakeGeneretingException("Operand of the mocked instruction must be a method");
-            if (!methodReference.Resolve().IsStatic)
+            if (!(instruction.Operand is MethodReference || instruction.Operand is FieldReference))
+                throw new FakeGeneretingException("Operand of the mocked instruction must be a method or field");
+
+            dynamic memberReference = instruction.Operand;
+            if (!memberReference.Resolve().IsStatic)
                 methodMocker.RemoveStackArgument(ilProcessor, instruction);
 
             if (_parameters.IsReturnObjectSet)

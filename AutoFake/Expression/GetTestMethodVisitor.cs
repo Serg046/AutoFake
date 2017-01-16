@@ -30,7 +30,7 @@ namespace AutoFake.Expression
 
         public void Visit(FieldInfo fieldInfo)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Cannot execute a field. The member must have a body.");
         }
     }
 }

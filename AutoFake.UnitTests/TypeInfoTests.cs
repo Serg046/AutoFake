@@ -86,5 +86,33 @@ namespace AutoFake.UnitTests
 
             new TypeInfo(typeof(TestClass), GetDependencies(null, null)).CreateInstance(typeof(TestClass));
         }
+
+        [Fact]
+        public void GetMonoCecilTypeName_SourceType_ReturnsSourceTypeName()
+        {
+            var sourceType = typeof(InternalTestClass);
+            var typeInfo = new TypeInfo(sourceType, new List<FakeDependency>());
+
+            Assert.Equal("AutoFake.UnitTests.TypeInfoTests/InternalTestClassFake",
+                typeInfo.GetMonoCecilTypeName(sourceType));
+        }
+
+        [Fact]
+        public void GetMonoCecilTypeName_SystemType_ReturnsSourceTypeName()
+        {
+            var sourceType = typeof(InternalTestClass);
+            var typeInfo = new TypeInfo(sourceType, new List<FakeDependency>());
+
+            Assert.Equal("System.Object", typeInfo.GetMonoCecilTypeName(typeof(object)));
+        }
+
+        [Fact]
+        public void GetMonoCecilTypeName_NestedType_ReturnsSourceTypeName()
+        {
+            var typeInfo = new TypeInfo(typeof(InternalTestClass), new List<FakeDependency>());
+
+            Assert.Equal("AutoFake.UnitTests.TypeInfoTests/TestClass",
+                typeInfo.GetMonoCecilTypeName(typeof(TestClass)));
+        }
     }
 }

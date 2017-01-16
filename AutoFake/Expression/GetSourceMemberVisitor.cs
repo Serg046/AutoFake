@@ -29,9 +29,6 @@ namespace AutoFake.Expression
 
         public void Visit(PropertyInfo propertyInfo) => SourceMember = new SourceMethod(propertyInfo.GetGetMethod(true));
 
-        public void Visit(FieldInfo fieldInfo)
-        {
-            throw new NotImplementedException();
-        }
+        public void Visit(FieldInfo fieldInfo) => SourceMember = new SourceField(fieldInfo);
     }
 }

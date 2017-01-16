@@ -77,6 +77,7 @@
     <Compile Include="Setup\MockTests\MockVerifyTests.cs" />
     <Compile Include="Setup\MockTests\ReplaceableMockTests.cs" />
     <Compile Include="Setup\MockTests\VerifiableMockTests.cs" />
+    <Compile Include="Setup\SourceFieldTests.cs" />
     <Compile Include="Setup\SourceMethodTests.cs" />
     <Compile Include="TestUtils\Cil.cs" />
     <Compile Include="TestUtils\CilUtils.cs" />

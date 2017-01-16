@@ -137,10 +137,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         public void Inject_IncorrectInstruction_Throws()
         {
             var ilProcessor = GetILProcessor();
-
-            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-            var instruction = Instruction.Create(OpCodes.Call, typeInfo.Methods.First());
-            instruction.Operand = typeInfo.Fields.First();
+            var instruction = Instruction.Create(OpCodes.Nop);
 
             Assert.Throws<FakeGeneretingException>(() => _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction));
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
@@ -32,10 +33,10 @@ namespace AutoFake.Expression
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
         {
-            var instanceExpr = _instance == null || methodInfo.IsStatic ? null : System.Linq.Expressions.Expression.Constant(_instance);
-            var callExpression = System.Linq.Expressions.Expression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
-
-            RuntimeValue = GetValueSafe(() => System.Linq.Expressions.Expression.Lambda(callExpression).Compile().DynamicInvoke());
+            var instanceExpr = _instance == null || methodInfo.IsStatic ? null : LinqExpression.Constant(_instance);
+            var callExpression = LinqExpression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
+            var lambda = LinqExpression.Lambda(callExpression).Compile();
+            RuntimeValue = GetValueSafe(() => lambda.DynamicInvoke());
         }
 
         public void Visit(PropertyInfo propertyInfo) => RuntimeValue = GetValueSafe(() => propertyInfo.GetValue(_instance, null));

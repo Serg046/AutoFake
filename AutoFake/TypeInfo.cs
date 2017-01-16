@@ -4,14 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Setup;
 using Mono.Cecil;
 
 namespace AutoFake
 {
     internal class TypeInfo
     {
-        private const string FAKE_NAMESPACE = "AutoFake.Fakes";
         private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private readonly AssemblyDefinition _assemblyDefinition;
@@ -29,31 +27,27 @@ namespace AutoFake
             var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, true);
             _typeDefinition = type.Resolve();
             _typeDefinition.Name += "Fake";
-            _typeDefinition.Namespace = FAKE_NAMESPACE;
         }
 
         public Type SourceType { get; }
         
         public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
 
-        public string GetInstalledMethodTypeName(Type declaringType)
+        public string GetMonoCecilTypeName(Type declaringType)
+            => declaringType == SourceType
+                ? _typeDefinition.FullName
+                : declaringType.Namespace + "." + GetAllTypes(declaringType)
+                    .Aggregate(string.Empty, (current, next) => next + "/" + current)
+                    .TrimEnd('/');
+
+        private IEnumerable<string> GetAllTypes(Type type)
         {
-            string result = null;
-            var type = declaringType;
-
-            Func<string, string> combineFunc = typeName => result == null ? typeName : typeName + "/" + result;
-
             var tmpType = type;
             do
             {
-                if (tmpType == SourceType)
-                    return combineFunc(_typeDefinition.FullName);
-                else
-                    result = combineFunc(tmpType.Name);
+                yield return tmpType.Name;
             } while ((tmpType = tmpType.DeclaringType) != null);
-
-            return type.Namespace + "." + result;
-        }
+        } 
 
         public TypeReference Import(Type type) => _assemblyDefinition.MainModule.Import(type);
         public MethodReference Import(MethodBase method) => _assemblyDefinition.MainModule.Import(method);
