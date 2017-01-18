@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using AutoFake.Expression;
 using Moq;
@@ -45,6 +46,16 @@ namespace AutoFake.UnitTests.Expression
             _visitor.Visit(field);
 
             _requestedVisitor.Verify(v => v.Visit(typeof(TargetClass).GetField(nameof(TargetClass.Field))));
+        }
+
+        [Fact]
+        public void Visit_Constructor_Success()
+        {
+            var expression = (NewExpression)((Expression<Func<TestClass>>)(() => new TestClass())).Body;
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            _requestedVisitor.Verify(v => v.Visit(expression, typeof(TargetClass).GetConstructors().Single()));
         }
 
         private class TestClass

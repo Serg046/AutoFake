@@ -49,6 +49,19 @@ namespace AutoFake.UnitTests.Expression
             Assert.Equal(field.FieldType, _visitor.SourceMember.ReturnType);
         }
 
+        [Fact]
+        public void Visit_NewExpression_Success()
+        {
+            Expression<Func<TestClass>> expression = () => new TestClass();
+            var newExpression = expression.Body as NewExpression;
+
+            _visitor.Visit(newExpression, newExpression.Constructor);
+
+            Assert.Equal(newExpression.Constructor.Name, _visitor.SourceMember.Name);
+            Assert.Equal(newExpression.Constructor.DeclaringType, _visitor.SourceMember.ReturnType);
+            Assert.Equal(newExpression.Constructor.GetParameters(), _visitor.SourceMember.GetParameters());
+        }
+
         private class TestClass
         {
             public static int Field;

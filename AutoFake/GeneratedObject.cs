@@ -22,12 +22,6 @@ namespace AutoFake
         public IList<MockedMemberInfo> MockedMembers { get; } = new List<MockedMemberInfo>();
         public bool IsBuilt { get; private set; }
 
-        public void AcceptMemberVisitor(LinqExpression expression, IMemberVisitor visitor)
-        {
-            var invocationExpression = new InvocationExpression(expression);
-            invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, Type));
-        }
-
         public void Build()
         {
             using (var memoryStream = new MemoryStream())

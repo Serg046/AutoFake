@@ -29,7 +29,7 @@ namespace AutoFake
             }
         }
 
-        public void Generate(ICollection<Mock> mocks, MethodInfo executeFunc)
+        public void Generate(ICollection<Mock> mocks, MethodBase executeFunc)
         {
             if (_generatedObject.IsBuilt)
                 throw new FakeGeneretingException("Fake is already built. Please use another instance.");
@@ -38,7 +38,7 @@ namespace AutoFake
         }
 
 
-        private void MockSetups(ICollection<Mock> mocks, MethodInfo executeFunc)
+        private void MockSetups(ICollection<Mock> mocks, MethodBase executeFunc)
         {
             foreach (var mock in mocks)
             {
@@ -53,7 +53,7 @@ namespace AutoFake
             }
         }
 
-        private string GetExecuteFuncSuffixName(MethodInfo executeFunc)
+        private string GetExecuteFuncSuffixName(MethodBase executeFunc)
         {
             var suffixName = executeFunc.Name;
             var installedCount = _generatedObject.MockedMembers.Count(g => g.TestMethodName == executeFunc.Name);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using Moq;
 using Xunit;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;

@@ -10,5 +10,6 @@ namespace AutoFake.Setup
         Type ReturnType { get; }
         bool IsCorrectInstruction(TypeInfo typeInfo, Instruction instruction);
         ParameterInfo[] GetParameters();
+        bool HasStackInstance { get; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Exceptions;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
@@ -29,6 +30,11 @@ namespace AutoFake.Expression
                 _runtimeValue = value;
                 _isRuntimeValueSet = true;
             }
+        }
+
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+        {
+            throw new NotSupportedExpressionException("Cannot execute contructor because the instance is already built.");
         }
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)

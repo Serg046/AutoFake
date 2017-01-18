@@ -51,6 +51,8 @@ namespace AutoFake.Expression
             }
         }
 
+        private void Analyze(NewExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Constructor);
+
         private void Analyze(PropertyInfo propertyInfo, IMemberVisitor visitor) => visitor.Visit(propertyInfo);
 
         private void Analyze(FieldInfo fieldInfo, IMemberVisitor visitor) => visitor.Visit(fieldInfo);

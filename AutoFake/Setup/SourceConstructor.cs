@@ -5,16 +5,16 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class SourceMethod : ISourceMember
+    internal class SourceConstructor : ISourceMember
     {
-        private readonly MethodInfo _method;
+        private readonly ConstructorInfo _constructor;
 
-        public SourceMethod(MethodInfo sourceMethod)
+        public SourceConstructor(ConstructorInfo sourceConstructor)
         {
-            _method = sourceMethod;
-            Name = sourceMethod.Name;
-            ReturnType = sourceMethod.ReturnType;
-            HasStackInstance = !sourceMethod.IsStatic;
+            _constructor = sourceConstructor;
+            Name = sourceConstructor.Name;
+            ReturnType = sourceConstructor.DeclaringType;
+            HasStackInstance = false;
         }
 
         public string Name { get; }
@@ -30,12 +30,12 @@ namespace AutoFake.Setup
             {
                 var method = (MethodReference)instruction.Operand;
                 result = method.DeclaringType.FullName == typeInfo
-                    .GetMonoCecilTypeName(_method.DeclaringType)
-                         && method.EquivalentTo(_method);
+                    .GetMonoCecilTypeName(_constructor.DeclaringType)
+                         && method.EquivalentTo(_constructor);
             }
             return result;
         }
 
-        public ParameterInfo[] GetParameters() => _method.GetParameters();
+        public ParameterInfo[] GetParameters() => _constructor.GetParameters();
     }
 }

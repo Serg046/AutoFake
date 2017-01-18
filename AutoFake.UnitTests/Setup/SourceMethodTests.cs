@@ -62,12 +62,23 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Fact]
-        public void GetParameters_MethodInfo_ReturnsName()
+        public void GetParameters_MethodInfo_ReturnsParameters()
         {
             var method = typeof(TestClass2).GetMethod(nameof(TestClass2.TestMethod));
             var sourceMethod = new SourceMethod(method);
 
             Assert.Equal(method.GetParameters(), sourceMethod.GetParameters());
+        }
+
+        [Theory]
+        [InlineData(nameof(TestClass2.TestMethod), true)]
+        [InlineData(nameof(TestClass2.StaticTestMethod), false)]
+        public void HasStackInstance_Field_Success(string methodName, bool expectedResult)
+        {
+            var method = typeof(TestClass2).GetMethod(methodName);
+            var sourceMethod = new SourceMethod(method);
+
+            Assert.Equal(expectedResult, sourceMethod.HasStackInstance);
         }
 
         private MethodInfo GetMethod(string methodName, params Type[] arguments) => GetMethod<TestClass>(methodName, arguments);
@@ -85,6 +96,7 @@ namespace AutoFake.UnitTests.Setup
         private class TestClass2
         {
             public int TestMethod(int arg) => 5;
+            public static int StaticTestMethod(int arg) => 5;
         }
     }
 }

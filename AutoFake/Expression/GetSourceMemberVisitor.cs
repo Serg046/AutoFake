@@ -25,6 +25,8 @@ namespace AutoFake.Expression
             }
         }
 
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => SourceMember = new SourceConstructor(constructorInfo);
+
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => SourceMember = new SourceMethod(methodInfo);
 
         public void Visit(PropertyInfo propertyInfo) => SourceMember = new SourceMethod(propertyInfo.GetGetMethod(true));

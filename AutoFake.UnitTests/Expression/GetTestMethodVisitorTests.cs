@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
+using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Xunit;
 
@@ -40,7 +42,15 @@ namespace AutoFake.UnitTests.Expression
         {
             var field = typeof(TestClass).GetField(nameof(TestClass.Field));
 
-            Assert.Throws<InvalidOperationException>(() => _visitor.Visit(field));
+            Assert.Throws<NotSupportedExpressionException>(() => _visitor.Visit(field));
+        }
+
+        [Fact]
+        public void Visit_Constructor_Throws()
+        {
+            var constructor = typeof(TestClass).GetConstructors().First();
+
+            Assert.Throws<NotSupportedExpressionException>(() => _visitor.Visit(null, constructor));
         }
 
         private class TestClass

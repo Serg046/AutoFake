@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Exceptions;
 
 namespace AutoFake.Expression
 {
     internal class GetTestMethodVisitor : IMemberVisitor
     {
-        private MethodInfo _methodInfo;
+        private MethodBase _methodInfo;
         private bool _isRuntimeValueSet;
 
-        public MethodInfo Method
+        public MethodBase Method
         {
             get
             {
@@ -24,13 +25,18 @@ namespace AutoFake.Expression
             }
         }
 
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+        {
+            throw new NotSupportedExpressionException("Cannot execute contructor because the instance is already built.");
+        }
+
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => Method = methodInfo;
 
         public void Visit(PropertyInfo propertyInfo) => Method = propertyInfo.GetGetMethod(true);
 
         public void Visit(FieldInfo fieldInfo)
         {
-            throw new InvalidOperationException("Cannot execute a field. The member must have a body.");
+            throw new NotSupportedExpressionException("Cannot execute a field. The member must have a body.");
         }
     }
 }

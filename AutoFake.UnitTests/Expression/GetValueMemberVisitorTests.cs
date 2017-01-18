@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Xunit;
 
@@ -172,6 +173,15 @@ namespace AutoFake.UnitTests.Expression
             var visitor = new GetValueMemberVisitor(generatedObject);
 
             Assert.Throws<InvalidOperationException>(() => visitor.Visit(property));
+        }
+
+        [Fact]
+        public void Visit_Ctor_Fails()
+        {
+            ConstructorInfo constructorInfo = null;
+            var visitor = new GetValueMemberVisitor(new GeneratedObject(null));
+
+            Assert.Throws<NotSupportedExpressionException>(() => visitor.Visit(null, constructorInfo));
         }
     }
 }

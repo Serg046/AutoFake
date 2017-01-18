@@ -1,5 +1,5 @@
-﻿using System.Linq.Expressions;
-using AutoFake.Expression;
+﻿using AutoFake.Expression;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake
 {
@@ -7,7 +7,7 @@ namespace AutoFake
     {
         private readonly ExecutorImpl _executor;
 
-        internal Executor(GeneratedObject generatedObject, LambdaExpression invocationExpression)
+        internal Executor(GeneratedObject generatedObject, InvocationExpression invocationExpression)
         {
             _executor = new ExecutorImpl(generatedObject, invocationExpression);
         }
@@ -19,7 +19,7 @@ namespace AutoFake
     {
         private readonly ExecutorImpl _executor;
 
-        internal Executor(GeneratedObject generatedObject, LambdaExpression invocationExpression)
+        internal Executor(GeneratedObject generatedObject, InvocationExpression invocationExpression)
         {
             _executor = new ExecutorImpl(generatedObject, invocationExpression);
         }
@@ -30,9 +30,9 @@ namespace AutoFake
     internal class ExecutorImpl
     {
         private readonly GeneratedObject _generatedObject;
-        private readonly LambdaExpression _invocationExpression;
+        private readonly InvocationExpression _invocationExpression;
 
-        public ExecutorImpl(GeneratedObject generatedObject, LambdaExpression invocationExpression)
+        public ExecutorImpl(GeneratedObject generatedObject, InvocationExpression invocationExpression)
         {
             _generatedObject = generatedObject;
             _invocationExpression = invocationExpression;
@@ -47,7 +47,7 @@ namespace AutoFake
             }
 
             var visitor = new GetValueMemberVisitor(_generatedObject);
-            _generatedObject.AcceptMemberVisitor(_invocationExpression.Body, visitor);
+            _invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, _generatedObject.Type));
 
             var result = visitor.RuntimeValue;
 

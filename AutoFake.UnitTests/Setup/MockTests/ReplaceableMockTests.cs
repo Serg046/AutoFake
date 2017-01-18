@@ -38,14 +38,20 @@ namespace AutoFake.UnitTests.Setup.MockTests
             _generatedObject.Build();
         }
 
+        private ISourceMember GetSourceMember(string name)
+           => new SourceMethod(typeof(TestClass).GetMethod(name));
+
         private ReplaceableMock GetReplaceableMock()
             => GetReplaceableMock(new List<FakeArgument>() { new FakeArgument(new EqualityArgumentChecker(1)) });
 
-        private ISourceMember GetSourceMember(string name)
-            => new SourceMethod(typeof(TestClass).GetMethod(name));
+        private ReplaceableMock GetReplaceableMock(string methodName)
+            => GetReplaceableMock(methodName, new List<FakeArgument>() { new FakeArgument(new EqualityArgumentChecker(1)) });
 
         private ReplaceableMock GetReplaceableMock(List<FakeArgument> arguments)
-            => new ReplaceableMock(GetSourceMember(nameof(TestClass.TestMethod)), arguments, _parameters);
+            => GetReplaceableMock(nameof(TestClass.TestMethod), arguments);
+
+        private ReplaceableMock GetReplaceableMock(string methodName, List<FakeArgument> arguments)
+            => new ReplaceableMock(GetSourceMember(methodName), arguments, _parameters);
 
         private FieldDefinition CreateFieldDefinition(string fieldName) => new FieldDefinition(fieldName, Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
 
@@ -133,29 +139,21 @@ namespace AutoFake.UnitTests.Setup.MockTests
             _mocker.Verify(m => m.RemoveMethodArguments(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
         }
 
-        [Fact]
-        public void Inject_IncorrectInstruction_Throws()
-        {
-            var ilProcessor = GetILProcessor();
-            var instruction = Instruction.Create(OpCodes.Nop);
-
-            Assert.Throws<FakeGeneretingException>(() => _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction));
-        }
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
         public void Inject_NonStaticMethod_OneStackArgumentMustBeRemoved(bool isMethodStatic)
         {
+            var methodName = isMethodStatic ? nameof(TestClass.StaticTestMethod) : nameof(TestClass.TestMethod);
+            var mock = GetReplaceableMock(methodName);
             var ilProcessor = GetILProcessor();
 
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var methodName = isMethodStatic ? nameof(TestClass.StaticTestMethod) : nameof(TestClass.TestMethod);
             var methodDefinition = typeInfo.Methods.Single(m => m.Name == methodName);
             var instruction = Instruction.Create(OpCodes.Call, methodDefinition);
             instruction.Operand = methodDefinition;
 
-            _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
+            mock.Inject(_mocker.Object, ilProcessor, instruction);
 
             _mocker.Verify(m => m.RemoveStackArgument(ilProcessor, instruction), isMethodStatic ? Times.Never() : Times.Once());
         }

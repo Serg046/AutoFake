@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Xunit;
@@ -25,7 +26,8 @@ namespace AutoFake.UnitTests.Expression
         [Fact]
         public void Visit_Method_Throws()
         {
-            Assert.Throws<NotSupportedExpressionException>(() => new SetValueMemberVisitor(new GeneratedObject(null), null).Visit(null, null));
+            Assert.Throws<NotSupportedExpressionException>(()
+                => new SetValueMemberVisitor(new GeneratedObject(null), null).Visit(null, (MethodInfo)null));
         }
 
         private static GeneratedObject GetGeneratedObject(object instance, Type type)
@@ -72,6 +74,13 @@ namespace AutoFake.UnitTests.Expression
             var visitor = new SetValueMemberVisitor(GetGeneratedObject(obj, typeof(SomeInstanceType)), 3);
             Assert.Throws<NotSupportedExpressionException>(
                 () => visitor.Visit(obj.GetType().GetProperty(nameof(SomeInstanceType.ReadOnlyProperty))));
+        }
+
+        [Fact]
+        public void Visit_Constructor_Throws()
+        {
+            Assert.Throws<NotSupportedExpressionException>(()
+                => new SetValueMemberVisitor(new GeneratedObject(null), null).Visit(null, (ConstructorInfo)null));
         }
     }
 }

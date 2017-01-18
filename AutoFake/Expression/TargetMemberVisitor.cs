@@ -16,6 +16,14 @@ namespace AutoFake.Expression
             _targeType = targetType;
         }
 
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+        {
+            var paramTypes = constructorInfo.GetParameters().Select(p => p.ParameterType).ToArray();
+            var constructor = _targeType.GetConstructor(paramTypes);
+
+            _requestedVisitor.Visit(newExpression, constructor);
+        }
+
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
         {
             var paramTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();

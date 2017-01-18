@@ -75,6 +75,7 @@
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
     <Compile Include="Setup\ISourceMember.cs" />
+    <Compile Include="Setup\SourceConstructor.cs" />
     <Compile Include="Setup\SourceField.cs" />
     <Compile Include="Setup\SourceMethod.cs" />
     <Compile Include="Setup\VerifiableMock.cs" />
@@ -82,7 +83,7 @@
     <Compile Include="Fake.cs" />
     <Compile Include="FakeDependency.cs" />
     <Compile Include="FakeGenerator.cs" />
-    <Compile Include="IMemberVisitor.cs" />
+    <Compile Include="Expression\IMemberVisitor.cs" />
     <Compile Include="IMethodMocker.cs" />
     <Compile Include="IMocker.cs" />
     <Compile Include="Mocker.cs" />

@@ -15,6 +15,11 @@ namespace AutoFake.Expression
             _value = value;
         }
 
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+        {
+            throw new NotSupportedExpressionException("Cannot set value for the constructor.");
+        }
+
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
         {
             throw new NotSupportedExpressionException("Cannot set value for the method.");

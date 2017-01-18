@@ -10,6 +10,7 @@ using Moq;
 using Xunit;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using Mock = AutoFake.Setup.Mock;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake.UnitTests
 {
@@ -46,7 +47,7 @@ namespace AutoFake.UnitTests
 
             Expression<Action> expr = () => TestMethod();
 
-            Assert.Throws<FakeGeneretingException>(() => new Executor(generateObject, expr).Execute());
+            Assert.Throws<FakeGeneretingException>(() => new Executor(generateObject, new InvocationExpression(expr)).Execute());
         }
 
         [Fact]
@@ -63,7 +64,7 @@ namespace AutoFake.UnitTests
 
             //act
             Expression<Action> expr = () => TestMethod();
-            new Executor(_generatedObject, expr).Execute();
+            new Executor(_generatedObject, new InvocationExpression(expr)).Execute();
 
             //assert
             foreach (var mockedMemberInfo in _generatedObject.MockedMembers.Where(m => m.Mock.SourceMember.ReturnType != typeof(void)))
@@ -86,7 +87,7 @@ namespace AutoFake.UnitTests
 
             Expression<Action> expr = () => TestMethod();
 
-            Assert.Throws<FakeGeneretingException>(() => new Executor(_generatedObject, expr).Execute());
+            Assert.Throws<FakeGeneretingException>(() => new Executor(_generatedObject, new InvocationExpression(expr)).Execute());
         }
 
         [Theory]
@@ -103,9 +104,9 @@ namespace AutoFake.UnitTests
             Expression<Action> expr = () => TestMethod();
 
             if (shoudBeFailed)
-                Assert.Throws<VerifiableException>(() => new Executor(_generatedObject, expr).Execute());
+                Assert.Throws<VerifiableException>(() => new Executor(_generatedObject, new InvocationExpression(expr)).Execute());
             else
-                new Executor(_generatedObject, expr).Execute();
+                new Executor(_generatedObject, new InvocationExpression(expr)).Execute();
         }
 
         [Fact]
@@ -119,7 +120,7 @@ namespace AutoFake.UnitTests
 
             Expression<Action> expr = () => TestMethod();
 
-            new Executor(_generatedObject, expr).Execute();
+            new Executor(_generatedObject, new InvocationExpression(expr)).Execute();
         }
 
         [Theory]
@@ -136,9 +137,9 @@ namespace AutoFake.UnitTests
             Expression<Action> expr = () => TestMethod();
 
             if (shoudBeFailed)
-                Assert.Throws<ExpectedCallsException>(() => new Executor(_generatedObject, expr).Execute());
+                Assert.Throws<ExpectedCallsException>(() => new Executor(_generatedObject, new InvocationExpression(expr)).Execute());
             else
-                new Executor(_generatedObject, expr).Execute();
+                new Executor(_generatedObject, new InvocationExpression(expr)).Execute();
         }
 
         [Fact]
@@ -150,7 +151,7 @@ namespace AutoFake.UnitTests
 
             //act
             Expression<Action> expr = () => TestMethod();
-            new Executor(_generatedObject, expr).Execute();
+            new Executor(_generatedObject, new InvocationExpression(expr)).Execute();
 
             //assert
             var mockedMemberInfo = _generatedObject.MockedMembers.Single();

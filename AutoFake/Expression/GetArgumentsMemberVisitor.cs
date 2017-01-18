@@ -33,6 +33,9 @@ namespace AutoFake.Expression
 
         public void Visit(FieldInfo fieldInfo) => Arguments = new List<FakeArgument>();
 
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+            => Arguments = newExpression.Arguments.Select(expr => GetArgument(() => expr)).ToList();
+
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
             => Arguments = methodExpression.Arguments.Select(expr => GetArgument(() => expr)).ToList();
 

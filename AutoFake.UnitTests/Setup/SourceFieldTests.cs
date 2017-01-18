@@ -69,9 +69,21 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(new ParameterInfo[0], sourceField.GetParameters());
         }
 
+        [Theory]
+        [InlineData(nameof(TestClass.Field), true)]
+        [InlineData(nameof(TestClass.StaticField), false)]
+        public void HasStackInstance_Field_Success(string fieldName, bool expectedResult)
+        {
+            var field = typeof(TestClass).GetField(fieldName);
+            var sourceField = new SourceField(field);
+
+            Assert.Equal(expectedResult, sourceField.HasStackInstance);
+        }
+
         private class TestClass
         {
             public int Field;
+            public static int StaticField;
         }
 
         private class TestClass2

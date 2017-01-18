@@ -212,9 +212,9 @@ namespace AutoFake.IntegrationTests.InstanceTests
             {
                 Debug.WriteLine("Started");
                 var cmd = new SqlCommand();
-                var vaue = cmd.ExecuteScalar();
+                var value = cmd.ExecuteScalar();
                 Debug.WriteLine("Finished");
-                return vaue;
+                return value;
             }
 
             public Hashtable GetFrameworkStaticValue()

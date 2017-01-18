@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using AutoFake.Expression;
 using Xunit;
 
@@ -66,7 +67,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_CtorCallAsArgument_Success()
+        public void Visit_MethodWithCtorCallAsArgument_Success()
         {
             //Constructor call must be in lambda. Do not extract variable.
             var expression = GetMethodCallExpression(t => t.SomeMethod(new DateTime(2016, 8, 22)));
@@ -78,7 +79,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_MethodCallAsArgument_Success()
+        public void Visit_MethodWithMethodCallAsArgument_Success()
         {
             var expression = GetMethodCallExpression(t => t.SomeMethod(TestClass.SomeStaticMethod(0)));
 
@@ -89,7 +90,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_PropertyCallAsArgument_Success()
+        public void Visit_MethodWithPropertyCallAsArgument_Success()
         {
             var expression = GetMethodCallExpression(t => t.SomeMethod(TestClass.SomeStaticProperty));
 
@@ -100,7 +101,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_FieldCallAsArgument_Success()
+        public void Visit_MethodWithFieldCallAsArgument_Success()
         {
             var expression = GetMethodCallExpression(t => t.SomeMethod(TestClass.SomeStaticField));
 
@@ -111,7 +112,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_CtorAndMethodCallsAsArgument_Success()
+        public void Visit_MethodWithCtorAndMethodCallsAsArgument_Success()
         {
             var expression = GetMethodCallExpression(t => t.SomeMethod(new DateTime(2016, 8, 22).AddDays(1)));
 
@@ -122,16 +123,16 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_LambdaParameterAsArgument_Fails()
+        public void Visit_MethodWithLambdaParameterAsArgument_Fails()
         {
             var expression = GetMethodCallExpression(t => t.SomeMethod(t));
             Assert.Throws<InvalidOperationException>(() => _visitor.Visit(expression, expression.Method));
         }
 
         [Fact]
-        public void Visit_YourselfRef_Success()
+        public void Visit_MethodWithYourselfRef_Success()
         {
-            var testClass = new TestClass();
+            var testClass = new MethodTestClass();
             var expression = GetMethodCallExpression(t => t.SomeMethod(testClass));
 
             _visitor.Visit(expression, expression.Method);
@@ -141,18 +142,18 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_DifferentInstances_Success()
+        public void Visit_MethodWithDifferentInstances_Success()
         {
-            var expression = GetMethodCallExpression(t => t.SomeMethod(new TestClass()));
+            var expression = GetMethodCallExpression(t => t.SomeMethod(new MethodTestClass()));
 
             _visitor.Visit(expression, expression.Method);
 
             Assert.Equal(1, _visitor.Arguments.Count);
-            Assert.False(_visitor.Arguments[0].Check(new TestClass()));
+            Assert.False(_visitor.Arguments[0].Check(new MethodTestClass()));
         }
 
         [Fact]
-        public void Visit_LambdaArg_Success()
+        public void Visit_MethodWithLambdaArg_Success()
         {
             var date = new DateTime(2017, 1, 12);
             var expression = GetMethodCallExpression(t => t.SomeMethod(Arg.Is<DateTime>(a => a > date)));
@@ -163,10 +164,191 @@ namespace AutoFake.UnitTests.Expression
             Assert.True(_visitor.Arguments[0].Check(date.AddDays(1)));
         }
 
-        private MethodCallExpression GetMethodCallExpression(Expression<Action<TestClass>> expression)
+        [Fact]
+        public void Visit_Property_ReturnsEmpty()
+        {
+            PropertyInfo property = null;
+
+            _visitor.Visit(property);
+
+            Assert.Empty(_visitor.Arguments);
+        }
+
+        [Fact]
+        public void Visit_Field_ReturnsEmpty()
+        {
+            FieldInfo field = null;
+
+            _visitor.Visit(field);
+
+            Assert.Empty(_visitor.Arguments);
+        }
+
+        [Fact]
+        public void Visit_CtorWithoutArgs_ReturnsEmpty()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass());
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(Enumerable.Empty<FakeArgument>(), _visitor.Arguments);
+        }
+
+        [Fact]
+        public void Visit_CtorWithConstArg_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(0));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(0));
+        }
+
+        [Fact]
+        public void Visit_CtorWithMultipleArgs_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(0, "0", "ab", GetType()));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(4, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(0));
+            Assert.True(_visitor.Arguments[1].Check("0"));
+            Assert.True(_visitor.Arguments[2].Check("ab"));
+            Assert.True(_visitor.Arguments[3].Check(GetType()));
+        }
+
+        [Fact]
+        public void Visit_CtorWithParamsArgs_Success()
+        {
+            var args1 = new[] { 0, 1 };
+            var args2 = new object[] { 0, "1", GetType() };
+            var expression = GetNewExpression(() => new CtorTestClass(-1, args1, args2));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(3, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(-1));
+            Assert.True(_visitor.Arguments[1].Check(args1));
+            Assert.True(_visitor.Arguments[2].Check(args2));
+        }
+
+        [Fact]
+        public void Visit_CtorWithCtorCallAsArgument_Success()
+        {
+            //Constructor call must be in lambda. Do not extract variable.
+            var expression = GetNewExpression(() => new CtorTestClass(new DateTime(2016, 8, 22)));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(new DateTime(2016, 8, 22)));
+        }
+
+        [Fact]
+        public void Visit_CtorWithMethodCallAsArgument_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(TestClass.SomeStaticMethod(0)));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(0));
+        }
+
+        [Fact]
+        public void Visit_CtorWithPropertyCallAsArgument_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(TestClass.SomeStaticProperty));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(2));
+        }
+
+        [Fact]
+        public void Visit_CtorWithFieldCallAsArgument_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(TestClass.SomeStaticField));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(2));
+        }
+
+        [Fact]
+        public void Visit_CtorWithCtorAndMethodCallsAsArgument_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(new DateTime(2016, 8, 22).AddDays(1)));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(new DateTime(2016, 8, 23)));
+        }
+
+        [Fact]
+        public void Visit_CtorWithLambdaParameterAsArgument_Fails()
+        {
+            var expression = GetNewExpression(t => new CtorTestClass(t));
+            Assert.Throws<InvalidOperationException>(() => _visitor.Visit(expression, expression.Constructor));
+        }
+
+        [Fact]
+        public void Visit_CtorWithYourselfRef_Success()
+        {
+            var testClass = new CtorTestClass();
+            var expression = GetNewExpression(() => new CtorTestClass(testClass));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(testClass));
+        }
+
+        [Fact]
+        public void Visit_CtorWithDifferentInstances_Success()
+        {
+            var expression = GetNewExpression(() => new CtorTestClass(new CtorTestClass()));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.False(_visitor.Arguments[0].Check(new TestClass()));
+        }
+
+        [Fact]
+        public void Visit_CtorWithLambdaArg_Success()
+        {
+            var date = new DateTime(2017, 1, 12);
+            var expression = GetNewExpression(() => new CtorTestClass(Arg.Is<DateTime>(a => a > date)));
+
+            _visitor.Visit(expression, expression.Constructor);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments[0].Check(date.AddDays(1)));
+        }
+
+        private MethodCallExpression GetMethodCallExpression(Expression<Action<MethodTestClass>> expression)
             => (MethodCallExpression)expression.Body;
 
+        private NewExpression GetNewExpression<T>(Expression<Func<T>> expression)
+            => (NewExpression)expression.Body;
+
+        private NewExpression GetNewExpression<T>(Expression<Func<CtorTestClass, T>> expression)
+            => (NewExpression)expression.Body;
+
         private class TestClass
+        {
+            public static int SomeStaticProperty { get; } = 2;
+            public static int SomeStaticField = 2;
+            public static int SomeStaticMethod(int a) => a;
+        }
+
+        private class MethodTestClass
         {
             public void SomeMethod()
             {
@@ -188,13 +370,36 @@ namespace AutoFake.UnitTests.Expression
             {
             }
 
-            public void SomeMethod(TestClass self)
+            public void SomeMethod(MethodTestClass self)
+            {
+            }
+        }
+
+        private class CtorTestClass
+        {
+            public CtorTestClass()
             {
             }
 
-            public static int SomeStaticProperty { get; } = 2;
-            public static int SomeStaticField = 2;
-            public static int SomeStaticMethod(int a) => a;
+            public CtorTestClass(int a)
+            {
+            }
+
+            public CtorTestClass(DateTime a)
+            {
+            }
+
+            public CtorTestClass(int a, string b, string c, Type d)
+            {
+            }
+
+            public CtorTestClass(int a, int[] args1, params object[] args2)
+            {
+            }
+
+            public CtorTestClass(CtorTestClass self)
+            {
+            }
         }
     }
 }

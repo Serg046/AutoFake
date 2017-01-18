@@ -16,11 +16,14 @@ namespace AutoFake.Setup
             _field = field;
             Name = field.Name;
             ReturnType = field.FieldType;
+            HasStackInstance = !field.IsStatic;
         }
 
         public string Name { get; }
 
         public Type ReturnType { get; }
+
+        public bool HasStackInstance { get; }
 
         public bool IsCorrectInstruction(TypeInfo typeInfo, Instruction instruction)
         {
@@ -35,5 +38,6 @@ namespace AutoFake.Setup
         }
 
         public ParameterInfo[] GetParameters() => new ParameterInfo[0];
+
     }
 }

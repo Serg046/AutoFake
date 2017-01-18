@@ -175,7 +175,7 @@ namespace AutoFake
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
             _fakeGenerator.Generate(Mocks, visitor.Method);
-            return new Executor(_generatedObject, expression);
+            return new Executor(_generatedObject, invocationExpression);
         }
 
         protected Executor<T> RewriteImpl<T>(LambdaExpression expression)
@@ -184,7 +184,7 @@ namespace AutoFake
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
             _fakeGenerator.Generate(Mocks, visitor.Method);
-            return new Executor<T>(_generatedObject, expression);
+            return new Executor<T>(_generatedObject, invocationExpression);
         }
 
         //---
@@ -217,13 +217,15 @@ namespace AutoFake
 
         protected T ExecuteImpl<T>(LambdaExpression expression)
         {
-            var executor = new Executor<T>(_generatedObject, expression);
+            var invocationExpression = new InvocationExpression(expression);
+            var executor = new Executor<T>(_generatedObject, invocationExpression);
             return executor.Execute();
         }
 
         protected void ExecuteImpl(LambdaExpression expression)
         {
-            var executor = new Executor(_generatedObject, expression);
+            var invocationExpression = new InvocationExpression(expression);
+            var executor = new Executor(_generatedObject, invocationExpression);
             executor.Execute();
         }
 
