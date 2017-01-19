@@ -25,10 +25,7 @@ namespace AutoFake.Expression
             }
         }
 
-        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
-        {
-            throw new NotSupportedExpressionException("Cannot execute contructor because the instance is already built.");
-        }
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => Method = constructorInfo;
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => Method = methodInfo;
 

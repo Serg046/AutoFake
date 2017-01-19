@@ -46,14 +46,26 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Rewrite_AfterExecuteInvocation_Throws()
         {
-            var fake = new Fake<FakeTests>();
+            var fake = new Fake<TestClass>();
             fake.Execute(f => f.SomeMethod());
 
             Assert.Throws<FakeGeneretingException>(() => fake.Rewrite(f => f.SomeMethod()));
         }
 
-        public void SomeMethod()
+        [Fact]
+        public void Execute_ConstructorAfterExecuteInvocation_Throws()
         {
+            var fake = new Fake<TestClass>();
+            fake.Execute();
+
+            Assert.Throws<InvalidOperationException>(() => fake.Execute());
+        }
+
+        private class TestClass
+        {
+            public void SomeMethod()
+            {
+            }
         }
     }
 }

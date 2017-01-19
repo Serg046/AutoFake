@@ -43,7 +43,6 @@ namespace AutoFake
             if (!_generatedObject.IsBuilt)
             {
                 _generatedObject.Build();
-                InitializeInstanceState();
             }
 
             var visitor = new GetValueMemberVisitor(_generatedObject);
@@ -57,14 +56,6 @@ namespace AutoFake
             }
 
             return result;
-        }
-
-        private void InitializeInstanceState()
-        {
-            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
-            {
-                mockedMemberInfo.Mock.Initialize(mockedMemberInfo, _generatedObject);
-            }
         }
     }
 }

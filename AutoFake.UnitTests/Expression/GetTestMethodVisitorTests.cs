@@ -48,9 +48,12 @@ namespace AutoFake.UnitTests.Expression
         [Fact]
         public void Visit_Constructor_Throws()
         {
-            var constructor = typeof(TestClass).GetConstructors().First();
+            Expression<Func<TestClass>> expression = () => new TestClass();
+            var newExpression = expression.Body as NewExpression;
 
-            Assert.Throws<NotSupportedExpressionException>(() => _visitor.Visit(null, constructor));
+            _visitor.Visit(newExpression, newExpression.Constructor);
+
+            Assert.Equal(newExpression.Constructor, _visitor.Method);
         }
 
         private class TestClass

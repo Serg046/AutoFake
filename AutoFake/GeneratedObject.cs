@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using AutoFake.Expression;
-using InvocationExpression = AutoFake.Expression.InvocationExpression;
-using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake
 {
@@ -29,10 +26,19 @@ namespace AutoFake
                 _typeInfo.WriteAssembly(memoryStream);
                 var assembly = Assembly.Load(memoryStream.ToArray());
                 Type = assembly.GetType(_typeInfo.FullTypeName, true);
-                Instance = IsStatic(_typeInfo.SourceType)
-                    ? null
-                    : _typeInfo.CreateInstance(Type);
+
+                Initialize();
+
+                Instance = !IsStatic(_typeInfo.SourceType) ? _typeInfo.CreateInstance(Type) : null;
                 IsBuilt = true;
+            }
+        }
+
+        private void Initialize()
+        {
+            foreach (var mockedMemberInfo in MockedMembers)
+            {
+                mockedMemberInfo.Mock.Initialize(mockedMemberInfo, this);
             }
         }
 

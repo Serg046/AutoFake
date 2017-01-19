@@ -255,6 +255,14 @@ namespace AutoFake
             ExecuteImpl(executeFunc);
         }
 
+        public void Execute()
+        {
+            if (_generatedObject.IsBuilt)
+                throw new InvalidOperationException("Cannot execute contructor because the instance is already built.");
+
+            _generatedObject.Build();
+        }
+
         //---------------------------------------------------------------------------------------------------------
 
         public void Reset() => Mocks.Clear();
