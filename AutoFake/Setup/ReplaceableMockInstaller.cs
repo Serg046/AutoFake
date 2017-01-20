@@ -41,6 +41,12 @@ namespace AutoFake.Setup
             return this;
         }
 
+        public ReplaceableMockInstaller<TReturn> ExpectedCallsCount(Func<int,bool> expectedCallsCountFunc)
+        {
+            _parameters.ExpectedCallsCountFunc = expectedCallsCountFunc;
+            return this;
+        }
+
         public ReplaceableMockInstaller<TReturn> Callback(Action callback)
         {
             ValidateCallback(callback);
@@ -74,6 +80,12 @@ namespace AutoFake.Setup
         {
             ValidateExpectedCallsCount(expectedCallsCount);
             _parameters.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
+            return this;
+        }
+
+        public ReplaceableMockInstaller ExpectedCallsCount(Func<int, bool> expectedCallsCountFunc)
+        {
+            _parameters.ExpectedCallsCountFunc = expectedCallsCountFunc;
             return this;
         }
 

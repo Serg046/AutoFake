@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AutoFake.Expression;
 
 namespace AutoFake.Setup
@@ -28,6 +29,12 @@ namespace AutoFake.Setup
         {
             ValidateExpectedCallsCount(expectedCallsCount);
             _parameters.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
+            return this;
+        }
+
+        public VerifiableMockInstaller ExpectedCallsCount(Func<int, bool> expectedCallsCountFunc)
+        {
+            _parameters.ExpectedCallsCountFunc = expectedCallsCountFunc;
             return this;
         }
     }

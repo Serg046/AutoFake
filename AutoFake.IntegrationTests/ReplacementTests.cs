@@ -70,6 +70,13 @@ namespace AutoFake.IntegrationTests
                 .Returns(DateTime.MinValue);
 
             Assert.Equal(DateTime.MinValue, fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null)).Execute());
+
+            fake = new Fake<TestClass>();
+            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
+                .ExpectedCallsCount(x => x > 0)
+                .Returns(DateTime.MinValue);
+
+            Assert.Equal(DateTime.MinValue, fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null)).Execute());
         }
 
         [Fact]

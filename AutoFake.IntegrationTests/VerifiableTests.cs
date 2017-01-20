@@ -70,6 +70,12 @@ namespace AutoFake.IntegrationTests
                 .ExpectedCallsCount(1);
 
             Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, zone), fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
+
+            fake = new Fake<TestClass>();
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
+                .ExpectedCallsCount(x => x > 0);
+
+            Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, zone), fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
         }
 
         [Fact]

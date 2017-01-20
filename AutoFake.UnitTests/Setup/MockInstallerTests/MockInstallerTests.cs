@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
+using Mono.Cecil;
 using Moq;
 using Xunit;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
 using Mock = AutoFake.Setup.Mock;
 
 namespace AutoFake.UnitTests.Setup.MockInstallerTests
@@ -50,11 +54,36 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
 
         [Theory]
         [MemberData(nameof(GetInstallers))]
-        public void ExpectedCallsCount_NonPositiveValue_Throws(dynamic installer)
+        internal void ExpectedCallsCount_NonPositiveValue_Throws(dynamic installer, List<Mock> mocks)
         {
             Assert.Throws<SetupException>(() => installer.ExpectedCallsCount(-1));
             Assert.Throws<SetupException>(() => installer.ExpectedCallsCount(0));
             installer.ExpectedCallsCount(1);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetInstallers))]
+        internal void ExpectedCallsCount_Func_Success(dynamic installer, List<Mock> mocks)
+        {
+            Func<int, bool> expectedCallsFunct = x => x > 0;
+
+            //act
+            installer.ExpectedCallsCount(expectedCallsFunct);
+
+            var mock = mocks.Single();
+            var mockedMemberInfo = new MockedMemberInfo(mock, null, null);
+            mockedMemberInfo.ActualCallsField = new FieldDefinition(nameof(TestClass.ActualCallsCount),
+                FieldAttributes.Public,
+                new FunctionPointerType());
+
+            var generatedObject = new GeneratedObject(null)
+            {
+                Type = typeof(TestClass),
+                Instance = new TestClass()
+            };
+
+            //assert
+            mock.Verify(mockedMemberInfo, generatedObject);
         }
 
         [Fact]
@@ -89,9 +118,12 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
             var invocationExpression = new Mock<IInvocationExpression>();
             invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
             invocationExpression.Setup(e => e.GetArguments()).Returns(arguments);
-            yield return new object[] {new ReplaceableMockInstaller(new List<Mock>(), invocationExpression.Object) };
-            yield return new object[] {new ReplaceableMockInstaller<int>(new List<Mock>(), invocationExpression.Object) };
-            yield return new object[] {new VerifiableMockInstaller(new List<Mock>(), invocationExpression.Object) };
+            var mocks = new List<Mock>();
+            yield return new object[] {new ReplaceableMockInstaller(mocks, invocationExpression.Object), mocks };
+            mocks = new List<Mock>();
+            yield return new object[] {new ReplaceableMockInstaller<int>(mocks, invocationExpression.Object), mocks };
+            mocks = new List<Mock>();
+            yield return new object[] {new VerifiableMockInstaller(mocks, invocationExpression.Object), mocks };
         }
 
         private static ISourceMember GetSourceMethod()
@@ -99,6 +131,8 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
 
         private class TestClass
         {
+            internal static List<int> ActualCallsCount = new List<int> {0};
+                 
             public void MockedMethod(int value)
             {
             }

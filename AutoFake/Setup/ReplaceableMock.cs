@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Exceptions;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
