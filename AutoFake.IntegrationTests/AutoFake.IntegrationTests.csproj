@@ -72,6 +72,7 @@
     <Compile Include="InstanceTests\MethodMockTests.cs" />
     <Compile Include="ReplacementTests.cs" />
     <Compile Include="InstanceTests\PropertyMockTests.cs" />
+    <Compile Include="StateTests.cs" />
     <Compile Include="StaticTests\FieldMockTests.cs" />
     <Compile Include="StaticTests\MethodMockTests.cs" />
     <Compile Include="StaticTests\PropertyMockTests.cs" />

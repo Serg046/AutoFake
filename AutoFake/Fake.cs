@@ -15,62 +15,39 @@ namespace AutoFake
         }
 
         public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
-        {
-            Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            var invocationExpression = new InvocationExpression(instanceSetupFunc);
-            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
-        }
+            => ReplaceImpl<TReturn>(instanceSetupFunc);
 
         public ReplaceableMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
-        {
-            Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
-            return new ReplaceableMockInstaller(Mocks, invocationExpression);
-        }
+            => ReplaceImpl(voidInstanceSetupFunc);
 
         //---------------------------------------------------------------------------------------------------------
 
         public VerifiableMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
-        {
-            Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            var invocationExpression = new InvocationExpression(instanceSetupFunc);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
-        }
+            => VerifyImpl(instanceSetupFunc);
 
         public VerifiableMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
-        {
-            Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
-        }
+            => VerifyImpl(voidInstanceSetupFunc);
 
         //---------------------------------------------------------------------------------------------------------
 
         public Executor<TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc)
-        {
-            Guard.NotNull(instanceRewriteFunc, nameof(instanceRewriteFunc));
-            return RewriteImpl<TReturn>(instanceRewriteFunc);
-        }
+            => RewriteImpl<TReturn>(instanceRewriteFunc);
 
         public Executor Rewrite(Expression<Action<T>> voidInstanceRewriteFunc)
-        {
-            Guard.NotNull(voidInstanceRewriteFunc, nameof(voidInstanceRewriteFunc));
-            return RewriteImpl(voidInstanceRewriteFunc);
-        }
+            => RewriteImpl(voidInstanceRewriteFunc);
 
         //---------------------------------------------------------------------------------------------------------
 
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> instanceExecuteFunc)
-        {
-            Guard.NotNull(instanceExecuteFunc, nameof(instanceExecuteFunc));
-            return ExecuteImpl<TReturn>(instanceExecuteFunc);
-        }
+            => ExecuteImpl<TReturn>(instanceExecuteFunc);
 
         public void Execute(Expression<Action<T>> voidInstanceExecuteFunc)
-        {
-            Guard.NotNull(voidInstanceExecuteFunc, nameof(voidInstanceExecuteFunc));
-            ExecuteImpl(voidInstanceExecuteFunc);
-        }
+            => ExecuteImpl(voidInstanceExecuteFunc);
+
+        //---------------------------------------------------------------------------------------------------------
+
+        public void SetValue<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc, TReturn value)
+            => SetValueImpl(instanceSetupFunc, value);
     }
 
     public class Fake
@@ -109,68 +86,59 @@ namespace AutoFake
 
         //---------------------------------------------------------------------------------------------------------
 
-        public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> setupFunc)
+        protected ReplaceableMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
         {
-            Guard.NotNull(setupFunc, nameof(setupFunc));
-            var invocationExpression = new InvocationExpression(setupFunc);
+            Guard.NotNull(expression, nameof(expression));
+            var invocationExpression = new InvocationExpression(expression);
             return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
+        }
+
+        protected ReplaceableMockInstaller ReplaceImpl(LambdaExpression expression)
+        {
+            Guard.NotNull(expression, nameof(expression));
+            var invocationExpression = new InvocationExpression(expression);
+            return new ReplaceableMockInstaller(Mocks, invocationExpression);
         }
 
         public ReplaceableMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
-        {
-            Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            var invocationExpression = new InvocationExpression(instanceSetupFunc);
-            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
-        }
+            => ReplaceImpl<TReturn>(instanceSetupFunc);
 
         public ReplaceableMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
-        {
-            Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
-            return new ReplaceableMockInstaller(Mocks, invocationExpression);
-        }
+            => ReplaceImpl(voidInstanceSetupFunc);
 
-        public ReplaceableMockInstaller Replace(Expression<Action> voidInstanceSetupFunc)
-        {
-            Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
-            return new ReplaceableMockInstaller(Mocks, invocationExpression);
-        }
+        public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+            => ReplaceImpl<TReturn>(staticSetupFunc);
+
+        public ReplaceableMockInstaller Replace(Expression<Action> voidStaticSetupFunc)
+            => ReplaceImpl(voidStaticSetupFunc);
 
         //---------------------------------------------------------------------------------------------------------
 
-        public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> setupFunc)
+        protected VerifiableMockInstaller VerifyImpl(LambdaExpression expression)
         {
-            Guard.NotNull(setupFunc, nameof(setupFunc));
-            var invocationExpression = new InvocationExpression(setupFunc);
+            Guard.NotNull(expression, nameof(expression));
+            var invocationExpression = new InvocationExpression(expression);
             return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
 
         public VerifiableMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
-        {
-            Guard.NotNull(instanceSetupFunc, nameof(instanceSetupFunc));
-            var invocationExpression = new InvocationExpression(instanceSetupFunc);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
-        }
+            => VerifyImpl(instanceSetupFunc);
 
         public VerifiableMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
-        {
-            Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
-        }
+            => VerifyImpl(voidInstanceSetupFunc);
 
-        public VerifiableMockInstaller Verify(Expression<Action> voidInstanceSetupFunc)
-        {
-            Guard.NotNull(voidInstanceSetupFunc, nameof(voidInstanceSetupFunc));
-            var invocationExpression = new InvocationExpression(voidInstanceSetupFunc);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
-        }
+        public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+            => VerifyImpl(staticSetupFunc);
+
+        public VerifiableMockInstaller Verify(Expression<Action> voidStaticSetupFunc)
+            => VerifyImpl(voidStaticSetupFunc);
 
         //---------------------------------------------------------------------------------------------------------
 
         protected Executor RewriteImpl(LambdaExpression expression)
         {
+            Guard.NotNull(expression, nameof(expression));
+
             var invocationExpression = new InvocationExpression(expression);
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
@@ -180,6 +148,8 @@ namespace AutoFake
 
         protected Executor<T> RewriteImpl<T>(LambdaExpression expression)
         {
+            Guard.NotNull(expression, nameof(expression));
+
             var invocationExpression = new InvocationExpression(expression);
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
@@ -187,36 +157,24 @@ namespace AutoFake
             return new Executor<T>(_generatedObject, invocationExpression);
         }
 
-        //---
-
-        public Executor<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> rewriteFunc)
-        {
-            Guard.NotNull(rewriteFunc, nameof(rewriteFunc));
-            return RewriteImpl<TReturn>(rewriteFunc);
-        }
-
         public Executor<TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc)
-        {
-            Guard.NotNull(instanceRewriteFunc, nameof(instanceRewriteFunc));
-            return RewriteImpl<TReturn>(instanceRewriteFunc);
-        }
+            => RewriteImpl<TReturn>(instanceRewriteFunc);
 
         public Executor Rewrite<TInput>(Expression<Action<TInput>> voidInstanceRewriteFunc)
-        {
-            Guard.NotNull(voidInstanceRewriteFunc, nameof(voidInstanceRewriteFunc));
-            return RewriteImpl(voidInstanceRewriteFunc);
-        }
+            => RewriteImpl(voidInstanceRewriteFunc);
 
-        public Executor Rewrite(Expression<Action> rewriteFunc)
-        {
-            Guard.NotNull(rewriteFunc, nameof(rewriteFunc));
-            return RewriteImpl(rewriteFunc);
-        }
+        public Executor<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> staticRewriteFunc)
+            => RewriteImpl<TReturn>(staticRewriteFunc);
+
+        public Executor Rewrite(Expression<Action> voidStaticRewriteFunc)
+            => RewriteImpl(voidStaticRewriteFunc);
 
         //---------------------------------------------------------------------------------------------------------
 
         protected T ExecuteImpl<T>(LambdaExpression expression)
         {
+            Guard.NotNull(expression, nameof(expression));
+
             var invocationExpression = new InvocationExpression(expression);
             var executor = new Executor<T>(_generatedObject, invocationExpression);
             return executor.Execute();
@@ -224,36 +182,24 @@ namespace AutoFake
 
         protected void ExecuteImpl(LambdaExpression expression)
         {
+            Guard.NotNull(expression, nameof(expression));
+
             var invocationExpression = new InvocationExpression(expression);
             var executor = new Executor(_generatedObject, invocationExpression);
             executor.Execute();
         }
 
-        //---
-
-        public TReturn Execute<TReturn>(Expression<Func<TReturn>> executeFunc)
-        {
-            Guard.NotNull(executeFunc, nameof(executeFunc));
-            return ExecuteImpl<TReturn>(executeFunc);
-        }
-
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceExecuteFunc)
-        {
-            Guard.NotNull(instanceExecuteFunc, nameof(instanceExecuteFunc));
-            return ExecuteImpl<TReturn>(instanceExecuteFunc);
-        }
+            => ExecuteImpl<TReturn>(instanceExecuteFunc);
 
         public void Execute<TInput>(Expression<Action<TInput>> voidInstanceExecuteFunc)
-        {
-            Guard.NotNull(voidInstanceExecuteFunc, nameof(voidInstanceExecuteFunc));
-            ExecuteImpl(voidInstanceExecuteFunc);
-        }
+            => ExecuteImpl(voidInstanceExecuteFunc);
 
-        public void Execute(Expression<Action> executeFunc)
-        {
-            Guard.NotNull(executeFunc, nameof(executeFunc));
-            ExecuteImpl(executeFunc);
-        }
+        public TReturn Execute<TReturn>(Expression<Func<TReturn>> staticExecuteFunc)
+            => ExecuteImpl<TReturn>(staticExecuteFunc);
+
+        public void Execute(Expression<Action> voidStaticExecuteFunc)
+            => ExecuteImpl(voidStaticExecuteFunc);
 
         public void Execute()
         {
@@ -262,6 +208,26 @@ namespace AutoFake
 
             _generatedObject.Build();
         }
+
+        //---------------------------------------------------------------------------------------------------------
+
+        protected void SetValueImpl<TReturn>(LambdaExpression expression, TReturn value)
+        {
+            Guard.NotNull(expression, nameof(expression));
+
+            if (!_generatedObject.IsBuilt)
+                throw new InvalidOperationException($"Cannot set the value. Instance is not built yet. Please run {nameof(Fake)}::{nameof(Execute)}() method.");
+
+            var invocationExpression = new InvocationExpression(expression);
+            var visitor = new SetValueMemberVisitor(_generatedObject, value);
+            invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, _generatedObject.Type));
+        }
+
+        public void SetValue<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc, TReturn value)
+            => SetValueImpl(instanceSetupFunc, value);
+
+        public void SetValue<TReturn>(Expression<Func<TReturn>> staticSetupFunc, TReturn value)
+            => SetValueImpl(staticSetupFunc, value);
 
         //---------------------------------------------------------------------------------------------------------
 

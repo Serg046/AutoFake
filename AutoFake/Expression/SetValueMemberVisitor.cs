@@ -32,6 +32,11 @@ namespace AutoFake.Expression
             propertyInfo.SetValue(_instance, _value, null);
         }
 
-        public void Visit(FieldInfo fieldInfo) => fieldInfo.SetValue(_instance, _value);
+        public void Visit(FieldInfo fieldInfo)
+        {
+            if (fieldInfo.Attributes.HasFlag(FieldAttributes.InitOnly))
+                throw new NotSupportedExpressionException("Cannot set value for the read-only property");
+            fieldInfo.SetValue(_instance, _value);
+        }
     }
 }
