@@ -69,41 +69,41 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             public TestClass GetTestClass()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = new TestClass();
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public HelperClass GetHelperClass()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var helper = new HelperClass();
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return helper;
             }
 
             public SqlCommand GetSqlCommand()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var cmd = new SqlCommand();
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return cmd;
             }
 
             public StringReader GetStringReader()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var reader = new StringReader("");
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return reader;
             }
 
             public OverloadCtorTestClass GetOverloadCtorTestClass()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var obj = new OverloadCtorTestClass(5);
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return obj;
             }
         }

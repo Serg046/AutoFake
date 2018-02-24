@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using Xunit;
 
@@ -70,42 +71,42 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             public static int GetDynamicStaticValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = DynamicStaticValue;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public static int GetHelperDynamicStaticValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = HelperClass.DynamicStaticValue;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public static string GetFrameworkValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var cmd = new SqlCommand();
                 var value = cmd.CommandText;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public static TextReader GetFrameworkStaticValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = TextReader.Null;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public static int GetStaticStructValueByAddress()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = StaticStructValue.Value;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
         }

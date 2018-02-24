@@ -1,6 +1,6 @@
-﻿using System;
-using System.Data.SqlClient;
+﻿using System.Diagnostics;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.InstanceTests
@@ -45,6 +45,18 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => HelperClass.DynamicStaticValue).Returns(7);
 
             Assert.Equal(7, fake.Rewrite(f => f.GetHelperDynamicStaticValue()).Execute());
+        }
+
+        [Fact]
+        public void FrameworkTest()
+        {
+            var fake = new Fake<TestClass>();
+
+            var header = "Test header";
+            fake.Replace((Header hd) => hd.Name).Returns(header);
+
+            var actual = fake.Rewrite(f => f.GetFrameworkValue()).Execute();
+            Assert.Equal(header, actual);
         }
 
         [Fact]
@@ -93,66 +105,66 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             public int GetDynamicValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = DynamicValue;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public int GetHelperDynamicValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var helper = new HelperClass();
                 var value = helper.DynamicValue;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public int GetDynamicStaticValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = DynamicStaticValue;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public int GetHelperDynamicStaticValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = HelperClass.DynamicStaticValue;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public string GetFrameworkValue()
             {
-                Console.WriteLine("Started");
-                var cmd = new SqlCommand();
-                var value = cmd.CommandText;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Started");
+                var header = new Header("header", 5);
+                var value = header.Name;
+                Debug.WriteLine("Finished");
                 return value;
             }
             public TextReader GetFrameworkStaticValue()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = TextReader.Null;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public int GetStructValueByAddress()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = StructValue.Value;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
 
             public int GetStaticStructValueByAddress()
             {
-                Console.WriteLine("Started");
+                Debug.WriteLine("Started");
                 var value = StaticStructValue.Value;
-                Console.WriteLine("Finished");
+                Debug.WriteLine("Finished");
                 return value;
             }
         }
