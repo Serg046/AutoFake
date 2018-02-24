@@ -8,7 +8,7 @@ namespace AutoFake.Setup
 {
     internal class SourceField : ISourceMember
     {
-        private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld};
+        private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda};
         private readonly FieldInfo _field;
 
         public SourceField(FieldInfo field)

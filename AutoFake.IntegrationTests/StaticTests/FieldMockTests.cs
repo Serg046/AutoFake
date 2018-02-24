@@ -51,9 +51,22 @@ namespace AutoFake.IntegrationTests.StaticTests
             Assert.NotEqual(TextReader.Null, actual);
         }
 
+        [Fact]
+        public void StaticStructFieldByAddress()
+        {
+            var fake = new Fake(typeof(TestClass));
+            var expected = new HelperStruct { Value = 5 };
+            fake.Replace(() => TestClass.StaticStructValue).Returns(expected);
+
+            var actual = fake.Rewrite(() => TestClass.GetStaticStructValueByAddress()).Execute();
+
+            Assert.Equal(expected.Value, actual);
+        }
+
         private static class TestClass
         {
             public static int DynamicStaticValue = 5;
+            public static HelperStruct StaticStructValue;
 
             public static int GetDynamicStaticValue()
             {
@@ -79,10 +92,19 @@ namespace AutoFake.IntegrationTests.StaticTests
                 Console.WriteLine("Finished");
                 return value;
             }
+
             public static TextReader GetFrameworkStaticValue()
             {
                 Console.WriteLine("Started");
                 var value = TextReader.Null;
+                Console.WriteLine("Finished");
+                return value;
+            }
+
+            public static int GetStaticStructValueByAddress()
+            {
+                Console.WriteLine("Started");
+                var value = StaticStructValue.Value;
                 Console.WriteLine("Finished");
                 return value;
             }
@@ -91,6 +113,11 @@ namespace AutoFake.IntegrationTests.StaticTests
         private static class HelperClass
         {
             public static int DynamicStaticValue = 5;
+        }
+
+        public struct HelperStruct
+        {
+            public int Value;
         }
     }
 }

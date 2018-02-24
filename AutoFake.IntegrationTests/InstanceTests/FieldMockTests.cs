@@ -60,10 +60,36 @@ namespace AutoFake.IntegrationTests.InstanceTests
             Assert.NotEqual(TextReader.Null, actual);
         }
 
+        [Fact]
+        public void StructFieldByAddress()
+        {
+            var fake = new Fake<TestClass>();
+            var expected = new HelperStruct {Value = 5};
+            fake.Replace(f => f.StructValue).Returns(expected);
+
+            var actual = fake.Rewrite(f => f.GetStructValueByAddress()).Execute();
+
+            Assert.Equal(expected.Value, actual);
+        }
+
+        [Fact]
+        public void StaticStructFieldByAddress()
+        {
+            var fake = new Fake<TestClass>();
+            var expected = new HelperStruct { Value = 5 };
+            fake.Replace(() => TestClass.StaticStructValue).Returns(expected);
+
+            var actual = fake.Rewrite(f => f.GetStaticStructValueByAddress()).Execute();
+
+            Assert.Equal(expected.Value, actual);
+        }
+
         private class TestClass
         {
             public int DynamicValue = 5;
             public static int DynamicStaticValue = 5;
+            public HelperStruct StructValue;
+            public static HelperStruct StaticStructValue;
 
             public int GetDynamicValue()
             {
@@ -113,12 +139,33 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 Console.WriteLine("Finished");
                 return value;
             }
+
+            public int GetStructValueByAddress()
+            {
+                Console.WriteLine("Started");
+                var value = StructValue.Value;
+                Console.WriteLine("Finished");
+                return value;
+            }
+
+            public int GetStaticStructValueByAddress()
+            {
+                Console.WriteLine("Started");
+                var value = StaticStructValue.Value;
+                Console.WriteLine("Finished");
+                return value;
+            }
         }
 
         private class HelperClass
         {
             public int DynamicValue = 5;
             public static int DynamicStaticValue = 5;
+        }
+
+        public struct HelperStruct
+        {
+            public int Value;
         }
     }
 }

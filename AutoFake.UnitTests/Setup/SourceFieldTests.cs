@@ -27,16 +27,26 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(field.FieldType, sourceField.ReturnType);
         }
 
-        [Fact]
-        public void IsCorrectInstruction_TheSameField_True()
+        [Theory]
+        [MemberData(nameof(FieldAccessInstructions))]
+        public void IsCorrectInstruction_TheSameField_True(OpCode fldInstruction)
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.Fields.Single(m => m.Name == nameof(TestClass.Field));
-            var instruction = Instruction.Create(OpCodes.Ldfld, field);
+            var instruction = Instruction.Create(fldInstruction, field);
 
             Assert.True(sourceMember.IsCorrectInstruction(typeInfo, instruction));
         }
+
+        public static IEnumerable<object[]> FieldAccessInstructions =>
+            new List<object[]>
+            {
+                new object [] {OpCodes.Ldfld},
+                new object [] {OpCodes.Ldsfld},
+                new object [] {OpCodes.Ldflda},
+                new object [] {OpCodes.Ldsflda},
+            };
 
         [Fact]
         public void IsCorrectInstruction_IncorrectOpCode_False()
