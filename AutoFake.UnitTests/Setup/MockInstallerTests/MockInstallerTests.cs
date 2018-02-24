@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
@@ -110,6 +110,26 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
 
             Assert.Throws<SetupException>(() => genericInstaller.Callback(null));
             Assert.Throws<SetupException>(() => installer.Callback(null));
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMembersToReplace))]
+        public void Ctor_TheSameMemberTwice_Fails(Expression<Func<object>> expressionToReplace)
+        {
+            var fake = new Fake<MockInstallerTests>();
+
+            fake.Replace(expressionToReplace);
+            Assert.Throws<SetupException>(() => fake.Replace(expressionToReplace));
+        }
+
+        private static IEnumerable<object[]> GetMembersToReplace()
+        {
+            Expression<Func<object>> expression = () => new DateTime(2018, 2, 25);
+            yield return new object[] { expression };
+            expression = () => DateTime.Now;
+            yield return new object[] { expression };
+            expression = () => DateTime.FromFileTime(0);
+            yield return new object[] { expression };
         }
 
         public static IEnumerable<object[]> GetInstallers()

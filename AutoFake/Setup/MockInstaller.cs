@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AutoFake.Exceptions;
 
 namespace AutoFake.Setup
@@ -21,6 +22,14 @@ namespace AutoFake.Setup
 
     public abstract class ReplaceableMockInstallerBase : MockInstaller
     {
+        internal void ValidateSourceMember(ICollection<Mock> mocks, ISourceMember soureMember)
+        {
+            if (mocks.Any(mock => mock.SourceMember.Equals(soureMember)))
+            {
+                throw new SetupException($"Mock for the following member is already installed: '{soureMember}'.");
+            }
+        }
+
         internal void ValidateCallback(Action callback)
         {
             if (callback == null)

@@ -37,5 +37,12 @@ namespace AutoFake.Setup
         }
 
         public ParameterInfo[] GetParameters() => _constructor.GetParameters();
+
+        public override bool Equals(object obj) 
+            => obj is SourceConstructor ctor && _constructor.Equals(ctor._constructor);
+
+        public override int GetHashCode() => _constructor.GetHashCode();
+
+        public override string ToString() => _constructor.ToString();
     }
 }

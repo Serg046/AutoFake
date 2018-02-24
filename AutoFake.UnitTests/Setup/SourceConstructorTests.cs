@@ -78,7 +78,34 @@ namespace AutoFake.UnitTests.Setup
             var sourceMember = new SourceConstructor(ctor);
 
             Assert.False(sourceMember.HasStackInstance);
+        }
 
+        [Fact]
+        public void Equals_TheSameCtor_True()
+        {
+            var ctor = typeof(TestClass2).GetConstructors().Single();
+            var sourceMember1 = new SourceConstructor(ctor);
+            var sourceMember2 = new SourceConstructor(ctor);
+
+            Assert.True(sourceMember1.Equals(sourceMember2));
+        }
+
+        [Fact]
+        public void GetHashCode_Ctor_TheSameHashCodes()
+        {
+            var ctor = typeof(TestClass2).GetConstructors().Single();
+            var sourceMember = new SourceConstructor(ctor);
+
+            Assert.Equal(ctor.GetHashCode(), sourceMember.GetHashCode());
+        }
+
+        [Fact]
+        public void ToString_Ctor_TheSameStrings()
+        {
+            var ctor = typeof(TestClass2).GetConstructors().Single();
+            var sourceMember = new SourceConstructor(ctor);
+
+            Assert.Equal(ctor.ToString(), sourceMember.ToString());
         }
 
         private ConstructorInfo GetCtor(params Type[] arguments) => GetCtor<TestClass>(arguments);

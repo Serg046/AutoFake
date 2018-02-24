@@ -81,6 +81,34 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(expectedResult, sourceMethod.HasStackInstance);
         }
 
+        [Fact]
+        public void Equals_TheSameMethod_True()
+        {
+            var method = typeof(TestClass2).GetMethod(nameof(TestClass2.TestMethod));
+            var sourceMethod1 = new SourceMethod(method);
+            var sourceMethod2 = new SourceMethod(method);
+
+            Assert.True(sourceMethod1.Equals(sourceMethod2));
+        }
+
+        [Fact]
+        public void GetHashCode_Method_TheSameHashCodes()
+        {
+            var method = typeof(TestClass2).GetMethod(nameof(TestClass2.TestMethod));
+            var sourceMethod = new SourceMethod(method);
+
+            Assert.Equal(method.GetHashCode(), sourceMethod.GetHashCode());
+        }
+
+        [Fact]
+        public void ToString_Method_TheSameStrings()
+        {
+            var method = typeof(TestClass2).GetMethod(nameof(TestClass2.TestMethod));
+            var sourceMethod = new SourceMethod(method);
+
+            Assert.Equal(method.ToString(), sourceMethod.ToString());
+        }
+
         private MethodInfo GetMethod(string methodName, params Type[] arguments) => GetMethod<TestClass>(methodName, arguments);
         private MethodInfo GetMethod<T>(string methodName, params Type[] arguments) => typeof(T).GetMethod(methodName, arguments);
 

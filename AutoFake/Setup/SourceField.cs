@@ -39,5 +39,11 @@ namespace AutoFake.Setup
 
         public ParameterInfo[] GetParameters() => new ParameterInfo[0];
 
+        public override bool Equals(object obj)
+            => obj is SourceField field && _field.Equals(field._field);
+
+        public override int GetHashCode() => _field.GetHashCode();
+
+        public override string ToString() => _field.ToString();
     }
 }

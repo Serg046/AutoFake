@@ -37,5 +37,12 @@ namespace AutoFake.Setup
         }
 
         public ParameterInfo[] GetParameters() => _method.GetParameters();
+
+        public override bool Equals(object obj)
+            => obj is SourceMethod method && _method.Equals(method._method);
+
+        public override int GetHashCode() => _method.GetHashCode();
+
+        public override string ToString() => _method.ToString();
     }
 }

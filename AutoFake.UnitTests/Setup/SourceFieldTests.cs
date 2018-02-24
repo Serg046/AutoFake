@@ -90,6 +90,34 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(expectedResult, sourceField.HasStackInstance);
         }
 
+        [Fact]
+        public void Equals_TheSameField_True()
+        {
+            var field = typeof(TestClass2).GetField(nameof(TestClass.Field));
+            var sourceField1 = new SourceField(field);
+            var sourceField2 = new SourceField(field);
+
+            Assert.True(sourceField1.Equals(sourceField2));
+        }
+
+        [Fact]
+        public void GetHashCode_Field_TheSameHashCodes()
+        {
+            var field = typeof(TestClass2).GetField(nameof(TestClass.Field));
+            var sourceField = new SourceField(field);
+
+            Assert.Equal(field.GetHashCode(), sourceField.GetHashCode());
+        }
+
+        [Fact]
+        public void ToString_Field_TheSameStrings()
+        {
+            var field = typeof(TestClass2).GetField(nameof(TestClass.Field));
+            var sourceField = new SourceField(field);
+
+            Assert.Equal(field.ToString(), sourceField.ToString());
+        }
+
         private class TestClass
         {
             public int Field;

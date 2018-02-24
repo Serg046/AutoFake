@@ -14,6 +14,8 @@ namespace AutoFake.Setup
         internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
             _sourceMember = invocationExpression.GetSourceMember();
+            ValidateSourceMember(mocks, _sourceMember);
+
             _setupArguments = invocationExpression.GetArguments();
             _parameters = new ReplaceableMock.Parameters();
             mocks.Add(new ReplaceableMock(_sourceMember, _setupArguments, _parameters));
@@ -64,6 +66,8 @@ namespace AutoFake.Setup
         internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
             _sourceMember = invocationExpression.GetSourceMember();
+            ValidateSourceMember(mocks, _sourceMember);
+
             _setupArguments = invocationExpression.GetArguments();
             _parameters = new ReplaceableMock.Parameters();
             mocks.Add(new ReplaceableMock(_sourceMember, _setupArguments, _parameters));
