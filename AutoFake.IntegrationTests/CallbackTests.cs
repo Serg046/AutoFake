@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Xunit;
 
 namespace AutoFake.IntegrationTests
@@ -11,8 +10,8 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => Debug.WriteLine(Arg.DefaultOf<int>()))
-                .Callback(() => { throw new InvalidOperationException(); });
+            fake.Replace(() => Console.WriteLine(Arg.DefaultOf<int>()))
+                .Callback(() => throw new InvalidOperationException());
 
             Assert.Throws<InvalidOperationException>(() => fake.Rewrite(f => f.Test()).Execute());
         }
@@ -21,7 +20,7 @@ namespace AutoFake.IntegrationTests
         {
             public void Test()
             {
-                Debug.WriteLine(0);
+                Console.WriteLine(0);
             }
         }
     }
