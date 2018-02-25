@@ -135,6 +135,15 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Execute(() => TestClass.GetValueByArguments(new DateTime(2016, 11, 05), correctZone));
         }
 
+        [Fact]
+        public void RecursionTest()
+        {
+            var fake = new Fake(typeof(TestClass));
+            fake.Replace(() => TestClass.GetRecursionValue(Arg.DefaultOf<int>())).Returns(-1);
+
+            Assert.Equal(-1, fake.Rewrite(() => TestClass.GetRecursionValue(2)).Execute());
+        }
+
         private static class TestClass
         {
             public static int DynamicStaticValue() => 5;
@@ -198,6 +207,15 @@ namespace AutoFake.IntegrationTests.StaticTests
                 Debug.WriteLine("Started");
                 var value = DynamicStaticValue() + DynamicStaticValue(5);
                 Debug.WriteLine("Finished");
+                return value;
+            }
+
+            public static int GetRecursionValue(int value)
+            {
+                if (value < 5)
+                {
+                    return GetRecursionValue(value + 1);
+                }
                 return value;
             }
         }
