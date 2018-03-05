@@ -33,6 +33,8 @@ namespace AutoFake
         
         public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
 
+        public ModuleDefinition Module => _assemblyDefinition.MainModule;
+
         public string GetMonoCecilTypeName(Type declaringType)
             => declaringType == SourceType
                 ? _typeDefinition.FullName
@@ -48,9 +50,6 @@ namespace AutoFake
                 yield return tmpType.Name;
             } while ((tmpType = tmpType.DeclaringType) != null);
         } 
-
-        public TypeReference Import(Type type) => _assemblyDefinition.MainModule.Import(type);
-        public MethodReference Import(MethodBase method) => _assemblyDefinition.MainModule.Import(method);
 
         public void AddField(FieldDefinition field) => _typeDefinition.Fields.Add(field);
         public void AddMethod(MethodDefinition method) => _typeDefinition.Methods.Add(method);

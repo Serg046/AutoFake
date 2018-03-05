@@ -26,8 +26,8 @@ namespace AutoFake
             MemberInfo = mockedMemberInfo;
 
             _mock = mockedMemberInfo.Mock;
-            _addToListMethodInfo = typeInfo.Import(typeof(List<int>).GetMethod(nameof(List<int>.Add)));
-            _invokeActionMethod = typeInfo.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
+            _addToListMethodInfo = typeInfo.Module.Import(typeof(List<int>).GetMethod(nameof(List<int>.Add)));
+            _invokeActionMethod = typeInfo.Module.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
         }
 
         public TypeInfo TypeInfo { get; }
@@ -37,7 +37,7 @@ namespace AutoFake
         {
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
             MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Import(_mock.SourceMember.ReturnType));
+                TypeInfo.Module.Import(_mock.SourceMember.ReturnType));
             TypeInfo.AddField(MemberInfo.RetValueField);
         }
 
@@ -46,13 +46,13 @@ namespace AutoFake
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + CALLS_COUNTER_FLD_SUFFIX;
             var collectionType = typeof(List<int>);
             MemberInfo.ActualCallsField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Import(collectionType));
+                TypeInfo.Module.Import(collectionType));
             TypeInfo.AddField(MemberInfo.ActualCallsField);
 
             var listConstructor = collectionType.GetConstructor(new Type[0]);
             var processor = GetCctorProcessor();
 
-            processor.Append(processor.Create(OpCodes.Newobj, TypeInfo.Import(listConstructor)));
+            processor.Append(processor.Create(OpCodes.Newobj, TypeInfo.Module.Import(listConstructor)));
             processor.Append(processor.Create(OpCodes.Stsfld, MemberInfo.ActualCallsField));
             processor.Append(processor.Create(OpCodes.Ret));
         }
@@ -78,7 +78,7 @@ namespace AutoFake
             var ctor = new MethodDefinition(STATIC_CONSTRUCTOR_METHOD_NAME,
                 MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName |
                 MethodAttributes.RTSpecialName,
-                TypeInfo.Import(typeof(void)));
+                TypeInfo.Module.Import(typeof(void)));
 
             TypeInfo.AddMethod(ctor);
             return ctor;
@@ -103,7 +103,7 @@ namespace AutoFake
             {
                 var fieldName = MemberInfo.Mock.SourceMember.Name + "Argument" + (parametersCount * MemberInfo.SourceCodeCallsCount + i);
                 var field = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                    TypeInfo.Import(installedMethodArguments[i].ParameterType));
+                    TypeInfo.Module.Import(installedMethodArguments[i].ParameterType));
                 TypeInfo.AddField(field);
 
                 result.Insert(0, field);
@@ -141,7 +141,7 @@ namespace AutoFake
         {
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + CALLBACK_FLD_SUFFIX;
             MemberInfo.CallbackField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Import(typeof(Action)));
+                TypeInfo.Module.Import(typeof(Action)));
             TypeInfo.AddField(MemberInfo.CallbackField);
         }
 
