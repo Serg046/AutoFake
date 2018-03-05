@@ -114,5 +114,14 @@ namespace AutoFake.UnitTests
             Assert.Equal("AutoFake.UnitTests.TypeInfoTests/TestClass",
                 typeInfo.GetMonoCecilTypeName(typeof(TestClass)));
         }
+
+        [Fact]
+        public void Module_SomeType_TheSameModulePaths()
+        {
+            var sourceType = typeof(TestClass);
+            var typeInfo = new TypeInfo(sourceType, new List<FakeDependency>());
+
+            Assert.Equal(sourceType.Module.FullyQualifiedName, typeInfo.Module.FullyQualifiedName);
+        }
     }
 }

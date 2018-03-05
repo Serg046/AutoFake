@@ -112,7 +112,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
             var type = typeof(TestClass);
             var method = type.GetMethod(nameof(TestClass.TestMethod), BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(int) }, null);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
-            return Instruction.Create(opCode, typeInfo.Import(method));
+            return Instruction.Create(opCode, typeInfo.Module.Import(method));
         }
 
         private class TestClass

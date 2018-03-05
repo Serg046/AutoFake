@@ -26,7 +26,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
             var mock = new MockFake(method);
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
 
-            Assert.True(mock.IsMethodInstruction(Instruction.Create(OpCodes.Call, typeInfo.Import(method))));
+            Assert.True(mock.IsMethodInstruction(Instruction.Create(OpCodes.Call, typeInfo.Module.Import(method))));
         }
 
         [Fact]

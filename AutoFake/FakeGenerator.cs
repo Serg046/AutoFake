@@ -79,7 +79,7 @@ namespace AutoFake
                 {
                     var method = (MethodReference)instruction.Operand;
                     
-                    if (IsClientSourceCode(method))
+                    if (IsFakeAssemblyMethod(method))
                     {
                         ReplaceInstructions(method.Resolve(), mock, mocker);
                     }
@@ -87,6 +87,7 @@ namespace AutoFake
             }
         }
 
-        private bool IsClientSourceCode(MethodReference methodReference) => methodReference.IsDefinition;
+        private bool IsFakeAssemblyMethod(MethodReference methodReference) 
+            => methodReference.DeclaringType.Scope is ModuleDefinition module && module == _typeInfo.Module;
     }
 }

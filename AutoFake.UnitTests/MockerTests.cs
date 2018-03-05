@@ -109,7 +109,7 @@ namespace AutoFake.UnitTests
             var cmd = proc.Body.Instructions[1];
             var mocker = GetMocker(GetMock(nameof(TestType.SomeMethod)));
 
-            mocker.MemberInfo.ActualCallsField = new FieldDefinition("Test", FieldAttributes.Private, _typeInfo.Import(typeof(int)));
+            mocker.MemberInfo.ActualCallsField = new FieldDefinition("Test", FieldAttributes.Private, _typeInfo.Module.Import(typeof(int)));
 
             mocker.InjectCurrentPositionSaving(proc, cmd);
 
@@ -239,8 +239,8 @@ namespace AutoFake.UnitTests
         public void PushMethodArguments_Fields_InjectedArgumentsPushing()
         {
             var fields = new List<FieldDefinition>();
-            fields.Add(new FieldDefinition("Test0", FieldAttributes.Private, _typeInfo.Import(typeof(int))));
-            fields.Add(new FieldDefinition("Test1", FieldAttributes.Private, _typeInfo.Import(typeof(int))));
+            fields.Add(new FieldDefinition("Test0", FieldAttributes.Private, _typeInfo.Module.Import(typeof(int))));
+            fields.Add(new FieldDefinition("Test1", FieldAttributes.Private, _typeInfo.Module.Import(typeof(int))));
 
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
