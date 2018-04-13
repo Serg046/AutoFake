@@ -6,7 +6,7 @@ namespace AutoFake
 {
     internal interface IMethodMocker
     {
-        TypeInfo TypeInfo { get; }
+        ITypeInfo TypeInfo { get; }
         MockedMemberInfo MemberInfo { get; }
         void InjectCurrentPositionSaving(ILProcessor ilProcessor, Instruction instruction);
         IList<FieldDefinition> PopMethodArguments(ILProcessor ilProcessor, Instruction instruction);

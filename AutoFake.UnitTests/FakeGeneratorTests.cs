@@ -43,27 +43,6 @@ namespace AutoFake.UnitTests
             _fakeGenerator.Generate(new[] {mock}, testMethod);
         }
 
-        [Fact]
-        public void Generate_MethodWithOneInvocation_ProcessOnce()
-        {
-            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.Now)).GetMethod, new List<FakeArgument>(),
-                new ReplaceableMock.Parameters());
-            var testMethod = GetMethodInfo(nameof(TestClass.GetDateNow));
-
-            Assert.Throws<InjectInvocationException>(() => _fakeGenerator.Generate(new[] {mock}, testMethod));
-        }
-
-        [Fact]
-        public void Generate_ValidInput_AnalyzesOnlyClientCode()
-        {
-            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.UtcNow)).GetMethod, new List<FakeArgument>(),
-                new ReplaceableMock.Parameters());
-            var testMethod = GetMethodInfo(nameof(TestClass.GetDateNow));
-
-            //Assert
-            _fakeGenerator.Generate(new[] { mock }, testMethod);
-        }
-
         public static IEnumerable<object[]> GetCallbackFieldTestData()
         {
             yield return new object[] {null, false};

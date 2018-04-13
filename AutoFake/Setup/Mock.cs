@@ -8,7 +8,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal abstract class Mock
+    internal abstract class Mock : IMock
     {
         private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
 
@@ -26,10 +26,7 @@ namespace AutoFake.Setup
         public abstract void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject);
         public abstract void Verify(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject);
 
-        public bool IsMethodInstruction(Instruction instruction)
-            => instruction.OpCode.OperandType == OperandType.InlineMethod;
-
-        public bool IsInstalledInstruction(TypeInfo typeInfo, Instruction instruction)
+        public bool IsInstalledInstruction(ITypeInfo typeInfo, Instruction instruction)
             => SourceMember.IsCorrectInstruction(typeInfo, instruction);
 
         public bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)

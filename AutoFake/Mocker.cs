@@ -20,7 +20,7 @@ namespace AutoFake
         private readonly MethodReference _addToListMethodInfo;
         private readonly MethodReference _invokeActionMethod;
 
-        public Mocker(TypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
+        public Mocker(ITypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
         {
             TypeInfo = typeInfo;
             MemberInfo = mockedMemberInfo;
@@ -30,7 +30,7 @@ namespace AutoFake
             _invokeActionMethod = typeInfo.Module.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
         }
 
-        public TypeInfo TypeInfo { get; }
+        public ITypeInfo TypeInfo { get; }
         public MockedMemberInfo MemberInfo { get; }
 
         public void GenerateRetValueField()
