@@ -25,7 +25,7 @@ namespace AutoFake.Setup
 
         public bool HasStackInstance { get; }
 
-        public bool IsCorrectInstruction(TypeInfo typeInfo, Instruction instruction)
+        public bool IsCorrectInstruction(ITypeInfo typeInfo, Instruction instruction)
         {
             var result = false;
             if (_fieldOpCodes.Contains(instruction.OpCode))

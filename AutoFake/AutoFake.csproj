@@ -65,11 +65,14 @@
     <Compile Include="FakeArgument.cs" />
     <Compile Include="Expression\GetSourceMemberVisitor.cs" />
     <Compile Include="Expression\GetValueMemberVisitor.cs" />
+    <Compile Include="FakeMethod.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
     <Compile Include="Arg.cs" />
     <Compile Include="Expression\InvocationExpression.cs" />
+    <Compile Include="ITypeInfo.cs" />
     <Compile Include="LambdaChecker.cs" />
+    <Compile Include="Setup\IMock.cs" />
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
     <Compile Include="Setup\ISourceMember.cs" />

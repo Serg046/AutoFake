@@ -8,7 +8,7 @@ using Mono.Cecil;
 
 namespace AutoFake
 {
-    internal class TypeInfo
+    internal class TypeInfo : ITypeInfo
     {
         private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
@@ -31,7 +31,7 @@ namespace AutoFake
 
         public Type SourceType { get; }
         
-        public string FullTypeName => _typeDefinition.FullName.Replace('/', '+');
+        public string FullTypeName => GetClrName(_typeDefinition.FullName);
 
         public ModuleDefinition Module => _assemblyDefinition.MainModule;
 
@@ -86,5 +86,16 @@ namespace AutoFake
 
             return constructor.Invoke(_dependencies.Select(d => d.Instance).ToArray());
         }
+
+        public MethodReference ConvertToSourceAssembly(MethodReference constructor)
+        {
+            var typeName = GetClrName(constructor.DeclaringType.FullName);
+            var type = SourceType.Assembly.GetType(typeName);
+            var ctor = type.GetConstructors().Single(c => c.GetParameters().Select(p => p.ParameterType.FullName)
+                .SequenceEqual(constructor.Parameters.Select(p => GetClrName(p.ParameterType.FullName))));
+            return Module.Import(ctor);
+        }
+
+        private string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
     }
 }

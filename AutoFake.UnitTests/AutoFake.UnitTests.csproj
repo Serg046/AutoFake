@@ -72,6 +72,7 @@
     <Compile Include="Expression\GetTestMethodVisitorTests.cs" />
     <Compile Include="Expression\InvocationExpressionTests.cs" />
     <Compile Include="Expression\TargetMemberVisitorTests.cs" />
+    <Compile Include="FakeMethodTests.cs" />
     <Compile Include="Setup\MockInstallerTests\MockInstallerTests.cs" />
     <Compile Include="Setup\MockTests\MockTests.cs" />
     <Compile Include="Setup\MockTests\MockVerifyTests.cs" />

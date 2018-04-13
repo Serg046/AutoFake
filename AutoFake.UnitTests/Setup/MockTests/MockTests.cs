@@ -12,24 +12,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
     public class MockTests
     {
         [Fact]
-        public void IsMethodInstruction_IncorrectInstruction_False()
-        {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-
-            Assert.False(mock.IsMethodInstruction(Instruction.Create(OpCodes.Nop)));
-        }
-
-        [Fact]
-        public void IsMethodInstruction_CorrectInstruction_True()
-        {
-            var method = GetMethod(nameof(TestClass.TestMethod));
-            var mock = new MockFake(method);
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-
-            Assert.True(mock.IsMethodInstruction(Instruction.Create(OpCodes.Call, typeInfo.Module.Import(method))));
-        }
-
-        [Fact]
         public void IsAsyncMethod_SyncMethod_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
