@@ -12,6 +12,7 @@ namespace AutoFake
         ModuleDefinition Module { get; }
         IEnumerable<FieldDefinition> Fields { get; }
         IEnumerable<MethodDefinition> Methods { get; }
+        FieldDefinition CreateInstanceByReflectionFunc { get; }
         string GetMonoCecilTypeName(Type declaringType);
         void AddField(FieldDefinition field);
         void AddMethod(MethodDefinition method);
