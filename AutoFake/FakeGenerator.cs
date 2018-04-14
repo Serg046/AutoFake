@@ -48,9 +48,6 @@ namespace AutoFake
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
                 new FakeMethod(method, mocker).ApplyMock(mock);
 
-                //var type = _typeInfo.SourceType.Assembly.GetType("AutoFake.IntegrationTests.InstanceTests.AssemblyTests+TestClass");
-                //method.DeclaringType = _typeInfo.Module.Import(type).Resolve();
-
                 _generatedObject.MockedMembers.Add(mocker.MemberInfo);
             }
         }

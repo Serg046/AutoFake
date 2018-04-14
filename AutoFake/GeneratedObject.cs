@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace AutoFake
@@ -36,11 +37,27 @@ namespace AutoFake
 
         private void Initialize()
         {
+            var field = GetField(this, _typeInfo.CreateInstanceByReflectionFunc.Name);
+            Func<Type, IEnumerable<string>, object> creator = CreateInstanceByReflection; 
+            field.SetValue(null, creator);
+
             foreach (var mockedMemberInfo in MockedMembers)
             {
                 mockedMemberInfo.Mock.Initialize(mockedMemberInfo, this);
             }
         }
+
+        private object CreateInstanceByReflection(Type ctorType, IEnumerable<string> ctorArgs)
+        {
+            var ctor = ctorType.GetConstructors().SingleOrDefault(c => c.GetParameters()
+                .Select(p => p.ParameterType.FullName)
+                .SequenceEqual(ctorArgs));
+            return ctor?.Invoke(null)
+                   ?? throw new ArgumentException($"Constructor for the type '{ctorType}' is not found");
+        }
+
+        protected FieldInfo GetField(GeneratedObject generatedObject, string fieldName)
+            => generatedObject.Type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
     }

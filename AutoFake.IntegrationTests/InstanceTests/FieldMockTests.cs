@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Remoting.Messaging;
 using Xunit;
@@ -119,6 +120,19 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 Debug.WriteLine("Finished");
                 return value;
             }
+
+            //public int GetHelperDynamicValue()
+            //{
+            //    _field.Invoke(typeof(HelperClass));
+
+            //    Debug.WriteLine("Started");
+            //    var helper = new HelperClass();
+            //    var value = helper.DynamicValue;
+            //    Debug.WriteLine("Finished");
+            //    return value;
+            //}
+
+            //private Func<Type, object> _field;
 
             public int GetDynamicStaticValue()
             {

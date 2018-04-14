@@ -27,7 +27,14 @@ namespace AutoFake
             var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, true);
             _typeDefinition = type.Resolve();
             _typeDefinition.Name += "Fake";
+
+            CreateInstanceByReflectionFunc = new FieldDefinition("CreateInstanceByReflectionFunc",
+                Mono.Cecil.FieldAttributes.Assembly | Mono.Cecil.FieldAttributes.Static,
+                Module.Import(typeof(Func<Type, IEnumerable<string>, object>)));
+            AddField(CreateInstanceByReflectionFunc);
         }
+
+        public FieldDefinition CreateInstanceByReflectionFunc { get; }
 
         public Type SourceType { get; }
         
