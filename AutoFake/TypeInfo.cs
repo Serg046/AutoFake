@@ -30,7 +30,7 @@ namespace AutoFake
 
             CreateInstanceByReflectionFunc = new FieldDefinition("CreateInstanceByReflectionFunc",
                 Mono.Cecil.FieldAttributes.Assembly | Mono.Cecil.FieldAttributes.Static,
-                Module.Import(typeof(Func<Type, IEnumerable<string>, object>)));
+                Module.Import(typeof(Func<Type, IEnumerable<object>, object>)));
             AddField(CreateInstanceByReflectionFunc);
         }
 

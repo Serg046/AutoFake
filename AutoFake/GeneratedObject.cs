@@ -38,7 +38,7 @@ namespace AutoFake
         private void Initialize()
         {
             var field = GetField(this, _typeInfo.CreateInstanceByReflectionFunc.Name);
-            Func<Type, IEnumerable<string>, object> creator = CreateInstanceByReflection; 
+            Func<Type, IEnumerable<object>, object> creator = CreateInstanceByReflection; 
             field.SetValue(null, creator);
 
             foreach (var mockedMemberInfo in MockedMembers)
@@ -47,12 +47,13 @@ namespace AutoFake
             }
         }
 
-        private object CreateInstanceByReflection(Type ctorType, IEnumerable<string> ctorArgs)
+        private object CreateInstanceByReflection(Type ctorType, IEnumerable<object> ctorArgs)
         {
+            if (ctorArgs == null) throw new ArgumentNullException(nameof(ctorArgs));
             var ctor = ctorType.GetConstructors().SingleOrDefault(c => c.GetParameters()
-                .Select(p => p.ParameterType.FullName)
-                .SequenceEqual(ctorArgs));
-            return ctor?.Invoke(null)
+                .Select(p => p.ParameterType.FullName).SequenceEqual(ctorArgs
+                .Select(p => p.GetType().FullName)));
+            return ctor?.Invoke(ctorArgs.ToArray())
                    ?? throw new ArgumentException($"Constructor for the type '{ctorType}' is not found");
         }
 
