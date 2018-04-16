@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using AutoFake.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -43,22 +46,44 @@ namespace AutoFake
                             var type = _mocker.TypeInfo.SourceType.Assembly.GetType(typeName);
                             var importedType = _mocker.TypeInfo.Module.Import(type);
                             var proc = currentMethod.Body.GetILProcessor();
-                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, _mocker.TypeInfo.CreateInstanceByReflectionFunc));
-                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldtoken, importedType));
-                            var getType = _mocker.TypeInfo.Module.Import(typeof(System.Type).GetMethod(nameof(System.Type.GetTypeFromHandle)));
-                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Call, getType));
 
-                            var listType = typeof(System.Collections.Generic.List<string>);
-                            var ctor = listType.GetConstructor(new System.Type[0]);
-                            var addToList = _mocker.TypeInfo.Module.Import(listType.GetMethod("Add"));
-                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Newobj, _mocker.TypeInfo.Module.Import(ctor)));
-                            foreach (var _ in methodDefinition.Parameters)
+                            var objType = _mocker.TypeInfo.Module.Import(typeof(object));
+                            var variables = new Stack<VariableDefinition>();
+                            foreach (var parameter in methodDefinition.Parameters)
                             {
-                                proc.InsertBefore(instruction, Instruction.Create(OpCodes.Call, addToList));
+                                var variableDefinition = new VariableDefinition(objType);
+                                if (parameter.ParameterType.IsValueType)
+                                {
+                                    proc.InsertBefore(instruction, Instruction.Create(OpCodes.Box, parameter.ParameterType));
+                                }
+                                proc.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, variableDefinition));
+                                variables.Push(variableDefinition);
+                                currentMethod.Body.Variables.Add(variableDefinition);
                             }
 
-                            var invoke = _mocker.TypeInfo.Module.Import(typeof(System.Func<System.Type,
-                                System.Collections.Generic.IEnumerable<string>, object>).GetMethod("Invoke"));
+                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, _mocker.TypeInfo.CreateInstanceByReflectionFunc));
+                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldtoken, importedType));
+                            var getType = _mocker.TypeInfo.Module.Import(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)));
+                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Call, getType));
+
+                            var listType = typeof(List<object>);
+                            var ctor = listType.GetConstructor(new System.Type[0]);
+                            var ctorDef = _mocker.TypeInfo.Module.Import(ctor);
+                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Newobj, ctorDef));
+                            var listVariable = new VariableDefinition(ctorDef.DeclaringType);
+                            currentMethod.Body.Variables.Add(listVariable);
+                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, listVariable));
+                            var addToList = _mocker.TypeInfo.Module.Import(listType.GetMethod("Add"));
+                            while (variables.Count > 0)
+                            {
+                                proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldloc, listVariable));
+                                var variableDefinition = variables.Pop();
+                                proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldloc, variableDefinition));
+                                proc.InsertBefore(instruction, Instruction.Create(OpCodes.Call, addToList));
+                            }
+                            proc.InsertBefore(instruction, Instruction.Create(OpCodes.Ldloc, listVariable));
+
+                            var invoke = _mocker.TypeInfo.Module.Import(typeof(Func<Type, IEnumerable<object>, object>).GetMethod("Invoke"));
                             proc.Replace(instruction, Instruction.Create(OpCodes.Call, invoke));
                         }
                         else
