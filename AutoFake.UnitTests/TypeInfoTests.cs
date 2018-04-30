@@ -88,16 +88,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void GetMonoCecilTypeName_SourceType_ReturnsSourceTypeName()
-        {
-            var sourceType = typeof(InternalTestClass);
-            var typeInfo = new TypeInfo(sourceType, new List<FakeDependency>());
-
-            Assert.Equal("AutoFake.UnitTests.TypeInfoTests/InternalTestClassFake",
-                typeInfo.GetMonoCecilTypeName(sourceType));
-        }
-
-        [Fact]
         public void GetMonoCecilTypeName_SystemType_ReturnsSourceTypeName()
         {
             var sourceType = typeof(InternalTestClass);
