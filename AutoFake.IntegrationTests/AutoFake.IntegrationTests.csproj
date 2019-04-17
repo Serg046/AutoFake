@@ -67,7 +67,7 @@
   <ItemGroup>
     <Compile Include="CallbackTests.cs" />
     <Compile Include="InstanceTests\CtorMockTests.cs" />
-    <Compile Include="InstanceTests\AssemblyTests.cs" />
+    <Compile Include="InstanceTests\CrossAssemblyTests.cs" />
     <Compile Include="InstanceTests\FieldMockTests.cs" />
     <Compile Include="InstanceTests\RewriteTests.cs" />
     <Compile Include="InstanceTests\MethodMockTests.cs" />

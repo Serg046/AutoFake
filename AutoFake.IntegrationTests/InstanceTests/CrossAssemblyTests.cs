@@ -3,7 +3,7 @@ using Xunit;
 
 namespace AutoFake.IntegrationTests.InstanceTests
 {
-    public class AssemblyTests
+    public class CrossAssemblyTests
     {
         [Fact]
         public void ClassCtorTest()
