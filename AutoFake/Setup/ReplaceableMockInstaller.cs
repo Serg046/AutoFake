@@ -25,6 +25,14 @@ namespace AutoFake.Setup
         {
             if (_sourceMember.ReturnType == typeof(void))
                 throw new SetupException("Setup expression must be non-void method");
+            _parameters.ReturnObject = () => returnObject;
+            return this;
+        }
+
+        public ReplaceableMockInstaller<TReturn> Returns(Func<object> returnObject)
+        {
+            if (_sourceMember.ReturnType == typeof(void))
+                throw new SetupException("Setup expression must be non-void method");
             _parameters.ReturnObject = returnObject;
             return this;
         }

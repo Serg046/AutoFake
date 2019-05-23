@@ -9,14 +9,15 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(m => m.GetValue())
-                .Returns(1);
-
+            fake.Replace(m => m.GetValue()).Returns(() => 1);
             fake.Rewrite(m => m.FirstMethod());
             fake.Rewrite(m => m.SecondMethod());
 
-            Assert.Equal(1, fake.Execute(f => f.FirstMethod()));
-            Assert.Equal(1, fake.Execute(f => f.SecondMethod()));
+            fake.Execute2(tst =>
+            {
+                Assert.Equal(1, tst.FirstMethod());
+                Assert.Equal(1, tst.SecondMethod());
+            });
         }
 
         [Fact]
@@ -24,17 +25,18 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(m => m.GetValue())
-                .Returns(1);
+            fake.Replace(m => m.GetValue()).Returns(() => 1);
             fake.Rewrite(m => m.FirstMethod());
 
             fake.Reset();
-            fake.Replace(m => m.GetValue())
-                .Returns(2);
+            fake.Replace(m => m.GetValue()).Returns(() => 2);
             fake.Rewrite(m => m.SecondMethod());
 
-            Assert.Equal(1, fake.Execute(f => f.FirstMethod()));
-            Assert.Equal(2, fake.Execute(f => f.SecondMethod()));
+            fake.Execute2(tst =>
+            {
+                Assert.Equal(1, tst.FirstMethod());
+                Assert.Equal(2, tst.SecondMethod());
+            });
         }
 
         [Fact]
@@ -42,17 +44,18 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(m => m.GetValue())
-                .Returns(1);
+            fake.Replace(m => m.GetValue()).Returns(() => 1);
             fake.Rewrite(m => m.FirstMethod());
 
             fake.Reset();
-            fake.Replace(m => m.GetValue())
-                .Returns(2);
+            fake.Replace(m => m.GetValue()).Returns(() => 2);
             fake.Rewrite(m => m.FirstMethod(Arg.DefaultOf<int>()));
 
-            Assert.Equal(1, fake.Execute(f => f.FirstMethod()));
-            Assert.Equal(3, fake.Execute(f => f.FirstMethod(1)));
+            fake.Execute2(tst =>
+            {
+                Assert.Equal(1, tst.FirstMethod());
+                Assert.Equal(3, tst.FirstMethod(1));
+            });
         }
 
         private class TestClass

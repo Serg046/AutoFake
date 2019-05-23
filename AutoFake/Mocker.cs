@@ -36,8 +36,9 @@ namespace AutoFake
         public void GenerateRetValueField()
         {
             var fieldName = MemberInfo.EvaluateRetValueFieldName() + RET_VALUE_FLD_SUFFIX;
-            MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Module.Import(_mock.SourceMember.ReturnType));
+            var fieldType = TypeInfo.Module.GetType(TypeInfo.GetMonoCecilTypeName(_mock.SourceMember.ReturnType))
+                ?? TypeInfo.Module.Import(_mock.SourceMember.ReturnType);
+            MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static, fieldType);
             TypeInfo.AddField(MemberInfo.RetValueField);
         }
 

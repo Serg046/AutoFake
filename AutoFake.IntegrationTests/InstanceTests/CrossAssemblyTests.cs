@@ -10,10 +10,9 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Rewrite(f => f.GetClassCtorResult());
 
-            var helper = fake.Rewrite(f => f.GetClassCtorResult()).Execute();
-
-            Assert.Equal(7, helper.Prop);
+            fake.Execute2(tst => Assert.Equal(7, tst.GetClassCtorResult().Prop));
         }
 
         [Fact]
@@ -21,10 +20,9 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Rewrite(f => f.GetClassCtorWithArgsResult());
 
-            var helper = fake.Rewrite(f => f.GetClassCtorWithArgsResult()).Execute();
-
-            Assert.Equal(7, helper.Prop);
+            fake.Execute2(tst => Assert.Equal(7, tst.GetClassCtorWithArgsResult().Prop));
         }
 
         [Fact]
@@ -32,10 +30,9 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Rewrite(f => f.GetClassField());
 
-            var helper = fake.Rewrite(f => f.GetClassField()).Execute();
-
-            Assert.Equal(7, helper.Prop);
+            fake.Execute2(tst => Assert.Equal(7, tst.GetClassField().Prop));
         }
 
         [Fact]
@@ -43,10 +40,9 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Rewrite(f => f.GetStructField());
 
-            var helper = fake.Rewrite(f => f.GetStructField()).Execute();
-
-            Assert.Equal(7, helper.Prop);
+            fake.Execute2(tst => Assert.Equal(7, tst.GetStructField().Prop));
         }
 
         public class HelperClass
