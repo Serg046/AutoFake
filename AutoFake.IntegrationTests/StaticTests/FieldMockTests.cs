@@ -1,7 +1,7 @@
-﻿using System;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.StaticTests
@@ -13,9 +13,10 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TestClass.DynamicStaticValue).Returns(7);
+            fake.Replace(() => TestClass.DynamicStaticValue).Returns(() => 7);
+            fake.Rewrite(() => TestClass.GetDynamicStaticValue());
 
-            Assert.Equal(7, fake.Rewrite(() => TestClass.GetDynamicStaticValue()).Execute());
+            fake.Execute2(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetDynamicStaticValue())));
         }
 
         [Fact]
@@ -23,9 +24,10 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => HelperClass.DynamicStaticValue).Returns(7);
+            fake.Replace(() => HelperClass.DynamicStaticValue).Returns(() => 7);
+            fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue());
 
-            Assert.Equal(7, fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue()).Execute());
+            fake.Execute2(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetHelperDynamicStaticValue())));
         }
 
         [Fact]
@@ -33,10 +35,11 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            var cmd = "select * from Test";
-            fake.Replace((SqlCommand c) => c.CommandText).Returns(cmd);
+            const string cmd = "select * from Test";
+            fake.Replace((SqlCommand c) => c.CommandText).Returns(() => cmd);
+            fake.Rewrite(() => TestClass.GetFrameworkValue());
 
-            Assert.Equal(cmd, fake.Rewrite(() => TestClass.GetFrameworkValue()).Execute());
+            fake.Execute2(tst => Assert.Equal(cmd, tst.Execute(() => TestClass.GetFrameworkValue())));
         }
 
         [Fact]
@@ -44,24 +47,27 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            var textReader = new StringReader(string.Empty);
-            fake.Replace(() => TextReader.Null).Returns(textReader);
+            fake.Replace(() => TextReader.Null).Returns(() => new StringReader(string.Empty));
+            fake.Rewrite(() => TestClass.GetFrameworkStaticValue());
 
-            var actual = fake.Rewrite(() => TestClass.GetFrameworkStaticValue()).Execute();
-            Assert.Equal(textReader, actual);
-            Assert.NotEqual(TextReader.Null, actual);
+            fake.Execute2((tst, prms) =>
+            {
+                var actual = tst.Execute(() => TestClass.GetFrameworkStaticValue());
+                Assert.Equal(prms.Single(), actual);
+                Assert.NotEqual(TextReader.Null, actual);
+            });
         }
 
         [Fact]
         public void StaticStructFieldByAddress()
         {
             var fake = new Fake(typeof(TestClass));
-            var expected = new HelperStruct { Value = 5 };
-            fake.Replace(() => TestClass.StaticStructValue).Returns(expected);
 
-            var actual = fake.Rewrite(() => TestClass.GetStaticStructValueByAddress()).Execute();
+            const int value = 5;
+            fake.Replace(() => TestClass.StaticStructValue).Returns(() => new HelperStruct { Value = value });
+            fake.Rewrite(() => TestClass.GetStaticStructValueByAddress());
 
-            Assert.Equal(expected.Value, actual);
+            fake.Execute2(tst => Assert.Equal(value, tst.Execute(() => TestClass.GetStaticStructValueByAddress())));
         }
 
         private static class TestClass

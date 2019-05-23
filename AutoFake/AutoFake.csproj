@@ -72,6 +72,7 @@
     <Compile Include="Expression\InvocationExpression.cs" />
     <Compile Include="ITypeInfo.cs" />
     <Compile Include="LambdaChecker.cs" />
+    <Compile Include="ReflectionUtils.cs" />
     <Compile Include="Setup\IMock.cs" />
     <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Executor.cs" />
     <Compile Include="TypeInfo.cs" />
     <Compile Include="Setup\VerifiableMockInstaller.cs" />
+    <Compile Include="TypeWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

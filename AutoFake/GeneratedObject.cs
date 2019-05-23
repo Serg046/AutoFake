@@ -8,25 +8,27 @@ namespace AutoFake
 {
     internal class GeneratedObject
     {
-        private readonly TypeInfo _typeInfo;
+        internal readonly TypeInfo _typeInfo;
 
         public GeneratedObject(TypeInfo typeInfo)
         {
             _typeInfo = typeInfo;
         }
 
+        public Assembly Assembly { get; private set; }
         public object Instance { get; internal set; }
         public Type Type { get; internal set; }
         public IList<MockedMemberInfo> MockedMembers { get; } = new List<MockedMemberInfo>();
         public bool IsBuilt { get; private set; }
+        public List<object> Parameters { get; } = new List<object>();
 
         public void Build()
         {
             using (var memoryStream = new MemoryStream())
             {
                 _typeInfo.WriteAssembly(memoryStream);
-                var assembly = Assembly.Load(memoryStream.ToArray());
-                Type = assembly.GetType(_typeInfo.FullTypeName, true);
+                Assembly = Assembly.Load(memoryStream.ToArray());
+                Type = Assembly.GetType(_typeInfo.FullTypeName, true);
 
                 Initialize();
 

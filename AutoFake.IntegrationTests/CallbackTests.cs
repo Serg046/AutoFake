@@ -12,8 +12,9 @@ namespace AutoFake.IntegrationTests
 
             fake.Replace(() => Console.WriteLine(Arg.DefaultOf<int>()))
                 .Callback(() => throw new InvalidOperationException());
+            fake.Rewrite(f => f.Test());
 
-            Assert.Throws<InvalidOperationException>(() => fake.Rewrite(f => f.Test()).Execute());
+            fake.Execute2(tst => Assert.Throws<InvalidOperationException>(() => tst.Test()));
         }
 
         private class TestClass

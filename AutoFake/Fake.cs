@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading.Tasks;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
@@ -48,12 +50,57 @@ namespace AutoFake
 
         public void SetValue<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc, TReturn value)
             => SetValueImpl(instanceSetupFunc, value);
+
+        public void Execute2(Action<T> action)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            
+
+            var delegateType = _generatedObject.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var method = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+            method.Invoke(instance, new[] {_generatedObject.Instance});
+
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
+            {
+                mockedMemberInfo.Mock.Verify(mockedMemberInfo, _generatedObject);
+            }
+        }
+
+        public Task Execute2Async(Func<T, Task> action)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
+            {
+                mockedMemberInfo.Mock.Verify(mockedMemberInfo, _generatedObject);
+            }
+
+            var delegateType = _generatedObject.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var method = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+            return (Task)method.Invoke(instance, new[] { _generatedObject.Instance });
+        }
+
+        public void Execute2(Action<T, IList<object>> action)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
+            {
+                mockedMemberInfo.Mock.Verify(mockedMemberInfo, _generatedObject);
+            }
+
+            var delegateType = _generatedObject.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var method = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+
+            method.Invoke(instance, new[] { _generatedObject.Instance, _generatedObject.Parameters });
+        }
     }
 
     public class Fake
     {
         private readonly FakeGenerator _fakeGenerator;
-        private readonly GeneratedObject _generatedObject;
+        internal readonly GeneratedObject _generatedObject;
 
         public Fake(Type type, params object[] contructorArgs)
         {
@@ -232,5 +279,48 @@ namespace AutoFake
         //---------------------------------------------------------------------------------------------------------
 
         public void Reset() => Mocks.Clear();
+
+        public void Execute2(Action<TypeWrapper> action)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
+            {
+                mockedMemberInfo.Mock.Verify(mockedMemberInfo, _generatedObject);
+            }
+
+            var delegateType = _generatedObject.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var method = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+            method.Invoke(instance, new object[] { new TypeWrapper(_generatedObject) });
+        }
+
+        public void Execute2(Action<TypeWrapper, IList<object>> action)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
+            {
+                mockedMemberInfo.Mock.Verify(mockedMemberInfo, _generatedObject);
+            }
+
+            var delegateType = _generatedObject.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var method = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+
+            method.Invoke(instance, new object[] { new TypeWrapper(_generatedObject), _generatedObject.Parameters });
+        }
+
+        public Task Execute2Async(Func<TypeWrapper, Task> action)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            foreach (var mockedMemberInfo in _generatedObject.MockedMembers)
+            {
+                mockedMemberInfo.Mock.Verify(mockedMemberInfo, _generatedObject);
+            }
+
+            var delegateType = _generatedObject.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var method = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+            return (Task)method.Invoke(instance, new[] { new TypeWrapper(_generatedObject) });
+        }
     }
 }

@@ -70,7 +70,9 @@ namespace AutoFake.Setup
                 if (field == null)
                     throw new FakeGeneretingException(
                         $"'{mockedMemberInfo.RetValueField.Name}' is not found in the generated object");
-                field.SetValue(null, _parameters.ReturnObject);
+                var obj = ReflectionUtils.Invoke(generatedObject.Assembly, _parameters.ReturnObject.Method);
+                field.SetValue(null, obj);
+                generatedObject.Parameters.Add(obj);
             }
 
             if (_parameters.Callback != null)
@@ -95,15 +97,15 @@ namespace AutoFake.Setup
         
         internal class Parameters
         {
-            private object _returnObject;
+            private Func<object> _returnObject;
 
             public bool NeedCheckArguments { get; set; }
             public Func<int, bool> ExpectedCallsCountFunc { get; set; }
             public bool IsReturnObjectSet { get; private set; }
 
-            public object ReturnObject
+            public Func<object> ReturnObject
             {
-                get { return _returnObject; }
+                get => _returnObject;
                 set
                 {
                     _returnObject = value;
