@@ -8,7 +8,7 @@ namespace AutoFake
     {
         ITypeInfo TypeInfo { get; }
         MockedMemberInfo MemberInfo { get; }
-        void InjectCurrentPositionSaving(ILProcessor ilProcessor, Instruction instruction);
+        void SaveMethodCall(ILProcessor ilProcessor, Instruction instruction);
         IList<FieldDefinition> PopMethodArguments(ILProcessor ilProcessor, Instruction instruction);
         void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction);
         void RemoveStackArgument(ILProcessor ilProcessor, Instruction instruction);

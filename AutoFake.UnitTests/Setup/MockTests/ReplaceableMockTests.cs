@@ -74,7 +74,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
             _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
 
-            _mocker.Verify(m => m.InjectCurrentPositionSaving(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
+            _mocker.Verify(m => m.SaveMethodCall(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
             Assert.Equal(mustBeInjected ? 1 : 0, _mockedMemberInfo.SourceCodeCallsCount);
         }
 
