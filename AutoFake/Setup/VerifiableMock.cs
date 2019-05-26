@@ -21,7 +21,7 @@ namespace AutoFake.Setup
         {
             if (NeedCallsCounter)
             {
-                methodMocker.InjectCurrentPositionSaving(ilProcessor, instruction);
+                methodMocker.SaveMethodCall(ilProcessor, instruction);
                 methodMocker.MemberInfo.SourceCodeCallsCount++;
             }
             if (SetupArguments.Any() && _parameters.NeedCheckArguments)

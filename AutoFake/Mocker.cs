@@ -85,7 +85,7 @@ namespace AutoFake
             return ctor;
         }
 
-        public void InjectCurrentPositionSaving(ILProcessor ilProcessor, Instruction instruction)
+        public void SaveMethodCall(ILProcessor ilProcessor, Instruction instruction)
         {
             ilProcessor.InsertAfter(instruction,
                     ilProcessor.Create(OpCodes.Callvirt, _addToListMethodInfo));
