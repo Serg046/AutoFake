@@ -14,6 +14,6 @@ namespace AutoFake
         void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction);
         void InjectCallback(ILProcessor ilProcessor, Instruction instruction);
         void InjectVerification(ILProcessor ilProcessor);
-        IEnumerable<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction);
+        IList<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction);
     }
 }

@@ -53,12 +53,12 @@ namespace AutoFake.IntegrationTests.InstanceTests
             public int Prop { get; set; }
         }
         
-        public struct HelperStruct
+        private struct HelperStruct
         {
             public int Prop { get; set; }
         }
 
-        public class TestClass
+        private class TestClass
         {
             private readonly HelperClass _helperClassField = new HelperClass();
             private HelperStruct _helperStructField;

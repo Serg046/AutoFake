@@ -122,7 +122,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             public static int DynamicStaticValue = 5;
         }
 
-        public struct HelperStruct
+        private struct HelperStruct
         {
             public int Value;
         }
