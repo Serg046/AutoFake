@@ -1,14 +1,18 @@
-﻿namespace AutoFake
+﻿using System;
+
+namespace AutoFake
 {
     internal class LambdaChecker : IFakeArgumentChecker
     {
-        private readonly dynamic _checker;
+        private readonly Delegate _checker;
 
-        public LambdaChecker(dynamic checker)
+        public LambdaChecker(Delegate checker)
         {
             _checker = checker;
         }
 
-        public bool Check(dynamic argument) => _checker(argument);
+        public bool Check(object argument) => (bool)_checker.DynamicInvoke(argument);
+
+        public override string ToString() => "should match Is-expression";
     }
 }

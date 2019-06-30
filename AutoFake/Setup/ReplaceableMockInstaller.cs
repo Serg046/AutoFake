@@ -1,57 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using AutoFake.Exceptions;
 using AutoFake.Expression;
 
 namespace AutoFake.Setup
 {
-    public class ReplaceableMockInstaller<TReturn> : ReplaceableMockInstallerBase
+    public class ReplaceableMockInstaller<TReturn>
     {
-        private readonly ISourceMember _sourceMember;
-        private readonly IList<FakeArgument> _setupArguments;
         private readonly ReplaceableMock.Parameters _parameters;
 
         internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
-            _sourceMember = invocationExpression.GetSourceMember();
-            ValidateSourceMember(mocks, _sourceMember);
-
-            _setupArguments = invocationExpression.GetArguments();
             _parameters = new ReplaceableMock.Parameters();
-            mocks.Add(new ReplaceableMock(_sourceMember, _setupArguments, _parameters));
+            mocks.Add(new ReplaceableMock(invocationExpression, _parameters));
         }
 
-        public ReplaceableMockInstaller<TReturn> Returns(TReturn returnObject)
+        public ReplaceableMockInstaller<TReturn> Returns(Func<TReturn> returnObject)
         {
-            if (_sourceMember.ReturnType == typeof(void))
-                throw new SetupException("Setup expression must be non-void method");
-            _parameters.ReturnObject = () => returnObject;
-            return this;
-        }
-
-        public ReplaceableMockInstaller<TReturn> Returns(Func<object> returnObject)
-        {
-            if (_sourceMember.ReturnType == typeof(void))
-                throw new SetupException("Setup expression must be non-void method");
-            _parameters.ReturnObject = returnObject;
+            _parameters.ReturnObject = new MethodDescriptor(returnObject.Method.DeclaringType.FullName, returnObject.Method.Name);
             return this;
         }
 
         public ReplaceableMockInstaller<TReturn> CheckArguments()
         {
-            ValidateSetupArguments(_sourceMember, _setupArguments);
             _parameters.NeedCheckArguments = true;
             return this;
         }
 
-        public ReplaceableMockInstaller<TReturn> ExpectedCallsCount(int expectedCallsCount)
+        public ReplaceableMockInstaller<TReturn> ExpectedCallsCount(byte expectedCallsCount)
         {
-            ValidateExpectedCallsCount(expectedCallsCount);
             _parameters.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
             return this;
         }
 
-        public ReplaceableMockInstaller<TReturn> ExpectedCallsCount(Func<int,bool> expectedCallsCountFunc)
+        public ReplaceableMockInstaller<TReturn> ExpectedCallsCount(Func<byte, bool> expectedCallsCountFunc)
         {
             _parameters.ExpectedCallsCountFunc = expectedCallsCountFunc;
             return this;
@@ -59,43 +40,34 @@ namespace AutoFake.Setup
 
         public ReplaceableMockInstaller<TReturn> Callback(Action callback)
         {
-            ValidateCallback(callback);
-            _parameters.Callback = callback;
+            _parameters.Callback = callback ?? throw new ArgumentNullException(nameof(callback));
             return this;
         }
     }
 
-    public class ReplaceableMockInstaller : ReplaceableMockInstallerBase
+    public class ReplaceableMockInstaller
     {
-        private readonly ISourceMember _sourceMember;
-        private readonly IList<FakeArgument> _setupArguments;
         private readonly ReplaceableMock.Parameters _parameters;
 
         internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
         {
-            _sourceMember = invocationExpression.GetSourceMember();
-            ValidateSourceMember(mocks, _sourceMember);
-
-            _setupArguments = invocationExpression.GetArguments();
             _parameters = new ReplaceableMock.Parameters();
-            mocks.Add(new ReplaceableMock(_sourceMember, _setupArguments, _parameters));
+            mocks.Add(new ReplaceableMock(invocationExpression, _parameters));
         }
 
         public ReplaceableMockInstaller CheckArguments()
         {
-            ValidateSetupArguments(_sourceMember, _setupArguments);
             _parameters.NeedCheckArguments = true;
             return this;
         }
 
-        public ReplaceableMockInstaller ExpectedCallsCount(int expectedCallsCount)
+        public ReplaceableMockInstaller ExpectedCallsCount(byte expectedCallsCount)
         {
-            ValidateExpectedCallsCount(expectedCallsCount);
             _parameters.ExpectedCallsCountFunc = callsCount => callsCount == expectedCallsCount;
             return this;
         }
 
-        public ReplaceableMockInstaller ExpectedCallsCount(Func<int, bool> expectedCallsCountFunc)
+        public ReplaceableMockInstaller ExpectedCallsCount(Func<byte, bool> expectedCallsCountFunc)
         {
             _parameters.ExpectedCallsCountFunc = expectedCallsCountFunc;
             return this;
@@ -103,8 +75,7 @@ namespace AutoFake.Setup
 
         public ReplaceableMockInstaller Callback(Action callback)
         {
-            ValidateCallback(callback);
-            _parameters.Callback = callback;
+            _parameters.Callback = callback ?? throw new ArgumentNullException(nameof(callback));
             return this;
         }
     }

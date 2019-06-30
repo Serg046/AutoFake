@@ -2,8 +2,9 @@
 {
     internal interface IMocker : IMethodMocker
     {
+        void GenerateSetupBodyField();
         void GenerateRetValueField();
-        void GenerateCallsCounter();
         void GenerateCallbackField();
+        void GenerateCallsCounterFuncField();
     }
 }

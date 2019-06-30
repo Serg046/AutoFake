@@ -111,7 +111,7 @@ namespace AutoFake.UnitTests
 
             mocker.MemberInfo.ActualCallsField = new FieldDefinition("Test", FieldAttributes.Private, _typeInfo.Module.Import(typeof(int)));
 
-            mocker.InjectCurrentPositionSaving(proc, cmd);
+            mocker.SaveMethodCall(proc, cmd);
 
             Assert.True(proc.Body.Instructions.Ordered(
                 Cil.Cmd(cmd.OpCode, cmd.Operand),

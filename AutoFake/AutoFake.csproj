@@ -32,19 +32,15 @@
   <ItemGroup>
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net40\Mono.Cecil.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil.Rocks, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -72,9 +68,9 @@
     <Compile Include="Expression\InvocationExpression.cs" />
     <Compile Include="ITypeInfo.cs" />
     <Compile Include="LambdaChecker.cs" />
+    <Compile Include="MethodDescriptor.cs" />
     <Compile Include="ReflectionUtils.cs" />
     <Compile Include="Setup\IMock.cs" />
-    <Compile Include="Setup\MockInstaller.cs" />
     <Compile Include="Setup\ReplaceableMock.cs" />
     <Compile Include="Setup\ISourceMember.cs" />
     <Compile Include="Setup\SourceConstructor.cs" />
@@ -95,7 +91,6 @@
     <Compile Include="MockedMemberInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Setup\ReplaceableMockInstaller.cs" />
-    <Compile Include="Executor.cs" />
     <Compile Include="TypeInfo.cs" />
     <Compile Include="Setup\VerifiableMockInstaller.cs" />
     <Compile Include="TypeWrapper.cs" />
@@ -103,7 +98,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
