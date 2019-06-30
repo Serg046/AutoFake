@@ -55,7 +55,7 @@ namespace AutoFake
             TypeInfo.AddField(MemberInfo.ExpectedCallsFuncField);
         }
 
-        public IEnumerable<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction)
+        public IList<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction)
         {
             if (MemberInfo.ActualCallsAccumulator == null)
             {
@@ -102,7 +102,7 @@ namespace AutoFake
             ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
             ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Call, _addToListOfObjArray));
 
-            return variables;
+            return variables.ToList();
         }
 
         public void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction)

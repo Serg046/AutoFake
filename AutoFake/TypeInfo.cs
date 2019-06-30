@@ -26,14 +26,7 @@ namespace AutoFake
 
             var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, true);
             _typeDefinition = type.Resolve();
-
-            CreateInstanceByReflectionFunc = new FieldDefinition("CreateInstanceByReflectionFunc",
-                Mono.Cecil.FieldAttributes.Assembly | Mono.Cecil.FieldAttributes.Static,
-                Module.Import(typeof(Func<Type, IEnumerable<object>, object>)));
-            AddField(CreateInstanceByReflectionFunc);
         }
-
-        public FieldDefinition CreateInstanceByReflectionFunc { get; }
 
         public Type SourceType { get; }
         
@@ -91,15 +84,6 @@ namespace AutoFake
                 throw new FakeGeneretingException("Constructor is not found");
 
             return constructor.Invoke(_dependencies.Select(d => d.Instance).ToArray());
-        }
-
-        public MethodReference ConvertToSourceAssembly(MethodReference constructor)
-        {
-            var typeName = GetClrName(constructor.DeclaringType.FullName);
-            var type = SourceType.Assembly.GetType(typeName);
-            var ctor = type.GetConstructors().Single(c => c.GetParameters().Select(p => p.ParameterType.FullName)
-                .SequenceEqual(constructor.Parameters.Select(p => GetClrName(p.ParameterType.FullName))));
-            return Module.Import(ctor);
         }
 
         private string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');

@@ -104,7 +104,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 tst.GetStaticStructValueByAddress()));
         }
 
-        public class TestClass
+        private class TestClass
         {
             public int DynamicValue = 5;
             public static int DynamicStaticValue = 5;
@@ -183,7 +183,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             public static int DynamicStaticValue = 5;
         }
 
-        public struct HelperStruct
+        private struct HelperStruct
         {
             public int Value;
         }
