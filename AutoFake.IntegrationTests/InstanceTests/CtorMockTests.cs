@@ -16,7 +16,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => new TestClass()).Returns(() => testClass);
             fake.Rewrite(f => f.GetTestClass());
 
-            fake.Execute2(tst => Assert.Equal(testClass, tst.GetTestClass()));
+            fake.Execute(tst => Assert.Equal(testClass, tst.GetTestClass()));
         }
 
         [Fact]
@@ -28,7 +28,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => new HelperClass()).Returns(() => helperClass);
             fake.Rewrite(f => f.GetHelperClass());
 
-            fake.Execute2(tst => Assert.Equal(helperClass, tst.GetHelperClass()));
+            fake.Execute(tst => Assert.Equal(helperClass, tst.GetHelperClass()));
         }
 
         [Fact]
@@ -40,7 +40,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => new SqlCommand()).Returns(() => cmd);
             fake.Rewrite(f => f.GetSqlCommand());
 
-            fake.Execute2(tst => Assert.Equal(cmd, tst.GetSqlCommand()));
+            fake.Execute(tst => Assert.Equal(cmd, tst.GetSqlCommand()));
         }
 
         [Fact]
@@ -52,7 +52,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => new StringReader("")).Returns(() => reader);
             fake.Rewrite(f => f.GetStringReader());
 
-            fake.Execute2(tst => Assert.Equal(reader, tst.GetStringReader()));
+            fake.Execute(tst => Assert.Equal(reader, tst.GetStringReader()));
         }
 
         [Fact]
@@ -64,7 +64,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(() => new OverloadCtorTestClass(Arg.DefaultOf<int>())).Returns(() => new OverloadCtorTestClass(7));
             fake.Rewrite(f => f.GetOverloadCtorTestClass());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.GetOverloadCtorTestClass().Value));
+            fake.Execute(tst => Assert.Equal(7, tst.GetOverloadCtorTestClass().Value));
         }
 
         private class TestClass

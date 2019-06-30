@@ -10,49 +10,46 @@ namespace AutoFake.IntegrationTests
         [Fact]
         public void CheckArgumentsTest()
         {
-            //var fake = new Fake<TestClass>();
+            var fake = new Fake<TestClass>();
 
-            //var date = DateTime.UtcNow;
-            //var zones = TimeZoneInfo.GetSystemTimeZones();
-            //var setupZone = zones[0];
-            //var failedZone = zones[1];
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Local))
+                .CheckArguments();
+            fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
-            //fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, setupZone))
-            //    .CheckArguments();
-
-            //fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
-
-            //Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, setupZone)));
-            //Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(date, failedZone)));
-
-            //Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, setupZone), fake.Execute(f => f.GetValueByArguments(date, setupZone)));
-            throw new NotImplementedException();
+            Assert.Throws<VerifiableException>(() => fake.Execute(tst => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Local)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(tst => tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc)));
+            fake.Execute(tst => Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Local),
+                tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Local)));
         }
 
         [Fact]
         public void ExpectedCallsCountTest()
         {
-            //var fake = new Fake<TestClass>();
+            var fake = new Fake<TestClass>();
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(2);
+            fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
+            fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1),
+                TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
 
-            //var date = DateTime.UtcNow;
-            //var zone = TimeZoneInfo.Local;
-            //fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
-            //    .ExpectedCallsCount(2);
+            fake = new Fake<TestClass>();
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(1);
+            fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
+            fake.Execute(tst => Assert.Equal(new DateTime(2019, 1, 1, 6, 0, 0),
+                tst.GetValueByArguments(new DateTime(2019, 1, 1),
+                    TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
 
-            //Assert.Throws<ExpectedCallsException>(() => fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
+            fake = new Fake<TestClass>();
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(x => x < 1);
+            fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
+            fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1),
+                TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
 
-            //fake = new Fake<TestClass>();
-            //fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
-            //    .ExpectedCallsCount(1);
-
-            //Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, zone), fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
-
-            //fake = new Fake<TestClass>();
-            //fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(date, zone))
-            //    .ExpectedCallsCount(x => x > 0);
-
-            //Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(date, zone), fake.Rewrite(f => f.GetValueByArguments(date, zone)).Execute());
-            throw new NotImplementedException();
+            fake = new Fake<TestClass>();
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(x => x > 0);
+            fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
+            fake.Execute(tst => Assert.Equal(new DateTime(2019, 1, 1, 6, 0, 0),
+                tst.GetValueByArguments(new DateTime(2019, 1, 1),
+                    TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
         }
 
         [Fact]
@@ -60,17 +57,18 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<TestClass>();
             fake.Verify(t => t.CodeBranch(1, 2))
-                .ExpectedCallsCount(2);
+                .CheckArguments()
+                .ExpectedCallsCount(1);
             fake.Rewrite(f => f.Sum(1, 2));
 
-            fake.Execute2(tst => Assert.Equal(6, tst.Sum(1, 2)));
+            fake.Execute(tst => Assert.Equal(6, tst.Sum(1, 2)));
 
             fake = new Fake<TestClass>();
             fake.Verify(t => t.CodeBranch(0, 0))
                 .ExpectedCallsCount(1);
             fake.Rewrite(f => f.Sum(0, 1));
 
-            fake.Execute2(tst => Assert.Equal(0, tst.Sum(0, 1)));
+            fake.Execute(tst => Assert.Equal(0, tst.Sum(0, 1)));
         }
 
         private class TestClass
@@ -85,16 +83,22 @@ namespace AutoFake.IntegrationTests
 
             public int CodeBranch(int a, int b) => a + b;
 
+            //public int Sum(int a, int b)
+            //{
+            //    if (a > 0)
+            //    {
+            //        return CodeBranch(a, b) + CodeBranch(a, b);
+            //    }
+            //    return CodeBranch(0, 0);
+            //}
+
             public int Sum(int a, int b)
             {
                 if (a > 0)
                 {
-                    return CodeBranch(a, b) + CodeBranch(a, b);
+                    return CodeBranch(a, b) + 3;
                 }
-                else
-                {
-                    return CodeBranch(0, 0);
-                }
+                return CodeBranch(0, 0);
             }
         }
     }

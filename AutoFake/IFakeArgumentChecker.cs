@@ -2,6 +2,6 @@
 {
     internal interface IFakeArgumentChecker
     {
-        bool Check(dynamic argument);
+        bool Check(object argument);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using AutoFake.Setup;
 using Mono.Cecil;
@@ -28,12 +29,12 @@ namespace AutoFake
                 ApplyMock(asyncMethod, mock);
             }
 
+            var ilProcessor = currentMethod.Body.GetILProcessor();
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
                 if (mock.IsInstalledInstruction(_mocker.TypeInfo, instruction))
                 {
-                    var proc = currentMethod.Body.GetILProcessor();
-                    mock.Inject(_mocker, proc, instruction);
+                    mock.Inject(_mocker, ilProcessor, instruction);
                 }
                 else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
                 {
@@ -97,6 +98,7 @@ namespace AutoFake
                     }
                 }
             }
+            _mocker.InjectVerification(ilProcessor);
         }
 
         private bool IsFakeAssemblyMethod(MethodReference methodReference)

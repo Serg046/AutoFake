@@ -51,7 +51,7 @@ namespace AutoFake.UnitTests
             var memberInfo = new MockedMemberInfo(new ReplaceableMock(sourceMember,
                 new List<FakeArgument>(), null), null, "suffix");
 
-            Assert.Equal("SystemInt32_Test_SystemObject_suffix", memberInfo.EvaluateRetValueFieldName());
+            Assert.Equal("SystemInt32_Test_SystemObject_suffix", memberInfo.GenerateFieldName());
         }
 
         public int Test(object arg) => 0;

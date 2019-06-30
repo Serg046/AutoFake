@@ -1,16 +1,16 @@
-﻿using System;
-
-namespace AutoFake
+﻿namespace AutoFake
 {
     internal class EqualityArgumentChecker : IFakeArgumentChecker
     {
-        private readonly Func<dynamic, bool> _checker;
+        private readonly object _value;
 
-        public EqualityArgumentChecker(dynamic value)
+        public EqualityArgumentChecker(object value)
         {
-            _checker = dynValue => object.Equals(dynValue, value);
+            _value = value;
         }
 
-        public bool Check(dynamic argument) => _checker.Invoke(argument);
+        public bool Check(object argument) => _value.Equals(argument);
+
+        public override string ToString() => _value.ToString();
     }
 }

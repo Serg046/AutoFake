@@ -16,7 +16,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Replace(() => TestClass.DynamicStaticValue).Returns(() => 7);
             fake.Rewrite(() => TestClass.GetDynamicStaticValue());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetDynamicStaticValue())));
+            fake.Execute(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetDynamicStaticValue())));
         }
 
         [Fact]
@@ -27,7 +27,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Replace(() => HelperClass.DynamicStaticValue).Returns(() => 7);
             fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetHelperDynamicStaticValue())));
+            fake.Execute(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetHelperDynamicStaticValue())));
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Replace((SqlCommand c) => c.CommandText).Returns(() => cmd);
             fake.Rewrite(() => TestClass.GetFrameworkValue());
 
-            fake.Execute2(tst => Assert.Equal(cmd, tst.Execute(() => TestClass.GetFrameworkValue())));
+            fake.Execute(tst => Assert.Equal(cmd, tst.Execute(() => TestClass.GetFrameworkValue())));
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Replace(() => TextReader.Null).Returns(() => new StringReader(string.Empty));
             fake.Rewrite(() => TestClass.GetFrameworkStaticValue());
 
-            fake.Execute2((tst, prms) =>
+            fake.Execute((tst, prms) =>
             {
                 var actual = tst.Execute(() => TestClass.GetFrameworkStaticValue());
                 Assert.Equal(prms.Single(), actual);
@@ -67,7 +67,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Replace(() => TestClass.StaticStructValue).Returns(() => new HelperStruct { Value = value });
             fake.Rewrite(() => TestClass.GetStaticStructValueByAddress());
 
-            fake.Execute2(tst => Assert.Equal(value, tst.Execute(() => TestClass.GetStaticStructValueByAddress())));
+            fake.Execute(tst => Assert.Equal(value, tst.Execute(() => TestClass.GetStaticStructValueByAddress())));
         }
 
         private static class TestClass

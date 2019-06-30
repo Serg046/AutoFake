@@ -10,24 +10,16 @@ namespace AutoFake.IntegrationTests
         [Fact]
         public void CheckArgumentsTest()
         {
-            //var fake = new Fake<TestClass>();
+            var fake = new Fake<TestClass>();
 
-            //var date = DateTime.UtcNow;
-            //var zones = TimeZoneInfo.GetSystemTimeZones();
-            //var setupZone = zones[0];
-            //var failedZone = zones[1];
+            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Local))
+                .CheckArguments()
+                .Returns(() => DateTime.MinValue);
+            fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
-            //fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(date, setupZone))
-            //    .CheckArguments()
-            //    .Returns(DateTime.MinValue);
-
-            //fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
-
-            //Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(DateTime.MinValue, setupZone)));
-            //Assert.Throws<VerifiableException>(() => fake.Execute(f => f.GetValueByArguments(date, failedZone)));
-
-            //Assert.Equal(DateTime.MinValue, fake.Execute(f => f.GetValueByArguments(date, setupZone)));
-            throw new NotImplementedException();
+            Assert.Throws<VerifiableException>(() => fake.Execute(tst => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Local)));
+            Assert.Throws<VerifiableException>(() => fake.Execute(tst => tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc)));
+            fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Local)));
         }
 
         [Fact]
@@ -39,7 +31,7 @@ namespace AutoFake.IntegrationTests
                 .Returns(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
 
-            fake.Execute2(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(DateTime.MinValue, null)));
+            fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(DateTime.MinValue, null)));
 
             fake = new Fake<TestClass>();
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
@@ -47,7 +39,7 @@ namespace AutoFake.IntegrationTests
                 .Returns(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
 
-            fake.Execute2(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
+            fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
 
             fake = new Fake<TestClass>();
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
@@ -55,7 +47,7 @@ namespace AutoFake.IntegrationTests
                 .Returns(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
 
-            fake.Execute2(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
+            fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
         }
 
         [Fact]
@@ -64,11 +56,11 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
             fake.Replace(t => t.CodeBranch(1, 2))
                 .CheckArguments()
-                .ExpectedCallsCount(2)
+                .ExpectedCallsCount(1)
                 .Returns(() => 6);
             fake.Rewrite(f => f.Sum(1, 2));
 
-            fake.Execute2(tst => Assert.Equal(12, tst.Sum(1, 2)));
+            fake.Execute(tst => Assert.Equal(9, tst.Sum(1, 2)));
 
             fake = new Fake<TestClass>();
             fake.Replace(t => t.CodeBranch(0, 0))
@@ -77,7 +69,7 @@ namespace AutoFake.IntegrationTests
                 .Returns(() => 6);
             fake.Rewrite(f => f.Sum(0, 1));
 
-            fake.Execute2(tst => Assert.Equal(6, tst.Sum(0, 1)));
+            fake.Execute(tst => Assert.Equal(6, tst.Sum(0, 1)));
         }
 
         private class TestClass
@@ -92,16 +84,25 @@ namespace AutoFake.IntegrationTests
 
             public int CodeBranch(int a, int b) => a + b;
 
+            //public int Sum(int a, int b)
+            //{
+            //    if (a > 0)
+            //    {
+            //        return CodeBranch(a, b) + CodeBranch(a, b);
+            //    }
+            //    else
+            //    {
+            //        return CodeBranch(0, 0);
+            //    }
+            //}
+
             public int Sum(int a, int b)
             {
                 if (a > 0)
                 {
-                    return CodeBranch(a, b) + CodeBranch(a, b);
+                    return CodeBranch(a, b) + 3;
                 }
-                else
-                {
-                    return CodeBranch(0, 0);
-                }
+                return CodeBranch(0, 0);
             }
         }
     }

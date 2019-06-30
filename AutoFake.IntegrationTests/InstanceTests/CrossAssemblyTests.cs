@@ -9,40 +9,40 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void ClassCtorTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
             fake.Rewrite(f => f.GetClassCtorResult());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.GetClassCtorResult().Prop));
+            fake.Execute(tst => Assert.Equal(7, tst.GetClassCtorResult().Prop));
         }
 
         [Fact]
         public void ClassCtorWithArgsTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
             fake.Rewrite(f => f.GetClassCtorWithArgsResult());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.GetClassCtorWithArgsResult().Prop));
+            fake.Execute(tst => Assert.Equal(7, tst.GetClassCtorWithArgsResult().Prop));
         }
 
         [Fact]
         public void ClassFieldTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
             fake.Rewrite(f => f.GetClassField());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.GetClassField().Prop));
+            fake.Execute(tst => Assert.Equal(7, tst.GetClassField().Prop));
         }
 
         [Fact]
         public void StructFieldTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(DateTime.Now);
+            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
             fake.Rewrite(f => f.GetStructField());
 
-            fake.Execute2(tst => Assert.Equal(7, tst.GetStructField().Prop));
+            fake.Execute(tst => Assert.Equal(7, tst.GetStructField().Prop));
         }
 
         public class HelperClass

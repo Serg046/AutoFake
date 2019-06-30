@@ -13,7 +13,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Rewrite(m => m.FirstMethod());
             fake.Rewrite(m => m.SecondMethod());
 
-            fake.Execute2(tst =>
+            fake.Execute(tst =>
             {
                 Assert.Equal(1, tst.FirstMethod());
                 Assert.Equal(1, tst.SecondMethod());
@@ -32,7 +32,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(m => m.GetValue()).Returns(() => 2);
             fake.Rewrite(m => m.SecondMethod());
 
-            fake.Execute2(tst =>
+            fake.Execute(tst =>
             {
                 Assert.Equal(1, tst.FirstMethod());
                 Assert.Equal(2, tst.SecondMethod());
@@ -51,7 +51,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             fake.Replace(m => m.GetValue()).Returns(() => 2);
             fake.Rewrite(m => m.FirstMethod(Arg.DefaultOf<int>()));
 
-            fake.Execute2(tst =>
+            fake.Execute(tst =>
             {
                 Assert.Equal(1, tst.FirstMethod());
                 Assert.Equal(3, tst.FirstMethod(1));

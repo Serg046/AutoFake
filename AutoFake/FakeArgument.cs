@@ -9,6 +9,8 @@
             _checker = checker;
         }
 
-        public bool Check(dynamic argument) => _checker.Check(argument);
+        public bool Check(object argument) => _checker.Check(argument);
+
+        public override string ToString() => _checker.ToString();
     }
 }
