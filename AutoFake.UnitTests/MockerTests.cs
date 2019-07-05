@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Expression;
 using AutoFake.Setup;
@@ -50,11 +51,11 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void SaveMethodCall_MethodWithTwoArgs_ReturnTwoVariables()
+        public void SaveMethodCall_MethodWithTwoArgs_ReturnsTwoVariables()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[8];
+            var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
             var fields = mocker.SaveMethodCall(proc, cmd);
@@ -67,7 +68,7 @@ namespace AutoFake.UnitTests
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[8];
+            var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
             mocker.RemoveMethodArguments(proc, cmd);
@@ -84,7 +85,7 @@ namespace AutoFake.UnitTests
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[8];
+            var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
             mocker.RemoveStackArgument(proc, cmd);
@@ -104,7 +105,7 @@ namespace AutoFake.UnitTests
 
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[8];
+            var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
             mocker.PushMethodArguments(proc, cmd, variables);
@@ -129,7 +130,7 @@ namespace AutoFake.UnitTests
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[8];
+            var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
             mocker.RemoveInstruction(proc, cmd);
@@ -140,16 +141,15 @@ namespace AutoFake.UnitTests
         [Fact]
         public void ReplaceToRetValueField_ValidInput_InstructionReplaced()
         {
-            const int methodIndex = 8;
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[methodIndex];
+            var cmd = FindMethodCall(proc.Body, out var cmdIndex);
             var mocker = GetMocker(GetMock());
             mocker.GenerateRetValueField();
 
             mocker.ReplaceToRetValueField(proc, cmd);
 
-            var replacedCmd = proc.Body.Instructions[methodIndex];
+            var replacedCmd = proc.Body.Instructions[cmdIndex];
 
             Assert.DoesNotContain(proc.Body.Instructions, i => i.Equals(cmd));
             Assert.Equal(OpCodes.Ldsfld, replacedCmd.OpCode);
@@ -175,7 +175,7 @@ namespace AutoFake.UnitTests
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
-            var cmd = proc.Body.Instructions[8];
+            var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
             mocker.GenerateCallbackField();
 
@@ -198,6 +198,22 @@ namespace AutoFake.UnitTests
 
         private ISourceMember GetSourceMember(string name) => GetSourceMember<TestType>(name);
         private ISourceMember GetSourceMember<T>(string name) => new SourceMethod(typeof(T).GetMethod(name));
+
+        private Instruction FindMethodCall(MethodBody method) => FindMethodCall(method, out var _);
+        private Instruction FindMethodCall(MethodBody method, out int index)
+        {
+            for (var i = 0; i < method.Instructions.Count; i++)
+            {
+                var instruction = method.Instructions[i];
+                if (instruction.OpCode == OpCodes.Call && instruction.Operand is MethodDefinition m &&
+                    m.Name == nameof(TestType.SomeMethodWithArguments))
+                {
+                    index = i;
+                    return instruction;
+                }
+            }
+            throw new InvalidOperationException("The method is not found");
+        }
 
         private class TestType
         {
