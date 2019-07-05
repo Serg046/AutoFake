@@ -12,14 +12,18 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Local))
+            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
                 .CheckArguments()
                 .Returns(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
-            Assert.Throws<VerifiableException>(() => fake.Execute(tst => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Local)));
-            Assert.Throws<VerifiableException>(() => fake.Execute(tst => tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc)));
-            fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Local)));
+            fake.Execute(tst =>
+            {
+                var incorrectZone = TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
+                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
+                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
+                Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
+            });
         }
 
         [Fact]
