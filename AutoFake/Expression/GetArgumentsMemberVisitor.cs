@@ -34,14 +34,13 @@ namespace AutoFake.Expression
         public void Visit(FieldInfo fieldInfo) => Arguments = new List<FakeArgument>();
 
         public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
-            => Arguments = newExpression.Arguments.Select(expr => GetArgument(() => expr)).ToList();
+            => Arguments = newExpression.Arguments.Select(TryGetArgument).ToList();
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
-            => Arguments = methodExpression.Arguments.Select(expr => GetArgument(() => expr)).ToList();
+            => Arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
-        private FakeArgument GetArgument(Func<LinqExpression> expressionFunc)
+        private FakeArgument TryGetArgument(LinqExpression expression)
         {
-            var expression = expressionFunc();
             try
             {
                 return GetArgument((dynamic)expression);
@@ -55,7 +54,7 @@ namespace AutoFake.Expression
 
         private FakeArgument GetArgument(ConstantExpression expression) => CreateFakeArgument(expression.Value);
 
-        private FakeArgument GetArgument(UnaryExpression expression) => GetArgument(() => expression.Operand);
+        private FakeArgument GetArgument(UnaryExpression expression) => TryGetArgument(expression.Operand);
 
         private FakeArgument GetArgument(LinqExpression expression)
         {
@@ -65,7 +64,7 @@ namespace AutoFake.Expression
             return CreateFakeArgument(arg);
         }
 
-        private FakeArgument CreateFakeArgument(dynamic arg)
+        private FakeArgument CreateFakeArgument(object arg)
         {
             var checker = new EqualityArgumentChecker(arg);
             return new FakeArgument(checker);

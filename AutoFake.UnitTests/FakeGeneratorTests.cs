@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using AutoFake.Setup;
 using Mono.Cecil.Cil;
 using Moq;
@@ -35,33 +36,12 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Generate_NoInvocations_ProcessIsNotCalled()
         {
-            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.Now)).GetMethod, new List<FakeArgument>(),
+            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.Now)).GetMethod,
                 new ReplaceableMock.Parameters());
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
 
             //Assert
             _fakeGenerator.Generate(new[] {mock}, testMethod);
-        }
-
-        [Fact]
-        public void Generate_MethodWithOneInvocation_ProcessOnce()
-        {
-            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.Now)).GetMethod, new List<FakeArgument>(),
-                new ReplaceableMock.Parameters());
-            var testMethod = GetMethodInfo(nameof(TestClass.GetDateNow));
-
-            Assert.Throws<InjectInvocationException>(() => _fakeGenerator.Generate(new[] {mock}, testMethod));
-        }
-
-        [Fact]
-        public void Generate_ValidInput_AnalyzesOnlyClientCode()
-        {
-            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.UtcNow)).GetMethod, new List<FakeArgument>(),
-                new ReplaceableMock.Parameters());
-            var testMethod = GetMethodInfo(nameof(TestClass.GetDateNow));
-
-            //Assert
-            _fakeGenerator.Generate(new[] { mock }, testMethod);
         }
 
         public static IEnumerable<object[]> GetCallbackFieldTestData()
@@ -88,8 +68,8 @@ namespace AutoFake.UnitTests
 
         private class ReplaceableMockFake : ReplaceableMock
         {
-            public ReplaceableMockFake(MethodInfo method, List<FakeArgument> setupArguments, Parameters parameters)
-                : base(new SourceMethod(method), setupArguments, parameters)
+            public ReplaceableMockFake(MethodInfo method, Parameters parameters)
+                : base(Moq.Mock.Of<IInvocationExpression>(m => m.GetSourceMember() == new SourceMethod(method)), parameters)
             {
             }
 

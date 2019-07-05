@@ -9,14 +9,15 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TestClass.GetValue())
-                .Returns(1);
-
+            fake.Replace(() => TestClass.GetValue()).Returns(() => 1);
             fake.Rewrite(() => TestClass.FirstMethod());
             fake.Rewrite(() => TestClass.SecondMethod());
 
-            Assert.Equal(1, fake.Execute(() => TestClass.FirstMethod()));
-            Assert.Equal(1, fake.Execute(() => TestClass.SecondMethod()));
+            fake.Execute(tst =>
+            {
+                Assert.Equal(1, tst.Execute(() => TestClass.FirstMethod()));
+                Assert.Equal(1, tst.Execute(() => TestClass.SecondMethod()));
+            });
         }
 
         [Fact]
@@ -24,17 +25,18 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TestClass.GetValue())
-                .Returns(1);
+            fake.Replace(() => TestClass.GetValue()).Returns(() => 1);
             fake.Rewrite(() => TestClass.FirstMethod());
 
             fake.Reset();
-            fake.Replace(() => TestClass.GetValue())
-                .Returns(2);
+            fake.Replace(() => TestClass.GetValue()).Returns(() => 2);
             fake.Rewrite(() => TestClass.SecondMethod());
 
-            Assert.Equal(1, fake.Execute(() => TestClass.FirstMethod()));
-            Assert.Equal(2, fake.Execute(() => TestClass.SecondMethod()));
+            fake.Execute(tst =>
+            {
+                Assert.Equal(1, tst.Execute(() => TestClass.FirstMethod()));
+                Assert.Equal(2, tst.Execute(() => TestClass.SecondMethod()));
+            });
         }
 
         [Fact]
@@ -42,17 +44,18 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TestClass.GetValue())
-                .Returns(1);
+            fake.Replace(() => TestClass.GetValue()).Returns(() => 1);
             fake.Rewrite(() => TestClass.FirstMethod());
 
             fake.Reset();
-            fake.Replace(() => TestClass.GetValue())
-                .Returns(2);
+            fake.Replace(() => TestClass.GetValue()).Returns(() => 2);
             fake.Rewrite(() => TestClass.FirstMethod(Arg.DefaultOf<int>()));
 
-            Assert.Equal(1, fake.Execute(() => TestClass.FirstMethod()));
-            Assert.Equal(3, fake.Execute(() => TestClass.FirstMethod(1)));
+            fake.Execute(tst =>
+            {
+                Assert.Equal(1, tst.Execute(() => TestClass.FirstMethod()));
+                Assert.Equal(3, tst.Execute(() => TestClass.FirstMethod(1)));
+            });
         }
 
         private static class TestClass
