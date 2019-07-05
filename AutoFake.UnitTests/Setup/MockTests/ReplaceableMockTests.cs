@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using AutoFake.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -14,7 +15,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
 {
     public class ReplaceableMockTests
     {
-        private const int RET_VALUE_FIELD_VALUE = 55;
         private static readonly Action CALLBACK_FIELD_VALUE = () => { };
 
         private readonly Mock<IMocker> _mocker;
@@ -38,33 +38,12 @@ namespace AutoFake.UnitTests.Setup.MockTests
             _generatedObject.Build();
         }
 
-        private ISourceMember GetSourceMember(string name)
-           => new SourceMethod(typeof(TestClass).GetMethod(name));
-
-        private ReplaceableMock GetReplaceableMock()
-            => GetReplaceableMock(new List<FakeArgument>() { new FakeArgument(new EqualityArgumentChecker(1)) });
-
-        private ReplaceableMock GetReplaceableMock(string methodName)
-            => GetReplaceableMock(methodName, new List<FakeArgument>() { new FakeArgument(new EqualityArgumentChecker(1)) });
-
-        private ReplaceableMock GetReplaceableMock(List<FakeArgument> arguments)
-            => GetReplaceableMock(nameof(TestClass.TestMethod), arguments);
-
-        private ReplaceableMock GetReplaceableMock(string methodName, List<FakeArgument> arguments)
-            => new ReplaceableMock(GetSourceMember(methodName), arguments, _parameters);
-
-        private FieldDefinition CreateFieldDefinition(string fieldName) => new FieldDefinition(fieldName, Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
-
-        private FakeArgument CreateArgument(int arg) => new FakeArgument(new EqualityArgumentChecker(arg));
-        
-        private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceableMock, null, "suffix");
-
         [Theory]
         [InlineData(false, false, false)]
         [InlineData(false, true, true)]
         [InlineData(true, false, true)]
         [InlineData(true, true, true)]
-        public void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_CallsCounterInjected(bool needCheckArguments,
+        public void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_SaveMethodCall(bool needCheckArguments,
             bool expectedCallsCountFunc, bool mustBeInjected)
         {
             _parameters.NeedCheckArguments = needCheckArguments;
@@ -75,66 +54,22 @@ namespace AutoFake.UnitTests.Setup.MockTests
             _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
 
             _mocker.Verify(m => m.SaveMethodCall(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
-            Assert.Equal(mustBeInjected ? 1 : 0, _mockedMemberInfo.SourceCodeCallsCount);
         }
 
         [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, true)]
-        public void Inject_Callback_CallbackInjected(bool isCallbackSet, bool mustBeInjected)
-        {
-            if (isCallbackSet)
-                _parameters.Callback = () => { };
-            var ilProcessor = GetILProcessor();
-            var instruction = GetInstruction();
-
-            _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
-
-            _mocker.Verify(m => m.InjectCallback(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
-        }
-
-        [Theory]
-        [InlineData(false, false, false)]
+        [InlineData(false, false, true)]
         [InlineData(false, true, false)]
         [InlineData(true, false, false)]
-        [InlineData(true, true, true)]
-        public void Inject_ArgsAndAndNeedCheckArguments_ArgumentsSaved(bool hasArgs, bool needCheckArguments, bool mustBeInjected)
-        {
-            var ilProcessor = GetILProcessor();
-            var instruction = GetInstruction();
-            _parameters.NeedCheckArguments = needCheckArguments;
-            var runtimeArgs = new List<FieldDefinition>();
-            _mocker.Setup(m => m.PopMethodArguments(ilProcessor, instruction)).Returns(runtimeArgs);
-            var mock = hasArgs ? GetReplaceableMock() : GetReplaceableMock(new List<FakeArgument>());
-
-            mock.Inject(_mocker.Object, ilProcessor, instruction);
-
-            if (mustBeInjected)
-            {
-                _mocker.Verify(m => m.PopMethodArguments(ilProcessor, instruction), Times.Once());
-                Assert.Equal(1, _mockedMemberInfo.ArgumentsCount);
-                Assert.Equal(runtimeArgs, _mockedMemberInfo.GetArguments(0));
-            }
-            else
-            {
-                _mocker.Verify(m => m.PopMethodArguments(ilProcessor, instruction), Times.Never);
-            }
-        }
-
-        [Theory]
-        [InlineData(false, false, false)]
-        [InlineData(false, true, false)]
-        [InlineData(true, false, true)]
         [InlineData(true, true, false)]
-        public void Inject_ArgsAndAndNotNeedCheckArguments_ArgumentsRemoved(bool hasArgs, bool needCheckArguments,
-            bool mustBeInjected)
+        public void Inject_ArgsAndNotNeedCheckArguments_ArgumentsRemoved(bool needCheckArguments,
+            bool expectedCallsCountFunc, bool mustBeInjected)
         {
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
             _parameters.NeedCheckArguments = needCheckArguments;
-            var mock = hasArgs ? GetReplaceableMock() : GetReplaceableMock(new List<FakeArgument>());
+            if (expectedCallsCountFunc) _parameters.ExpectedCallsCountFunc = i => i == 0;
 
-            mock.Inject(_mocker.Object, ilProcessor, instruction);
+            _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
 
             _mocker.Verify(m => m.RemoveMethodArguments(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
         }
@@ -163,8 +98,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         [InlineData(false)]
         public void Inject_IsReturnObjectSet_ReplaceToRetValueFieldInjected(bool isReturnObjectSet)
         {
-            if (isReturnObjectSet)
-                _parameters.ReturnObject = null;
+            if (isReturnObjectSet) _parameters.ReturnObject = new MethodDescriptor("testType", "testName");
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
 
@@ -178,8 +112,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         [InlineData(false)]
         public void Inject_IsReturnObjectNotSet_InstructionRemoved(bool isReturnObjectSet)
         {
-            if (isReturnObjectSet)
-                _parameters.ReturnObject = null;
+            if (isReturnObjectSet) _parameters.ReturnObject = new MethodDescriptor("testType", "testName");
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
 
@@ -189,29 +122,9 @@ namespace AutoFake.UnitTests.Setup.MockTests
         }
 
         [Fact]
-        public void Initialize_ValidData_Success()
-        {
-            _parameters.ReturnObject = RET_VALUE_FIELD_VALUE;
-            _parameters.Callback = CALLBACK_FIELD_VALUE;
-            var mockedMemberInfo = GetMockedMemberInfo();
-            mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField));
-            mockedMemberInfo.CallbackField = CreateFieldDefinition(nameof(TestClass.CallbackField));
-
-            _replaceableMock.Initialize(mockedMemberInfo, _generatedObject);
-
-            var retValueField = _generatedObject.Type
-                .GetField(nameof(TestClass.RetValueField), BindingFlags.NonPublic | BindingFlags.Static);
-            var callbackFieldField = _generatedObject.Type
-                .GetField(nameof(TestClass.CallbackField), BindingFlags.NonPublic | BindingFlags.Static);
-
-            Assert.Equal(CALLBACK_FIELD_VALUE, callbackFieldField.GetValue(_generatedObject.Instance));
-            Assert.Equal(RET_VALUE_FIELD_VALUE, retValueField.GetValue(_generatedObject.Instance));
-        }
-
-        [Fact]
         public void Initialize_NoRetValueField_Fails()
         {
-            _parameters.ReturnObject = RET_VALUE_FIELD_VALUE;
+            _parameters.ReturnObject = new MethodDescriptor(typeof(TestClass).FullName, nameof(TestClass.GetValue));
             var mockedMemberInfo = GetMockedMemberInfo();
             mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField) + "salt");
 
@@ -221,7 +134,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         [Fact]
         public void Initialize_RetValue_Success()
         {
-            _parameters.ReturnObject = RET_VALUE_FIELD_VALUE;
+            _parameters.ReturnObject = new MethodDescriptor(typeof(TestClass).FullName, nameof(TestClass.GetValue));
             var mockedMemberInfo = GetMockedMemberInfo();
             mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField));
 
@@ -229,48 +142,24 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
             var retValueField = _generatedObject.Type
                 .GetField(nameof(TestClass.RetValueField), BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.Equal(RET_VALUE_FIELD_VALUE, retValueField.GetValue(_generatedObject.Instance));
-        }
-
-        [Fact]
-        public void Initialize_NoCallbackField_Fails()
-        {
-            _parameters.Callback = CALLBACK_FIELD_VALUE;
-            var mockedMemberInfo = GetMockedMemberInfo();
-            mockedMemberInfo.CallbackField = CreateFieldDefinition(nameof(TestClass.CallbackField) + "salt");
-
-            Assert.Throws<FakeGeneretingException>(() => _replaceableMock.Initialize(mockedMemberInfo, _generatedObject));
-        }
-
-        [Fact]
-        public void Initialize_Callback_Success()
-        {
-            _parameters.Callback = CALLBACK_FIELD_VALUE;
-            var mockedMemberInfo = GetMockedMemberInfo();
-            mockedMemberInfo.CallbackField = CreateFieldDefinition(nameof(TestClass.CallbackField));
-
-            _replaceableMock.Initialize(mockedMemberInfo, _generatedObject);
-
-            var callbackFieldField = _generatedObject.Type
-                .GetField(nameof(TestClass.CallbackField), BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.Equal(CALLBACK_FIELD_VALUE, callbackFieldField.GetValue(_generatedObject.Instance));
+            Assert.Equal(TestClass.VALUE, retValueField.GetValue(_generatedObject.Instance));
         }
 
         [Theory]
-        [InlineData(false,false,false)]
-        [InlineData(false,true,true)]
-        [InlineData(true,false,true)]
-        [InlineData(true,true,true)]
-        public void PrepareForInjecting_NeedCheckArgumentsOrExpectedCallsCount_CallsCounterInjected(
+        [InlineData(false, false, false)]
+        [InlineData(false, true, true)]
+        [InlineData(true, false, true)]
+        [InlineData(true, true, true)]
+        public void PrepareForInjecting_NeedCheckArgumentsOrExpectedCallsCount_GenerateSetupBodyFieldInjected(
             bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected)
         {
             _parameters.NeedCheckArguments = needCheckArguments;
-            _parameters.ExpectedCallsCountFunc = expectedCallsCount ? i => i == 1 : (Func<int, bool>)null;
+            _parameters.ExpectedCallsCountFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
             var mocker = new Mock<IMocker>();
 
             _replaceableMock.PrepareForInjecting(mocker.Object);
 
-            mocker.Verify(m => m.GenerateCallsCounter(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
+            mocker.Verify(m => m.GenerateSetupBodyField(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
         }
 
         [Theory]
@@ -278,8 +167,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         [InlineData(true, true)]
         public void PrepareForInjecting_ReturnObjectIsSet_RetValueFieldInjected(bool isReturnObjectSet, bool shouldBeInjected)
         {
-            if (isReturnObjectSet)
-                _parameters.ReturnObject = null;
+            if (isReturnObjectSet) _parameters.ReturnObject = new MethodDescriptor("testType", "testName");
             var mocker = new Mock<IMocker>();
 
             _replaceableMock.PrepareForInjecting(mocker.Object);
@@ -311,6 +199,20 @@ namespace AutoFake.UnitTests.Setup.MockTests
             return Instruction.Create(opCode, typeInfo.Module.Import(method));
         }
 
+        private ISourceMember GetSourceMember(string name)
+            => new SourceMethod(typeof(TestClass).GetMethod(name));
+
+        private ReplaceableMock GetReplaceableMock() => GetReplaceableMock(nameof(TestClass.TestMethod));
+
+        private ReplaceableMock GetReplaceableMock(string methodName)
+            => new ReplaceableMock(Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember(methodName)), _parameters);
+
+        private FieldDefinition CreateFieldDefinition(string fieldName) => new FieldDefinition(fieldName, Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
+
+        private FakeArgument CreateArgument(int arg) => new FakeArgument(new EqualityArgumentChecker(arg));
+
+        private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceableMock, null, "suffix");
+
         private class TestClass
         {
             internal static object RetValueField;
@@ -324,6 +226,10 @@ namespace AutoFake.UnitTests.Setup.MockTests
             public static void StaticTestMethod()
             {
             }
+
+            public const int VALUE = 55;
+
+            internal int GetValue() => VALUE;
         }
     }
 }

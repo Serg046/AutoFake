@@ -79,26 +79,6 @@ namespace AutoFake.UnitTests
                 mustBeCalled ? Times.AtLeastOnce() : Times.Never());
         }
 
-        [Fact]
-        public void ApplyMock_IsFakeAssemblyCtor_ConvertedToSourceAssembly()
-        {
-            var convertedCtor = CreateMethod(".ctor");
-            var ctor = CreateMethod(".ctor");
-            ctor.IsSpecialName = ctor.IsRuntimeSpecialName = true;
-            var typeInfo = new Mock<ITypeInfo>();
-            typeInfo.Setup(t => t.Module).Returns(ModuleDefinition.CreateModule("TestModule", ModuleKind.Dll));
-            typeInfo.Setup(t => t.ConvertToSourceAssembly(ctor)).Returns(convertedCtor);
-            ctor.DeclaringType.Scope = typeInfo.Object.Module;
-            _mocker.Setup(m => m.TypeInfo).Returns(typeInfo.Object);
-            var ctorInstruction = Instruction.Create(OpCodes.Call, ctor);
-            _method.Body.Instructions.Add(ctorInstruction);
-
-            _fakeMethod.ApplyMock(_mock.Object);
-
-            Assert.NotEqual(ctor, ctorInstruction.Operand);
-            Assert.Equal(convertedCtor, ctorInstruction.Operand);
-        }
-
         private MethodDefinition CreateMethod(string name)
         {
             return new MethodDefinition(name, MethodAttributes.Public, new TypeReference("TestNamespace", "TestReturnType", null, null))
