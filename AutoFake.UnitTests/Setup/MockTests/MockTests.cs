@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Expression;
 using AutoFake.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -11,24 +12,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
 {
     public class MockTests
     {
-        [Fact]
-        public void IsMethodInstruction_IncorrectInstruction_False()
-        {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-
-            Assert.False(mock.IsMethodInstruction(Instruction.Create(OpCodes.Nop)));
-        }
-
-        [Fact]
-        public void IsMethodInstruction_CorrectInstruction_True()
-        {
-            var method = GetMethod(nameof(TestClass.TestMethod));
-            var mock = new MockFake(method);
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-
-            Assert.True(mock.IsMethodInstruction(Instruction.Create(OpCodes.Call, typeInfo.Module.Import(method))));
-        }
-
         [Fact]
         public void IsAsyncMethod_SyncMethod_False()
         {
@@ -57,9 +40,13 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
         private class MockFake : Mock
         {
-            public MockFake(MethodInfo method) : base(new SourceMethod(method), null)
+            public MockFake(MethodInfo method) : base(Moq.Mock.Of<IInvocationExpression>(
+                m => m.GetSourceMember() == new SourceMethod(method)))
             {
             }
+
+            public override bool CheckArguments { get; }
+            public override Func<byte, bool> ExpectedCalls { get; }
 
             public override void PrepareForInjecting(IMocker mocker)
             {
@@ -72,11 +59,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
             }
 
             public override void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public override void Verify(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
             {
                 throw new System.NotImplementedException();
             }

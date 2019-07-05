@@ -1,35 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal abstract class Mock
+    internal abstract class Mock : IMock
     {
         private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
 
-        protected Mock(ISourceMember sourceMember, IList<FakeArgument> setupArguments)
+        private readonly IInvocationExpression _invocationExpression;
+
+        protected Mock(IInvocationExpression invocationExpression)
         {
-            SourceMember = sourceMember;
-            SetupArguments = setupArguments;
+            _invocationExpression = invocationExpression;
+            SourceMember = invocationExpression.GetSourceMember();
         }
 
+        public abstract bool CheckArguments { get; }
+        public abstract Func<byte, bool> ExpectedCalls { get; }
+
         public ISourceMember SourceMember { get; }
-        public IList<FakeArgument> SetupArguments { get; }
 
         public abstract void PrepareForInjecting(IMocker mocker);
         public abstract void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);
-        public abstract void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject);
-        public abstract void Verify(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject);
 
-        public bool IsMethodInstruction(Instruction instruction)
-            => instruction.OpCode.OperandType == OperandType.InlineMethod;
+        public virtual void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
+        {
+            if (mockedMemberInfo.SetupBodyField != null)
+            {
+                var field = GetField(generatedObject, mockedMemberInfo.SetupBodyField.Name);
+                field.SetValue(null, _invocationExpression);
+            }
+        }
 
-        public bool IsInstalledInstruction(TypeInfo typeInfo, Instruction instruction)
+        public bool IsInstalledInstruction(ITypeInfo typeInfo, Instruction instruction)
             => SourceMember.IsCorrectInstruction(typeInfo, instruction);
 
         public bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
@@ -49,68 +57,7 @@ namespace AutoFake.Setup
             return false;
         }
 
-        protected void Verify(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject,
-            bool needCheckArguments, Func<int, bool> expectedCallsCountFunc)
-        {
-            if (needCheckArguments)
-            {
-                var ids = GetActualCallIds(mockedMemberInfo.ActualCallsField.Name, generatedObject);
-                VerifyMethodArguments(mockedMemberInfo, generatedObject, ids);
-
-                if (expectedCallsCountFunc != null)
-                    VerifyExpectedCallsCount(expectedCallsCountFunc, ids.Count);
-            }
-            else if (expectedCallsCountFunc != null)
-            {
-                var actualCallsCount = GetActualCallIds(mockedMemberInfo.ActualCallsField.Name, generatedObject).Count;
-                VerifyExpectedCallsCount(expectedCallsCountFunc, actualCallsCount);
-            }
-        }
-
         protected FieldInfo GetField(GeneratedObject generatedObject, string fieldName)
             => generatedObject.Type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
-
-        private List<int> GetActualCallIds(string actualCallsFieldName, GeneratedObject generatedObject)
-        {
-            var field = GetField(generatedObject, actualCallsFieldName);
-            if (field == null)
-                throw new FakeGeneretingException($"'{actualCallsFieldName}' is not found in the generated object");
-            return (List<int>)field.GetValue(null);
-        }
-
-        private void VerifyMethodArguments(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject, IEnumerable<int> actualCallIds)
-        {
-            foreach (var index in actualCallIds)
-            {
-                var argumentFields = mockedMemberInfo.GetArguments(index);
-
-                if (argumentFields.Count != mockedMemberInfo.Mock.SetupArguments.Count)
-                {
-                    throw new FakeGeneretingException(
-                        $"Installed and actual arguments count is diffrent. Installed: {mockedMemberInfo.Mock.SetupArguments.Count}, Actual: {argumentFields.Count}.");
-                }
-
-                for (var i = 0; i < argumentFields.Count; i++)
-                {
-                    var argumentChecker = mockedMemberInfo.Mock.SetupArguments[i];
-                    var field = GetField(generatedObject, argumentFields[i].Name);
-                    if (field == null)
-                        throw new FakeGeneretingException($"'{argumentFields[i].Name}' is not found in the generated object");
-
-                    var realArg = field.GetValue(null);
-                    if (!argumentChecker.Check(realArg))
-                        throw new VerifiableException(
-                            $"Setup and real arguments are different. Runtime argument - {realArg}.");
-                }
-            }
-        }
-
-        private void VerifyExpectedCallsCount(Func<int, bool> expectedCallsCountFunc, int actualCallsCount)
-        {
-            if (expectedCallsCountFunc?.Invoke(actualCallsCount) != true)
-            {
-                throw new ExpectedCallsException($"Setup and actual calls count are different. Actual: {actualCallsCount}.");
-            }
-        }
     }
 }

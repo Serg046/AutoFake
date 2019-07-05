@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading.Tasks;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
@@ -20,34 +22,26 @@ namespace AutoFake
         public ReplaceableMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
             => ReplaceImpl(voidInstanceSetupFunc);
 
-        //---------------------------------------------------------------------------------------------------------
-
         public VerifiableMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
 
         public VerifiableMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
-        //---------------------------------------------------------------------------------------------------------
-
-        public Executor<TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc)
+        public void Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc)
             => RewriteImpl<TReturn>(instanceRewriteFunc);
 
-        public Executor Rewrite(Expression<Action<T>> voidInstanceRewriteFunc)
+        public void Rewrite(Expression<Action<T>> voidInstanceRewriteFunc)
             => RewriteImpl(voidInstanceRewriteFunc);
 
-        //---------------------------------------------------------------------------------------------------------
+        public void Execute(Action<T> action) => Execute(action.Method, gen => gen.Instance);
 
-        public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> instanceExecuteFunc)
-            => ExecuteImpl<TReturn>(instanceExecuteFunc);
+        public void Execute(Action<T, IList<object>> action) => Execute(action.Method, gen => new[] { gen.Instance, gen.Parameters });
 
-        public void Execute(Expression<Action<T>> voidInstanceExecuteFunc)
-            => ExecuteImpl(voidInstanceExecuteFunc);
+        public Task ExecuteAsync(Func<T, Task> action) => (Task)Execute(action.Method, gen => gen.Instance);
 
-        //---------------------------------------------------------------------------------------------------------
+        public Task ExecuteAsync(Func<T, IList<object>, Task> action) => (Task)Execute(action.Method, gen => new[] { gen.Instance, gen.Parameters});
 
-        public void SetValue<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc, TReturn value)
-            => SetValueImpl(instanceSetupFunc, value);
     }
 
     public class Fake
@@ -76,15 +70,11 @@ namespace AutoFake
 
         internal ICollection<Mock> Mocks { get; }
 
-        //---------------------------------------------------------------------------------------------------------
-
         public void SaveFakeAssembly(string fileName)
         {
             Guard.NotNull(fileName, nameof(fileName));
             _fakeGenerator.Save(fileName);
         }
-
-        //---------------------------------------------------------------------------------------------------------
 
         protected ReplaceableMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
         {
@@ -112,8 +102,6 @@ namespace AutoFake
         public ReplaceableMockInstaller Replace(Expression<Action> voidStaticSetupFunc)
             => ReplaceImpl(voidStaticSetupFunc);
 
-        //---------------------------------------------------------------------------------------------------------
-
         protected VerifiableMockInstaller VerifyImpl(LambdaExpression expression)
         {
             Guard.NotNull(expression, nameof(expression));
@@ -133,9 +121,7 @@ namespace AutoFake
         public VerifiableMockInstaller Verify(Expression<Action> voidStaticSetupFunc)
             => VerifyImpl(voidStaticSetupFunc);
 
-        //---------------------------------------------------------------------------------------------------------
-
-        protected Executor RewriteImpl(LambdaExpression expression)
+        protected void RewriteImpl(LambdaExpression expression)
         {
             Guard.NotNull(expression, nameof(expression));
 
@@ -143,10 +129,9 @@ namespace AutoFake
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
             _fakeGenerator.Generate(Mocks, visitor.Method);
-            return new Executor(_generatedObject, invocationExpression);
         }
 
-        protected Executor<T> RewriteImpl<T>(LambdaExpression expression)
+        protected void RewriteImpl<T>(LambdaExpression expression)
         {
             Guard.NotNull(expression, nameof(expression));
 
@@ -154,83 +139,50 @@ namespace AutoFake
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
             _fakeGenerator.Generate(Mocks, visitor.Method);
-            return new Executor<T>(_generatedObject, invocationExpression);
         }
 
-        public Executor<TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc)
+        public void Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc)
             => RewriteImpl<TReturn>(instanceRewriteFunc);
 
-        public Executor Rewrite<TInput>(Expression<Action<TInput>> voidInstanceRewriteFunc)
+        public void Rewrite<TInput>(Expression<Action<TInput>> voidInstanceRewriteFunc)
             => RewriteImpl(voidInstanceRewriteFunc);
 
-        public Executor<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> staticRewriteFunc)
+        public void Rewrite<TReturn>(Expression<Func<TReturn>> staticRewriteFunc)
             => RewriteImpl<TReturn>(staticRewriteFunc);
 
-        public Executor Rewrite(Expression<Action> voidStaticRewriteFunc)
+        public void Rewrite(Expression<Action> voidStaticRewriteFunc)
             => RewriteImpl(voidStaticRewriteFunc);
 
-        //---------------------------------------------------------------------------------------------------------
-
-        protected T ExecuteImpl<T>(LambdaExpression expression)
-        {
-            Guard.NotNull(expression, nameof(expression));
-
-            var invocationExpression = new InvocationExpression(expression);
-            var executor = new Executor<T>(_generatedObject, invocationExpression);
-            return executor.Execute();
-        }
-
-        protected void ExecuteImpl(LambdaExpression expression)
-        {
-            Guard.NotNull(expression, nameof(expression));
-
-            var invocationExpression = new InvocationExpression(expression);
-            var executor = new Executor(_generatedObject, invocationExpression);
-            executor.Execute();
-        }
-
-        public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceExecuteFunc)
-            => ExecuteImpl<TReturn>(instanceExecuteFunc);
-
-        public void Execute<TInput>(Expression<Action<TInput>> voidInstanceExecuteFunc)
-            => ExecuteImpl(voidInstanceExecuteFunc);
-
-        public TReturn Execute<TReturn>(Expression<Func<TReturn>> staticExecuteFunc)
-            => ExecuteImpl<TReturn>(staticExecuteFunc);
-
-        public void Execute(Expression<Action> voidStaticExecuteFunc)
-            => ExecuteImpl(voidStaticExecuteFunc);
-
-        public void Execute()
-        {
-            if (_generatedObject.IsBuilt)
-                throw new InvalidOperationException("Cannot execute contructor because the instance is already built.");
-
-            _generatedObject.Build();
-        }
-
-        //---------------------------------------------------------------------------------------------------------
-
-        protected void SetValueImpl<TReturn>(LambdaExpression expression, TReturn value)
-        {
-            Guard.NotNull(expression, nameof(expression));
-
-            if (!_generatedObject.IsBuilt)
-                throw new InvalidOperationException($"Cannot set the value. Instance is not built yet. Please run {nameof(Fake)}::{nameof(Execute)}() method.");
-
-            var invocationExpression = new InvocationExpression(expression);
-            var visitor = new SetValueMemberVisitor(_generatedObject, value);
-            invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, _generatedObject.Type));
-        }
-
-        public void SetValue<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc, TReturn value)
-            => SetValueImpl(instanceSetupFunc, value);
-
-        public void SetValue<TReturn>(Expression<Func<TReturn>> staticSetupFunc, TReturn value)
-            => SetValueImpl(staticSetupFunc, value);
-
-        //---------------------------------------------------------------------------------------------------------
-
         public void Reset() => Mocks.Clear();
+
+        public void Execute(Action<TypeWrapper> action) => Execute(action.Method, gen => new TypeWrapper(gen));
+
+        public void Execute(Action<TypeWrapper, IList<object>> action) => Execute(action.Method, gen => new object[] { new TypeWrapper(gen), gen.Parameters });
+
+        public Task ExecuteAsync(Func<TypeWrapper, Task> action) => (Task)Execute(action.Method, gen => new TypeWrapper(gen));
+
+        public Task ExecuteAsync(Func<TypeWrapper, IList<object>, Task> action)
+            => (Task)Execute(action.Method, gen => new object[] {new TypeWrapper(gen), gen.Parameters});
+
+        internal object Execute(MethodInfo method, Func<GeneratedObject, object> fake) => Execute(method, gen => new[] { fake(gen) });
+
+        internal object Execute(MethodInfo method, Func<GeneratedObject, object[]> fake)
+        {
+            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+
+            var delegateType = _generatedObject.Assembly.GetType(method.DeclaringType.FullName, true);
+            var generatedMethod = delegateType.GetMethod(method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var instance = Activator.CreateInstance(delegateType);
+
+            try
+            {
+                return generatedMethod.Invoke(instance, fake(_generatedObject));
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException != null) throw ex.InnerException;
+                throw;
+            }
+        }
     }
 }

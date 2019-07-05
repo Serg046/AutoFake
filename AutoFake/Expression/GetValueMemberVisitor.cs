@@ -42,12 +42,12 @@ namespace AutoFake.Expression
             var instanceExpr = _instance == null || methodInfo.IsStatic ? null : LinqExpression.Constant(_instance);
             var callExpression = LinqExpression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
             var lambda = LinqExpression.Lambda(callExpression).Compile();
-            RuntimeValue = GetValueSafe(() => lambda.DynamicInvoke());
+            RuntimeValue = GetValue(() => lambda.DynamicInvoke());
         }
 
-        public void Visit(PropertyInfo propertyInfo) => RuntimeValue = GetValueSafe(() => propertyInfo.GetValue(_instance, null));
+        public void Visit(PropertyInfo propertyInfo) => RuntimeValue = GetValue(() => propertyInfo.GetValue(_instance, null));
 
-        private object GetValueSafe(Func<object> func)
+        private object GetValue(Func<object> func)
         {
             try
             {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Mono.Cecil;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,11 +9,11 @@ namespace AutoFake
 {
     internal class FakeGenerator
     {
-        private readonly TypeInfo _typeInfo;
+        private readonly ITypeInfo _typeInfo;
         private readonly MockerFactory _mockerFactory;
         private readonly GeneratedObject _generatedObject;
 
-        public FakeGenerator(TypeInfo typeInfo, MockerFactory mockerFactory, GeneratedObject generatedObject)
+        public FakeGenerator(ITypeInfo typeInfo, MockerFactory mockerFactory, GeneratedObject generatedObject)
         {
             _typeInfo = typeInfo;
             _mockerFactory = mockerFactory;
@@ -47,7 +46,7 @@ namespace AutoFake
                 mock.PrepareForInjecting(mocker);
 
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
-                ReplaceInstructions(method, mock, mocker);
+                new FakeMethod(method, mocker).ApplyMock(mock);
 
                 _generatedObject.MockedMembers.Add(mocker.MemberInfo);
             }
@@ -61,33 +60,5 @@ namespace AutoFake
                 suffixName += installedCount;
             return suffixName;
         }
-
-        private void ReplaceInstructions(MethodDefinition currentMethod, Mock mock, IMocker mocker)
-        {
-            MethodDefinition asyncMethod;
-            if (mock.IsAsyncMethod(currentMethod, out asyncMethod))
-                ReplaceInstructions(asyncMethod, mock, mocker);
-            
-            foreach (var instruction in currentMethod.Body.Instructions.ToList())
-            {
-                if (mock.IsInstalledInstruction(_typeInfo, instruction))
-                {
-                    var proc = currentMethod.Body.GetILProcessor();
-                    mock.Inject(mocker, proc, instruction);
-                }
-                else if (mock.IsMethodInstruction(instruction))
-                {
-                    var method = (MethodReference)instruction.Operand;
-                    
-                    if (IsFakeAssemblyMethod(method))
-                    {
-                        ReplaceInstructions(method.Resolve(), mock, mocker);
-                    }
-                }
-            }
-        }
-
-        private bool IsFakeAssemblyMethod(MethodReference methodReference) 
-            => methodReference.DeclaringType.Scope is ModuleDefinition module && module == _typeInfo.Module;
     }
 }
