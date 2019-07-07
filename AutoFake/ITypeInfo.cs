@@ -10,8 +10,8 @@ namespace AutoFake
         Type SourceType { get; }
         string FullTypeName { get; }
         ModuleDefinition Module { get; }
-        IEnumerable<FieldDefinition> Fields { get; }
-        IEnumerable<MethodDefinition> Methods { get; }
+        ICollection<FieldDefinition> Fields { get; }
+        ICollection<MethodDefinition> Methods { get; }
         string GetMonoCecilTypeName(Type declaringType);
         void AddField(FieldDefinition field);
         void AddMethod(MethodDefinition method);

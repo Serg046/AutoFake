@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -28,11 +29,9 @@ namespace AutoFake
         public VerifiableMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
-        public void Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc)
-            => RewriteImpl<TReturn>(instanceRewriteFunc);
+        public void Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
 
-        public void Rewrite(Expression<Action<T>> voidInstanceRewriteFunc)
-            => RewriteImpl(voidInstanceRewriteFunc);
+        public void Rewrite(Expression<Action<T>> action) => RewriteImpl(action);
 
         public void Execute(Action<T> action) => Execute(action.Method, gen => gen.Instance);
 
@@ -48,6 +47,7 @@ namespace AutoFake
     {
         private readonly FakeGenerator _fakeGenerator;
         private readonly GeneratedObject _generatedObject;
+        private readonly TypeInfo _typeInfo;
 
         public Fake(Type type, params object[] contructorArgs)
         {
@@ -60,20 +60,22 @@ namespace AutoFake
                 return dependecy ?? new FakeDependency(c?.GetType(), c);
             }).ToList();
 
-            var typeInfo = new TypeInfo(type, dependencies);
+            _typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
-            _generatedObject = new GeneratedObject(typeInfo);
-            _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory, _generatedObject);
+            _generatedObject = new GeneratedObject(_typeInfo);
+            _fakeGenerator = new FakeGenerator(_typeInfo, mockerFactory, _generatedObject);
 
-            Mocks = new List<Mock>();
+            Mocks = new List<IMock>();
         }
 
-        internal ICollection<Mock> Mocks { get; }
+        internal ICollection<IMock> Mocks { get; }
 
         public void SaveFakeAssembly(string fileName)
         {
-            Guard.NotNull(fileName, nameof(fileName));
-            _fakeGenerator.Save(fileName);
+            using (var fileStream = File.Create(fileName))
+            {
+                _typeInfo.WriteAssembly(fileStream);
+            }
         }
 
         protected ReplaceableMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
@@ -131,27 +133,13 @@ namespace AutoFake
             _fakeGenerator.Generate(Mocks, visitor.Method);
         }
 
-        protected void RewriteImpl<T>(LambdaExpression expression)
-        {
-            Guard.NotNull(expression, nameof(expression));
+        public void Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
 
-            var invocationExpression = new InvocationExpression(expression);
-            var visitor = new GetTestMethodVisitor();
-            invocationExpression.AcceptMemberVisitor(visitor);
-            _fakeGenerator.Generate(Mocks, visitor.Method);
-        }
+        public void Rewrite<TInput>(Expression<Action<TInput>> voidInstanceRewriteFunc) => RewriteImpl(voidInstanceRewriteFunc);
 
-        public void Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc)
-            => RewriteImpl<TReturn>(instanceRewriteFunc);
+        public void Rewrite<TReturn>(Expression<Func<TReturn>> staticRewriteFunc) => RewriteImpl(staticRewriteFunc);
 
-        public void Rewrite<TInput>(Expression<Action<TInput>> voidInstanceRewriteFunc)
-            => RewriteImpl(voidInstanceRewriteFunc);
-
-        public void Rewrite<TReturn>(Expression<Func<TReturn>> staticRewriteFunc)
-            => RewriteImpl<TReturn>(staticRewriteFunc);
-
-        public void Rewrite(Expression<Action> voidStaticRewriteFunc)
-            => RewriteImpl(voidStaticRewriteFunc);
+        public void Rewrite(Expression<Action> voidStaticRewriteFunc) => RewriteImpl(voidStaticRewriteFunc);
 
         public void Reset() => Mocks.Clear();
 

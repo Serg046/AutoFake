@@ -51,7 +51,6 @@
     <Compile Include="Exceptions\ExpectedCallsException.cs" />
     <Compile Include="Exceptions\FakeGeneretingException.cs" />
     <Compile Include="Exceptions\NotSupportedExpressionException.cs" />
-    <Compile Include="Exceptions\SetupException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
     <Compile Include="Expression\GetArgumentsMemberVisitor.cs" />
     <Compile Include="Expression\GetTestMethodVisitor.cs" />

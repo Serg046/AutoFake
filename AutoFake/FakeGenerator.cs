@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
@@ -20,15 +19,7 @@ namespace AutoFake
             _generatedObject = generatedObject;
         }
 
-        public void Save(string fileName)
-        {
-            using (var fileStream = File.Create(fileName))
-            {
-                _typeInfo.WriteAssembly(fileStream);
-            }
-        }
-
-        public void Generate(ICollection<Mock> mocks, MethodBase executeFunc)
+        public void Generate(ICollection<IMock> mocks, MethodBase executeFunc)
         {
             if (_generatedObject.IsBuilt)
                 throw new FakeGeneretingException("Fake is already built. Please use another instance.");
@@ -37,28 +28,17 @@ namespace AutoFake
         }
 
 
-        private void MockSetups(ICollection<Mock> mocks, MethodBase executeFunc)
+        private void MockSetups(ICollection<IMock> mocks, MethodBase executeFunc)
         {
             foreach (var mock in mocks)
             {
-                var mocker = _mockerFactory.CreateMocker(_typeInfo,
-                    new MockedMemberInfo(mock, executeFunc.Name, GetExecuteFuncSuffixName(executeFunc)));
+                var mocker = _mockerFactory.CreateMocker(_typeInfo, new MockedMemberInfo(mock, executeFunc.Name,
+                    (byte)_generatedObject.MockedMembers.Count(m => m.TestMethodName == executeFunc.Name)));
                 mock.PrepareForInjecting(mocker);
-
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
                 new FakeMethod(method, mocker).ApplyMock(mock);
-
                 _generatedObject.MockedMembers.Add(mocker.MemberInfo);
             }
-        }
-
-        private string GetExecuteFuncSuffixName(MethodBase executeFunc)
-        {
-            var suffixName = executeFunc.Name;
-            var installedCount = _generatedObject.MockedMembers.Count(g => g.TestMethodName == executeFunc.Name);
-            if (installedCount > 0)
-                suffixName += installedCount;
-            return suffixName;
         }
     }
 }

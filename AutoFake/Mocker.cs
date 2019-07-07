@@ -11,7 +11,7 @@ namespace AutoFake
 {
     internal class Mocker : IMocker
     {
-        private readonly Mock _mock;
+        private readonly IMock _mock;
         private readonly MethodReference _addToListOfObjArray;
         private readonly MethodReference _invokeActionMethod;
         private readonly MethodReference _matchArgumentsMethod;

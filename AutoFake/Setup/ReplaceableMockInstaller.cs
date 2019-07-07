@@ -8,7 +8,7 @@ namespace AutoFake.Setup
     {
         private readonly ReplaceableMock.Parameters _parameters;
 
-        internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
+        internal ReplaceableMockInstaller(ICollection<IMock> mocks, IInvocationExpression invocationExpression)
         {
             _parameters = new ReplaceableMock.Parameters();
             mocks.Add(new ReplaceableMock(invocationExpression, _parameters));
@@ -49,7 +49,7 @@ namespace AutoFake.Setup
     {
         private readonly ReplaceableMock.Parameters _parameters;
 
-        internal ReplaceableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
+        internal ReplaceableMockInstaller(ICollection<IMock> mocks, IInvocationExpression invocationExpression)
         {
             _parameters = new ReplaceableMock.Parameters();
             mocks.Add(new ReplaceableMock(invocationExpression, _parameters));

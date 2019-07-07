@@ -75,7 +75,13 @@ namespace AutoFake.UnitTests.Expression
             field = typeof(TestClass).GetField(nameof(TestClass.StaticField));
             Expression<Func<int>> staticFldExpr = () => TestClass.StaticField;
             yield return new object[] { staticFldExpr, null, field };
+            field = typeof(TestClass).GetField(nameof(TestClass.StaticField));
+
+            Expression<Func<object>> staticFldExprWithCast = () => TestClass.StaticField;
+            yield return new object[] { staticFldExprWithCast, null, field };
         }
+
+        private event EventHandler _testEvent;
 
         private class TestClass
         {

@@ -18,7 +18,7 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Check_LambdaChacker_Success()
+        public void Check_LambdaChecker_Success()
         {
             Func<int, bool> lambda = arg => arg > 0; 
             var checker = new LambdaChecker(lambda);
@@ -26,6 +26,17 @@ namespace AutoFake.UnitTests
 
             Assert.True(argument.Check(1));
             Assert.False(argument.Check(-1));
+        }
+
+        [Fact]
+        public void ToString_Checker_CheckerToString()
+        {
+            const string testString = "test string";
+            var checker = new Mock<IFakeArgumentChecker>();
+            checker.Setup(c => c.ToString()).Returns(testString);
+            var argument = new FakeArgument(checker.Object);
+
+            Assert.Equal(testString, argument.ToString());
         }
     }
 }
