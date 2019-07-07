@@ -21,7 +21,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             _parameters = new VerifiableMock.Parameters();
             _mocker = new Mock<IMocker>();
-            var mockedMemberInfo = new MockedMemberInfo(null, null, null);
+            var mockedMemberInfo = new MockedMemberInfo(null, null);
             _mocker.Setup(m => m.MemberInfo).Returns(mockedMemberInfo);
 
             _verifiableMock = GetVerifiableMock();

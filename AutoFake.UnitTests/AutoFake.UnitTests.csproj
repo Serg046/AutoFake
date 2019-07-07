@@ -73,6 +73,8 @@
     <Compile Include="Expression\InvocationExpressionTests.cs" />
     <Compile Include="Expression\TargetMemberVisitorTests.cs" />
     <Compile Include="FakeMethodTests.cs" />
+    <Compile Include="LambdaCheckerTests.cs" />
+    <Compile Include="MockerFactoryTests.cs" />
     <Compile Include="Setup\MockInstallerTests\MockInstallerTests.cs" />
     <Compile Include="Setup\MockTests\MockTests.cs" />
     <Compile Include="Setup\MockTests\ReplaceableMockTests.cs" />
@@ -94,6 +96,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Expression\SetValueMemberVisitorTests.cs" />
     <Compile Include="TypeInfoTests.cs" />
+    <Compile Include="TypeWrapperTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoFake\AutoFake.csproj">

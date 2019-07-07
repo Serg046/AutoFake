@@ -36,11 +36,11 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
             var arguments = new List<FakeArgument> { new FakeArgument(new EqualityArgumentChecker(1)) };
             var invocationExpression = new Mock<IInvocationExpression>();
             invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
-            var mocks = new List<Mock>();
+            var mocks = new List<IMock>();
             yield return new object[] { new ReplaceableMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
-            mocks = new List<Mock>();
+            mocks = new List<IMock>();
             yield return new object[] { new ReplaceableMockInstaller<int>(mocks, invocationExpression.Object), mocks.Single() };
-            mocks = new List<Mock>();
+            mocks = new List<IMock>();
             yield return new object[] { new VerifiableMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
         }
 

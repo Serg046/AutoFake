@@ -7,9 +7,9 @@ namespace AutoFake
 {
     internal class GeneratedObject
     {
-        private readonly TypeInfo _typeInfo;
+        private readonly ITypeInfo _typeInfo;
 
-        public GeneratedObject(TypeInfo typeInfo)
+        public GeneratedObject(ITypeInfo typeInfo)
         {
             _typeInfo = typeInfo;
         }

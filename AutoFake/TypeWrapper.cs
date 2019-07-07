@@ -16,8 +16,10 @@ namespace AutoFake
         }
 
         public void Execute(Expression<Action> expression) => ExecuteImpl(expression);
+        public void Execute<TInput>(Expression<Action<TInput>> expression) => ExecuteImpl(expression);
 
-        public T Execute<T>(Expression<Func<T>> expression) => (T)ExecuteImpl(expression);
+        public TResult Execute<TResult>(Expression<Func<TResult>> expression) => (TResult)ExecuteImpl(expression);
+        public TResult Execute<TInput, TResult>(Expression<Func<TInput, TResult>> expression) => (TResult)ExecuteImpl(expression);
 
         private object ExecuteImpl(LinqExpression expression)
         {

@@ -8,7 +8,7 @@ namespace AutoFake.Setup
     {
         private readonly VerifiableMock.Parameters _parameters = new VerifiableMock.Parameters();
 
-        internal VerifiableMockInstaller(ICollection<Mock> mocks, IInvocationExpression invocationExpression)
+        internal VerifiableMockInstaller(ICollection<IMock> mocks, IInvocationExpression invocationExpression)
         {
             mocks.Add(new VerifiableMock(invocationExpression, _parameters));
         }

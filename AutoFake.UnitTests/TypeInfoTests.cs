@@ -4,54 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AutoFake.Exceptions;
+using Mono.Cecil;
 using Xunit;
 
 namespace AutoFake.UnitTests
 {
     public class TypeInfoTests
     {
-        private class TestClass
-        {
-            public TestClass(StringBuilder dependency1, StringBuilder dependency2)
-            {
-            }
-        }
-
-        internal class InternalTestClass
-        {
-            internal InternalTestClass()
-            {
-            }
-        }
-
-        protected class ProtectedTestClass
-        {
-            protected ProtectedTestClass()
-            {
-            }
-        }
-
-        private class PrivateTestClass
-        {
-            private PrivateTestClass()
-            {
-            }
-        }
-
-        private class AmbiguousCtorTestClass
-        {
-            public AmbiguousCtorTestClass(StreamReader reader)
-            {
-            }
-
-            public AmbiguousCtorTestClass(StreamWriter writer)
-            {
-            }
-        }
-
-        private IList<FakeDependency> GetDependencies(params object[] args)
-            => args.Select(a => new FakeDependency(a?.GetType(), a)).ToList();
-
         [Fact]
         public void CreateInstance_InvalidDependencies_Throws()
         {
@@ -113,5 +72,69 @@ namespace AutoFake.UnitTests
 
             Assert.Equal(sourceType.Module.FullyQualifiedName, typeInfo.Module.FullyQualifiedName);
         }
+
+        [Fact]
+        public void AddField_Field_Added()
+        {
+            const string testName = "testName";
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
+
+            typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+
+            Assert.NotNull(typeInfo.Fields.Single(f => f.Name == testName));
+        }
+
+        [Fact]
+        public void AddMethod_Method_Added()
+        {
+            const string testName = "testName";
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
+
+            typeInfo.AddMethod(new MethodDefinition(testName, MethodAttributes.Assembly, new FunctionPointerType()));
+
+            Assert.NotNull(typeInfo.Methods.Single(f => f.Name == testName));
+        }
+
+        private class TestClass
+        {
+            public TestClass(StringBuilder dependency1, StringBuilder dependency2)
+            {
+            }
+        }
+
+        internal class InternalTestClass
+        {
+            internal InternalTestClass()
+            {
+            }
+        }
+
+        protected class ProtectedTestClass
+        {
+            protected ProtectedTestClass()
+            {
+            }
+        }
+
+        private class PrivateTestClass
+        {
+            private PrivateTestClass()
+            {
+            }
+        }
+
+        private class AmbiguousCtorTestClass
+        {
+            public AmbiguousCtorTestClass(StreamReader reader)
+            {
+            }
+
+            public AmbiguousCtorTestClass(StreamWriter writer)
+            {
+            }
+        }
+
+        private IList<FakeDependency> GetDependencies(params object[] args)
+            => args.Select(a => new FakeDependency(a?.GetType(), a)).ToList();
     }
 }

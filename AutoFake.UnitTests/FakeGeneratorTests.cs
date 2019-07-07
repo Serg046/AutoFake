@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Expression;
 using AutoFake.Setup;
-using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
 
@@ -18,12 +16,8 @@ namespace AutoFake.UnitTests
         public FakeGeneratorTests()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var mocker = new Mock<IMocker>();
-            var mockerFactory = new Mock<MockerFactory>();
-            mockerFactory.Setup(m => m.CreateMocker(typeInfo, It.IsAny<MockedMemberInfo>())).Returns(mocker.Object);
             _generatedObject = new GeneratedObject(typeInfo);
-
-            _fakeGenerator = new FakeGenerator(typeInfo, mockerFactory.Object, _generatedObject);
+            _fakeGenerator = new FakeGenerator(typeInfo, Moq.Mock.Of<MockerFactory>(), _generatedObject);
         }
 
         [Fact]
@@ -34,14 +28,30 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Generate_NoInvocations_ProcessIsNotCalled()
+        public void Generate_Mock_PreparedForInjecting()
         {
-            var mock = new ReplaceableMockFake(typeof(DateTime).GetProperty(nameof(DateTime.Now)).GetMethod,
-                new ReplaceableMock.Parameters());
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
+            var mock = new Mock<IMock>();
 
-            //Assert
-            _fakeGenerator.Generate(new[] {mock}, testMethod);
+            _fakeGenerator.Generate(new[] {mock.Object}, testMethod);
+
+            mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
+        }
+
+        [Fact]
+        public void Generate_MultipleMocks_SuffixUpdated()
+        {
+            var simpleMethodName = nameof(TestClass.SimpleMethod);
+            var testMethod = GetMethodInfo(simpleMethodName);
+            var mock = new Mock<IMock>();
+            mock.Setup(m => m.SourceMember).Returns(new SourceMethod(testMethod));
+
+            _fakeGenerator.Generate(new[] { mock.Object, mock.Object, mock.Object }, testMethod);
+
+            Assert.Equal(3, _generatedObject.MockedMembers.Count);
+            Assert.EndsWith(simpleMethodName, _generatedObject.MockedMembers[0].GenerateFieldName());
+            Assert.EndsWith(simpleMethodName + "1", _generatedObject.MockedMembers[1].GenerateFieldName());
+            Assert.EndsWith(simpleMethodName + "2", _generatedObject.MockedMembers[2].GenerateFieldName());
         }
 
         public static IEnumerable<object[]> GetCallbackFieldTestData()
@@ -59,28 +69,6 @@ namespace AutoFake.UnitTests
                 var a = 5;
                 var b = a;
             }
-
-            public void GetDateNow()
-            {
-                var a = DateTime.Now;
-            }
-        }
-
-        private class ReplaceableMockFake : ReplaceableMock
-        {
-            public ReplaceableMockFake(MethodInfo method, Parameters parameters)
-                : base(Moq.Mock.Of<IInvocationExpression>(m => m.GetSourceMember() == new SourceMethod(method)), parameters)
-            {
-            }
-
-            public override void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
-            {
-                throw new InjectInvocationException();
-            }
-        }
-
-        private class InjectInvocationException : Exception
-        {
         }
     }
 }

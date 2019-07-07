@@ -24,7 +24,7 @@ namespace AutoFake
             //TODO: remove reading mode parameter when a new version of mono.cecil will be available, see https://github.com/jbevain/cecil/issues/295
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, new ReaderParameters(ReadingMode.Immediate));
 
-            var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, true);
+            var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, runtimeName: true);
             _typeDefinition = type.Resolve();
         }
 
@@ -53,8 +53,8 @@ namespace AutoFake
         public void AddField(FieldDefinition field) => _typeDefinition.Fields.Add(field);
         public void AddMethod(MethodDefinition method) => _typeDefinition.Methods.Add(method);
 
-        public IEnumerable<FieldDefinition> Fields => _typeDefinition.Fields; 
-        public IEnumerable<MethodDefinition> Methods => _typeDefinition.Methods;
+        public ICollection<FieldDefinition> Fields => _typeDefinition.Fields; 
+        public ICollection<MethodDefinition> Methods => _typeDefinition.Methods;
 
         public void WriteAssembly(Stream stream)
         {

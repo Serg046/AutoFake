@@ -8,16 +8,16 @@ namespace AutoFake
 {
     internal class MockedMemberInfo
     {
-        private readonly string _suffixName;
+        private readonly byte _order;
 
-        public MockedMemberInfo(Mock mock, string testMethodName, string suffixName)
+        public MockedMemberInfo(IMock mock, string testMethodName, byte order = 0)
         {
-            _suffixName = suffixName;
+            _order = order;
             Mock = mock;
             TestMethodName = testMethodName;
         }
 
-        public Mock Mock { get; }
+        public IMock Mock { get; }
         public string TestMethodName { get; }
         public FieldDefinition SetupBodyField { get; internal set; }
         public FieldDefinition RetValueField { get; internal set; }
@@ -27,11 +27,12 @@ namespace AutoFake
 
         public string GenerateFieldName()
         {
-            return new StringBuilder(Mock.SourceMember.ReturnType.ToString().Replace(".", ""))
+            var fieldName = new StringBuilder(Mock.SourceMember.ReturnType.ToString().Replace(".", ""))
                 .Append("_").Append(Mock.SourceMember.Name).Append("_")
                 .Append(ArgumentsToString(Mock.SourceMember))
-                .Append(_suffixName)
-                .ToString();
+                .Append(TestMethodName);
+            if (_order > 0) fieldName.Append(_order);
+            return fieldName.ToString();
         }
 
         private string ArgumentsToString(ISourceMember member)

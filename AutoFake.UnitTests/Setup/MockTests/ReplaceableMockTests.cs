@@ -28,7 +28,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             _parameters = new ReplaceableMock.Parameters();
             _mocker = new Mock<IMocker>();
-            _mockedMemberInfo = new MockedMemberInfo(null, null, null);
+            _mockedMemberInfo = new MockedMemberInfo(null, null);
             _mocker.Setup(m => m.MemberInfo).Returns(_mockedMemberInfo);
 
             _replaceableMock = GetReplaceableMock();
@@ -211,7 +211,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
         private FakeArgument CreateArgument(int arg) => new FakeArgument(new EqualityArgumentChecker(arg));
 
-        private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceableMock, null, "suffix");
+        private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceableMock, "suffix");
 
         private class TestClass
         {
