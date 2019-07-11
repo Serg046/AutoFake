@@ -17,6 +17,12 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
+        public void Arguments_NoRuntimeValue_Throws()
+        {
+            Assert.Throws<InvalidOperationException>(() => _visitor.Arguments);
+        }
+
+        [Fact]
         public void Visit_MethodWithoutArgs_ReturnsEmpty()
         {
             var expression = GetMethodCallExpression(t => t.SomeMethod());
@@ -332,6 +338,17 @@ namespace AutoFake.UnitTests.Expression
             Assert.True(_visitor.Arguments[0].Check(date.AddDays(1)));
         }
 
+        [Fact]
+        public void Visit_UnaryExpression_ReturnsEmpty()
+        {
+            var expression = GetMethodCallExpression(tst => tst.SomeMethod((object)5));
+
+            _visitor.Visit(expression, expression.Method);
+
+            Assert.Equal(1, _visitor.Arguments.Count);
+            Assert.True(_visitor.Arguments.Single().Check(5));
+        }
+
         private MethodCallExpression GetMethodCallExpression(Expression<Action<MethodTestClass>> expression)
             => (MethodCallExpression)expression.Body;
 
@@ -359,6 +376,10 @@ namespace AutoFake.UnitTests.Expression
             }
 
             public void SomeMethod(DateTime a)
+            {
+            }
+
+            public void SomeMethod(object a)
             {
             }
 
