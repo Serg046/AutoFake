@@ -28,7 +28,7 @@ namespace AutoFake.Setup
             }
             else
             {
-                methodMocker.RemoveMethodArguments(ilProcessor, instruction);
+                methodMocker.RemoveMethodArgumentsIfAny(ilProcessor, instruction);
             }
 
             if (_parameters.Callback != null)

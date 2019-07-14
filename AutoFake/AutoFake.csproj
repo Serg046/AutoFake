@@ -76,7 +76,6 @@
     <Compile Include="Setup\SourceField.cs" />
     <Compile Include="Setup\SourceMethod.cs" />
     <Compile Include="Setup\VerifiableMock.cs" />
-    <Compile Include="Expression\SetValueMemberVisitor.cs" />
     <Compile Include="Fake.cs" />
     <Compile Include="FakeDependency.cs" />
     <Compile Include="FakeGenerator.cs" />

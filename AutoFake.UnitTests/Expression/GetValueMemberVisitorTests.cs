@@ -10,47 +10,6 @@ namespace AutoFake.UnitTests.Expression
 {
     public class GetValueMemberVisitorTests
     {
-        private class SomeInstanceType
-        {
-            public int SomeMethod(int a) => a;
-            public int SomeProperty { get; } = 2;
-            public int SomeField = 2;
-            public static int SomeStaticMethod(int a) => a;
-            public static int SomeStaticProperty { get; } = 2;
-            public static int SomeStaticField = 2;
-        }
-
-        private static class SomeStaticType
-        {
-            public static int SomeStaticMethod(int a) => a;
-            public static int SomeStaticProperty { get; } = 2;
-            public static int SomeStaticField = 2;
-        }
-
-        private class SomeInstanceTypeFake
-        {
-            public int SomeMethod(int a) => a + 1;
-            public int SomeProperty { get; } = 3;
-            public int FailMethod() { throw new InvalidOperationException(); }
-
-            public int FailProperty
-            {
-                get { throw new InvalidOperationException(); }
-            }
-
-            public int SomeField = 3;
-            public static int SomeStaticMethod(int a) => a + 1;
-            public static int SomeStaticProperty { get; } = 3;
-            public static int SomeStaticField = 3;
-        }
-
-        private static class SomeStaticTypeFake
-        {
-            public static int SomeStaticMethod(int a) => a + 1;
-            public static int SomeStaticProperty { get; } = 3;
-            public static int SomeStaticField = 3;
-        }
-
         [Fact]
         public void RuntimeValue_ThrowsIfIsNotVisited()
         {
@@ -153,7 +112,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_MethodWithException_ThrowsTheSameException()
+        public void Visit_MethodWithExceptionInside_ThrowsInnerException()
         {
             var generatedObject = GetGeneratedObject(new SomeInstanceTypeFake(), typeof(SomeInstanceTypeFake));
             Expression<Action<SomeInstanceTypeFake>> expr = s => s.FailMethod();
@@ -165,7 +124,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_PropertyWithException_ThrowsTheSameException()
+        public void Visit_PropertyWithExceptionInside_ThrowsInnerException()
         {
             var generatedObject = GetGeneratedObject(new SomeInstanceTypeFake(), typeof(SomeInstanceTypeFake));
             var property = generatedObject.Type.GetProperty(nameof(SomeInstanceTypeFake.FailProperty));
@@ -176,12 +135,65 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
+        public void Visit_PropertyWithException_ThrowsOriginalException()
+        {
+            var generatedObject = GetGeneratedObject(new SomeInstanceTypeFake(), typeof(SomeInstanceTypeFake));
+            var property = generatedObject.Type.GetProperty(nameof(SomeInstanceTypeFake.SomeProperty));
+            generatedObject.Instance = null;
+
+            var visitor = new GetValueMemberVisitor(generatedObject);
+
+            Assert.Throws<TargetException>(() => visitor.Visit(property));
+        }
+
+        [Fact]
         public void Visit_Ctor_Fails()
         {
             ConstructorInfo constructorInfo = null;
             var visitor = new GetValueMemberVisitor(new GeneratedObject(null));
 
             Assert.Throws<NotSupportedExpressionException>(() => visitor.Visit(null, constructorInfo));
+        }
+
+        private class SomeInstanceType
+        {
+            public int SomeMethod(int a) => a;
+            public int SomeProperty { get; } = 2;
+            public int SomeField = 2;
+            public static int SomeStaticMethod(int a) => a;
+            public static int SomeStaticProperty { get; } = 2;
+            public static int SomeStaticField = 2;
+        }
+
+        private static class SomeStaticType
+        {
+            public static int SomeStaticMethod(int a) => a;
+            public static int SomeStaticProperty { get; } = 2;
+            public static int SomeStaticField = 2;
+        }
+
+        private class SomeInstanceTypeFake
+        {
+            public int SomeMethod(int a) => a + 1;
+            public int SomeProperty { get; } = 3;
+            public int FailMethod() { throw new InvalidOperationException(); }
+
+            public int FailProperty
+            {
+                get { throw new InvalidOperationException(); }
+            }
+
+            public int SomeField = 3;
+            public static int SomeStaticMethod(int a) => a + 1;
+            public static int SomeStaticProperty { get; } = 3;
+            public static int SomeStaticField = 3;
+        }
+
+        private static class SomeStaticTypeFake
+        {
+            public static int SomeStaticMethod(int a) => a + 1;
+            public static int SomeStaticProperty { get; } = 3;
+            public static int SomeStaticField = 3;
         }
     }
 }
