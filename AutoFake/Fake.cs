@@ -166,10 +166,9 @@ namespace AutoFake
             {
                 return generatedMethod.Invoke(instance, fake(_generatedObject));
             }
-            catch (TargetInvocationException ex)
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                if (ex.InnerException != null) throw ex.InnerException;
-                throw;
+                throw ex.InnerException;
             }
         }
     }

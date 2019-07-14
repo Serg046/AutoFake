@@ -7,7 +7,7 @@ namespace AutoFake
     {
         ITypeInfo TypeInfo { get; }
         MockedMemberInfo MemberInfo { get; }
-        void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction);
+        void RemoveMethodArgumentsIfAny(ILProcessor ilProcessor, Instruction instruction);
         void RemoveStackArgument(ILProcessor ilProcessor, Instruction instruction);
         void PushMethodArguments(ILProcessor ilProcessor, Instruction instruction, IEnumerable<VariableDefinition> variables);
         void RemoveInstruction(ILProcessor ilProcessor, Instruction instruction);

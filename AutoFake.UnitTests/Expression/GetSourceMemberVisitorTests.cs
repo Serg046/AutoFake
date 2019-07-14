@@ -15,7 +15,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Arguments_NoRuntimeValue_Throws()
+        public void SourceMember_NoSourceMember_Throws()
         {
             Assert.Throws<InvalidOperationException>(() => _visitor.SourceMember);
         }

@@ -94,7 +94,6 @@
     <Compile Include="MockedMemberInfoTests.cs" />
     <Compile Include="MockerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Expression\SetValueMemberVisitorTests.cs" />
     <Compile Include="TypeInfoTests.cs" />
     <Compile Include="TypeWrapperTests.cs" />
   </ItemGroup>

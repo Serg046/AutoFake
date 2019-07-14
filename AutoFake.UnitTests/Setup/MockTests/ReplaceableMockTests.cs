@@ -71,7 +71,7 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
             _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
 
-            _mocker.Verify(m => m.RemoveMethodArguments(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
+            _mocker.Verify(m => m.RemoveMethodArgumentsIfAny(ilProcessor, instruction), mustBeInjected ? Times.Once() : Times.Never());
         }
 
         [Theory]
