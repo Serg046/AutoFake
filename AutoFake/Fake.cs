@@ -49,16 +49,12 @@ namespace AutoFake
         private readonly GeneratedObject _generatedObject;
         private readonly TypeInfo _typeInfo;
 
-        public Fake(Type type, params object[] contructorArgs)
+        public Fake(Type type, params object[] constructorArgs)
         {
-            Guard.NotNull(type, nameof(type));
-            Guard.NotNull(contructorArgs, nameof(contructorArgs));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));
 
-            var dependencies = contructorArgs.Select(c =>
-            {
-                var dependecy = c as FakeDependency;
-                return dependecy ?? new FakeDependency(c?.GetType(), c);
-            }).ToList();
+            var dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
 
             _typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
@@ -80,14 +76,14 @@ namespace AutoFake
 
         protected ReplaceableMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
             return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
         protected ReplaceableMockInstaller ReplaceImpl(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
             return new ReplaceableMockInstaller(Mocks, invocationExpression);
         }
@@ -106,7 +102,7 @@ namespace AutoFake
 
         protected VerifiableMockInstaller VerifyImpl(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
             return new VerifiableMockInstaller(Mocks, invocationExpression);
         }
@@ -125,7 +121,7 @@ namespace AutoFake
 
         protected void RewriteImpl(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
 
             var invocationExpression = new InvocationExpression(expression);
             var visitor = new GetTestMethodVisitor();
