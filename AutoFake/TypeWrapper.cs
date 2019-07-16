@@ -27,7 +27,7 @@ namespace AutoFake
 
             var invocationExpression = new InvocationExpression(expression);
             var visitor = new GetValueMemberVisitor(_generatedObject);
-            invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, _generatedObject.Type));
+            invocationExpression.AcceptMemberVisitor(visitor);
             return visitor.RuntimeValue;
         }
     }

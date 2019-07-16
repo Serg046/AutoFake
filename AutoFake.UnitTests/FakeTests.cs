@@ -170,27 +170,27 @@ namespace AutoFake.UnitTests
             }));
         }
 
-        //[Fact]
-        //public async Task Execute_Fake_CallbackExecuted()
-        //{
-        //    const string testString = "testString";
-        //    var fake = new Fake(typeof(TestClass));
-        //    fake.Replace((TestClass t) => t.StringInstanceMethod()).Returns(() => testString);
-        //    fake.Rewrite((TestClass t) => t.StringInstanceMethod());
+        [Fact]
+        public async Task Execute_Fake_CallbackExecuted()
+        {
+            const string testString = "testString";
+            var fake = new Fake(typeof(TestClass));
+            fake.Replace((TestClass t) => t.StringInstanceMethod()).Returns(() => testString);
+            fake.Rewrite((TestClass t) => t.StringInstanceMethod());
 
-        //    Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
-        //    await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
-        //    Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
-        //    {
-        //        Assert.Equal(testString, prms.Single());
-        //        tst.Execute((TestClass t) => t.FailingMethod());
-        //    }));
-        //    await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
-        //    {
-        //        Assert.Equal(testString, prms.Single());
-        //        await tst.Execute((TestClass t) => t.FailingMethodAsync());
-        //    }));
-        //}
+            Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
+            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
+            Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
+            {
+                Assert.Equal(testString, prms.Single());
+                tst.Execute((TestClass t) => t.FailingMethod());
+            }));
+            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
+            {
+                Assert.Equal(testString, prms.Single());
+                await tst.Execute((TestClass t) => t.FailingMethodAsync());
+            }));
+        }
 
         public static IEnumerable<object[]> GetCallbacks()
         {
