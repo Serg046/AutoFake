@@ -60,7 +60,6 @@
     <Compile Include="Expression\GetSourceMemberVisitor.cs" />
     <Compile Include="Expression\GetValueMemberVisitor.cs" />
     <Compile Include="FakeMethod.cs" />
-    <Compile Include="Guard.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
     <Compile Include="Arg.cs" />
     <Compile Include="Expression\InvocationExpression.cs" />
