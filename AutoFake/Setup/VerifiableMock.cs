@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil.Cil;
@@ -29,17 +31,18 @@ namespace AutoFake.Setup
             }
         }
 
-        public override void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
+        public override IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type)
         {
-            base.Initialize(mockedMemberInfo, generatedObject);
+            var parameters = base.Initialize(mockedMemberInfo, type);
             if (_parameters.ExpectedCallsCountFunc != null)
             {
-                var field = GetField(generatedObject, mockedMemberInfo.ExpectedCallsFuncField.Name);
+                var field = GetField(type, mockedMemberInfo.ExpectedCallsFuncField.Name);
                 if (field == null)
                     throw new FakeGeneretingException(
                         $"'{mockedMemberInfo.ExpectedCallsFuncField.Name}' is not found in the generated object");
                 field.SetValue(null, _parameters.ExpectedCallsCountFunc);
             }
+            return parameters;
         }
 
         public override void PrepareForInjecting(IMocker mocker)

@@ -8,11 +8,11 @@ namespace AutoFake
 {
     public class TypeWrapper
     {
-        private readonly GeneratedObject _generatedObject;
+        private readonly FakeObjectInfo _fakeObject;
 
-        internal TypeWrapper(GeneratedObject generatedObject)
+        internal TypeWrapper(FakeObjectInfo fakeObject)
         {
-            _generatedObject = generatedObject;
+            _fakeObject = fakeObject;
         }
 
         public void Execute(Expression<Action> expression) => ExecuteImpl(expression);
@@ -23,10 +23,8 @@ namespace AutoFake
 
         private object ExecuteImpl(LinqExpression expression)
         {
-            if (!_generatedObject.IsBuilt) _generatedObject.Build();
-
             var invocationExpression = new InvocationExpression(expression);
-            var visitor = new GetValueMemberVisitor(_generatedObject);
+            var visitor = new GetValueMemberVisitor(_fakeObject);
             invocationExpression.AcceptMemberVisitor(visitor);
             return visitor.RuntimeValue;
         }

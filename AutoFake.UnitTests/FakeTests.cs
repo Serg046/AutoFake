@@ -114,23 +114,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Rewrite_AfterExecuteInvocation_Throws()
-        {
-            var fake = new Fake<TestClass>();
-            fake.Execute(f => f.VoidInstanceMethod());
-
-            Assert.Throws<FakeGeneretingException>(() => fake.Rewrite(f => f.VoidInstanceMethod()));
-        }
-
-        //[Theory]
-        //[MemberData(nameof(GetInvalidCallbacks))]
-        //internal void Rewrite_InvalidInput_Throws(dynamic callback)
-        //{
-        //    Assert.Throws<ArgumentNullException>(() => new Fake(typeof(TestClass)).Rewrite(callback));
-        //    Assert.Throws<ArgumentNullException>(() => new Fake<TestClass>().Rewrite(callback));
-        //}
-
-        [Fact]
         public void Rewrite_FakeInvalidInput_Throws()
         {
             var fake = new Fake(typeof(TestClass));

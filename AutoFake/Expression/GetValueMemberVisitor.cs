@@ -12,7 +12,7 @@ namespace AutoFake.Expression
         private bool _isRuntimeValueSet;
         private object _runtimeValue;
 
-        public GetValueMemberVisitor(GeneratedObject generatedObject)
+        public GetValueMemberVisitor(FakeObjectInfo generatedObject)
         {
             _instance = generatedObject.Instance;
         }

@@ -48,20 +48,12 @@ namespace AutoFake.UnitTests.Setup.MockTests
             public override bool CheckArguments { get; }
             public override Func<byte, bool> ExpectedCalls { get; }
 
-            public override void PrepareForInjecting(IMocker mocker)
-            {
-                throw new System.NotImplementedException();
-            }
+            public override void PrepareForInjecting(IMocker mocker) => throw new System.NotImplementedException();
 
             public override void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
-            {
-                throw new System.NotImplementedException();
-            }
+                => throw new NotImplementedException();
 
-            public override void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
-            {
-                throw new System.NotImplementedException();
-            }
+            public override IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type) => throw new System.NotImplementedException();
         }
 
         private class TestClass

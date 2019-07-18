@@ -22,7 +22,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
 
         private readonly ReplaceableMock _replaceableMock;
         private readonly MockedMemberInfo _mockedMemberInfo;
-        private readonly GeneratedObject _generatedObject;
 
         public ReplaceableMockTests()
         {
@@ -34,8 +33,6 @@ namespace AutoFake.UnitTests.Setup.MockTests
             _replaceableMock = GetReplaceableMock();
 
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            _generatedObject = new GeneratedObject(typeInfo);
-            _generatedObject.Build();
         }
 
         [Theory]
@@ -128,21 +125,21 @@ namespace AutoFake.UnitTests.Setup.MockTests
             var mockedMemberInfo = GetMockedMemberInfo();
             mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField) + "salt");
 
-            Assert.Throws<FakeGeneretingException>(() => _replaceableMock.Initialize(mockedMemberInfo, _generatedObject));
+            Assert.Throws<FakeGeneretingException>(() => _replaceableMock.Initialize(mockedMemberInfo, typeof(TestClass)));
         }
 
         [Fact]
         public void Initialize_RetValue_Success()
         {
-            _parameters.ReturnObject = new MethodDescriptor(typeof(TestClass).FullName, nameof(TestClass.GetValue));
+            var type = typeof(TestClass);
+            _parameters.ReturnObject = new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
             var mockedMemberInfo = GetMockedMemberInfo();
             mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField));
 
-            _replaceableMock.Initialize(mockedMemberInfo, _generatedObject);
+            _replaceableMock.Initialize(mockedMemberInfo, type);
 
-            var retValueField = _generatedObject.Type
-                .GetField(nameof(TestClass.RetValueField), BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.Equal(TestClass.VALUE, retValueField.GetValue(_generatedObject.Instance));
+            var retValueField = type.GetField(nameof(TestClass.RetValueField), BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.Equal(TestClass.VALUE, retValueField.GetValue(null));
         }
 
         [Theory]

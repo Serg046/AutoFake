@@ -88,7 +88,6 @@
     <Compile Include="FakeArgumentTests.cs" />
     <Compile Include="FakeGeneratorTests.cs" />
     <Compile Include="FakeTests.cs" />
-    <Compile Include="GeneratedObjectTests.cs" />
     <Compile Include="Expression\GetValueMemberVisitorTests.cs" />
     <Compile Include="MockedMemberInfoTests.cs" />
     <Compile Include="MockerTests.cs" />
