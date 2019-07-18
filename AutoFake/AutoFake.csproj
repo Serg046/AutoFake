@@ -83,7 +83,7 @@
     <Compile Include="Mocker.cs" />
     <Compile Include="MockerFactory.cs" />
     <Compile Include="Setup\Mock.cs" />
-    <Compile Include="GeneratedObject.cs" />
+    <Compile Include="FakeObjectInfo.cs" />
     <Compile Include="MockedMemberInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Setup\ReplaceableMockInstaller.cs" />

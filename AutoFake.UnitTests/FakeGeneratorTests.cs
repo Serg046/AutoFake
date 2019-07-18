@@ -10,21 +10,12 @@ namespace AutoFake.UnitTests
 {
     public class FakeGeneratorTests
     {
-        private readonly GeneratedObject _generatedObject;
         private readonly FakeGenerator _fakeGenerator;
 
         public FakeGeneratorTests()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            _generatedObject = new GeneratedObject(typeInfo);
-            _fakeGenerator = new FakeGenerator(typeInfo, Moq.Mock.Of<MockerFactory>(), _generatedObject);
-        }
-
-        [Fact]
-        public void Generate_BuiltObject_Throws()
-        {
-            _generatedObject.Build();
-            Assert.Throws<FakeGeneretingException>(() => _fakeGenerator.Generate(null, null));
+            _fakeGenerator = new FakeGenerator(typeInfo, Moq.Mock.Of<MockerFactory>());
         }
 
         [Fact]
@@ -32,8 +23,9 @@ namespace AutoFake.UnitTests
         {
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
+            var mockedMembers = new Mock<MockedMemberInfo>();
 
-            _fakeGenerator.Generate(new[] {mock.Object}, testMethod);
+            _fakeGenerator.Generate(new[] { mock.Object }, new List<MockedMemberInfo>(), testMethod);
 
             mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
         }
@@ -45,13 +37,14 @@ namespace AutoFake.UnitTests
             var testMethod = GetMethodInfo(simpleMethodName);
             var mock = new Mock<IMock>();
             mock.Setup(m => m.SourceMember).Returns(new SourceMethod(testMethod));
+            var mockedMembers = new List<MockedMemberInfo>();
 
-            _fakeGenerator.Generate(new[] { mock.Object, mock.Object, mock.Object }, testMethod);
+            _fakeGenerator.Generate(new[] { mock.Object, mock.Object, mock.Object }, mockedMembers, testMethod);
 
-            Assert.Equal(3, _generatedObject.MockedMembers.Count);
-            Assert.EndsWith(simpleMethodName, _generatedObject.MockedMembers[0].GenerateFieldName());
-            Assert.EndsWith(simpleMethodName + "1", _generatedObject.MockedMembers[1].GenerateFieldName());
-            Assert.EndsWith(simpleMethodName + "2", _generatedObject.MockedMembers[2].GenerateFieldName());
+            Assert.Equal(3, mockedMembers.Count);
+            Assert.EndsWith(simpleMethodName, mockedMembers[0].GenerateFieldName());
+            Assert.EndsWith(simpleMethodName + "1", mockedMembers[1].GenerateFieldName());
+            Assert.EndsWith(simpleMethodName + "2", mockedMembers[2].GenerateFieldName());
         }
 
         public static IEnumerable<object[]> GetCallbackFieldTestData()

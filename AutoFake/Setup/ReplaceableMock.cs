@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil.Cil;
@@ -48,23 +51,21 @@ namespace AutoFake.Setup
                 methodMocker.RemoveInstruction(ilProcessor, instruction);
         }
 
-        public override void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
+        public override IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type)
         {
-            base.Initialize(mockedMemberInfo, generatedObject);
+            var parameters = base.Initialize(mockedMemberInfo, type).ToList();
             if (_parameters.ReturnObject != null)
             {
-                var field = GetField(generatedObject, mockedMemberInfo.RetValueField.Name);
-                if (field == null)
-                    throw new FakeGeneretingException(
-                        $"'{mockedMemberInfo.RetValueField.Name}' is not found in the generated object");
-                var obj = ReflectionUtils.Invoke(generatedObject.Assembly, _parameters.ReturnObject);
+                var field = GetField(type, mockedMemberInfo.RetValueField.Name)
+                    ?? throw new FakeGeneretingException($"'{mockedMemberInfo.RetValueField.Name}' is not found in the generated object");
+                var obj = ReflectionUtils.Invoke(type.Assembly, _parameters.ReturnObject);
                 field.SetValue(null, obj);
-                generatedObject.Parameters.Add(obj);
+                parameters.Add(obj);
             }
 
             if (_parameters.Callback != null)
             {
-                var field = GetField(generatedObject, mockedMemberInfo.CallbackField.Name);
+                var field = GetField(type, mockedMemberInfo.CallbackField.Name);
                 if (field == null)
                     throw new FakeGeneretingException(
                         $"'{mockedMemberInfo.CallbackField.Name}' is not found in the generated object");
@@ -73,12 +74,13 @@ namespace AutoFake.Setup
 
             if (_parameters.ExpectedCallsCountFunc != null)
             {
-                var field = GetField(generatedObject, mockedMemberInfo.ExpectedCallsFuncField.Name);
+                var field = GetField(type, mockedMemberInfo.ExpectedCallsFuncField.Name);
                 if (field == null)
                     throw new FakeGeneretingException(
                         $"'{mockedMemberInfo.ExpectedCallsFuncField.Name}' is not found in the generated object");
                 field.SetValue(null, _parameters.ExpectedCallsCountFunc);
             }
+            return parameters;
         }
 
         public override void PrepareForInjecting(IMocker mocker)

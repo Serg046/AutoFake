@@ -87,5 +87,26 @@ namespace AutoFake
         }
 
         private string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
+
+        public FakeObjectInfo CreateFakeObject(IEnumerable<MockedMemberInfo> mockedMembers)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                WriteAssembly(memoryStream);
+                var assembly = Assembly.Load(memoryStream.ToArray());
+                var type = assembly.GetType(FullTypeName, true);
+
+                var parameters = new List<object>();
+                foreach (var mockedMemberInfo in mockedMembers)
+                {
+                    parameters.AddRange(mockedMemberInfo.Mock.Initialize(mockedMemberInfo, type));
+                }
+
+                var instance = !IsStatic(SourceType) ? CreateInstance(type) : null;
+                return new FakeObjectInfo(parameters, type, instance);
+            }
+        }
+
+        private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
     }
 }

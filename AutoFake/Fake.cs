@@ -46,7 +46,6 @@ namespace AutoFake
     public class Fake
     {
         private readonly FakeGenerator _fakeGenerator;
-        private readonly GeneratedObject _generatedObject;
         private readonly TypeInfo _typeInfo;
 
         public Fake(Type type, params object[] constructorArgs)
@@ -58,13 +57,14 @@ namespace AutoFake
 
             _typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
-            _generatedObject = new GeneratedObject(_typeInfo);
-            _fakeGenerator = new FakeGenerator(_typeInfo, mockerFactory, _generatedObject);
+            _fakeGenerator = new FakeGenerator(_typeInfo, mockerFactory);
 
             Mocks = new List<IMock>();
+            MockedMembers = new List<MockedMemberInfo>();
         }
 
         internal ICollection<IMock> Mocks { get; }
+        internal ICollection<MockedMemberInfo> MockedMembers { get; }
 
         public void SaveFakeAssembly(string fileName)
         {
@@ -126,7 +126,7 @@ namespace AutoFake
             var invocationExpression = new InvocationExpression(expression);
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
-            _fakeGenerator.Generate(Mocks, visitor.Method);
+            _fakeGenerator.Generate(Mocks, MockedMembers, visitor.Method);
         }
 
         public void Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
@@ -148,19 +148,19 @@ namespace AutoFake
         public Task ExecuteAsync(Func<TypeWrapper, IList<object>, Task> action)
             => (Task)Execute(action.Method, gen => new object[] {new TypeWrapper(gen), gen.Parameters});
 
-        internal object Execute(MethodInfo method, Func<GeneratedObject, object> fake) => Execute(method, gen => new[] { fake(gen) });
+        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object> fake) => Execute(method, gen => new[] { fake(gen) });
 
-        internal object Execute(MethodInfo method, Func<GeneratedObject, object[]> fake)
+        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object[]> fake)
         {
-            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            var fakeObject = _typeInfo.CreateFakeObject(MockedMembers);
 
-            var delegateType = _generatedObject.Assembly.GetType(method.DeclaringType.FullName, true);
+            var delegateType = fakeObject.Type.Assembly.GetType(method.DeclaringType.FullName, true);
             var generatedMethod = delegateType.GetMethod(method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
             var instance = Activator.CreateInstance(delegateType);
 
             try
             {
-                return generatedMethod.Invoke(instance, fake(_generatedObject));
+                return generatedMethod.Invoke(instance, fake(fakeObject));
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
