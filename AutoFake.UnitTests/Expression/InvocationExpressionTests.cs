@@ -80,13 +80,21 @@ namespace AutoFake.UnitTests.Expression
         {
             Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
             var expr = new InvocationExpression(methodExpr);
-            var arguments = new[] { new object[] 
-            {
-                new FakeArgument(new EqualityArgumentChecker(4)),
-                new FakeArgument(new EqualityArgumentChecker("4"))
-            }};
+            var arguments = new[] { new object[] { 4, "4" }};
 
             Assert.Throws<VerifiableException>(() => expr.MatchArguments(arguments, true, null));
+        }
+
+        [Theory]
+        [InlineData(4, false)]
+        [InlineData(5, true)]
+        public void MatchArguments_ValidInput_Passes(int arg, bool checkArguments)
+        {
+            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
+            var expr = new InvocationExpression(methodExpr);
+            var arguments = new[] { new object[] { arg, arg.ToString() }};
+
+            expr.MatchArguments(arguments, checkArguments, null);
         }
 
         public static IEnumerable<object[]> GetAcceptMemberVisitorTestData()
