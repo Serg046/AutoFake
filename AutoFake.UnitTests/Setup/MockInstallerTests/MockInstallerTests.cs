@@ -24,8 +24,8 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
         [MemberData(nameof(GetInstallers))]
         internal void ExpectedCallsCount_Func_Success(dynamic installer, Mock mock)
         {
-            Func<byte, bool> expectedCallsFunct = x => x > 2;
-            installer.ExpectedCallsCount(expectedCallsFunct);
+            Func<byte, bool> expectedCallsFunc = x => x > 2;
+            installer.ExpectedCalls(expectedCallsFunc);
 
             Assert.True(mock.ExpectedCalls(3));
             Assert.False(mock.ExpectedCalls(2));
@@ -37,11 +37,11 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
             var invocationExpression = new Mock<IInvocationExpression>();
             invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
             var mocks = new List<IMock>();
-            yield return new object[] { new ReplaceableMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
+            yield return new object[] { new ReplaceMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
             mocks = new List<IMock>();
-            yield return new object[] { new ReplaceableMockInstaller<int>(mocks, invocationExpression.Object), mocks.Single() };
+            yield return new object[] { new ReplaceMockInstaller<int>(mocks, invocationExpression.Object), mocks.Single() };
             mocks = new List<IMock>();
-            yield return new object[] { new VerifiableMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
+            yield return new object[] { new VerifyMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
         }
 
         private static ISourceMember GetSourceMethod()

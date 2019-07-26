@@ -1,31 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class ReplaceableMock : Mock
+    internal class ReplaceMock : Mock
     {
         private readonly Parameters _parameters;
 
-        public ReplaceableMock(IInvocationExpression invocationExpression, Parameters parameters) : base(invocationExpression)
+        public ReplaceMock(IInvocationExpression invocationExpression, Parameters parameters) : base(invocationExpression)
         {
             _parameters = parameters;
         }
 
-        private bool NeedCallsCounter =>  _parameters.NeedCheckArguments || _parameters.ExpectedCallsCountFunc != null;
+        public override Func<byte, bool> ExpectedCalls => _parameters.ExpectedCallsFunc;
 
-        public override Func<byte, bool> ExpectedCalls => _parameters.ExpectedCallsCountFunc;
-
-        public override bool CheckArguments => _parameters.NeedCheckArguments;
+        public override bool CheckArguments => _parameters.CheckArguments;
 
         public override void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
         {
-            if (_parameters.NeedCheckArguments || _parameters.ExpectedCallsCountFunc != null)
+            if (_parameters.CheckArguments || _parameters.ExpectedCallsFunc != null)
             {
                 methodMocker.SaveMethodCall(ilProcessor, instruction);
             }
@@ -72,24 +69,24 @@ namespace AutoFake.Setup
                 field.SetValue(null, _parameters.Callback);
             }
 
-            if (_parameters.ExpectedCallsCountFunc != null)
+            if (_parameters.ExpectedCallsFunc != null)
             {
                 var field = GetField(type, mockedMemberInfo.ExpectedCallsFuncField.Name);
                 if (field == null)
                     throw new FakeGeneretingException(
                         $"'{mockedMemberInfo.ExpectedCallsFuncField.Name}' is not found in the generated object");
-                field.SetValue(null, _parameters.ExpectedCallsCountFunc);
+                field.SetValue(null, _parameters.ExpectedCallsFunc);
             }
             return parameters;
         }
 
         public override void PrepareForInjecting(IMocker mocker)
         {
-            if (_parameters.NeedCheckArguments || _parameters.ExpectedCallsCountFunc != null)
+            if (_parameters.CheckArguments || _parameters.ExpectedCallsFunc != null)
             {
                 mocker.GenerateSetupBodyField();
             }
-            if (_parameters.ExpectedCallsCountFunc != null)
+            if (_parameters.ExpectedCallsFunc != null)
                 mocker.GenerateCallsCounterFuncField();
             if (_parameters.ReturnObject != null)
                 mocker.GenerateRetValueField();
@@ -99,8 +96,8 @@ namespace AutoFake.Setup
         
         internal class Parameters
         {
-            public bool NeedCheckArguments { get; set; }
-            public Func<byte, bool> ExpectedCallsCountFunc { get; set; }
+            public bool CheckArguments { get; set; }
+            public Func<byte, bool> ExpectedCallsFunc { get; set; }
             public MethodDescriptor ReturnObject { get; set; }
             public Action Callback { get; set; }
         }

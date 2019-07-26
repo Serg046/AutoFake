@@ -17,16 +17,16 @@ namespace AutoFake
         {
         }
 
-        public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
+        public ReplaceMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-        public ReplaceableMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
+        public ReplaceMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
             => ReplaceImpl(voidInstanceSetupFunc);
 
-        public VerifiableMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
+        public VerifyMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
 
-        public VerifiableMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
+        public VerifyMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
         public void Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
@@ -74,49 +74,49 @@ namespace AutoFake
             }
         }
 
-        protected ReplaceableMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
+        protected ReplaceMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
+            return new ReplaceMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
-        protected ReplaceableMockInstaller ReplaceImpl(LambdaExpression expression)
+        protected ReplaceMockInstaller ReplaceImpl(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new ReplaceableMockInstaller(Mocks, invocationExpression);
+            return new ReplaceMockInstaller(Mocks, invocationExpression);
         }
 
-        public ReplaceableMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
+        public ReplaceMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
             => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-        public ReplaceableMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+        public ReplaceMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
             => ReplaceImpl(voidInstanceSetupFunc);
 
-        public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+        public ReplaceMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
             => ReplaceImpl<TReturn>(staticSetupFunc);
 
-        public ReplaceableMockInstaller Replace(Expression<Action> voidStaticSetupFunc)
+        public ReplaceMockInstaller Replace(Expression<Action> voidStaticSetupFunc)
             => ReplaceImpl(voidStaticSetupFunc);
 
-        protected VerifiableMockInstaller VerifyImpl(LambdaExpression expression)
+        protected VerifyMockInstaller VerifyImpl(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
+            return new VerifyMockInstaller(Mocks, invocationExpression);
         }
 
-        public VerifiableMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
+        public VerifyMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
 
-        public VerifiableMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+        public VerifyMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
-        public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+        public VerifyMockInstaller Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
             => VerifyImpl(staticSetupFunc);
 
-        public VerifiableMockInstaller Verify(Expression<Action> voidStaticSetupFunc)
+        public VerifyMockInstaller Verify(Expression<Action> voidStaticSetupFunc)
             => VerifyImpl(voidStaticSetupFunc);
 
         protected void RewriteImpl(LambdaExpression expression)

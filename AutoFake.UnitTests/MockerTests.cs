@@ -305,12 +305,12 @@ namespace AutoFake.UnitTests
             ));
         }
 
-        private Mock GetMock(bool checkArguemnts = false, bool callsCounter = false) => new ReplaceableMock(Moq.Mock.Of<IInvocationExpression>(
+        private Mock GetMock(bool checkArguemnts = false, bool callsCounter = false) => new ReplaceMock(Moq.Mock.Of<IInvocationExpression>(
             e => e.GetSourceMember() == GetSourceMember(nameof(TestType.SomeMethod))),
-            new ReplaceableMock.Parameters
+            new ReplaceMock.Parameters
             {
-                NeedCheckArguments = checkArguemnts,
-                ExpectedCallsCountFunc = callsCounter ? (b => true) : (Func<byte, bool>)null 
+                CheckArguments = checkArguemnts,
+                ExpectedCallsFunc = callsCounter ? (b => true) : (Func<byte, bool>)null 
             });
 
         private Mocker GetMocker(Mock mock) => GetMocker(_typeInfo, mock);

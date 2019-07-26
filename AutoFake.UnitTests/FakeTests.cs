@@ -167,7 +167,7 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake<FakeTests>();
             fake.Verify(f => f.Reset_ClearsSetups())
-                .ExpectedCallsCount(1);
+                .ExpectedCalls(1);
             Assert.NotEmpty(fake.Mocks);
 
             fake.Reset();
@@ -220,7 +220,7 @@ namespace AutoFake.UnitTests
         {
             const string testString = "testString";
             var fake = new Fake<TestClass>();
-            fake.Replace(f => f.StringInstanceMethod()).Returns(() => testString);
+            fake.Replace(f => f.StringInstanceMethod()).Return(() => testString);
             fake.Rewrite(f => f.StringInstanceMethod());
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.FailingMethod()));
@@ -242,7 +242,7 @@ namespace AutoFake.UnitTests
         {
             const string testString = "testString";
             var fake = new Fake(typeof(TestClass));
-            fake.Replace((TestClass t) => t.StringInstanceMethod()).Returns(() => testString);
+            fake.Replace((TestClass t) => t.StringInstanceMethod()).Return(() => testString);
             fake.Rewrite((TestClass t) => t.StringInstanceMethod());
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
