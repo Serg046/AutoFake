@@ -18,14 +18,14 @@ namespace AutoFake.UnitTests.Setup.MockTests
         private static readonly Action CALLBACK_FIELD_VALUE = () => { };
 
         private readonly Mock<IMocker> _mocker;
-        private readonly ReplaceableMock.Parameters _parameters;
+        private readonly ReplaceMock.Parameters _parameters;
 
-        private readonly ReplaceableMock _replaceableMock;
+        private readonly ReplaceMock _replaceableMock;
         private readonly MockedMemberInfo _mockedMemberInfo;
 
         public ReplaceableMockTests()
         {
-            _parameters = new ReplaceableMock.Parameters();
+            _parameters = new ReplaceMock.Parameters();
             _mocker = new Mock<IMocker>();
             _mockedMemberInfo = new MockedMemberInfo(null, null);
             _mocker.Setup(m => m.MemberInfo).Returns(_mockedMemberInfo);
@@ -43,8 +43,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         public void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_SaveMethodCall(bool needCheckArguments,
             bool expectedCallsCountFunc, bool mustBeInjected)
         {
-            _parameters.NeedCheckArguments = needCheckArguments;
-            if (expectedCallsCountFunc) _parameters.ExpectedCallsCountFunc = i => i == 0;
+            _parameters.CheckArguments = needCheckArguments;
+            if (expectedCallsCountFunc) _parameters.ExpectedCallsFunc = i => i == 0;
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
 
@@ -63,8 +63,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
-            _parameters.NeedCheckArguments = needCheckArguments;
-            if (expectedCallsCountFunc) _parameters.ExpectedCallsCountFunc = i => i == 0;
+            _parameters.CheckArguments = needCheckArguments;
+            if (expectedCallsCountFunc) _parameters.ExpectedCallsFunc = i => i == 0;
 
             _replaceableMock.Inject(_mocker.Object, ilProcessor, instruction);
 
@@ -150,8 +150,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         public void PrepareForInjecting_NeedCheckArgumentsOrExpectedCallsCount_GenerateSetupBodyFieldInjected(
             bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected)
         {
-            _parameters.NeedCheckArguments = needCheckArguments;
-            _parameters.ExpectedCallsCountFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
+            _parameters.CheckArguments = needCheckArguments;
+            _parameters.ExpectedCallsFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
             var mocker = new Mock<IMocker>();
 
             _replaceableMock.PrepareForInjecting(mocker.Object);
@@ -199,10 +199,10 @@ namespace AutoFake.UnitTests.Setup.MockTests
         private ISourceMember GetSourceMember(string name)
             => new SourceMethod(typeof(TestClass).GetMethod(name));
 
-        private ReplaceableMock GetReplaceableMock() => GetReplaceableMock(nameof(TestClass.TestMethod));
+        private ReplaceMock GetReplaceableMock() => GetReplaceableMock(nameof(TestClass.TestMethod));
 
-        private ReplaceableMock GetReplaceableMock(string methodName)
-            => new ReplaceableMock(Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember(methodName)), _parameters);
+        private ReplaceMock GetReplaceableMock(string methodName)
+            => new ReplaceMock(Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember(methodName)), _parameters);
 
         private FieldDefinition CreateFieldDefinition(string fieldName) => new FieldDefinition(fieldName, Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
 

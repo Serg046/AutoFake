@@ -13,7 +13,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var testClass = new TestClass();
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => new TestClass()).Returns(() => testClass);
+            fake.Replace(() => new TestClass()).Return(() => testClass);
             fake.Rewrite(f => f.GetTestClass());
 
             fake.Execute(tst => Assert.Equal(testClass, tst.GetTestClass()));
@@ -25,7 +25,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var helperClass = new HelperClass();
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => new HelperClass()).Returns(() => helperClass);
+            fake.Replace(() => new HelperClass()).Return(() => helperClass);
             fake.Rewrite(f => f.GetHelperClass());
 
             fake.Execute(tst => Assert.Equal(helperClass, tst.GetHelperClass()));
@@ -37,7 +37,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var cmd = new SqlCommand();
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => new SqlCommand()).Returns(() => cmd);
+            fake.Replace(() => new SqlCommand()).Return(() => cmd);
             fake.Rewrite(f => f.GetSqlCommand());
 
             fake.Execute(tst => Assert.Equal(cmd, tst.GetSqlCommand()));
@@ -49,7 +49,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var reader = new StringReader("test");
             var fake = new Fake<TestClass>();
             
-            fake.Replace(() => new StringReader("")).Returns(() => reader);
+            fake.Replace(() => new StringReader("")).Return(() => reader);
             fake.Rewrite(f => f.GetStringReader());
 
             fake.Execute(tst => Assert.Equal(reader, tst.GetStringReader()));
@@ -60,8 +60,8 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => new OverloadCtorTestClass()).Returns(() => new OverloadCtorTestClass(6));
-            fake.Replace(() => new OverloadCtorTestClass(Arg.DefaultOf<int>())).Returns(() => new OverloadCtorTestClass(7));
+            fake.Replace(() => new OverloadCtorTestClass()).Return(() => new OverloadCtorTestClass(6));
+            fake.Replace(() => new OverloadCtorTestClass(Arg.DefaultOf<int>())).Return(() => new OverloadCtorTestClass(7));
             fake.Rewrite(f => f.GetOverloadCtorTestClass());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetOverloadCtorTestClass().Value));

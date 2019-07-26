@@ -17,7 +17,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(t => t.DynamicValue()).Returns(() => 7);
+            fake.Replace(t => t.DynamicValue()).Return(() => 7);
             fake.Rewrite(f => f.GetDynamicValue());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetDynamicValue()));
@@ -28,7 +28,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((HelperClass h) => h.DynamicValue()).Returns(() => 7);
+            fake.Replace((HelperClass h) => h.DynamicValue()).Return(() => 7);
             fake.Rewrite(f => f.GetHelperDynamicValue());
             
             fake.Execute(tst => Assert.Equal(7, tst.GetHelperDynamicValue()));
@@ -39,7 +39,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => TestClass.DynamicStaticValue()).Returns(() => 7);
+            fake.Replace(() => TestClass.DynamicStaticValue()).Return(() => 7);
             fake.Rewrite(f => f.GetDynamicStaticValue());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetDynamicStaticValue()));
@@ -50,7 +50,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => HelperClass.DynamicStaticValue()).Returns(() => 7);
+            fake.Replace(() => HelperClass.DynamicStaticValue()).Return(() => 7);
             fake.Rewrite(f => f.GetHelperDynamicStaticValue());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetHelperDynamicStaticValue()));
@@ -61,7 +61,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace((SqlCommand c) => c.ExecuteScalar()).Returns(() => 7);
+            fake.Replace((SqlCommand c) => c.ExecuteScalar()).Return(() => 7);
             fake.Rewrite(f => f.GetFrameworkValue());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetFrameworkValue()));
@@ -72,7 +72,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => CollectionsUtil.CreateCaseInsensitiveHashtable()).Returns(() => new Hashtable {{1, 1}});
+            fake.Replace(() => CollectionsUtil.CreateCaseInsensitiveHashtable()).Return(() => new Hashtable {{1, 1}});
             fake.Rewrite(f => f.GetFrameworkStaticValue());
 
             fake.Execute((tst, prm) => Assert.Equal(prm[0], tst.GetFrameworkStaticValue()));
@@ -83,7 +83,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>())).Returns(() => DateTime.MinValue);
+            fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>())).Return(() => DateTime.MinValue);
             fake.Rewrite(t => t.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
 
             fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local)));
@@ -108,8 +108,8 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(t => t.DynamicValue()).Returns(() => 7);
-            fake.Replace(t => t.DynamicValue(5)).Returns(() => 7);
+            fake.Replace(t => t.DynamicValue()).Return(() => 7);
+            fake.Replace(t => t.DynamicValue(5)).Return(() => 7);
             fake.Rewrite(f => f.GetDynValueByOveloadedMethodCalls());
 
             fake.Execute(tst => Assert.Equal(14, tst.GetDynValueByOveloadedMethodCalls()));
@@ -120,7 +120,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<AsyncTestClass>();
 
-            fake.Replace(a => a.GetDynamicValueAsync()).Returns(() => Task.FromResult(7));
+            fake.Replace(a => a.GetDynamicValueAsync()).Return(() => Task.FromResult(7));
             fake.Rewrite(f => f.GetValueAsync());
 
             await fake.ExecuteAsync(async tst => Assert.Equal(7, await tst.GetValueAsync()));
@@ -131,7 +131,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<AsyncTestClass>();
 
-            fake.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Returns(() => Task.FromResult(7));
+            fake.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Return(() => Task.FromResult(7));
             fake.Rewrite(f => f.GetStaticValueAsync());
 
             await fake.ExecuteAsync(async tst => Assert.Equal(7, await tst.GetStaticValueAsync()));
@@ -141,13 +141,13 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void ParamsMethodTest()
         {
             var fake = new Fake<ParamsTestClass>();
-            fake.Replace(p => p.GetValue(1, 2, 3)).Returns(() => -1);
+            fake.Replace(p => p.GetValue(1, 2, 3)).Return(() => -1);
             fake.Rewrite(f => f.Test());
 
             fake.Execute(tst => Assert.Equal(-1, tst.Test()));
 
             fake = new Fake<ParamsTestClass>();
-            fake.Replace(p => p.GetValue(new[] {1, 2, 3})).Returns(() => -1);
+            fake.Replace(p => p.GetValue(new[] {1, 2, 3})).Return(() => -1);
             fake.Rewrite(f => f.Test());
 
             fake.Execute(tst => Assert.Equal(-1, tst.Test()));
@@ -178,7 +178,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Replace(f => f.GetRecursionValue(Arg.DefaultOf<int>())).Returns(() => -1);
+            fake.Replace(f => f.GetRecursionValue(Arg.DefaultOf<int>())).Return(() => -1);
             fake.Rewrite(f => f.GetRecursionValue(2));
 
             fake.Execute(tst => Assert.Equal(-1, tst.GetRecursionValue(2)));

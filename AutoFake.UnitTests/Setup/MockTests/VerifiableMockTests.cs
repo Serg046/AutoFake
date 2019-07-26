@@ -12,14 +12,14 @@ namespace AutoFake.UnitTests.Setup.MockTests
 {
     public class VerifiableMockTests
     {
-        private readonly VerifiableMock.Parameters _parameters;
+        private readonly VerifyMock.Parameters _parameters;
         private readonly Mock<IMocker> _mocker;
 
-        private readonly VerifiableMock _verifiableMock;
+        private readonly VerifyMock _verifiableMock;
 
         public VerifiableMockTests()
         {
-            _parameters = new VerifiableMock.Parameters();
+            _parameters = new VerifyMock.Parameters();
             _mocker = new Mock<IMocker>();
             var mockedMemberInfo = new MockedMemberInfo(null, null);
             _mocker.Setup(m => m.MemberInfo).Returns(mockedMemberInfo);
@@ -35,8 +35,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         public void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_CallsCounterInjected(bool needCheckArguments,
             bool expectedCallsCountFunc, bool mustBeInjected)
         {
-            _parameters.NeedCheckArguments = needCheckArguments;
-            if (expectedCallsCountFunc) _parameters.ExpectedCallsCountFunc = i => i == 0;
+            _parameters.CheckArguments = needCheckArguments;
+            if (expectedCallsCountFunc) _parameters.ExpectedCallsFunc = i => i == 0;
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
 
@@ -55,8 +55,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         {
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
-            if (expectedCallsCountFunc) _parameters.ExpectedCallsCountFunc = i => i == 0;
-            _parameters.NeedCheckArguments = needCheckArguments;
+            if (expectedCallsCountFunc) _parameters.ExpectedCallsFunc = i => i == 0;
+            _parameters.CheckArguments = needCheckArguments;
             var runtimeArgs = new List<VariableDefinition>();
             _mocker.Setup(m => m.SaveMethodCall(ilProcessor, instruction)).Returns(runtimeArgs);
 
@@ -82,8 +82,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
         public void PrepareForInjecting_NeedCheckArgumentsOrExpectedCallsCount_CallsCounterInjected(
             bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected)
         {
-            _parameters.NeedCheckArguments = needCheckArguments;
-            _parameters.ExpectedCallsCountFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
+            _parameters.CheckArguments = needCheckArguments;
+            _parameters.ExpectedCallsFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
             var mocker = new Mock<IMocker>();
 
             _verifiableMock.PrepareForInjecting(mocker.Object);
@@ -91,8 +91,8 @@ namespace AutoFake.UnitTests.Setup.MockTests
             mocker.Verify(m => m.GenerateCallsCounterFuncField(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
         }
 
-        private VerifiableMock GetVerifiableMock()
-            => new VerifiableMock(Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember()), _parameters);
+        private VerifyMock GetVerifiableMock()
+            => new VerifyMock(Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember()), _parameters);
 
         private ISourceMember GetSourceMember()
             => new SourceMethod(typeof(TestClass).GetMethod(nameof(TestClass.TestMethod)));
