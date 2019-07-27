@@ -20,8 +20,8 @@ namespace AutoFake
         public ReplaceMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-        public ReplaceMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
-            => ReplaceImpl(voidInstanceSetupFunc);
+        public RemoveMockInstaller Remove(Expression<Action<T>> voidInstanceSetupFunc)
+            => RemoveImpl(voidInstanceSetupFunc);
 
         public VerifyMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
@@ -81,24 +81,24 @@ namespace AutoFake
             return new ReplaceMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
-        protected ReplaceMockInstaller ReplaceImpl(LambdaExpression expression)
+        protected RemoveMockInstaller RemoveImpl(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new ReplaceMockInstaller(Mocks, invocationExpression);
+            return new RemoveMockInstaller(Mocks, invocationExpression);
         }
 
         public ReplaceMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
             => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-        public ReplaceMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
-            => ReplaceImpl(voidInstanceSetupFunc);
+        public RemoveMockInstaller Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+            => RemoveImpl(voidInstanceSetupFunc);
 
         public ReplaceMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
             => ReplaceImpl<TReturn>(staticSetupFunc);
 
-        public ReplaceMockInstaller Replace(Expression<Action> voidStaticSetupFunc)
-            => ReplaceImpl(voidStaticSetupFunc);
+        public RemoveMockInstaller Remove(Expression<Action> voidStaticSetupFunc)
+            => RemoveImpl(voidStaticSetupFunc);
 
         protected VerifyMockInstaller VerifyImpl(LambdaExpression expression)
         {

@@ -96,7 +96,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             var fake = new Fake<TestClass>();
 
-            fake.Replace(t => t.ThrowException());
+            fake.Remove(t => t.ThrowException());
             fake.Rewrite(f => f.UnsafeMethod());
 
             //no exception

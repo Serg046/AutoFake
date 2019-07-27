@@ -37,7 +37,7 @@ namespace AutoFake.UnitTests.Setup.MockInstallerTests
             var invocationExpression = new Mock<IInvocationExpression>();
             invocationExpression.Setup(e => e.GetSourceMember()).Returns(GetSourceMethod());
             var mocks = new List<IMock>();
-            yield return new object[] { new ReplaceMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
+            yield return new object[] { new RemoveMockInstaller(mocks, invocationExpression.Object), mocks.Single() };
             mocks = new List<IMock>();
             yield return new object[] { new ReplaceMockInstaller<int>(mocks, invocationExpression.Object), mocks.Single() };
             mocks = new List<IMock>();

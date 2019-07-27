@@ -65,7 +65,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CallbackTests.cs" />
     <Compile Include="InstanceTests\CtorMockTests.cs" />
     <Compile Include="InstanceTests\CrossAssemblyTests.cs" />
     <Compile Include="InstanceTests\FieldMockTests.cs" />

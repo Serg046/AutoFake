@@ -75,7 +75,7 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TestClass.ThrowException());
+            fake.Remove(() => TestClass.ThrowException());
             fake.Rewrite(() => TestClass.UnsafeMethod());
 
             //no exception
