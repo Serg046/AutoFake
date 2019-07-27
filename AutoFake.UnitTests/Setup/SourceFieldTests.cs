@@ -29,14 +29,14 @@ namespace AutoFake.UnitTests.Setup
 
         [Theory]
         [MemberData(nameof(FieldAccessInstructions))]
-        public void IsCorrectInstruction_TheSameField_True(OpCode fldInstruction)
+        public void IsSourceInstruction_TheSameField_True(OpCode fldInstruction)
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.Fields.Single(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(fldInstruction, field);
 
-            Assert.True(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         public static IEnumerable<object[]> FieldAccessInstructions =>
@@ -49,25 +49,25 @@ namespace AutoFake.UnitTests.Setup
             };
 
         [Fact]
-        public void IsCorrectInstruction_IncorrectOpCode_False()
+        public void IsSourceInstruction_IncorrectOpCode_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.Fields.Single(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Stfld, field);
 
-            Assert.False(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]
-        public void IsCorrectInstruction_DifferentTypes_False()
+        public void IsSourceInstruction_DifferentTypes_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var field = typeInfo.Fields.Single(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Ldfld, field);
             var sourceMember = new SourceField(typeof(TestClass2).GetField(nameof(TestClass2.Field)));
 
-            Assert.False(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]

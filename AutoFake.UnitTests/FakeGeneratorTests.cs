@@ -23,6 +23,7 @@ namespace AutoFake.UnitTests
         {
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
+            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             var mockedMembers = new Mock<MockedMemberInfo>();
 
             _fakeGenerator.Generate(new[] { mock.Object }, new List<MockedMemberInfo>(), testMethod);

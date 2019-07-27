@@ -70,14 +70,14 @@
     <Compile Include="InstanceTests\FieldMockTests.cs" />
     <Compile Include="InstanceTests\RewriteTests.cs" />
     <Compile Include="InstanceTests\MethodMockTests.cs" />
-    <Compile Include="ReplacementTests.cs" />
+    <Compile Include="ReplaceTests.cs" />
     <Compile Include="InstanceTests\PropertyMockTests.cs" />
     <Compile Include="StaticTests\FieldMockTests.cs" />
     <Compile Include="StaticTests\MethodMockTests.cs" />
     <Compile Include="StaticTests\PropertyMockTests.cs" />
     <Compile Include="StaticTests\RewriteTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VerifiableTests.cs" />
+    <Compile Include="VerifyTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

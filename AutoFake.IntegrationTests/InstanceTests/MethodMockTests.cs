@@ -166,9 +166,9 @@ namespace AutoFake.IntegrationTests.InstanceTests
             {
                 var correctZone = TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", "");
                 var incorrectZone = TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2016, 11, 05), incorrectZone));
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2016, 11, 03), correctZone));
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2016, 11, 03), incorrectZone));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2016, 11, 05), incorrectZone));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2016, 11, 03), correctZone));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2016, 11, 03), incorrectZone));
                 tst.GetValueByArguments(new DateTime(2016, 11, 05), correctZone);
             });
         }
