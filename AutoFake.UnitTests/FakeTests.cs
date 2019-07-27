@@ -28,9 +28,7 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake(typeof(TestClass));
             Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Action>)null));
         }
 
         [Fact]
@@ -39,15 +37,30 @@ namespace AutoFake.UnitTests
             var genericFake = new Fake<TestClass>();
             Fake fake = genericFake;
             Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Action>)null));
             Assert.Throws<ArgumentNullException>(() => genericFake.Replace((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => genericFake.Replace((Expression<Action<TestClass>>)null));
+        }
+
+        [Fact]
+        public void Remove_FakeInvalidInput_Throws()
+        {
+            var fake = new Fake(typeof(TestClass));
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action>)null));
+        }
+
+        [Fact]
+        public void Remove_GenericFakeInvalidInput_Throws()
+        {
+            var genericFake = new Fake<TestClass>();
+            Fake fake = genericFake;
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Remove((Expression<Action<TestClass>>)null));
         }
 
         [Theory]
-        [MemberData(nameof(GetCallbacks))]
+        [MemberData(nameof(GetFuncs))]
         public void Replace_Fake_MockAdded(dynamic callback)
         {
             var fake = new Fake(typeof(TestClass));
@@ -58,12 +71,34 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(GetCallbacks))]
+        [MemberData(nameof(GetFuncs))]
         internal void Replace_GenericFake_MockAdded(dynamic callback)
         {
             var fake = new Fake<TestClass>();
 
             fake.Replace(callback);
+
+            Assert.NotEmpty(fake.Mocks);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Remove_Fake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake(typeof(TestClass));
+
+            fake.Remove(callback);
+
+            Assert.NotEmpty(fake.Mocks);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        internal void Remove_GenericFake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+
+            fake.Remove(callback);
 
             Assert.NotEmpty(fake.Mocks);
         }
@@ -259,13 +294,20 @@ namespace AutoFake.UnitTests
             }));
         }
         public static IEnumerable<object[]> GetCallbacks()
+            => GetFuncs().Concat(GetActions());
+
+        public static IEnumerable<object[]> GetFuncs()
         {
             Expression<Func<TestClass, string>> instanceFunc = tst => tst.StringInstanceMethod();
             yield return new object[] { instanceFunc };
-            Expression<Action<TestClass>> instanceAction = tst => tst.VoidInstanceMethod();
-            yield return new object[] { instanceAction };
             Expression<Func<string>> staticFunc = () => TestClass.StaticStringInstanceMethod();
             yield return new object[] { staticFunc };
+        }
+
+        public static IEnumerable<object[]> GetActions()
+        {
+            Expression<Action<TestClass>> instanceAction = tst => tst.VoidInstanceMethod();
+            yield return new object[] { instanceAction };
             Expression<Action> staticAction = () => TestClass.StaticVoidInstanceMethod();
             yield return new object[] { staticAction };
         }

@@ -68,6 +68,7 @@
     <Compile Include="MethodDescriptor.cs" />
     <Compile Include="ReflectionUtils.cs" />
     <Compile Include="Setup\IMock.cs" />
+    <Compile Include="Setup\RemoveMockInstaller.cs" />
     <Compile Include="Setup\ReplaceMock.cs" />
     <Compile Include="Setup\ISourceMember.cs" />
     <Compile Include="Setup\SourceConstructor.cs" />

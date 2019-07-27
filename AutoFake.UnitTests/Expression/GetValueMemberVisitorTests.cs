@@ -20,19 +20,19 @@ namespace AutoFake.UnitTests.Expression
 
         public static IEnumerable<object[]> GetVisitMethodTestData()
         {
-            var generatedObject = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
+            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
             Expression<Func<SomeInstanceType, int>> instanceExpr = s => s.SomeMethod(2);
-            var method = generatedObject.Type.GetMethod(nameof(SomeInstanceTypeFake.SomeMethod));
-            yield return new object[] {generatedObject, instanceExpr.Body, method, 3};
+            var method = fakeObjectInfo.Type.GetMethod(nameof(SomeInstanceTypeFake.SomeMethod));
+            yield return new object[] {fakeObjectInfo, instanceExpr.Body, method, 3};
 
             Expression<Func<int>> staticExpr = () => SomeInstanceType.SomeStaticMethod(2);
-            method = generatedObject.Type.GetMethod(nameof(SomeInstanceTypeFake.SomeStaticMethod));
-            yield return new object[] {generatedObject, staticExpr.Body, method, 3};
+            method = fakeObjectInfo.Type.GetMethod(nameof(SomeInstanceTypeFake.SomeStaticMethod));
+            yield return new object[] {fakeObjectInfo, staticExpr.Body, method, 3};
 
-            generatedObject = new FakeObjectInfo(null, typeof(SomeStaticTypeFake));
+            fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeStaticTypeFake));
             staticExpr = () => SomeStaticType.SomeStaticMethod(2);
-            method = generatedObject.Type.GetMethod(nameof(SomeStaticTypeFake.SomeStaticMethod));
-            yield return new object[] { generatedObject, staticExpr.Body, method, 3 };
+            method = fakeObjectInfo.Type.GetMethod(nameof(SomeStaticTypeFake.SomeStaticMethod));
+            yield return new object[] { fakeObjectInfo, staticExpr.Body, method, 3 };
         }
 
         [Theory]
@@ -48,16 +48,16 @@ namespace AutoFake.UnitTests.Expression
 
         public static IEnumerable<object[]> GetVisitPropertyTestData()
         {
-            var generatedObject = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
-            var property = generatedObject.Type.GetProperty(nameof(SomeInstanceTypeFake.SomeProperty));
-            yield return new object[] {generatedObject, property, 3};
+            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
+            var property = fakeObjectInfo.Type.GetProperty(nameof(SomeInstanceTypeFake.SomeProperty));
+            yield return new object[] {fakeObjectInfo, property, 3};
 
-            property = generatedObject.Type.GetProperty(nameof(SomeInstanceTypeFake.SomeStaticProperty));
-            yield return new object[] { generatedObject, property, 3 };
+            property = fakeObjectInfo.Type.GetProperty(nameof(SomeInstanceTypeFake.SomeStaticProperty));
+            yield return new object[] { fakeObjectInfo, property, 3 };
 
-            generatedObject = new FakeObjectInfo(null, typeof(SomeStaticTypeFake));
-            property = generatedObject.Type.GetProperty(nameof(SomeStaticTypeFake.SomeStaticProperty));
-            yield return new object[] { generatedObject, property, 3 };
+            fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeStaticTypeFake));
+            property = fakeObjectInfo.Type.GetProperty(nameof(SomeStaticTypeFake.SomeStaticProperty));
+            yield return new object[] { fakeObjectInfo, property, 3 };
         }
 
         [Theory]
@@ -73,16 +73,16 @@ namespace AutoFake.UnitTests.Expression
 
         public static IEnumerable<object[]> GetVisitFieldTestData()
         {
-            var generatedObject = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
-            var field = generatedObject.Type.GetField(nameof(SomeInstanceTypeFake.SomeField));
-            yield return new object[] { generatedObject, field, 3 };
+            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
+            var field = fakeObjectInfo.Type.GetField(nameof(SomeInstanceTypeFake.SomeField));
+            yield return new object[] { fakeObjectInfo, field, 3 };
 
-            field = generatedObject.Type.GetField(nameof(SomeInstanceTypeFake.SomeStaticField));
-            yield return new object[] { generatedObject, field, 3 };
+            field = fakeObjectInfo.Type.GetField(nameof(SomeInstanceTypeFake.SomeStaticField));
+            yield return new object[] { fakeObjectInfo, field, 3 };
 
-            generatedObject = new FakeObjectInfo(null, typeof(SomeStaticTypeFake));
-            field = generatedObject.Type.GetField(nameof(SomeStaticTypeFake.SomeStaticField));
-            yield return new object[] { generatedObject, field, 3 };
+            fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeStaticTypeFake));
+            field = fakeObjectInfo.Type.GetField(nameof(SomeStaticTypeFake.SomeStaticField));
+            yield return new object[] { fakeObjectInfo, field, 3 };
         }
 
         [Theory]
@@ -99,11 +99,11 @@ namespace AutoFake.UnitTests.Expression
         [Fact]
         public void Visit_MethodWithExceptionInside_ThrowsInnerException()
         {
-            var generatedObject = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
+            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
             Expression<Action<SomeInstanceTypeFake>> expr = s => s.FailMethod();
-            var method = generatedObject.Type.GetMethod(nameof(SomeInstanceTypeFake.FailMethod));
+            var method = fakeObjectInfo.Type.GetMethod(nameof(SomeInstanceTypeFake.FailMethod));
 
-            var visitor = new GetValueMemberVisitor(generatedObject);
+            var visitor = new GetValueMemberVisitor(fakeObjectInfo);
 
             Assert.Throws<InvalidOperationException>(() => visitor.Visit((MethodCallExpression)expr.Body, method));
         }
@@ -111,10 +111,10 @@ namespace AutoFake.UnitTests.Expression
         [Fact]
         public void Visit_PropertyWithExceptionInside_ThrowsInnerException()
         {
-            var generatedObject = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
-            var property = generatedObject.Type.GetProperty(nameof(SomeInstanceTypeFake.FailProperty));
+            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
+            var property = fakeObjectInfo.Type.GetProperty(nameof(SomeInstanceTypeFake.FailProperty));
 
-            var visitor = new GetValueMemberVisitor(generatedObject);
+            var visitor = new GetValueMemberVisitor(fakeObjectInfo);
 
             Assert.Throws<InvalidOperationException>(() => visitor.Visit(property));
         }
