@@ -17,6 +17,12 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
+        public void Method_NoMethod_Throws()
+        {
+            Assert.Throws<InvalidOperationException>(() => _visitor.Method);
+        }
+
+        [Fact]
         public void Visit_MethodExpression_Success()
         {
             Expression<Action<TestClass>> expression = t => t.Method();

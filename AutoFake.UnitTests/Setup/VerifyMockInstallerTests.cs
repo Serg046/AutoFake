@@ -1,0 +1,47 @@
+﻿using AutoFake.Expression;
+using AutoFake.Setup;
+using System.Collections.Generic;
+using System.Linq;
+using Xunit;
+
+namespace AutoFake.UnitTests.Setup
+{
+    public class VerifyMockInstallerTests
+    {
+        private readonly IMock _mock;
+        private readonly VerifyMockInstaller _verifyMockInstaller;
+
+        public VerifyMockInstallerTests()
+        {
+            var mocks = new List<IMock>();
+            _verifyMockInstaller = new VerifyMockInstaller(mocks, Moq.Mock.Of<IInvocationExpression>());
+            _mock = mocks.Single();
+        }
+
+        [Fact]
+        public void CheckArguments_ReturnsTrue()
+        {
+            Assert.False(_mock.CheckArguments);
+            _verifyMockInstaller.CheckArguments();
+            Assert.True(_mock.CheckArguments);
+        }
+
+        [Fact]
+        public void ExpectedCalls_Byte_Success()
+        {
+            _verifyMockInstaller.ExpectedCalls(3);
+
+            Assert.True(_mock.ExpectedCalls(3));
+            Assert.False(_mock.ExpectedCalls(2));
+        }
+
+        [Fact]
+        public void ExpectedCalls_Func_Success()
+        {
+            _verifyMockInstaller.ExpectedCalls(x => x > 2);
+
+            Assert.True(_mock.ExpectedCalls(3));
+            Assert.False(_mock.ExpectedCalls(2));
+        }
+    }
+}

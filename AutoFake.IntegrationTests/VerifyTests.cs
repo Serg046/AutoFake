@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AutoFake.IntegrationTests
 {
-    public class VerifiableTests
+    public class VerifyTests
     {
         [Fact]
         public void CheckArgumentsTest()
@@ -18,8 +18,8 @@ namespace AutoFake.IntegrationTests
             fake.Execute(tst =>
             {
                 var incorrectZone = TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
                 Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc),
                     tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
             });
@@ -29,26 +29,26 @@ namespace AutoFake.IntegrationTests
         public void ExpectedCallsCountTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(2);
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCalls(2);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
             fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1),
                 TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
 
             fake = new Fake<TestClass>();
-            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(1);
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCalls(1);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
             fake.Execute(tst => Assert.Equal(new DateTime(2019, 1, 1, 6, 0, 0),
                 tst.GetValueByArguments(new DateTime(2019, 1, 1),
                     TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
 
             fake = new Fake<TestClass>();
-            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(x => x < 1);
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCalls(x => x < 1);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
             fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1),
                 TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", ""))));
 
             fake = new Fake<TestClass>();
-            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCallsCount(x => x > 0);
+            fake.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local)).ExpectedCalls(x => x > 0);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local));
             fake.Execute(tst => Assert.Equal(new DateTime(2019, 1, 1, 6, 0, 0),
                 tst.GetValueByArguments(new DateTime(2019, 1, 1),
@@ -61,14 +61,14 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
             fake.Verify(t => t.CodeBranch(1, 2))
                 .CheckArguments()
-                .ExpectedCallsCount(1);
+                .ExpectedCalls(1);
             fake.Rewrite(f => f.Sum(1, 2));
 
             fake.Execute(tst => Assert.Equal(6, tst.Sum(1, 2)));
 
             fake = new Fake<TestClass>();
             fake.Verify(t => t.CodeBranch(0, 0))
-                .ExpectedCallsCount(1);
+                .ExpectedCalls(1);
             fake.Rewrite(f => f.Sum(0, 1));
 
             fake.Execute(tst => Assert.Equal(0, tst.Sum(0, 1)));

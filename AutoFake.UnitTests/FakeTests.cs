@@ -15,9 +15,53 @@ namespace AutoFake.UnitTests
 {
     public class FakeTests
     {
+        [Fact]
+        public void Ctor_InvalidInput_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new Fake<TestClass>(null));
+            Assert.Throws<ArgumentNullException>(() => new Fake(null));
+            Assert.Throws<ArgumentNullException>(() => new Fake(typeof(TestClass), null));
+        }
+
+        [Fact]
+        public void Replace_FakeInvalidInput_Throws()
+        {
+            var fake = new Fake(typeof(TestClass));
+            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<object>>)null));
+        }
+
+        [Fact]
+        public void Replace_GenericFakeInvalidInput_Throws()
+        {
+            var genericFake = new Fake<TestClass>();
+            Fake fake = genericFake;
+            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<object>>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Replace((Expression<Func<TestClass, object>>)null));
+        }
+
+        [Fact]
+        public void Remove_FakeInvalidInput_Throws()
+        {
+            var fake = new Fake(typeof(TestClass));
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action>)null));
+        }
+
+        [Fact]
+        public void Remove_GenericFakeInvalidInput_Throws()
+        {
+            var genericFake = new Fake<TestClass>();
+            Fake fake = genericFake;
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Remove((Expression<Action<TestClass>>)null));
+        }
+
         [Theory]
-        [MemberData(nameof(GetCallbacks))]
-        internal void Replace_Fake_MockAdded(dynamic callback)
+        [MemberData(nameof(GetFuncs))]
+        public void Replace_Fake_MockAdded(dynamic callback)
         {
             var fake = new Fake(typeof(TestClass));
 
@@ -27,7 +71,7 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(GetCallbacks))]
+        [MemberData(nameof(GetFuncs))]
         internal void Replace_GenericFake_MockAdded(dynamic callback)
         {
             var fake = new Fake<TestClass>();
@@ -35,6 +79,51 @@ namespace AutoFake.UnitTests
             fake.Replace(callback);
 
             Assert.NotEmpty(fake.Mocks);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Remove_Fake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake(typeof(TestClass));
+
+            fake.Remove(callback);
+
+            Assert.NotEmpty(fake.Mocks);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        internal void Remove_GenericFake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+
+            fake.Remove(callback);
+
+            Assert.NotEmpty(fake.Mocks);
+        }
+
+        [Fact]
+        public void Verify_FakeInvalidInput_Throws()
+        {
+            var fake = new Fake(typeof(TestClass));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action>)null));
+        }
+
+        [Fact]
+        public void Verify_GenericFakeInvalidInput_Throws()
+        {
+            var genericFake = new Fake<TestClass>();
+            Fake fake = genericFake;
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Verify((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Verify((Expression<Action<TestClass>>)null));
         }
 
         [Theory]
@@ -60,12 +149,26 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Rewrite_AfterExecuteInvocation_Throws()
+        public void Rewrite_FakeInvalidInput_Throws()
         {
-            var fake = new Fake<TestClass>();
-            fake.Execute(f => f.VoidInstanceMethod());
+            var fake = new Fake(typeof(TestClass));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Func<object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Action>)null));
+        }
 
-            Assert.Throws<FakeGeneretingException>(() => fake.Rewrite(f => f.VoidInstanceMethod()));
+        [Fact]
+        public void Rewrite_GenericFakeInvalidInput_Throws()
+        {
+            var genericFake = new Fake<TestClass>();
+            Fake fake = genericFake;
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Func<object>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Rewrite((Expression<Action>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Rewrite((Expression<Func<TestClass, object>>)null));
+            Assert.Throws<ArgumentNullException>(() => genericFake.Rewrite((Expression<Action<TestClass>>)null));
         }
 
         [Theory]
@@ -74,6 +177,7 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake(typeof(TestClass));
             var mock = new Mock<IMock>();
+            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
@@ -87,6 +191,7 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake<TestClass>();
             var mock = new Mock<IMock>();
+            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
@@ -98,9 +203,8 @@ namespace AutoFake.UnitTests
         public void Reset_ClearsSetups()
         {
             var fake = new Fake<FakeTests>();
-
             fake.Verify(f => f.Reset_ClearsSetups())
-                .ExpectedCallsCount(1);
+                .ExpectedCalls(1);
             Assert.NotEmpty(fake.Mocks);
 
             fake.Reset();
@@ -153,16 +257,16 @@ namespace AutoFake.UnitTests
         {
             const string testString = "testString";
             var fake = new Fake<TestClass>();
-            fake.Replace(f => f.StringInstanceMethod()).Returns(() => testString);
+            fake.Replace(f => f.StringInstanceMethod()).Return(() => testString);
             fake.Rewrite(f => f.StringInstanceMethod());
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.FailingMethod()));
             await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.FailingMethodAsync()));
             Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
-                {
-                    Assert.Equal(testString, prms.Single());
-                    tst.FailingMethod();
-                }));
+            {
+                Assert.Equal(testString, prms.Single());
+                tst.FailingMethod();
+            }));
             await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
             {
                 Assert.Equal(testString, prms.Single());
@@ -170,36 +274,42 @@ namespace AutoFake.UnitTests
             }));
         }
 
-        //[Fact]
-        //public async Task Execute_Fake_CallbackExecuted()
-        //{
-        //    const string testString = "testString";
-        //    var fake = new Fake(typeof(TestClass));
-        //    fake.Replace((TestClass t) => t.StringInstanceMethod()).Returns(() => testString);
-        //    fake.Rewrite((TestClass t) => t.StringInstanceMethod());
+        [Fact]
+        public async Task Execute_Fake_CallbackExecuted()
+        {
+            const string testString = "testString";
+            var fake = new Fake(typeof(TestClass));
+            fake.Replace((TestClass t) => t.StringInstanceMethod()).Return(() => testString);
+            fake.Rewrite((TestClass t) => t.StringInstanceMethod());
 
-        //    Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
-        //    await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
-        //    Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
-        //    {
-        //        Assert.Equal(testString, prms.Single());
-        //        tst.Execute((TestClass t) => t.FailingMethod());
-        //    }));
-        //    await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
-        //    {
-        //        Assert.Equal(testString, prms.Single());
-        //        await tst.Execute((TestClass t) => t.FailingMethodAsync());
-        //    }));
-        //}
-
+            Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
+            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
+            Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
+            {
+                Assert.Equal(testString, prms.Single());
+                tst.Execute((TestClass t) => t.FailingMethod());
+            }));
+            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
+            {
+                Assert.Equal(testString, prms.Single());
+                await tst.Execute((TestClass t) => t.FailingMethodAsync());
+            }));
+        }
         public static IEnumerable<object[]> GetCallbacks()
+            => GetFuncs().Concat(GetActions());
+
+        public static IEnumerable<object[]> GetFuncs()
         {
             Expression<Func<TestClass, string>> instanceFunc = tst => tst.StringInstanceMethod();
             yield return new object[] { instanceFunc };
-            Expression<Action<TestClass>> instanceAction = tst => tst.VoidInstanceMethod();
-            yield return new object[] { instanceAction };
             Expression<Func<string>> staticFunc = () => TestClass.StaticStringInstanceMethod();
             yield return new object[] { staticFunc };
+        }
+
+        public static IEnumerable<object[]> GetActions()
+        {
+            Expression<Action<TestClass>> instanceAction = tst => tst.VoidInstanceMethod();
+            yield return new object[] { instanceAction };
             Expression<Action> staticAction = () => TestClass.StaticVoidInstanceMethod();
             yield return new object[] { staticAction };
         }

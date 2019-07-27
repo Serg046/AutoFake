@@ -105,7 +105,7 @@ namespace AutoFake
             return variables.ToList();
         }
 
-        public void RemoveMethodArguments(ILProcessor ilProcessor, Instruction instruction)
+        public void RemoveMethodArgumentsIfAny(ILProcessor ilProcessor, Instruction instruction)
         {
             if (instruction.Operand is MethodReference method)
             {

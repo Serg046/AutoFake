@@ -13,7 +13,7 @@ namespace AutoFake.UnitTests
             var sourceMember = new SourceMethod(GetType().GetMethod(nameof(Test)));
             var expressionMock = new Mock<IInvocationExpression>();
             expressionMock.Setup(e => e.GetSourceMember()).Returns(sourceMember);
-            var memberInfo = new MockedMemberInfo(new ReplaceableMock(expressionMock.Object, null), "suffix");
+            var memberInfo = new MockedMemberInfo(new ReplaceMock(expressionMock.Object, null), "suffix");
 
             Assert.Equal("SystemInt32_Test_SystemObject_suffix", memberInfo.GenerateFieldName());
         }

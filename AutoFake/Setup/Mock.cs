@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -28,17 +28,15 @@ namespace AutoFake.Setup
         public abstract void PrepareForInjecting(IMocker mocker);
         public abstract void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);
 
-        public virtual void Initialize(MockedMemberInfo mockedMemberInfo, GeneratedObject generatedObject)
+        public virtual IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type)
         {
             if (mockedMemberInfo.SetupBodyField != null)
             {
-                var field = GetField(generatedObject, mockedMemberInfo.SetupBodyField.Name);
+                var field = GetField(type, mockedMemberInfo.SetupBodyField.Name);
                 field.SetValue(null, _invocationExpression);
             }
+            return new object[0];
         }
-
-        public bool IsInstalledInstruction(ITypeInfo typeInfo, Instruction instruction)
-            => SourceMember.IsCorrectInstruction(typeInfo, instruction);
 
         public bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
         {
@@ -47,8 +45,6 @@ namespace AutoFake.Setup
                 .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
             if (asyncAttribute != null)
             {
-                if (asyncAttribute.ConstructorArguments.Count != 1)
-                    throw new FakeGeneretingException("Unexpected exception. AsyncStateMachine has several arguments or 0.");
                 TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
                 asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
                 return true;
@@ -57,7 +53,7 @@ namespace AutoFake.Setup
             return false;
         }
 
-        protected FieldInfo GetField(GeneratedObject generatedObject, string fieldName)
-            => generatedObject.Type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
+        protected FieldInfo GetField(Type type, string fieldName)
+            => type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
     }
 }

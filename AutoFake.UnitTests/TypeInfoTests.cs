@@ -95,6 +95,20 @@ namespace AutoFake.UnitTests
             Assert.NotNull(typeInfo.Methods.Single(f => f.Name == testName));
         }
 
+        [Theory]
+        [InlineData(typeof(StringBuilder), false)]
+        [InlineData(typeof(Enumerable), true)]
+        public void CreateFakeObject(Type type, bool isStaticType)
+        {
+            var typeInfo = new TypeInfo(type, new FakeDependency[0]);
+
+            var fakeObjectInfo = typeInfo.CreateFakeObject(Enumerable.Empty<MockedMemberInfo>());
+
+            Assert.Equal(type.FullName, fakeObjectInfo.Type.FullName);
+            var instanceAssertion = isStaticType ? (Action<object>)Assert.Null : Assert.NotNull;
+            instanceAssertion(fakeObjectInfo.Instance);
+        }
+
         private class TestClass
         {
             public TestClass(StringBuilder dependency1, StringBuilder dependency2)
