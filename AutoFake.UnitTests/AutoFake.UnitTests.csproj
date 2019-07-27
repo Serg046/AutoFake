@@ -74,10 +74,12 @@
     <Compile Include="FakeMethodTests.cs" />
     <Compile Include="LambdaCheckerTests.cs" />
     <Compile Include="MockerFactoryTests.cs" />
-    <Compile Include="Setup\MockInstallerTests\MockInstallerTests.cs" />
-    <Compile Include="Setup\MockTests\MockTests.cs" />
-    <Compile Include="Setup\MockTests\ReplaceableMockTests.cs" />
-    <Compile Include="Setup\MockTests\VerifiableMockTests.cs" />
+    <Compile Include="Setup\RemoveMockInstallerTests.cs" />
+    <Compile Include="Setup\ReplaceMockInstallerTests.cs" />
+    <Compile Include="Setup\MockTests.cs" />
+    <Compile Include="Setup\ReplaceMockTests.cs" />
+    <Compile Include="Setup\VerifyMockInstallerTests.cs" />
+    <Compile Include="Setup\VerifyMockTests.cs" />
     <Compile Include="Setup\SourceConstructorTests.cs" />
     <Compile Include="Setup\SourceFieldTests.cs" />
     <Compile Include="Setup\SourceMethodTests.cs" />

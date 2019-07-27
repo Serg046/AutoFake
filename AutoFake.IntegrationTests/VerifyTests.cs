@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AutoFake.IntegrationTests
 {
-    public class VerifiableTests
+    public class VerifyTests
     {
         [Fact]
         public void CheckArgumentsTest()
@@ -18,8 +18,8 @@ namespace AutoFake.IntegrationTests
             fake.Execute(tst =>
             {
                 var incorrectZone = TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
                 Assert.Equal(TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc),
                     tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
             });

@@ -29,36 +29,36 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Fact]
-        public void IsCorrectInstruction_DifferentTypes_False()
+        public void IsSourceInstruction_DifferentTypes_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass2), new List<FakeDependency>());
             var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass2.TestMethod));
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
-            Assert.False(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]
-        public void IsCorrectInstruction_DifferentOverloads_False()
+        public void IsSourceInstruction_DifferentOverloads_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0);
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
-            Assert.False(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]
-        public void IsCorrectInstruction_TheSameMethod_True()
+        public void IsSourceInstruction_TheSameMethod_True()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
             var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 1);
             var instruction = Instruction.Create(OpCodes.Call, method);
 
-            Assert.True(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]

@@ -13,7 +13,6 @@ namespace AutoFake.Setup
         void PrepareForInjecting(IMocker mocker);
         void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);
         IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type);
-        bool IsInstalledInstruction(ITypeInfo typeInfo, Instruction instruction);
         bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod);
     }
 }

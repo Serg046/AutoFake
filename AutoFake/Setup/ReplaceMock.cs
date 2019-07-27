@@ -31,9 +31,6 @@ namespace AutoFake.Setup
                 methodMocker.RemoveMethodArgumentsIfAny(ilProcessor, instruction);
             }
 
-            if (_parameters.Callback != null)
-                methodMocker.InjectCallback(ilProcessor, instruction);
-
             ReplaceInstruction(methodMocker, ilProcessor, instruction);
         }
 
@@ -60,15 +57,6 @@ namespace AutoFake.Setup
                 parameters.Add(obj);
             }
 
-            if (_parameters.Callback != null)
-            {
-                var field = GetField(type, mockedMemberInfo.CallbackField.Name);
-                if (field == null)
-                    throw new FakeGeneretingException(
-                        $"'{mockedMemberInfo.CallbackField.Name}' is not found in the generated object");
-                field.SetValue(null, _parameters.Callback);
-            }
-
             if (_parameters.ExpectedCallsFunc != null)
             {
                 var field = GetField(type, mockedMemberInfo.ExpectedCallsFuncField.Name);
@@ -90,8 +78,6 @@ namespace AutoFake.Setup
                 mocker.GenerateCallsCounterFuncField();
             if (_parameters.ReturnObject != null)
                 mocker.GenerateRetValueField();
-            if (_parameters.Callback != null)
-                mocker.GenerateCallbackField();
         }
         
         internal class Parameters
@@ -99,7 +85,6 @@ namespace AutoFake.Setup
             public bool CheckArguments { get; set; }
             public Func<byte, bool> ExpectedCallsFunc { get; set; }
             public MethodDescriptor ReturnObject { get; set; }
-            public Action Callback { get; set; }
         }
     }
 }

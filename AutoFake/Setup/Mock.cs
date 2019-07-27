@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -39,9 +38,6 @@ namespace AutoFake.Setup
             return new object[0];
         }
 
-        public bool IsInstalledInstruction(ITypeInfo typeInfo, Instruction instruction)
-            => SourceMember.IsCorrectInstruction(typeInfo, instruction);
-
         public bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
         {
             //for .net 4, it is available in .net 4.5
@@ -49,8 +45,6 @@ namespace AutoFake.Setup
                 .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
             if (asyncAttribute != null)
             {
-                if (asyncAttribute.ConstructorArguments.Count != 1)
-                    throw new FakeGeneretingException("Unexpected exception. AsyncStateMachine has several arguments or 0.");
                 TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
                 asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
                 return true;

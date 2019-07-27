@@ -29,36 +29,46 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Fact]
-        public void IsCorrectInstruction_DifferentTypes_False()
+        public void IsSourceInstruction_NoCall_False()
+        {
+            var typeInfo = new TypeInfo(typeof(TestClass2), new List<FakeDependency>());
+            var instruction = Instruction.Create(OpCodes.Nop);
+            var sourceMember = new SourceConstructor(GetCtor(typeof(int)));
+
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
+        }
+
+        [Fact]
+        public void IsSourceInstruction_DifferentTypes_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass2), new List<FakeDependency>());
             var method = typeInfo.Methods.Single(m => m.Name == ".ctor");
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceConstructor(GetCtor(typeof(int)));
 
-            Assert.False(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]
-        public void IsCorrectInstruction_DifferentOverloads_False()
+        public void IsSourceInstruction_DifferentOverloads_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var ctor = typeInfo.Methods.Single(m => m.Name == ".ctor" && m.Parameters.Count == 0);
             var instruction = Instruction.Create(OpCodes.Call, ctor);
             var sourceMember = new SourceConstructor(GetCtor(typeof(int)));
 
-            Assert.False(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]
-        public void IsCorrectInstruction_TheSameMethod_True()
+        public void IsSourceInstruction_TheSameMethod_True()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var sourceMember = new SourceConstructor(GetCtor(typeof(int)));
             var method = typeInfo.Methods.Single(m => m.Name == ".ctor" && m.Parameters.Count == 1);
             var instruction = Instruction.Create(OpCodes.Call, method);
 
-            Assert.True(sourceMember.IsCorrectInstruction(typeInfo, instruction));
+            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction));
         }
 
         [Fact]

@@ -37,11 +37,5 @@ namespace AutoFake.Setup
             _parameters.ExpectedCallsFunc = expectedCallsCountFunc;
             return this;
         }
-
-        public ReplaceMockInstaller<TReturn> Callback(Action callback)
-        {
-            _parameters.Callback = callback ?? throw new ArgumentNullException(nameof(callback));
-            return this;
-        }
     }
 }

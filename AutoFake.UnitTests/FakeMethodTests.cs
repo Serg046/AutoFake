@@ -11,6 +11,7 @@ namespace AutoFake.UnitTests
         private readonly Mock<IMock> _mock;
         private readonly MethodDefinition _method;
         private readonly Mock<IMethodMocker> _mocker;
+        private readonly Mock<ISourceMember> _sourceMember;
 
         private readonly FakeMethod _fakeMethod;
 
@@ -18,6 +19,8 @@ namespace AutoFake.UnitTests
         {
             _mock = new Mock<IMock>();
             _method = CreateMethod("testMethod");
+            _sourceMember = new Mock<ISourceMember>();
+            _mock.Setup(m => m.SourceMember).Returns(_sourceMember.Object);
             _mocker = new Mock<IMethodMocker>();
             _fakeMethod = new FakeMethod(_method, _mocker.Object);
         }
@@ -32,7 +35,7 @@ namespace AutoFake.UnitTests
 
             _fakeMethod.ApplyMock(_mock.Object);
 
-            _mock.Verify(m => m.IsInstalledInstruction(It.IsAny<ITypeInfo>(),
+            _sourceMember.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(),
                 It.Is<Instruction>(i => i == expectedInstruction)));
         }
 
@@ -41,7 +44,7 @@ namespace AutoFake.UnitTests
         {
             var expectedInstruction = Instruction.Create(OpCodes.Nop);
             _method.Body.Instructions.Add(expectedInstruction);
-            _mock.Setup(m => m.IsInstalledInstruction(It.IsAny<ITypeInfo>(), expectedInstruction)).Returns(true);
+            _mock.Setup(m => m.SourceMember.IsSourceInstruction(It.IsAny<ITypeInfo>(), expectedInstruction)).Returns(true);
 
             _fakeMethod.ApplyMock(_mock.Object);
 
@@ -62,7 +65,7 @@ namespace AutoFake.UnitTests
             _method.Body.Instructions.Add(installedInstruction);
             if (isInstalled)
             {
-                _mock.Setup(m => m.IsInstalledInstruction(It.IsAny<ITypeInfo>(), installedInstruction)).Returns(true);
+                _mock.Setup(m => m.SourceMember.IsSourceInstruction(It.IsAny<ITypeInfo>(), installedInstruction)).Returns(true);
             }
             if (isFakeAssemblyMethod)
             {
@@ -74,7 +77,7 @@ namespace AutoFake.UnitTests
 
             _fakeMethod.ApplyMock(_mock.Object);
 
-            _mock.Verify(m => m.IsInstalledInstruction(It.IsAny<ITypeInfo>(),
+            _sourceMember.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(),
                     It.Is<Instruction>(i => i == expectedInstruction)),
                 mustBeCalled ? Times.AtLeastOnce() : Times.Never());
         }

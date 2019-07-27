@@ -82,7 +82,7 @@ namespace AutoFake.UnitTests.Expression
             var expr = new InvocationExpression(methodExpr);
             var arguments = new[] { new object[] { 4, "4" }};
 
-            Assert.Throws<VerifiableException>(() => expr.MatchArguments(arguments, true, null));
+            Assert.Throws<VerifyException>(() => expr.MatchArguments(arguments, true, null));
         }
 
         [Theory]
