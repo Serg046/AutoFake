@@ -9,7 +9,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void ClassCtorTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
+            fake.Replace(() => DateTime.Now).Return(() => DateTime.Now);
             fake.Rewrite(f => f.GetClassCtorResult());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetClassCtorResult().Prop));
@@ -19,7 +19,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void ClassCtorWithArgsTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
+            fake.Replace(() => DateTime.Now).Return(() => DateTime.Now);
             fake.Rewrite(f => f.GetClassCtorWithArgsResult());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetClassCtorWithArgsResult().Prop));
@@ -29,7 +29,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void ClassFieldTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
+            fake.Replace(() => DateTime.Now).Return(() => DateTime.Now);
             fake.Rewrite(f => f.GetClassField());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetClassField().Prop));
@@ -39,7 +39,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         public void StructFieldTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Replace(() => DateTime.Now).Returns(() => DateTime.Now);
+            fake.Replace(() => DateTime.Now).Return(() => DateTime.Now);
             fake.Rewrite(f => f.GetStructField());
 
             fake.Execute(tst => Assert.Equal(7, tst.GetStructField().Prop));

@@ -17,5 +17,6 @@ namespace AutoFake
         void AddMethod(MethodDefinition method);
         void WriteAssembly(Stream stream);
         object CreateInstance(Type type);
+        FakeObjectInfo CreateFakeObject(IEnumerable<MockedMemberInfo> mockedMembers);
     }
 }

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AutoFake.IntegrationTests
 {
-    public class ReplacementTests
+    public class ReplaceTests
     {
         [Fact]
         public void CheckArgumentsTest()
@@ -14,14 +14,14 @@ namespace AutoFake.IntegrationTests
 
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
                 .CheckArguments()
-                .Returns(() => DateTime.MinValue);
+                .Return(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()));
 
             fake.Execute(tst =>
             {
                 var incorrectZone = TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
-                Assert.Throws<VerifiableException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
+                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
                 Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
             });
         }
@@ -31,24 +31,24 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<TestClass>();
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
-                .ExpectedCallsCount(2)
-                .Returns(() => DateTime.MinValue);
+                .ExpectedCalls(2)
+                .Return(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
 
             fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(DateTime.MinValue, null)));
 
             fake = new Fake<TestClass>();
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
-                .ExpectedCallsCount(1)
-                .Returns(() => DateTime.MinValue);
+                .ExpectedCalls(1)
+                .Return(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
 
             fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
 
             fake = new Fake<TestClass>();
             fake.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
-                .ExpectedCallsCount(x => x > 0)
-                .Returns(() => DateTime.MinValue);
+                .ExpectedCalls(x => x > 0)
+                .Return(() => DateTime.MinValue);
             fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
 
             fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
@@ -60,8 +60,8 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
             fake.Replace(t => t.CodeBranch(1, 2))
                 .CheckArguments()
-                .ExpectedCallsCount(1)
-                .Returns(() => 6);
+                .ExpectedCalls(1)
+                .Return(() => 6);
             fake.Rewrite(f => f.Sum(1, 2));
 
             fake.Execute(tst => Assert.Equal(9, tst.Sum(1, 2)));
@@ -69,8 +69,8 @@ namespace AutoFake.IntegrationTests
             fake = new Fake<TestClass>();
             fake.Replace(t => t.CodeBranch(0, 0))
                 .CheckArguments()
-                .ExpectedCallsCount(1)
-                .Returns(() => 6);
+                .ExpectedCalls(1)
+                .Return(() => 6);
             fake.Rewrite(f => f.Sum(0, 1));
 
             fake.Execute(tst => Assert.Equal(6, tst.Sum(0, 1)));

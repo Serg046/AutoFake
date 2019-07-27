@@ -90,7 +90,7 @@ namespace AutoFake.Expression
                         var fakeArgument = fakeArguments[i];
                         if (!fakeArgument.Check(args[i]))
                         {
-                            throw new VerifiableException(
+                            throw new VerifyException(
                                 $"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {args[i]}.");
                         }
                     }

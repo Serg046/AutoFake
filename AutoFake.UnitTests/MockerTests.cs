@@ -65,7 +65,7 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void SaveMethodCall_ActualCallsAccumulator()
+        public void SaveMethodCall_NoActualCallsAccumulator_Created()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
@@ -77,6 +77,21 @@ namespace AutoFake.UnitTests
             Assert.NotNull(mocker.MemberInfo.ActualCallsAccumulator?.VariableType);
             Assert.Equal(_typeInfo.Module.Import(typeof(List<object[]>)).FullName,
                 mocker.MemberInfo.ActualCallsAccumulator.VariableType.FullName);
+        }
+
+        [Fact]
+        public void SaveMethodCall_ActualCallsAccumulator_Reused()
+        {
+            var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
+            var proc = method.Body.GetILProcessor();
+            var cmd = FindMethodCall(proc.Body);
+            var mocker = GetMocker(GetMock());
+            var expectedAccumulator = new VariableDefinition(new FunctionPointerType());
+            mocker.MemberInfo.ActualCallsAccumulator = expectedAccumulator;
+
+            mocker.SaveMethodCall(proc, cmd);
+
+            Assert.Equal(expectedAccumulator, mocker.MemberInfo.ActualCallsAccumulator);
         }
 
         [Fact]
@@ -121,20 +136,34 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void RemoveMethodArguments_ValidInput_InjectedArgumentsRemoving()
+        public void RemoveMethodArgumentsIfAny_ValidInput_InjectedArgumentsRemoving()
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
             var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
-            mocker.RemoveMethodArguments(proc, cmd);
+            mocker.RemoveMethodArgumentsIfAny(proc, cmd);
 
             Assert.True(proc.Body.Instructions.Ordered(
                 Cil.Cmd(OpCodes.Pop),
                 Cil.Cmd(OpCodes.Pop),
                 Cil.Cmd(cmd.OpCode, cmd.Operand)
                 ));
+        }
+
+        [Fact]
+        public void RemoveMethodArgumentsIfAny_Field_NothingInjected()
+        {
+            var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
+            var proc = method.Body.GetILProcessor();
+            var cmd = FindFieldCall(proc.Body);
+            var mocker = GetMocker(GetMock());
+            var originalInstructions = proc.Body.Instructions.ToList();
+
+            mocker.RemoveMethodArgumentsIfAny(proc, cmd);
+
+            Assert.Equal(originalInstructions, proc.Body.Instructions);
         }
 
         [Fact]
@@ -276,12 +305,12 @@ namespace AutoFake.UnitTests
             ));
         }
 
-        private Mock GetMock(bool checkArguemnts = false, bool callsCounter = false) => new ReplaceableMock(Moq.Mock.Of<IInvocationExpression>(
+        private Mock GetMock(bool checkArguemnts = false, bool callsCounter = false) => new ReplaceMock(Moq.Mock.Of<IInvocationExpression>(
             e => e.GetSourceMember() == GetSourceMember(nameof(TestType.SomeMethod))),
-            new ReplaceableMock.Parameters
+            new ReplaceMock.Parameters
             {
-                NeedCheckArguments = checkArguemnts,
-                ExpectedCallsCountFunc = callsCounter ? (b => true) : (Func<byte, bool>)null 
+                CheckArguments = checkArguemnts,
+                ExpectedCallsFunc = callsCounter ? (b => true) : (Func<byte, bool>)null 
             });
 
         private Mocker GetMocker(Mock mock) => GetMocker(_typeInfo, mock);
@@ -307,8 +336,26 @@ namespace AutoFake.UnitTests
             throw new InvalidOperationException("The method is not found");
         }
 
+        private Instruction FindFieldCall(MethodBody method) => FindFieldCall(method, out var _);
+        private Instruction FindFieldCall(MethodBody method, out int index)
+        {
+            for (var i = 0; i < method.Instructions.Count; i++)
+            {
+                var instruction = method.Instructions[i];
+                if (instruction.OpCode == OpCodes.Ldfld && instruction.Operand is FieldDefinition f &&
+                    f.Name == nameof(TestType.SomeField))
+                {
+                    index = i;
+                    return instruction;
+                }
+            }
+            throw new InvalidOperationException("The field is not found");
+        }
+
         private class TestType
         {
+            public int SomeField = 1;
+
             public int SomeMethod() => 0;
 
             public void SomeMethodWithBody()
@@ -316,7 +363,7 @@ namespace AutoFake.UnitTests
                 var a = 5;
                 var b = "a";
                 SomeMethodWithArguments(a, b);
-                var c = a + b;
+                var c = SomeField + a;
             }
 
             public void SomeMethodWithArguments(int a, string b)

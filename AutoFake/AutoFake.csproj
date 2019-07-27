@@ -55,13 +55,11 @@
     <Compile Include="Expression\GetArgumentsMemberVisitor.cs" />
     <Compile Include="Expression\GetTestMethodVisitor.cs" />
     <Compile Include="Expression\IInvocationExpression.cs" />
-    <Compile Include="Expression\TargetMemberVisitor.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FakeArgument.cs" />
     <Compile Include="Expression\GetSourceMemberVisitor.cs" />
     <Compile Include="Expression\GetValueMemberVisitor.cs" />
     <Compile Include="FakeMethod.cs" />
-    <Compile Include="Guard.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
     <Compile Include="Arg.cs" />
     <Compile Include="Expression\InvocationExpression.cs" />
@@ -70,13 +68,13 @@
     <Compile Include="MethodDescriptor.cs" />
     <Compile Include="ReflectionUtils.cs" />
     <Compile Include="Setup\IMock.cs" />
-    <Compile Include="Setup\ReplaceableMock.cs" />
+    <Compile Include="Setup\RemoveMockInstaller.cs" />
+    <Compile Include="Setup\ReplaceMock.cs" />
     <Compile Include="Setup\ISourceMember.cs" />
     <Compile Include="Setup\SourceConstructor.cs" />
     <Compile Include="Setup\SourceField.cs" />
     <Compile Include="Setup\SourceMethod.cs" />
-    <Compile Include="Setup\VerifiableMock.cs" />
-    <Compile Include="Expression\SetValueMemberVisitor.cs" />
+    <Compile Include="Setup\VerifyMock.cs" />
     <Compile Include="Fake.cs" />
     <Compile Include="FakeDependency.cs" />
     <Compile Include="FakeGenerator.cs" />
@@ -86,12 +84,12 @@
     <Compile Include="Mocker.cs" />
     <Compile Include="MockerFactory.cs" />
     <Compile Include="Setup\Mock.cs" />
-    <Compile Include="GeneratedObject.cs" />
+    <Compile Include="FakeObjectInfo.cs" />
     <Compile Include="MockedMemberInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Setup\ReplaceableMockInstaller.cs" />
+    <Compile Include="Setup\ReplaceMockInstaller.cs" />
     <Compile Include="TypeInfo.cs" />
-    <Compile Include="Setup\VerifiableMockInstaller.cs" />
+    <Compile Include="Setup\VerifyMockInstaller.cs" />
     <Compile Include="TypeWrapper.cs" />
   </ItemGroup>
   <ItemGroup>

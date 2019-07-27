@@ -17,16 +17,16 @@ namespace AutoFake
         {
         }
 
-        public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
+        public ReplaceMockInstaller<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-        public ReplaceableMockInstaller Replace(Expression<Action<T>> voidInstanceSetupFunc)
-            => ReplaceImpl(voidInstanceSetupFunc);
+        public RemoveMockInstaller Remove(Expression<Action<T>> voidInstanceSetupFunc)
+            => RemoveImpl(voidInstanceSetupFunc);
 
-        public VerifiableMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
+        public VerifyMockInstaller Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
 
-        public VerifiableMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
+        public VerifyMockInstaller Verify(Expression<Action<T>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
         public void Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
@@ -46,29 +46,25 @@ namespace AutoFake
     public class Fake
     {
         private readonly FakeGenerator _fakeGenerator;
-        private readonly GeneratedObject _generatedObject;
         private readonly TypeInfo _typeInfo;
 
-        public Fake(Type type, params object[] contructorArgs)
+        public Fake(Type type, params object[] constructorArgs)
         {
-            Guard.NotNull(type, nameof(type));
-            Guard.NotNull(contructorArgs, nameof(contructorArgs));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));
 
-            var dependencies = contructorArgs.Select(c =>
-            {
-                var dependecy = c as FakeDependency;
-                return dependecy ?? new FakeDependency(c?.GetType(), c);
-            }).ToList();
+            var dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
 
             _typeInfo = new TypeInfo(type, dependencies);
             var mockerFactory = new MockerFactory();
-            _generatedObject = new GeneratedObject(_typeInfo);
-            _fakeGenerator = new FakeGenerator(_typeInfo, mockerFactory, _generatedObject);
+            _fakeGenerator = new FakeGenerator(_typeInfo, mockerFactory);
 
             Mocks = new List<IMock>();
+            MockedMembers = new List<MockedMemberInfo>();
         }
 
         internal ICollection<IMock> Mocks { get; }
+        internal ICollection<MockedMemberInfo> MockedMembers { get; }
 
         public void SaveFakeAssembly(string fileName)
         {
@@ -78,59 +74,59 @@ namespace AutoFake
             }
         }
 
-        protected ReplaceableMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
+        protected ReplaceMockInstaller<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new ReplaceableMockInstaller<TReturn>(Mocks, invocationExpression);
+            return new ReplaceMockInstaller<TReturn>(Mocks, invocationExpression);
         }
 
-        protected ReplaceableMockInstaller ReplaceImpl(LambdaExpression expression)
+        protected RemoveMockInstaller RemoveImpl(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new ReplaceableMockInstaller(Mocks, invocationExpression);
+            return new RemoveMockInstaller(Mocks, invocationExpression);
         }
 
-        public ReplaceableMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
+        public ReplaceMockInstaller<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
             => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-        public ReplaceableMockInstaller Replace<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
-            => ReplaceImpl(voidInstanceSetupFunc);
+        public RemoveMockInstaller Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+            => RemoveImpl(voidInstanceSetupFunc);
 
-        public ReplaceableMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+        public ReplaceMockInstaller<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
             => ReplaceImpl<TReturn>(staticSetupFunc);
 
-        public ReplaceableMockInstaller Replace(Expression<Action> voidStaticSetupFunc)
-            => ReplaceImpl(voidStaticSetupFunc);
+        public RemoveMockInstaller Remove(Expression<Action> voidStaticSetupFunc)
+            => RemoveImpl(voidStaticSetupFunc);
 
-        protected VerifiableMockInstaller VerifyImpl(LambdaExpression expression)
+        protected VerifyMockInstaller VerifyImpl(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = new InvocationExpression(expression);
-            return new VerifiableMockInstaller(Mocks, invocationExpression);
+            return new VerifyMockInstaller(Mocks, invocationExpression);
         }
 
-        public VerifiableMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
+        public VerifyMockInstaller Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
 
-        public VerifiableMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+        public VerifyMockInstaller Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
-        public VerifiableMockInstaller Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+        public VerifyMockInstaller Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
             => VerifyImpl(staticSetupFunc);
 
-        public VerifiableMockInstaller Verify(Expression<Action> voidStaticSetupFunc)
+        public VerifyMockInstaller Verify(Expression<Action> voidStaticSetupFunc)
             => VerifyImpl(voidStaticSetupFunc);
 
         protected void RewriteImpl(LambdaExpression expression)
         {
-            Guard.NotNull(expression, nameof(expression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
 
             var invocationExpression = new InvocationExpression(expression);
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
-            _fakeGenerator.Generate(Mocks, visitor.Method);
+            _fakeGenerator.Generate(Mocks, MockedMembers, visitor.Method);
         }
 
         public void Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
@@ -152,24 +148,23 @@ namespace AutoFake
         public Task ExecuteAsync(Func<TypeWrapper, IList<object>, Task> action)
             => (Task)Execute(action.Method, gen => new object[] {new TypeWrapper(gen), gen.Parameters});
 
-        internal object Execute(MethodInfo method, Func<GeneratedObject, object> fake) => Execute(method, gen => new[] { fake(gen) });
+        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object> fake) => Execute(method, gen => new[] { fake(gen) });
 
-        internal object Execute(MethodInfo method, Func<GeneratedObject, object[]> fake)
+        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object[]> fake)
         {
-            if (!_generatedObject.IsBuilt) _generatedObject.Build();
+            var fakeObject = _typeInfo.CreateFakeObject(MockedMembers);
 
-            var delegateType = _generatedObject.Assembly.GetType(method.DeclaringType.FullName, true);
+            var delegateType = fakeObject.Type.Assembly.GetType(method.DeclaringType.FullName, true);
             var generatedMethod = delegateType.GetMethod(method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
             var instance = Activator.CreateInstance(delegateType);
 
             try
             {
-                return generatedMethod.Invoke(instance, fake(_generatedObject));
+                return generatedMethod.Invoke(instance, fake(fakeObject));
             }
-            catch (TargetInvocationException ex)
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                if (ex.InnerException != null) throw ex.InnerException;
-                throw;
+                throw ex.InnerException;
             }
         }
     }

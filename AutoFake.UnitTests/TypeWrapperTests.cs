@@ -9,8 +9,8 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_Action_Executed()
         {
-            var generatedObject = new GeneratedObject(new TypeInfo(typeof(StaticClass), new List<FakeDependency>()));
-            var typeWrapper = new TypeWrapper(generatedObject);
+            var fakeObjectInfo = new FakeObjectInfo(new object[0], typeof(StaticClass));
+            var typeWrapper = new TypeWrapper(fakeObjectInfo);
 
             Assert.Throws<NotImplementedException>(() => typeWrapper.Execute(() => StaticClass.Method()));
         }
@@ -18,8 +18,8 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_Func_Executed()
         {
-            var generatedObject = new GeneratedObject(new TypeInfo(typeof(StaticClass), new List<FakeDependency>()));
-            var typeWrapper = new TypeWrapper(generatedObject);
+            var fakeObjectInfo = new FakeObjectInfo(new object[0], typeof(StaticClass));
+            var typeWrapper = new TypeWrapper(fakeObjectInfo);
 
             const int expectedValue = 7;
             Assert.Equal(expectedValue, typeWrapper.Execute(() => StaticClass.GetValue(expectedValue)));

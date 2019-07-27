@@ -2,9 +2,9 @@
 
 namespace AutoFake.Exceptions
 {
-    public class VerifiableException : Exception
+    public class VerifyException : Exception
     {
-        public VerifiableException(string message) : base(message)
+        public VerifyException(string message) : base(message)
         {
         }
     }
