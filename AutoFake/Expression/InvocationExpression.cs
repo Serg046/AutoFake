@@ -39,6 +39,7 @@ namespace AutoFake.Expression
 
         private void Analyze(MethodCallExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Method);
 
+        [ExcludeFromCodeCoverage]
         private void Analyze(MemberExpression expression, IMemberVisitor visitor)
         {
             try
