@@ -52,6 +52,7 @@
     <Compile Include="Exceptions\FakeGeneretingException.cs" />
     <Compile Include="Exceptions\NotSupportedExpressionException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
+    <Compile Include="ExcludeFromCodeCoverageAttribute.cs" />
     <Compile Include="Expression\GetArgumentsMemberVisitor.cs" />
     <Compile Include="Expression\GetTestMethodVisitor.cs" />
     <Compile Include="Expression\IInvocationExpression.cs" />
