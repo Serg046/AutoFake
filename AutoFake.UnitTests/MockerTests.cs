@@ -41,7 +41,7 @@ namespace AutoFake.UnitTests
         {
             var mocker = GetMocker(GetMock());
 
-            mocker.GenerateRetValueField();
+            mocker.GenerateRetValueField(typeof(int));
 
             var expectedFieldName = $"SystemInt32_SomeMethod_{MOCKER_MEMBER_SUFFIX_NAME}_RetValue";
             Assert.Equal(expectedFieldName, mocker.MemberInfo.RetValueField.Name);
@@ -72,7 +72,7 @@ namespace AutoFake.UnitTests
             var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
-            mocker.SaveMethodCall(proc, cmd);
+            mocker.SaveMethodCall(proc, cmd, true);
 
             Assert.NotNull(mocker.MemberInfo.ActualCallsAccumulator?.VariableType);
             Assert.Equal(_typeInfo.Module.Import(typeof(List<object[]>)).FullName,
@@ -89,7 +89,7 @@ namespace AutoFake.UnitTests
             var expectedAccumulator = new VariableDefinition(new FunctionPointerType());
             mocker.MemberInfo.ActualCallsAccumulator = expectedAccumulator;
 
-            mocker.SaveMethodCall(proc, cmd);
+            mocker.SaveMethodCall(proc, cmd, true);
 
             Assert.Equal(expectedAccumulator, mocker.MemberInfo.ActualCallsAccumulator);
         }
@@ -102,7 +102,7 @@ namespace AutoFake.UnitTests
             var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
-            var variables = mocker.SaveMethodCall(proc, cmd);
+            var variables = mocker.SaveMethodCall(proc, cmd, true);
 
             Assert.Equal(2, variables.Count);
         }
@@ -115,7 +115,7 @@ namespace AutoFake.UnitTests
             var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock(checkArguemnts: true));
 
-            var variables = mocker.SaveMethodCall(proc, cmd);
+            var variables = mocker.SaveMethodCall(proc, cmd, true);
 
             var arrVar = method.Body.Variables.Single(v => v.VariableType.FullName == "System.Object[]");
             Assert.True(proc.Body.Instructions.Ordered(
@@ -231,7 +231,7 @@ namespace AutoFake.UnitTests
             var proc = method.Body.GetILProcessor();
             var cmd = FindMethodCall(proc.Body, out var cmdIndex);
             var mocker = GetMocker(GetMock());
-            mocker.GenerateRetValueField();
+            mocker.GenerateRetValueField(typeof(int));
 
             mocker.ReplaceToRetValueField(proc, cmd);
 
@@ -279,7 +279,7 @@ namespace AutoFake.UnitTests
         [InlineData(true, false, true)]
         [InlineData(false, true, true)]
         [InlineData(true, true, true)]
-        public void InjectVerification_CheckArgsOrCallsCounter_Injected(bool checkArguments, bool callsCounter, bool injected)
+        public void InjectVerification_CheckCalls_Injected(bool checkArguments, bool callsCounter, bool injected)
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
@@ -288,7 +288,7 @@ namespace AutoFake.UnitTests
             mocker.MemberInfo.ExpectedCallsFuncField = new FieldDefinition("testCounter", FieldAttributes.Assembly, new FunctionPointerType());
             mocker.MemberInfo.ActualCallsAccumulator = new VariableDefinition(new FunctionPointerType());
 
-            mocker.InjectVerification(proc);
+            mocker.InjectVerification(proc, checkArguments, callsCounter);
 
             var checkArgsCode = checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var callsCounterCil = callsCounter
@@ -305,13 +305,13 @@ namespace AutoFake.UnitTests
             ));
         }
 
-        private Mock GetMock(bool checkArguemnts = false, bool callsCounter = false) => new ReplaceMock(Moq.Mock.Of<IInvocationExpression>(
-            e => e.GetSourceMember() == GetSourceMember(nameof(TestType.SomeMethod))),
-            new ReplaceMock.Parameters
+        private Mock GetMock(bool checkArguemnts = false, bool callsCounter = false)
+            => new ReplaceMock(Moq.Mock.Of<IInvocationExpression>(
+                e => e.GetSourceMember() == GetSourceMember(nameof(TestType.SomeMethod))))
             {
                 CheckArguments = checkArguemnts,
-                ExpectedCallsFunc = callsCounter ? (b => true) : (Func<byte, bool>)null 
-            });
+                ExpectedCallsFunc = callsCounter ? (b => true) : (Func<byte, bool>)null
+            };
 
         private Mocker GetMocker(Mock mock) => GetMocker(_typeInfo, mock);
         private Mocker GetMocker(TypeInfo typeInfo, Mock mock)

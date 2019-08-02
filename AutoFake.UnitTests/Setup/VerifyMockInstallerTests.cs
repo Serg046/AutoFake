@@ -8,14 +8,14 @@ namespace AutoFake.UnitTests.Setup
 {
     public class VerifyMockInstallerTests
     {
-        private readonly IMock _mock;
+        private readonly VerifyMock _mock;
         private readonly VerifyMockInstaller _verifyMockInstaller;
 
         public VerifyMockInstallerTests()
         {
             var mocks = new List<IMock>();
             _verifyMockInstaller = new VerifyMockInstaller(mocks, Moq.Mock.Of<IInvocationExpression>());
-            _mock = mocks.Single();
+            _mock = (VerifyMock)mocks.Single();
         }
 
         [Fact]
@@ -31,8 +31,8 @@ namespace AutoFake.UnitTests.Setup
         {
             _verifyMockInstaller.ExpectedCalls(3);
 
-            Assert.True(_mock.ExpectedCalls(3));
-            Assert.False(_mock.ExpectedCalls(2));
+            Assert.True(_mock.ExpectedCallsFunc(3));
+            Assert.False(_mock.ExpectedCallsFunc(2));
         }
 
         [Fact]
@@ -40,8 +40,8 @@ namespace AutoFake.UnitTests.Setup
         {
             _verifyMockInstaller.ExpectedCalls(x => x > 2);
 
-            Assert.True(_mock.ExpectedCalls(3));
-            Assert.False(_mock.ExpectedCalls(2));
+            Assert.True(_mock.ExpectedCallsFunc(3));
+            Assert.False(_mock.ExpectedCallsFunc(2));
         }
     }
 }

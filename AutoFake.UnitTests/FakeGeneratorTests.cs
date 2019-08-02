@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using AutoFake.Exceptions;
+using System.Threading.Tasks;
 using AutoFake.Setup;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
 
@@ -23,12 +25,10 @@ namespace AutoFake.UnitTests
         {
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
-            var mockedMembers = new Mock<MockedMemberInfo>();
 
             _fakeGenerator.Generate(new[] { mock.Object }, new List<MockedMemberInfo>(), testMethod);
 
-            mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
+            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
         }
 
         [Fact]
@@ -37,15 +37,47 @@ namespace AutoFake.UnitTests
             var simpleMethodName = nameof(TestClass.SimpleMethod);
             var testMethod = GetMethodInfo(simpleMethodName);
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.SourceMember).Returns(new SourceMethod(testMethod));
             var mockedMembers = new List<MockedMemberInfo>();
 
             _fakeGenerator.Generate(new[] { mock.Object, mock.Object, mock.Object }, mockedMembers, testMethod);
 
             Assert.Equal(3, mockedMembers.Count);
-            Assert.EndsWith(simpleMethodName, mockedMembers[0].GenerateFieldName());
-            Assert.EndsWith(simpleMethodName + "1", mockedMembers[1].GenerateFieldName());
-            Assert.EndsWith(simpleMethodName + "2", mockedMembers[2].GenerateFieldName());
+            Assert.EndsWith(simpleMethodName, mockedMembers[0].UniqueName);
+            Assert.EndsWith(simpleMethodName + "1", mockedMembers[1].UniqueName);
+            Assert.EndsWith(simpleMethodName + "2", mockedMembers[2].UniqueName);
+        }
+
+        [Fact]
+        public void ApplyMock_IsInstalledInstruction_Injected()
+        {
+            var testMethod = GetMethodInfo(nameof(TestClass.TestMethod));
+            var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
+            var mock = new Mock<IMock>();
+            var mockedMembers = new List<MockedMemberInfo>();
+
+            _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, testMethod);
+
+            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(),
+                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
+        }
+
+        [Fact]
+        public void Generate_IsAsyncMethod_RecursivelyCallsWithBody()
+        {
+            var asyncMethod = GetMethodInfo(nameof(TestClass.AsyncMethod));
+            var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
+            var mock = new Mock<IMock>();
+            var mockedMembers = new List<MockedMemberInfo>();
+
+            _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, asyncMethod);
+
+            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(),
+                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
+        }
+
+        private bool Equivalent(object operand, MethodInfo innerMethod)
+        {
+            return operand is MethodReference method && method.EquivalentTo(innerMethod);
         }
 
         public static IEnumerable<object[]> GetCallbackFieldTestData()
@@ -62,6 +94,17 @@ namespace AutoFake.UnitTests
             {
                 var a = 5;
                 var b = a;
+            }
+
+            public void TestMethod()
+            {
+                SimpleMethod();
+            }
+
+            public async void AsyncMethod()
+            {
+                await Task.Delay(1);
+                SimpleMethod();
             }
         }
     }
