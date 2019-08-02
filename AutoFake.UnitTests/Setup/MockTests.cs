@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using AutoFake.Expression;
 using AutoFake.Setup;
@@ -8,33 +6,10 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xunit;
 
-namespace AutoFake.UnitTests.Setu
+namespace AutoFake.UnitTests.Setup
 {
     public class MockTests
     {
-        [Fact]
-        public void IsAsyncMethod_SyncMethod_False()
-        {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0);
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-
-            MethodDefinition methodDefinition;
-            Assert.False(mock.IsAsyncMethod(method, out methodDefinition));
-        }
-
-        [Fact]
-        public void IsAsyncMethod_AsyncMethod_True()
-        {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.AsyncMethod));
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-
-            MethodDefinition methodDefinition;
-            Assert.True(mock.IsAsyncMethod(method, out methodDefinition));
-            Assert.NotNull(methodDefinition);
-        }
-
         [Fact]
         public void Initialize_SetupBodyField_ExpressionSet()
         {
@@ -66,10 +41,10 @@ namespace AutoFake.UnitTests.Setu
             }
 
             public IInvocationExpression InvocationExpression { get; }
-            public override bool CheckArguments { get; }
-            public override Func<byte, bool> ExpectedCalls { get; }
 
-            public override void PrepareForInjecting(IMocker mocker) => throw new System.NotImplementedException();
+            public override void AfterInjection(IMocker mocker, ILProcessor ilProcessor) => throw new NotImplementedException();
+
+            public override void BeforeInjection(IMocker mocker) => throw new System.NotImplementedException();
 
             public override void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
                 => throw new NotImplementedException();
@@ -84,10 +59,6 @@ namespace AutoFake.UnitTests.Setu
             }
 
             public int TestMethod(int arg) => 5;
-
-            public async void AsyncMethod()
-            {
-            }
         }
     }
 }

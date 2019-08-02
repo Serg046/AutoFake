@@ -71,7 +71,6 @@
     <Compile Include="Expression\GetSourceMemberVisitorTests.cs" />
     <Compile Include="Expression\GetTestMethodVisitorTests.cs" />
     <Compile Include="Expression\InvocationExpressionTests.cs" />
-    <Compile Include="FakeMethodTests.cs" />
     <Compile Include="LambdaCheckerTests.cs" />
     <Compile Include="MockerFactoryTests.cs" />
     <Compile Include="Setup\RemoveMockInstallerTests.cs" />

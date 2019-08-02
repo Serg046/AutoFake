@@ -177,12 +177,11 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake(typeof(TestClass));
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
 
-            mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
+            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
         }
 
         [Theory]
@@ -191,12 +190,11 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake<TestClass>();
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
 
-            mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
+            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
         }
 
         [Fact]

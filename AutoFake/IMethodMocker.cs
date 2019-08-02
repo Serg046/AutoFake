@@ -13,7 +13,6 @@ namespace AutoFake
         void RemoveInstruction(ILProcessor ilProcessor, Instruction instruction);
         void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction);
         void InjectCallback(ILProcessor ilProcessor, Instruction instruction);
-        void InjectVerification(ILProcessor ilProcessor);
-        IList<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction);
+        IList<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction, bool checkArguments);
     }
 }
