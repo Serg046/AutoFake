@@ -7,7 +7,8 @@ namespace AutoFake.Setup
 {
     internal class SourceMethod : ISourceMember
     {
-        private readonly MethodInfo _method;
+        private readonly MethodBase _method;
+        private MethodDefinition _monoCecilMethod;
 
         public SourceMethod(MethodInfo sourceMethod)
         {
@@ -15,6 +16,14 @@ namespace AutoFake.Setup
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.ReturnType;
             HasStackInstance = !sourceMethod.IsStatic;
+        }
+
+        public SourceMethod(ConstructorInfo sourceMethod)
+        {
+            _method = sourceMethod;
+            Name = sourceMethod.Name;
+            ReturnType = sourceMethod.DeclaringType;
+            HasStackInstance = false;
         }
 
         public string Name { get; }
@@ -25,15 +34,15 @@ namespace AutoFake.Setup
 
         public bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction)
         {
-            var result = false;
-            if (instruction.OpCode.OperandType == OperandType.InlineMethod)
+            if (instruction.OpCode.OperandType == OperandType.InlineMethod &&
+                instruction.Operand is MethodReference method &&
+                method.Name == _method.Name &&
+                method.DeclaringType.Name == _method.DeclaringType.Name)
             {
-                var method = (MethodReference)instruction.Operand;
-                result = method.DeclaringType.FullName == typeInfo
-                    .GetMonoCecilTypeName(_method.DeclaringType)
-                         && method.EquivalentTo(_method);
+                if (_monoCecilMethod == null) _monoCecilMethod = typeInfo.Module.Import(_method).Resolve();
+                return method.Resolve().ToString() == _monoCecilMethod.ToString();
             }
-            return result;
+            return false;
         }
 
         public ParameterInfo[] GetParameters() => _method.GetParameters();

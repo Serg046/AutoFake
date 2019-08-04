@@ -49,17 +49,18 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void ApplyMock_IsInstalledInstruction_Injected()
+        public void Generate_IsInstalledInstruction_Injected()
         {
             var testMethod = GetMethodInfo(nameof(TestClass.TestMethod));
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
+            mock.Setup(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(), It.IsAny<MethodBody>(),
+                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)))).Returns(true);
             var mockedMembers = new List<MockedMemberInfo>();
 
             _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, testMethod);
 
-            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(), It.IsAny<MethodBody>(),
-                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
+            mock.Verify(m => m.Inject(It.IsAny<IMethodMocker>(), It.IsAny<ILProcessor>(), It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 
         [Fact]
@@ -76,10 +77,10 @@ namespace AutoFake.UnitTests
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 
-        private bool Equivalent(object operand, MethodInfo innerMethod)
-        {
-            return operand is MethodReference method && method.EquivalentTo(innerMethod);
-        }
+        private bool Equivalent(object operand, MethodInfo innerMethod) => 
+            operand is MethodReference method &&
+            method.Name == innerMethod.Name &&
+            method.Parameters.Count == innerMethod.GetParameters().Length;
 
         public static IEnumerable<object[]> GetCallbackFieldTestData()
         {

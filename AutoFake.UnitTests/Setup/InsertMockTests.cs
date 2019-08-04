@@ -1,6 +1,4 @@
-﻿using System;
-using AutoFake.Setup;
-using Mono.Cecil;
+﻿using AutoFake.Setup;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
@@ -20,7 +18,7 @@ namespace AutoFake.UnitTests.Setup
             method.Instructions.Add(firstInstruction);
             method.Instructions.Add(lastInstruction);
 
-            var mock = new InsertMock(() => { }, location);
+            var mock = new InsertMock(null, location);
 
             Assert.True(mock.IsSourceInstruction(null, method, shouldBeFirst ? firstInstruction : lastInstruction));
             Assert.False(mock.IsSourceInstruction(null, method, shouldBeFirst ? lastInstruction : firstInstruction));
@@ -30,18 +28,18 @@ namespace AutoFake.UnitTests.Setup
         public void Inject_Instruction_Injected()
         {
             var mocker = new Mock<IMethodMocker>();
-            var mock = new InsertMock(() => { }, InsertMock.Location.Top);
+            var mock = new InsertMock(null, InsertMock.Location.Top);
             var cmd = Instruction.Create(OpCodes.Nop);
 
             mock.Inject(mocker.Object, null, cmd);
 
-            mocker.Verify(m => m.InjectCallback(null, cmd, It.IsAny<MethodDescriptor>()));
+            mocker.Verify(m => m.InjectCallback(null, cmd, It.IsAny<MethodDescriptor>(), true));
         }
 
         [Fact]
         public void Initialize_GeneratedType_Nothing()
         {
-            var mock = new InsertMock(() => { }, InsertMock.Location.Top);
+            var mock = new InsertMock(null, InsertMock.Location.Top);
 
             var parameters = mock.Initialize(null, null);
 

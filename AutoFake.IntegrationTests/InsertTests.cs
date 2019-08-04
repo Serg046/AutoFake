@@ -9,15 +9,14 @@ namespace AutoFake.IntegrationTests
         public void Should_AddNumberInTheEnd_When_Append()
         {
             var fake = new Fake<TestClass>();
-            fake.Append(() => TestClass.Numbers.Add(5));
+            fake.Append(() => TestClass.Numbers.Add(-1));
             fake.Rewrite(t => t.SomeMethod());
 
             fake.Execute(tst =>
             {
                 Assert.Empty(TestClass.Numbers);
                 tst.SomeMethod();
-                Assert.Equal(7, TestClass.Numbers[0]);
-                Assert.Equal(5, TestClass.Numbers[1]);
+                Assert.Equal(new[] {3, 5, 7, -1}, TestClass.Numbers);
                 TestClass.Numbers.Clear();
             });
         }
@@ -26,26 +25,77 @@ namespace AutoFake.IntegrationTests
         public void Should_AddNumberInTheBeginning_When_Prepend()
         {
             var fake = new Fake<TestClass>();
-            fake.Prepend(() => TestClass.Numbers.Add(5));
+            fake.Prepend(() => TestClass.Numbers.Add(-1));
             fake.Rewrite(t => t.SomeMethod());
 
             fake.Execute(tst =>
             {
                 Assert.Empty(TestClass.Numbers);
                 tst.SomeMethod();
-                Assert.Equal(5, TestClass.Numbers[0]);
-                Assert.Equal(7, TestClass.Numbers[1]);
+                Assert.Equal(new[] {-1, 3, 5, 7}, TestClass.Numbers);
+                TestClass.Numbers.Clear();
+            });
+        }
+
+        [Fact]
+        public void Should_AddNumberAfterCmd_When_AppendWithSourceMember()
+        {
+            var fake = new Fake<TestClass>();
+            fake.Append(() => TestClass.Numbers.Add(-1))
+                .After((List<int> list) => list.AddRange(new int[0]));
+            fake.Rewrite(t => t.SomeMethod());
+
+            fake.Execute(tst =>
+            {
+                Assert.Empty(TestClass.Numbers);
+                tst.SomeMethod();
+                Assert.Equal(new[] { 3, 5, -1, 7 }, TestClass.Numbers);
+                TestClass.Numbers.Clear();
+            });
+        }
+
+        [Fact]
+        public void Should_AddBothNumbers_When_MultipleCallbacks()
+        {
+            var fake = new Fake<TestClass>();
+            fake.Prepend(() => TestClass.Numbers.Add(-1));
+            fake.Append(() => TestClass.Numbers.Add(-2));
+            fake.Rewrite(t => t.SomeMethod());
+
+            fake.Execute(tst =>
+            {
+                Assert.Empty(TestClass.Numbers);
+                tst.SomeMethod();
+                Assert.Equal(new[] { -1, 3, 5, 7, -2 }, TestClass.Numbers);
+                TestClass.Numbers.Clear();
+            });
+        }
+
+        [Fact]
+        public void Should_AddNumberBeforeCmd_When_PrependWithSourceMember()
+        {
+            var fake = new Fake<TestClass>();
+            fake.Prepend(() => TestClass.Numbers.Add(-1))
+                .Before((List<int> list) => list.AddRange(new int[0]));
+            fake.Rewrite(t => t.SomeMethod());
+
+            fake.Execute(tst =>
+            {
+                Assert.Empty(TestClass.Numbers);
+                tst.SomeMethod();
+                Assert.Equal(new[] { 3, -1, 5, 7 }, TestClass.Numbers);
                 TestClass.Numbers.Clear();
             });
         }
 
         private class TestClass
         {
-            //public static List<int> Numbers { get; } = new List<int>();
-            public static readonly List<int> Numbers = new List<int>();
+            public static List<int> Numbers { get; } = new List<int>();
 
             public void SomeMethod()
             {
+                Numbers.Add(3);
+                Numbers.AddRange(new [] {5});
                 Numbers.Add(7);
             }
         }

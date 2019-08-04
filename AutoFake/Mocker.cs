@@ -37,7 +37,7 @@ namespace AutoFake
         {
             var fieldName = MemberInfo.UniqueName + "_RetValue";
             var fieldType = TypeInfo.Module.GetType(TypeInfo.GetMonoCecilTypeName(returnType))
-                ?? TypeInfo.Module.Import(returnType);
+                            ?? TypeInfo.Module.Import(returnType);
             MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static, fieldType);
             TypeInfo.AddField(MemberInfo.RetValueField);
         }
@@ -128,13 +128,21 @@ namespace AutoFake
             => ilProcessor.Replace(instruction,
                 ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.RetValueField));
         
-        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction, MethodDescriptor callback)
+        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction, MethodDescriptor callback, bool beforeInstruction)
         {
             var type = TypeInfo.Module.GetType(callback.DeclaringType, true).Resolve();
             var ctor = type.Methods.Single(m => m.Name == ".ctor");
             var method = type.Methods.Single(m => m.Name == callback.Name);
-            ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Newobj, ctor));
-            ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Call, method));
+            if (beforeInstruction)
+            {
+                ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Newobj, ctor));
+                ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Call, method));
+            }
+            else
+            {
+                ilProcessor.InsertAfter(instruction, Instruction.Create(OpCodes.Call, method));
+                ilProcessor.InsertAfter(instruction, Instruction.Create(OpCodes.Newobj, ctor));
+            }
         }
 
         public void InjectVerification(ILProcessor ilProcessor, bool checkArguments, bool expectedCalls)
