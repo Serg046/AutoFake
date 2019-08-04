@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Exceptions;
 using AutoFake.Setup;
 using Mono.Cecil;
 using Moq;
@@ -293,6 +292,59 @@ namespace AutoFake.UnitTests
                 await tst.Execute((TestClass t) => t.FailingMethodAsync());
             }));
         }
+
+        [Fact]
+        public void Append_GenericFake_MockAdded()
+        {
+            var fake = new Fake<TestClass>();
+            Action action = () => { };
+
+            fake.Append(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
+        [Fact]
+        public void Append_Fake_MockAdded()
+        {
+            var fake = new Fake(typeof(TestClass));
+            Action action = () => { };
+
+            fake.Append(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
+        [Fact]
+        public void Prepend_GenericFake_MockAdded()
+        {
+            var fake = new Fake<TestClass>();
+            Action action = () => { };
+
+            fake.Prepend(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
+        [Fact]
+        public void Prepend_Fake_MockAdded()
+        {
+            var fake = new Fake(typeof(TestClass));
+            Action action = () => { };
+
+            fake.Prepend(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 

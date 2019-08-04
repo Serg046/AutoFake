@@ -7,12 +7,12 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal abstract class Mock : IMock
+    internal abstract class SourceMemberMock : IMock
     {
         private readonly IInvocationExpression _invocationExpression;
         private readonly Lazy<string> _uniqueName;
 
-        protected Mock(IInvocationExpression invocationExpression)
+        protected SourceMemberMock(IInvocationExpression invocationExpression)
         {
             _invocationExpression = invocationExpression;
             SourceMember = invocationExpression.GetSourceMember();
@@ -37,10 +37,10 @@ namespace AutoFake.Setup
                 var field = GetField(type, mockedMemberInfo.SetupBodyField.Name);
                 field.SetValue(null, _invocationExpression);
             }
-            return new object[0];
+            return new List<object>();
         }
 
-        public bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction)
+        public bool IsSourceInstruction(ITypeInfo typeInfo, Mono.Cecil.Cil.MethodBody method, Instruction instruction)
         {
             return SourceMember.IsSourceInstruction(typeInfo, instruction);
         }

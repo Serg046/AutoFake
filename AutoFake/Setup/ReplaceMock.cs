@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class ReplaceMock : Mock
+    internal class ReplaceMock : SourceMemberMock
     {
         public ReplaceMock(IInvocationExpression invocationExpression) : base(invocationExpression)
         {

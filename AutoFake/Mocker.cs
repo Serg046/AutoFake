@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using AutoFake.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
@@ -11,9 +10,7 @@ namespace AutoFake
 {
     internal class Mocker : IMocker
     {
-        private readonly IMock _mock;
         private readonly MethodReference _addToListOfObjArray;
-        private readonly MethodReference _invokeActionMethod;
         private readonly MethodReference _matchArgumentsMethod;
 
         public Mocker(ITypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
@@ -21,9 +18,7 @@ namespace AutoFake
             TypeInfo = typeInfo;
             MemberInfo = mockedMemberInfo;
 
-            _mock = mockedMemberInfo.Mock;
             _addToListOfObjArray = typeInfo.Module.Import(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
-            _invokeActionMethod = typeInfo.Module.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
             _matchArgumentsMethod = TypeInfo.Module.Import(typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArguments)));
         }
 
@@ -132,21 +127,14 @@ namespace AutoFake
         public void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction)
             => ilProcessor.Replace(instruction,
                 ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.RetValueField));
-
-        public void GenerateCallbackField()
+        
+        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction, MethodDescriptor callback)
         {
-            var fieldName = MemberInfo.UniqueName + "_Callback";
-            MemberInfo.CallbackField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Module.Import(typeof(Action)));
-            TypeInfo.AddField(MemberInfo.CallbackField);
-        }
-
-        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction)
-        {
-            ilProcessor.InsertAfter(instruction,
-                    ilProcessor.Create(OpCodes.Callvirt, _invokeActionMethod));
-            ilProcessor.InsertAfter(instruction,
-                ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.CallbackField));
+            var type = TypeInfo.Module.GetType(callback.DeclaringType, true).Resolve();
+            var ctor = type.Methods.Single(m => m.Name == ".ctor");
+            var method = type.Methods.Single(m => m.Name == callback.Name);
+            ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Newobj, ctor));
+            ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Call, method));
         }
 
         public void InjectVerification(ILProcessor ilProcessor, bool checkArguments, bool expectedCalls)
