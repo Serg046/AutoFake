@@ -167,5 +167,19 @@ namespace AutoFake
                 throw ex.InnerException;
             }
         }
+
+        public AppendMockInstaller Append(Action action)
+        {
+            var position = (ushort)Mocks.Count;
+            Mocks.Add(new InsertMock(action, InsertMock.Location.Bottom));
+            return new AppendMockInstaller(Mocks, position, action);
+        }
+
+        public PrependMockInstaller Prepend(Action action)
+        {
+            var position = (ushort)Mocks.Count;
+            Mocks.Add(new InsertMock(action, InsertMock.Location.Top));
+            return new PrependMockInstaller(Mocks, position, action);
+        }
     }
 }

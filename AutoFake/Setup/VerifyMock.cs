@@ -6,7 +6,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class VerifyMock : Mock
+    internal class VerifyMock : SourceMemberMock
     {
         public VerifyMock(IInvocationExpression invocationExpression) : base(invocationExpression)
         {

@@ -28,7 +28,7 @@ namespace AutoFake.UnitTests.Setup
         private MethodInfo GetMethod(string methodName, params Type[] arguments) => GetMethod<TestClass>(methodName, arguments);
         private MethodInfo GetMethod<T>(string methodName, params Type[] arguments) => typeof(T).GetMethod(methodName, arguments);
 
-        private class MockFake : Mock
+        private class MockFake : SourceMemberMock
         {
             public MockFake(MethodInfo method) : this(Moq.Mock.Of<IInvocationExpression>(
                 m => m.GetSourceMember() == new SourceMethod(method)))

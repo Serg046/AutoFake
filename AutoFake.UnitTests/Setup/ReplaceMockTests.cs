@@ -15,8 +15,6 @@ namespace AutoFake.UnitTests.Setup
 {
     public class ReplaceMockTests
     {
-        private static readonly Action CALLBACK_FIELD_VALUE = () => { };
-
         private readonly Mock<IMocker> _mocker;
         private readonly MockedMemberInfo _mockedMemberInfo;
         private readonly ReplaceMock _replaceMock;

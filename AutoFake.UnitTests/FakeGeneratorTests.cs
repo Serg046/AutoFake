@@ -7,6 +7,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
+using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.UnitTests
 {
@@ -57,7 +58,7 @@ namespace AutoFake.UnitTests
 
             _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, testMethod);
 
-            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(),
+            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(), It.IsAny<MethodBody>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 
@@ -71,7 +72,7 @@ namespace AutoFake.UnitTests
 
             _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, asyncMethod);
 
-            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(),
+            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(), It.IsAny<MethodBody>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 

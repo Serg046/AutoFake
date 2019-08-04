@@ -73,6 +73,7 @@
     <Compile Include="Expression\InvocationExpressionTests.cs" />
     <Compile Include="LambdaCheckerTests.cs" />
     <Compile Include="MockerFactoryTests.cs" />
+    <Compile Include="Setup\InsertMockTests.cs" />
     <Compile Include="Setup\RemoveMockInstallerTests.cs" />
     <Compile Include="Setup\ReplaceMockInstallerTests.cs" />
     <Compile Include="Setup\MockTests.cs" />

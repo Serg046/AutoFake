@@ -8,7 +8,7 @@ namespace AutoFake.Setup
     {
         string UniqueName { get; }
         bool CheckSourceMemberCalls { get; }
-        bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction);
+        bool IsSourceInstruction(ITypeInfo typeInfo, MethodBody method, Instruction instruction);
         void BeforeInjection(IMocker mocker);
         void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);
         void AfterInjection(IMocker mocker, ILProcessor ilProcessor);

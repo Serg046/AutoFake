@@ -32,6 +32,5 @@ namespace AutoFake
         public FieldDefinition RetValueField { get; internal set; }
         public VariableDefinition ActualCallsAccumulator { get; internal set; }
         public FieldDefinition ExpectedCallsFuncField { get; internal set; }
-        public FieldDefinition CallbackField { get; internal set; }
     }
 }

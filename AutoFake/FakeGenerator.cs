@@ -43,7 +43,7 @@ namespace AutoFake
             var ilProcessor = currentMethod.Body.GetILProcessor();
             foreach (var instruction in currentMethod.Body.Instructions.ToList())
             {
-                if (mock.IsSourceInstruction(mocker.TypeInfo, instruction))
+                if (mock.IsSourceInstruction(mocker.TypeInfo, currentMethod.Body, instruction))
                 {
                     mock.Inject(mocker, ilProcessor, instruction);
                 }
