@@ -27,50 +27,67 @@ namespace AutoFake
                     (byte)mockedMembers.Count(m => m.TestMethodName == executeFunc.Name)));
                 mock.BeforeInjection(mocker);
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
-                ApplyMock(method, mock, mocker);
+                var testMethod = new TestMethod(method, mock, mocker);
+                testMethod.Rewrite();
                 mock.AfterInjection(mocker, method.Body.GetILProcessor());
                 mockedMembers.Add(mocker.MemberInfo);
             }
         }
 
-        private void ApplyMock(MethodDefinition currentMethod, IMock mock, IMocker mocker)
+        private class TestMethod
         {
-            if (IsAsyncMethod(currentMethod, out var asyncMethod))
+            private readonly MethodDefinition _originalMethod;
+            private readonly IMock _mock;
+            private readonly IMocker _mocker;
+
+            public TestMethod(MethodDefinition originalMethod, IMock mock, IMocker mocker)
             {
-                ApplyMock(asyncMethod, mock, mocker);
+                _originalMethod = originalMethod;
+                _mock = mock;
+                _mocker = mocker;
             }
 
-            var ilProcessor = currentMethod.Body.GetILProcessor();
-            foreach (var instruction in currentMethod.Body.Instructions.ToList())
+            public void Rewrite() => Rewrite(_originalMethod);
+
+            private void Rewrite(MethodDefinition currentMethod)
             {
-                if (mock.IsSourceInstruction(mocker.TypeInfo, currentMethod.Body, instruction))
+                if (IsAsyncMethod(currentMethod, out var asyncMethod))
                 {
-                    mock.Inject(mocker, ilProcessor, instruction);
+                    Rewrite(asyncMethod);
                 }
-                else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method, mocker))
+
+                var ilProcessor = currentMethod.Body.GetILProcessor();
+                foreach (var instruction in currentMethod.Body.Instructions.ToList())
                 {
-                    var methodDefinition = method.Resolve();
-                    ApplyMock(methodDefinition, mock, mocker);
+                    if (_mock.IsSourceInstruction(_mocker.TypeInfo, _originalMethod.Body, instruction))
+                    {
+                        _mock.Inject(_mocker, ilProcessor, instruction);
+                    }
+                    else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method, _mocker))
+                    {
+                        var methodDefinition = method.Resolve();
+                        Rewrite(methodDefinition);
+                    }
                 }
             }
-        }
 
-        private bool IsFakeAssemblyMethod(MethodReference methodReference, IMocker mocker)
-            => methodReference.DeclaringType.Scope is ModuleDefinition module && module == mocker.TypeInfo.Module;
+            private bool IsFakeAssemblyMethod(MethodReference methodReference, IMocker mocker)
+                => methodReference.DeclaringType.Scope is ModuleDefinition module && module == mocker.TypeInfo.Module;
 
-        private bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
-        {
-            //for .net 4, it is available in .net 4.5
-            dynamic asyncAttribute = method.CustomAttributes
-                .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
-            if (asyncAttribute != null)
+            private bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
             {
-                TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
-                asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
-                return true;
+                //for .net 4, it is available in .net 4.5
+                dynamic asyncAttribute = method.CustomAttributes
+                    .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
+                if (asyncAttribute != null)
+                {
+                    TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
+                    asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
+                    return true;
+                }
+                asyncMethod = null;
+                return false;
             }
-            asyncMethod = null;
-            return false;
         }
     }
 }

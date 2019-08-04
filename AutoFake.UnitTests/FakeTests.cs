@@ -293,55 +293,55 @@ namespace AutoFake.UnitTests
             }));
         }
 
-        [Fact]
-        public void Append_GenericFake_MockAdded()
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Append_GenericFake_MockAdded(dynamic callback)
         {
             var fake = new Fake<TestClass>();
-            Action action = () => { };
+            var action = callback.Compile();
 
             fake.Append(action);
 
             var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
             Assert.Equal(action.Method.Name, mock.Action.Name);
         }
 
-        [Fact]
-        public void Append_Fake_MockAdded()
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Append_Fake_MockAdded(dynamic callback)
         {
             var fake = new Fake(typeof(TestClass));
-            Action action = () => { };
+            var action = callback.Compile();
 
             fake.Append(action);
 
             var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
             Assert.Equal(action.Method.Name, mock.Action.Name);
         }
 
-        [Fact]
-        public void Prepend_GenericFake_MockAdded()
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Prepend_GenericFake_MockAdded(dynamic callback)
         {
             var fake = new Fake<TestClass>();
-            Action action = () => { };
+            var action = callback.Compile();
 
             fake.Prepend(action);
 
             var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
             Assert.Equal(action.Method.Name, mock.Action.Name);
         }
 
-        [Fact]
-        public void Prepend_Fake_MockAdded()
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Prepend_Fake_MockAdded(dynamic callback)
         {
             var fake = new Fake(typeof(TestClass));
-            Action action = () => { };
+            var action = callback.Compile();
 
             fake.Prepend(action);
 
             var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.DeclaringType.FullName, mock.Action.DeclaringType);
             Assert.Equal(action.Method.Name, mock.Action.Name);
         }
 

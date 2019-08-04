@@ -10,22 +10,23 @@ namespace AutoFake.Setup
     {
         private readonly Location _location;
 
-        public InsertMock(Action action, Location location)
+        public InsertMock(MethodDescriptor action, Location location)
         {
             _location = location;
-            Action = new MethodDescriptor(action.Method.DeclaringType.FullName, action.Method.Name);
+            Action = action;
         }
 
         public MethodDescriptor Action { get; }
 
-        public string UniqueName => "Callback";
+        [ExcludeFromCodeCoverage]
+        public string UniqueName => null;
 
-        public bool CheckSourceMemberCalls => false;
-
+        [ExcludeFromCodeCoverage]
         public void AfterInjection(IMocker mocker, ILProcessor ilProcessor)
         {
         }
 
+        [ExcludeFromCodeCoverage]
         public void BeforeInjection(IMocker mocker)
         {
         }
@@ -37,9 +38,10 @@ namespace AutoFake.Setup
 
         public void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
         {
-            methodMocker.InjectCallback(ilProcessor, instruction, Action);
+            methodMocker.InjectCallback(ilProcessor, instruction, Action, beforeInstruction: true);
         }
 
+        [ExcludeFromCodeCoverage] // No way to exclude default statement, see https://github.com/OpenCover/opencover/issues/907
         public bool IsSourceInstruction(ITypeInfo typeInfo, MethodBody method, Instruction instruction)
         {
             switch (_location)

@@ -51,36 +51,13 @@ namespace AutoFake.Setup
                 field.SetValue(null, obj);
                 parameters.Add(obj);
             }
-
-            if (ExpectedCallsFunc != null)
-            {
-                var field = GetField(type, mockedMemberInfo.ExpectedCallsFuncField.Name);
-                if (field == null)
-                    throw new FakeGeneretingException(
-                        $"'{mockedMemberInfo.ExpectedCallsFuncField.Name}' is not found in the generated object");
-                field.SetValue(null, ExpectedCallsFunc);
-            }
             return parameters;
         }
 
         public override void BeforeInjection(IMocker mocker)
         {
-            if (CheckSourceMemberCalls)
-            {
-                mocker.GenerateSetupBodyField();
-            }
-            if (ExpectedCallsFunc != null)
-                mocker.GenerateCallsCounterFuncField();
-            if (ReturnObject != null)
-                mocker.GenerateRetValueField(SourceMember.ReturnType);
-        }
-
-        public override void AfterInjection(IMocker mocker, ILProcessor ilProcessor)
-        {
-            if (CheckSourceMemberCalls)
-            {
-                mocker.InjectVerification(ilProcessor, CheckArguments, ExpectedCallsFunc != null);
-            }
+            base.BeforeInjection(mocker);
+            if (ReturnObject != null) mocker.GenerateRetValueField(SourceMember.ReturnType);
         }
     }
 }

@@ -72,7 +72,7 @@ namespace AutoFake.UnitTests
             var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
-            mocker.SaveMethodCall(proc, cmd, true);
+            mocker.SaveMethodCall(proc, cmd, false);
 
             Assert.NotNull(mocker.MemberInfo.ActualCallsAccumulator?.VariableType);
             Assert.Equal(_typeInfo.Module.Import(typeof(List<object[]>)).FullName,
@@ -89,7 +89,7 @@ namespace AutoFake.UnitTests
             var expectedAccumulator = new VariableDefinition(new FunctionPointerType());
             mocker.MemberInfo.ActualCallsAccumulator = expectedAccumulator;
 
-            mocker.SaveMethodCall(proc, cmd, true);
+            mocker.SaveMethodCall(proc, cmd, false);
 
             Assert.Equal(expectedAccumulator, mocker.MemberInfo.ActualCallsAccumulator);
         }
@@ -102,7 +102,7 @@ namespace AutoFake.UnitTests
             var cmd = FindMethodCall(proc.Body);
             var mocker = GetMocker(GetMock());
 
-            var variables = mocker.SaveMethodCall(proc, cmd, true);
+            var variables = mocker.SaveMethodCall(proc, cmd, false);
 
             Assert.Equal(2, variables.Count);
         }
@@ -244,8 +244,10 @@ namespace AutoFake.UnitTests
             Assert.Equal(mocker.MemberInfo.RetValueField, replacedCmd.Operand);
         }
 
-        [Fact]
-        public void InjectCallback_ValidInput_Injected()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void InjectCallback_ValidInput_Injected(bool beforeInstruction)
         {
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestType.SomeMethodWithBody));
             var proc = method.Body.GetILProcessor();
@@ -255,13 +257,16 @@ namespace AutoFake.UnitTests
                 _typeInfo.GetMonoCecilTypeName(typeof(TestType)),
                 nameof(TestType.SomeMethodWithArguments));
 
-            mocker.InjectCallback(proc, cmd, mtDescr);
+            mocker.InjectCallback(proc, cmd, mtDescr, beforeInstruction);
 
-            Assert.True(proc.Body.Instructions.Ordered(
+            var sourceCmd = new[] {Cil.Cmd(cmd.OpCode, cmd.Operand)};
+            var cmds = new[]
+            {
                 Cil.Cmd(OpCodes.Newobj, (MethodReference m) => m.Name == ".ctor" && m.DeclaringType.FullName == mtDescr.DeclaringType),
-                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == mtDescr.Name && m.DeclaringType.FullName == mtDescr.DeclaringType),
-                Cil.Cmd(cmd.OpCode, cmd.Operand)
-                ));
+                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == mtDescr.Name && m.DeclaringType.FullName == mtDescr.DeclaringType)
+            };
+            var orderedCmds = beforeInstruction ? cmds.Concat(sourceCmd) : sourceCmd.Concat(cmds);
+            Assert.True(proc.Body.Instructions.Ordered(orderedCmds.ToArray()));
         }
 
         [Theory]

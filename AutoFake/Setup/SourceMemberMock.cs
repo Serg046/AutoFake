@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil.Cil;
 
@@ -26,16 +27,27 @@ namespace AutoFake.Setup
         public ISourceMember SourceMember { get; }
         public string UniqueName => _uniqueName.Value;
 
-        public abstract void BeforeInjection(IMocker mocker);
+        public virtual void BeforeInjection(IMocker mocker)
+        {
+            if (CheckSourceMemberCalls) mocker.GenerateSetupBodyField();
+            if (ExpectedCallsFunc != null) mocker.GenerateCallsCounterFuncField();
+        }
+
         public abstract void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);
-        public abstract void AfterInjection(IMocker mocker, ILProcessor ilProcessor);
 
         public virtual IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type)
         {
             if (mockedMemberInfo.SetupBodyField != null)
             {
                 var field = GetField(type, mockedMemberInfo.SetupBodyField.Name);
+                if (field == null) throw new FakeGeneretingException($"'{mockedMemberInfo.SetupBodyField.Name}' is not found in the generated object");
                 field.SetValue(null, _invocationExpression);
+            }
+            if (ExpectedCallsFunc != null)
+            {
+                var field = GetField(type, mockedMemberInfo.ExpectedCallsFuncField.Name);
+                if (field == null) throw new FakeGeneretingException($"'{mockedMemberInfo.ExpectedCallsFuncField.Name}' is not found in the generated object");
+                field.SetValue(null, ExpectedCallsFunc);
             }
             return new List<object>();
         }
@@ -58,6 +70,14 @@ namespace AutoFake.Setup
                 fieldName.Append("_").Append(parameter.ParameterType.FullName.Replace(".", ""));
             }
             return fieldName.ToString();
+        }
+
+        public void AfterInjection(IMocker mocker, ILProcessor ilProcessor)
+        {
+            if (CheckSourceMemberCalls)
+            {
+                mocker.InjectVerification(ilProcessor, CheckArguments, ExpectedCallsFunc != null);
+            }
         }
     }
 }
