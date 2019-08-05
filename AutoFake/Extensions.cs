@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Mono.Cecil;
 using System.Linq;
 
@@ -10,5 +11,8 @@ namespace AutoFake
             => methodReference.Name == method.Name &&
                methodReference.Parameters.Select(p => p.ParameterType.FullName)
                    .SequenceEqual(method.GetParameters().Select(p => p.ParameterType.FullName));
+
+        public static MethodDescriptor ToMethodDescriptor(this Delegate action)
+            => new MethodDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name);
     }
 }

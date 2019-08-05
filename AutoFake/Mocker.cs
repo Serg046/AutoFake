@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using AutoFake.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
@@ -11,9 +10,7 @@ namespace AutoFake
 {
     internal class Mocker : IMocker
     {
-        private readonly IMock _mock;
         private readonly MethodReference _addToListOfObjArray;
-        private readonly MethodReference _invokeActionMethod;
         private readonly MethodReference _matchArgumentsMethod;
 
         public Mocker(ITypeInfo typeInfo, MockedMemberInfo mockedMemberInfo)
@@ -21,9 +18,7 @@ namespace AutoFake
             TypeInfo = typeInfo;
             MemberInfo = mockedMemberInfo;
 
-            _mock = mockedMemberInfo.Mock;
             _addToListOfObjArray = typeInfo.Module.Import(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
-            _invokeActionMethod = typeInfo.Module.Import(typeof(Action).GetMethod(nameof(Action.Invoke)));
             _matchArgumentsMethod = TypeInfo.Module.Import(typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArguments)));
         }
 
@@ -32,30 +27,30 @@ namespace AutoFake
 
         public void GenerateSetupBodyField()
         {
-            var fieldName = MemberInfo.GenerateFieldName() + "_SetupBody";
+            var fieldName = MemberInfo.UniqueName + "_SetupBody";
             var fieldType = TypeInfo.Module.Import(typeof(InvocationExpression));
             MemberInfo.SetupBodyField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static, fieldType);
             TypeInfo.AddField(MemberInfo.SetupBodyField);
         }
 
-        public void GenerateRetValueField()
+        public void GenerateRetValueField(Type returnType)
         {
-            var fieldName = MemberInfo.GenerateFieldName() + "_RetValue";
-            var fieldType = TypeInfo.Module.GetType(TypeInfo.GetMonoCecilTypeName(_mock.SourceMember.ReturnType))
-                ?? TypeInfo.Module.Import(_mock.SourceMember.ReturnType);
+            var fieldName = MemberInfo.UniqueName + "_RetValue";
+            var fieldType = TypeInfo.Module.GetType(TypeInfo.GetMonoCecilTypeName(returnType))
+                            ?? TypeInfo.Module.Import(returnType);
             MemberInfo.RetValueField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static, fieldType);
             TypeInfo.AddField(MemberInfo.RetValueField);
         }
 
         public void GenerateCallsCounterFuncField()
         {
-            var fieldName = MemberInfo.GenerateFieldName() + "_ExpectedCallsFunc";
+            var fieldName = MemberInfo.UniqueName + "_ExpectedCallsFunc";
             MemberInfo.ExpectedCallsFuncField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
                 TypeInfo.Module.Import(typeof(Func<byte, bool>)));
             TypeInfo.AddField(MemberInfo.ExpectedCallsFuncField);
         }
 
-        public IList<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction)
+        public IList<VariableDefinition> SaveMethodCall(ILProcessor ilProcessor, Instruction instruction, bool checkArguments)
         {
             if (MemberInfo.ActualCallsAccumulator == null)
             {
@@ -82,7 +77,7 @@ namespace AutoFake
             ilProcessor.Body.Variables.Add(arrVar);
             ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
-            if (MemberInfo.Mock.CheckArguments)
+            if (checkArguments)
             {
                 var counter = 0;
                 foreach (var variable in variables)
@@ -132,41 +127,39 @@ namespace AutoFake
         public void ReplaceToRetValueField(ILProcessor ilProcessor, Instruction instruction)
             => ilProcessor.Replace(instruction,
                 ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.RetValueField));
-
-        public void GenerateCallbackField()
+        
+        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction, MethodDescriptor callback, bool beforeInstruction)
         {
-            var fieldName = MemberInfo.GenerateFieldName() + "_Callback";
-            MemberInfo.CallbackField = new FieldDefinition(fieldName, FieldAttributes.Assembly | FieldAttributes.Static,
-                TypeInfo.Module.Import(typeof(Action)));
-            TypeInfo.AddField(MemberInfo.CallbackField);
-        }
-
-        public void InjectCallback(ILProcessor ilProcessor, Instruction instruction)
-        {
-            ilProcessor.InsertAfter(instruction,
-                    ilProcessor.Create(OpCodes.Callvirt, _invokeActionMethod));
-            ilProcessor.InsertAfter(instruction,
-                ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.CallbackField));
-        }
-
-        public void InjectVerification(ILProcessor ilProcessor)
-        {
-            if (MemberInfo.Mock.CheckArguments || MemberInfo.ExpectedCallsFuncField != null)
+            var type = TypeInfo.Module.GetType(callback.DeclaringType, true).Resolve();
+            var ctor = type.Methods.Single(m => m.Name == ".ctor");
+            var method = type.Methods.Single(m => m.Name == callback.Name);
+            if (beforeInstruction)
             {
-                var retInstruction = ilProcessor.Body.Instructions.Last();
-                ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.SetupBodyField));
-                ilProcessor.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, MemberInfo.ActualCallsAccumulator));
-                ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(MemberInfo.Mock.CheckArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
-                if (MemberInfo.Mock.ExpectedCalls != null)
-                {
-                    ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.ExpectedCallsFuncField));
-                }
-                else
-                {
-                    ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Ldnull));
-                }
-                ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Callvirt, _matchArgumentsMethod));
+                ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Newobj, ctor));
+                ilProcessor.InsertBefore(instruction, Instruction.Create(OpCodes.Call, method));
             }
+            else
+            {
+                ilProcessor.InsertAfter(instruction, Instruction.Create(OpCodes.Call, method));
+                ilProcessor.InsertAfter(instruction, Instruction.Create(OpCodes.Newobj, ctor));
+            }
+        }
+
+        public void InjectVerification(ILProcessor ilProcessor, bool checkArguments, bool expectedCalls)
+        {
+            var retInstruction = ilProcessor.Body.Instructions.Last();
+            ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.SetupBodyField));
+            ilProcessor.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, MemberInfo.ActualCallsAccumulator));
+            ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
+            if (expectedCalls)
+            {
+                ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Ldsfld, MemberInfo.ExpectedCallsFuncField));
+            }
+            else
+            {
+                ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Ldnull));
+            }
+            ilProcessor.InsertBefore(retInstruction, ilProcessor.Create(OpCodes.Callvirt, _matchArgumentsMethod));
         }
     }
 }

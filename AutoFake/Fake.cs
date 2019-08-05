@@ -41,6 +41,21 @@ namespace AutoFake
 
         public Task ExecuteAsync(Func<T, IList<object>, Task> action) => (Task)Execute(action.Method, gen => new[] { gen.Instance, gen.Parameters});
 
+        public AppendMockInstaller<T> Append(Action<T> action)
+        {
+            var position = (ushort)Mocks.Count;
+            var descriptor = action.ToMethodDescriptor();
+            Mocks.Add(new InsertMock(descriptor, InsertMock.Location.Bottom));
+            return new AppendMockInstaller<T>(Mocks, position, descriptor);
+        }
+
+        public PrependMockInstaller<T> Prepend(Action<T> action)
+        {
+            var position = (ushort)Mocks.Count;
+            var descriptor = action.ToMethodDescriptor();
+            Mocks.Add(new InsertMock(descriptor, InsertMock.Location.Top));
+            return new PrependMockInstaller<T>(Mocks, position, descriptor);
+        }
     }
 
     public class Fake
@@ -63,7 +78,7 @@ namespace AutoFake
             MockedMembers = new List<MockedMemberInfo>();
         }
 
-        internal ICollection<IMock> Mocks { get; }
+        internal IList<IMock> Mocks { get; }
         internal ICollection<MockedMemberInfo> MockedMembers { get; }
 
         public void SaveFakeAssembly(string fileName)
@@ -166,6 +181,38 @@ namespace AutoFake
             {
                 throw ex.InnerException;
             }
+        }
+
+        public AppendMockInstaller<T> Append<T>(Action<T> action)
+        {
+            var position = (ushort)Mocks.Count;
+            var descriptor = action.ToMethodDescriptor();
+            Mocks.Add(new InsertMock(descriptor, InsertMock.Location.Bottom));
+            return new AppendMockInstaller<T>(Mocks, position, descriptor);
+        }
+
+        public AppendMockInstaller Append(Action action)
+        {
+            var position = (ushort)Mocks.Count;
+            var descriptor = action.ToMethodDescriptor();
+            Mocks.Add(new InsertMock(descriptor, InsertMock.Location.Bottom));
+            return new AppendMockInstaller(Mocks, position, descriptor);
+        }
+
+        public PrependMockInstaller<T> Prepend<T>(Action<T> action)
+        {
+            var position = (ushort)Mocks.Count;
+            var descriptor = action.ToMethodDescriptor();
+            Mocks.Add(new InsertMock(descriptor, InsertMock.Location.Top));
+            return new PrependMockInstaller<T>(Mocks, position, descriptor);
+        }
+
+        public PrependMockInstaller Prepend(Action action)
+        {
+            var position = (ushort)Mocks.Count;
+            var descriptor = action.ToMethodDescriptor();
+            Mocks.Add(new InsertMock(descriptor, InsertMock.Location.Top));
+            return new PrependMockInstaller(Mocks, position, descriptor);
         }
     }
 }

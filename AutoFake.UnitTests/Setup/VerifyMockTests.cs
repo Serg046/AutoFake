@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
@@ -14,14 +12,11 @@ namespace AutoFake.UnitTests.Setup
 {
     public class VerifyMockTests
     {
-        private readonly VerifyMock.Parameters _parameters;
         private readonly Mock<IMocker> _mocker;
-
         private readonly VerifyMock _verifyMock;
 
         public VerifyMockTests()
         {
-            _parameters = new VerifyMock.Parameters();
             _mocker = new Mock<IMocker>();
             var mockedMemberInfo = new MockedMemberInfo(null, null);
             _mocker.Setup(m => m.MemberInfo).Returns(mockedMemberInfo);
@@ -39,94 +34,27 @@ namespace AutoFake.UnitTests.Setup
         {
             var ilProcessor = GetILProcessor();
             var instruction = GetInstruction();
-            if (expectedCallsCountFunc) _parameters.ExpectedCallsFunc = i => i == 0;
-            _parameters.CheckArguments = needCheckArguments;
+            if (expectedCallsCountFunc) _verifyMock.ExpectedCallsFunc = i => i == 0;
+            _verifyMock.CheckArguments = needCheckArguments;
             var runtimeArgs = new List<VariableDefinition>();
-            _mocker.Setup(m => m.SaveMethodCall(ilProcessor, instruction)).Returns(runtimeArgs);
+            _mocker.Setup(m => m.SaveMethodCall(ilProcessor, instruction, needCheckArguments)).Returns(runtimeArgs);
 
             _verifyMock.Inject(_mocker.Object, ilProcessor, instruction);
 
             if (mustBeInjected)
             {
-                _mocker.Verify(m => m.SaveMethodCall(ilProcessor, instruction), Times.Once());
+                _mocker.Verify(m => m.SaveMethodCall(ilProcessor, instruction, needCheckArguments), Times.Once());
                 _mocker.Verify(m => m.PushMethodArguments(ilProcessor, instruction, runtimeArgs), Times.Once());
             }
             else
             {
-                _mocker.Verify(m => m.SaveMethodCall(ilProcessor, instruction), Times.Never);
+                _mocker.Verify(m => m.SaveMethodCall(ilProcessor, instruction, needCheckArguments), Times.Never);
                 _mocker.Verify(m => m.PushMethodArguments(ilProcessor, instruction, runtimeArgs), Times.Never);
             }
         }
 
-        [Fact]
-        public void Initialize_NoExpectedCallsField_NoEffect()
-        {
-            var mockedMemberInfo = new MockedMemberInfo(GetVerifyMock(), null);
-
-            _verifyMock.Initialize(mockedMemberInfo, typeof(TestClass));
-
-            Assert.Null(TestClass.ExpectedCallsFuncField);
-        }
-
-        [Fact]
-        public void Initialize_IncorrectExpectedCallsField_Fails()
-        {
-            _parameters.ExpectedCallsFunc = i => true;
-            var mockedMemberInfo = new MockedMemberInfo(GetVerifyMock(), null);
-            mockedMemberInfo.ExpectedCallsFuncField = new FieldDefinition(nameof(TestClass.ExpectedCallsFuncField) + "salt",
-                Mono.Cecil.FieldAttributes.Assembly, new FunctionPointerType());
-
-            Assert.Throws<FakeGeneretingException>(() => _verifyMock.Initialize(mockedMemberInfo, typeof(TestClass)));
-        }
-
-        [Fact]
-        public void Initialize_ExpectedCallsFunc_Set()
-        {
-            var type = typeof(TestClass);
-            _parameters.ExpectedCallsFunc = i => true;
-            var mockedMemberInfo = new MockedMemberInfo(GetVerifyMock(), null);
-            mockedMemberInfo.ExpectedCallsFuncField = new FieldDefinition(nameof(TestClass.ExpectedCallsFuncField),
-                Mono.Cecil.FieldAttributes.Assembly, new FunctionPointerType());
-
-            Assert.Null(TestClass.ExpectedCallsFuncField);
-            _verifyMock.Initialize(mockedMemberInfo, type);
-
-            Assert.Equal(_parameters.ExpectedCallsFunc, TestClass.ExpectedCallsFuncField);
-            TestClass.ExpectedCallsFuncField = null;
-        }
-
-        [Theory]
-        [InlineData(false, false, false)]
-        [InlineData(false, true, true)]
-        [InlineData(true, false, true)]
-        [InlineData(true, true, true)]
-        public void PrepareForInjecting_NeedCheckArgumentsOrExpectedCallsCount_GenerateSetupBodyFieldInjected(
-            bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected)
-        {
-            _parameters.CheckArguments = needCheckArguments;
-            _parameters.ExpectedCallsFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
-            var mocker = new Mock<IMocker>();
-
-            _verifyMock.PrepareForInjecting(mocker.Object);
-
-            mocker.Verify(m => m.GenerateSetupBodyField(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
-        }
-
-        [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, true)]
-        public void PrepareForInjecting_ExpectedCallsFunc_Injected(bool callsCounter, bool shouldBeInjected)
-        {
-            if (callsCounter) _parameters.ExpectedCallsFunc = i => true;
-            var mocker = new Mock<IMocker>();
-
-            _verifyMock.PrepareForInjecting(mocker.Object);
-
-            mocker.Verify(m => m.GenerateCallsCounterFuncField(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
-        }
-
         private VerifyMock GetVerifyMock() => new VerifyMock(
-            Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember()), _parameters);
+            Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember()));
 
         private ISourceMember GetSourceMember()
             => new SourceMethod(typeof(TestClass).GetMethod(nameof(TestClass.TestMethod)));

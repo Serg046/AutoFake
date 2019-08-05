@@ -6,28 +6,29 @@ namespace AutoFake.Setup
 {
     public class VerifyMockInstaller
     {
-        private readonly VerifyMock.Parameters _parameters = new VerifyMock.Parameters();
+        private readonly VerifyMock _mock;
 
         internal VerifyMockInstaller(ICollection<IMock> mocks, IInvocationExpression invocationExpression)
         {
-            mocks.Add(new VerifyMock(invocationExpression, _parameters));
+            _mock = new VerifyMock(invocationExpression);
+            mocks.Add(_mock);
         }
 
         public VerifyMockInstaller CheckArguments()
         {
-            _parameters.CheckArguments = true;
+            _mock.CheckArguments = true;
             return this;
         }
 
         public VerifyMockInstaller ExpectedCalls(byte expectedCallsCount)
         {
-            _parameters.ExpectedCallsFunc = callsCount => callsCount == expectedCallsCount;
+            _mock.ExpectedCallsFunc = callsCount => callsCount == expectedCallsCount;
             return this;
         }
 
         public VerifyMockInstaller ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _parameters.ExpectedCallsFunc = expectedCallsCountFunc;
+            _mock.ExpectedCallsFunc = expectedCallsCountFunc;
             return this;
         }
     }
