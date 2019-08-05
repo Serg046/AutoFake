@@ -6,35 +6,35 @@ namespace AutoFake.Setup
 {
     public class ReplaceMockInstaller<TReturn>
     {
-        private readonly ReplaceMock.Parameters _parameters;
+        private readonly ReplaceMock _mock;
 
         internal ReplaceMockInstaller(ICollection<IMock> mocks, IInvocationExpression invocationExpression)
         {
-            _parameters = new ReplaceMock.Parameters();
-            mocks.Add(new ReplaceMock(invocationExpression, _parameters));
+            _mock = new ReplaceMock(invocationExpression);
+            mocks.Add(_mock);
         }
 
         public ReplaceMockInstaller<TReturn> Return(Func<TReturn> returnObject)
         {
-            _parameters.ReturnObject = new MethodDescriptor(returnObject.Method.DeclaringType.FullName, returnObject.Method.Name);
+            _mock.ReturnObject = new MethodDescriptor(returnObject.Method.DeclaringType.FullName, returnObject.Method.Name);
             return this;
         }
 
         public ReplaceMockInstaller<TReturn> CheckArguments()
         {
-            _parameters.CheckArguments = true;
+            _mock.CheckArguments = true;
             return this;
         }
 
         public ReplaceMockInstaller<TReturn> ExpectedCalls(byte expectedCallsCount)
         {
-            _parameters.ExpectedCallsFunc = callsCount => callsCount == expectedCallsCount;
+            _mock.ExpectedCallsFunc = callsCount => callsCount == expectedCallsCount;
             return this;
         }
 
         public ReplaceMockInstaller<TReturn> ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _parameters.ExpectedCallsFunc = expectedCallsCountFunc;
+            _mock.ExpectedCallsFunc = expectedCallsCountFunc;
             return this;
         }
     }

@@ -60,7 +60,6 @@
     <Compile Include="FakeArgument.cs" />
     <Compile Include="Expression\GetSourceMemberVisitor.cs" />
     <Compile Include="Expression\GetValueMemberVisitor.cs" />
-    <Compile Include="FakeMethod.cs" />
     <Compile Include="IFakeArgumentChecker.cs" />
     <Compile Include="Arg.cs" />
     <Compile Include="Expression\InvocationExpression.cs" />
@@ -68,12 +67,16 @@
     <Compile Include="LambdaChecker.cs" />
     <Compile Include="MethodDescriptor.cs" />
     <Compile Include="ReflectionUtils.cs" />
+    <Compile Include="Setup\InsertMock.cs" />
+    <Compile Include="Setup\AppendMockInstaller.cs" />
     <Compile Include="Setup\IMock.cs" />
+    <Compile Include="Setup\PrependMockInstaller.cs" />
     <Compile Include="Setup\RemoveMockInstaller.cs" />
     <Compile Include="Setup\ReplaceMock.cs" />
     <Compile Include="Setup\ISourceMember.cs" />
-    <Compile Include="Setup\SourceConstructor.cs" />
     <Compile Include="Setup\SourceField.cs" />
+    <Compile Include="Setup\SourceMemberInsertMock.cs" />
+    <Compile Include="Setup\SourceMemberInsertMockInstaller.cs" />
     <Compile Include="Setup\SourceMethod.cs" />
     <Compile Include="Setup\VerifyMock.cs" />
     <Compile Include="Fake.cs" />
@@ -84,13 +87,13 @@
     <Compile Include="IMocker.cs" />
     <Compile Include="Mocker.cs" />
     <Compile Include="MockerFactory.cs" />
-    <Compile Include="Setup\Mock.cs" />
+    <Compile Include="Setup\SourceMemberMock.cs" />
     <Compile Include="FakeObjectInfo.cs" />
     <Compile Include="MockedMemberInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Setup\ReplaceMockInstaller.cs" />
-    <Compile Include="TypeInfo.cs" />
     <Compile Include="Setup\VerifyMockInstaller.cs" />
+    <Compile Include="TypeInfo.cs" />
     <Compile Include="TypeWrapper.cs" />
   </ItemGroup>
   <ItemGroup>

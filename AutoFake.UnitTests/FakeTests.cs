@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Exceptions;
 using AutoFake.Setup;
 using Mono.Cecil;
 using Moq;
@@ -177,12 +176,11 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake(typeof(TestClass));
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
 
-            mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
+            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
         }
 
         [Theory]
@@ -191,12 +189,11 @@ namespace AutoFake.UnitTests
         {
             var fake = new Fake<TestClass>();
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.SourceMember).Returns(Moq.Mock.Of<ISourceMember>());
             fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
 
-            mock.Verify(m => m.PrepareForInjecting(It.IsAny<IMocker>()));
+            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
         }
 
         [Fact]
@@ -295,6 +292,59 @@ namespace AutoFake.UnitTests
                 await tst.Execute((TestClass t) => t.FailingMethodAsync());
             }));
         }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Append_GenericFake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+            var action = callback.Compile();
+
+            fake.Append(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Append_Fake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake(typeof(TestClass));
+            var action = callback.Compile();
+
+            fake.Append(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Prepend_GenericFake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+            var action = callback.Compile();
+
+            fake.Prepend(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetActions))]
+        public void Prepend_Fake_MockAdded(dynamic callback)
+        {
+            var fake = new Fake(typeof(TestClass));
+            var action = callback.Compile();
+
+            fake.Prepend(action);
+
+            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
+            Assert.Equal(action.Method.Name, mock.Action.Name);
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 

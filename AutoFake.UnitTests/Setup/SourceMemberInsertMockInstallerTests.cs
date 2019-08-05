@@ -1,35 +1,33 @@
 ﻿using AutoFake.Expression;
 using AutoFake.Setup;
-using System.Collections.Generic;
-using System.Linq;
+using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
 {
-    public class VerifyMockInstallerTests
+    public class SourceMemberInsertMockInstallerTests
     {
-        private readonly VerifyMock _mock;
-        private readonly VerifyMockInstaller _verifyMockInstaller;
+        private readonly SourceMemberInsertMock _mock;
+        private readonly SourceMemberInsertMockInstaller _installer;
 
-        public VerifyMockInstallerTests()
+        public SourceMemberInsertMockInstallerTests()
         {
-            var mocks = new List<IMock>();
-            _verifyMockInstaller = new VerifyMockInstaller(mocks, Moq.Mock.Of<IInvocationExpression>());
-            _mock = (VerifyMock)mocks.Single();
+            _mock = new SourceMemberInsertMock(Mock.Of<IInvocationExpression>(), null, InsertMock.Location.Top);
+            _installer = new SourceMemberInsertMockInstaller(_mock);
         }
 
         [Fact]
         public void CheckArguments_ReturnsTrue()
         {
             Assert.False(_mock.CheckArguments);
-            _verifyMockInstaller.CheckArguments();
+            _installer.CheckArguments();
             Assert.True(_mock.CheckArguments);
         }
 
         [Fact]
         public void ExpectedCalls_Byte_Success()
         {
-            _verifyMockInstaller.ExpectedCalls(3);
+            _installer.ExpectedCalls(3);
 
             Assert.True(_mock.ExpectedCallsFunc(3));
             Assert.False(_mock.ExpectedCallsFunc(2));
@@ -38,7 +36,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void ExpectedCalls_Func_Success()
         {
-            _verifyMockInstaller.ExpectedCalls(x => x > 2);
+            _installer.ExpectedCalls(x => x > 2);
 
             Assert.True(_mock.ExpectedCallsFunc(3));
             Assert.False(_mock.ExpectedCallsFunc(2));

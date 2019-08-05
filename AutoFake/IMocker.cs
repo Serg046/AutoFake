@@ -1,10 +1,13 @@
-﻿namespace AutoFake
+﻿using Mono.Cecil.Cil;
+using System;
+
+namespace AutoFake
 {
     internal interface IMocker : IMethodMocker
     {
         void GenerateSetupBodyField();
-        void GenerateRetValueField();
-        void GenerateCallbackField();
+        void GenerateRetValueField(Type returnType);
         void GenerateCallsCounterFuncField();
+        void InjectVerification(ILProcessor ilProcessor, bool checkArguments, bool expectedCalls);
     }
 }

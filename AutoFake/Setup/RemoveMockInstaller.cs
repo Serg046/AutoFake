@@ -6,29 +6,29 @@ namespace AutoFake.Setup
 {
     public class RemoveMockInstaller
     {
-        private readonly ReplaceMock.Parameters _parameters;
+        private readonly ReplaceMock _mock;
 
         internal RemoveMockInstaller(ICollection<IMock> mocks, IInvocationExpression invocationExpression)
         {
-            _parameters = new ReplaceMock.Parameters();
-            mocks.Add(new ReplaceMock(invocationExpression, _parameters));
+            _mock = new ReplaceMock(invocationExpression);
+            mocks.Add(_mock);
         }
 
         public RemoveMockInstaller CheckArguments()
         {
-            _parameters.CheckArguments = true;
+            _mock.CheckArguments = true;
             return this;
         }
 
         public RemoveMockInstaller ExpectedCalls(byte expectedCallsCount)
         {
-            _parameters.ExpectedCallsFunc = callsCount => callsCount == expectedCallsCount;
+            _mock.ExpectedCallsFunc = callsCount => callsCount == expectedCallsCount;
             return this;
         }
 
         public RemoveMockInstaller ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _parameters.ExpectedCallsFunc = expectedCallsCountFunc;
+            _mock.ExpectedCallsFunc = expectedCallsCountFunc;
             return this;
         }
     }

@@ -10,6 +10,7 @@ namespace AutoFake.Setup
     {
         private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda};
         private readonly FieldInfo _field;
+        private FieldDefinition _monoCecilField;
 
         public SourceField(FieldInfo field)
         {
@@ -27,14 +28,15 @@ namespace AutoFake.Setup
 
         public bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction)
         {
-            var result = false;
-            if (_fieldOpCodes.Contains(instruction.OpCode))
+            if (_fieldOpCodes.Contains(instruction.OpCode) &&
+                instruction.Operand is FieldReference field &&
+                field.Name == _field.Name &&
+                field.FieldType.Name == _field.FieldType.Name)
             {
-                var field = (FieldReference)instruction.Operand;
-                result = field.Name == _field.Name &&
-                         field.DeclaringType.FullName == typeInfo.GetMonoCecilTypeName(_field.DeclaringType);
+                if (_monoCecilField == null) _monoCecilField = typeInfo.Module.Import(_field).Resolve();
+                return field.Resolve().ToString() == _monoCecilField.ToString();
             }
-            return result;
+            return false;
         }
 
         public ParameterInfo[] GetParameters() => new ParameterInfo[0];

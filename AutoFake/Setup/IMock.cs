@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
     internal interface IMock
     {
-        bool CheckArguments { get; }
-        Func<byte, bool> ExpectedCalls { get; }
-        ISourceMember SourceMember { get; }
-        void PrepareForInjecting(IMocker mocker);
+        string UniqueName { get; }
+        bool IsSourceInstruction(ITypeInfo typeInfo, MethodBody method, Instruction instruction);
+        void BeforeInjection(IMocker mocker);
         void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction);
+        void AfterInjection(IMocker mocker, ILProcessor ilProcessor);
         IList<object> Initialize(MockedMemberInfo mockedMemberInfo, Type type);
-        bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod);
     }
 }
