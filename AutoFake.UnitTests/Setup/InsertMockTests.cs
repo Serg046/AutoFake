@@ -25,6 +25,14 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Fact]
+        public void IsSourceInstruction_UnexpectedLocation_False()
+        {
+	        var mock = new InsertMock(null, (InsertMock.Location)(-1));
+
+            Assert.False(mock.IsSourceInstruction(null, null, null));
+		}
+
+        [Fact]
         public void Inject_Instruction_Injected()
         {
             var mocker = new Mock<IMethodMocker>();
