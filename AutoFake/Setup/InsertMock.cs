@@ -41,7 +41,6 @@ namespace AutoFake.Setup
             methodMocker.InjectCallback(ilProcessor, instruction, Action, beforeInstruction: true);
         }
 
-        [ExcludeFromCodeCoverage] // No way to exclude default statement, see https://github.com/OpenCover/opencover/issues/907
         public bool IsSourceInstruction(ITypeInfo typeInfo, MethodBody method, Instruction instruction)
         {
             switch (_location)
