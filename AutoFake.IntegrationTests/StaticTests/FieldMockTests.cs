@@ -13,8 +13,8 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
-            fake.Rewrite(() => TestClass.GetDynamicStaticValue());
+            fake.Rewrite(() => TestClass.GetDynamicStaticValue())
+                .Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
 
             fake.Execute(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetDynamicStaticValue())));
         }
@@ -24,8 +24,8 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
-            fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue());
+            fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue())
+                .Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
 
             fake.Execute(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetHelperDynamicStaticValue())));
         }
@@ -36,8 +36,8 @@ namespace AutoFake.IntegrationTests.StaticTests
             var fake = new Fake(typeof(TestClass));
 
             const string cmd = "select * from Test";
-            fake.Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
-            fake.Rewrite(() => TestClass.GetFrameworkValue());
+            fake.Rewrite(() => TestClass.GetFrameworkValue())
+                .Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
 
             fake.Execute(tst => Assert.Equal(cmd, tst.Execute(() => TestClass.GetFrameworkValue())));
         }
@@ -47,8 +47,8 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Replace(() => TextReader.Null).Return(() => new StringReader(string.Empty));
-            fake.Rewrite(() => TestClass.GetFrameworkStaticValue());
+            fake.Rewrite(() => TestClass.GetFrameworkStaticValue())
+                .Replace(() => TextReader.Null).Return(() => new StringReader(string.Empty));
 
             fake.Execute((tst, prms) =>
             {
@@ -64,8 +64,8 @@ namespace AutoFake.IntegrationTests.StaticTests
             var fake = new Fake(typeof(TestClass));
 
             const int value = 5;
-            fake.Replace(() => TestClass.StaticStructValue).Return(() => new HelperStruct { Value = value });
-            fake.Rewrite(() => TestClass.GetStaticStructValueByAddress());
+            fake.Rewrite(() => TestClass.GetStaticStructValueByAddress())
+                .Replace(() => TestClass.StaticStructValue).Return(() => new HelperStruct { Value = value });
 
             fake.Execute(tst => Assert.Equal(value, tst.Execute(() => TestClass.GetStaticStructValueByAddress())));
         }
