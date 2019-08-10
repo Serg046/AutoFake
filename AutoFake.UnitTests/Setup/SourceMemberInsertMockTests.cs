@@ -1,5 +1,6 @@
 ﻿using AutoFake.Expression;
-using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
+using AutoFixture.Xunit2;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
@@ -9,18 +10,21 @@ namespace AutoFake.UnitTests.Setup
     public class SourceMemberInsertMockTests
     {
         [Theory]
-        [InlineData(InsertMock.Location.Top, true)]
-        [InlineData(InsertMock.Location.Bottom, false)]
-        internal void Inject_MethodDescriptor_Injected(InsertMock.Location location, bool injectBeforeCmd)
+        [InlineAutoMoqData(InsertMock.Location.Top, true)]
+        [InlineAutoMoqData(InsertMock.Location.Bottom, false)]
+        internal void Inject_MethodDescriptor_Injected(
+            InsertMock.Location location,
+            bool injectBeforeCmd,
+            MethodDescriptor descriptor,
+            [Frozen]Mock<IProcessor> proc,
+            [Frozen]IProcessorFactory factory)
         {
-            var descriptor = new MethodDescriptor("testType", "testMethodName");
-            var mock = new SourceMemberInsertMock(Mock.Of<IInvocationExpression>(), descriptor, location);
-            var mocker = new Mock<IMethodMocker>();
+            var mock = new SourceMemberInsertMock(factory, Mock.Of<IInvocationExpression>(), descriptor, location);
             var cmd = Instruction.Create(OpCodes.Nop);
 
-            mock.Inject(mocker.Object, null, cmd);
+            mock.Inject(null, cmd);
 
-            mocker.Verify(m => m.InjectCallback(null, cmd, descriptor, injectBeforeCmd));
+            proc.Verify(m => m.InjectCallback(descriptor, injectBeforeCmd));
         }
     }
 }

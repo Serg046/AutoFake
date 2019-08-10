@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AutoFake.Exceptions;
+using AutoFake.Setup;
 using Mono.Cecil;
 using Xunit;
 
@@ -80,11 +81,11 @@ namespace AutoFake.UnitTests
         [Theory]
         [InlineData(typeof(StringBuilder), false)]
         [InlineData(typeof(Enumerable), true)]
-        public void CreateFakeObject(Type type, bool isStaticType)
+        public void CreateFakeObject_Type_Created(Type type, bool isStaticType)
         {
             var typeInfo = new TypeInfo(type, new FakeDependency[0]);
 
-            var fakeObjectInfo = typeInfo.CreateFakeObject(Enumerable.Empty<MockedMemberInfo>());
+            var fakeObjectInfo = typeInfo.CreateFakeObject(new MockCollection());
 
             Assert.Equal(type.FullName, fakeObjectInfo.Type.FullName);
             var instanceAssertion = isStaticType ? (Action<object>)Assert.Null : Assert.NotNull;

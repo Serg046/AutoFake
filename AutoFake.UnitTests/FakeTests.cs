@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Setup;
+using AutoFake.Setup.Configurations;
 using Mono.Cecil;
 using Moq;
 using Xunit;
@@ -20,131 +20,6 @@ namespace AutoFake.UnitTests
             Assert.Throws<ArgumentNullException>(() => new Fake<TestClass>(null));
             Assert.Throws<ArgumentNullException>(() => new Fake(null));
             Assert.Throws<ArgumentNullException>(() => new Fake(typeof(TestClass), null));
-        }
-
-        [Fact]
-        public void Replace_FakeInvalidInput_Throws()
-        {
-            var fake = new Fake(typeof(TestClass));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<object>>)null));
-        }
-
-        [Fact]
-        public void Replace_GenericFakeInvalidInput_Throws()
-        {
-            var genericFake = new Fake<TestClass>();
-            Fake fake = genericFake;
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Replace((Expression<Func<object>>)null));
-            Assert.Throws<ArgumentNullException>(() => genericFake.Replace((Expression<Func<TestClass, object>>)null));
-        }
-
-        [Fact]
-        public void Remove_FakeInvalidInput_Throws()
-        {
-            var fake = new Fake(typeof(TestClass));
-            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action<TestClass>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action>)null));
-        }
-
-        [Fact]
-        public void Remove_GenericFakeInvalidInput_Throws()
-        {
-            var genericFake = new Fake<TestClass>();
-            Fake fake = genericFake;
-            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action<TestClass>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Remove((Expression<Action>)null));
-            Assert.Throws<ArgumentNullException>(() => genericFake.Remove((Expression<Action<TestClass>>)null));
-        }
-
-        [Theory]
-        [MemberData(nameof(GetFuncs))]
-        public void Replace_Fake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake(typeof(TestClass));
-
-            fake.Replace(callback);
-
-            Assert.NotEmpty(fake.Mocks);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetFuncs))]
-        internal void Replace_GenericFake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake<TestClass>();
-
-            fake.Replace(callback);
-
-            Assert.NotEmpty(fake.Mocks);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Remove_Fake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake(typeof(TestClass));
-
-            fake.Remove(callback);
-
-            Assert.NotEmpty(fake.Mocks);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        internal void Remove_GenericFake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake<TestClass>();
-
-            fake.Remove(callback);
-
-            Assert.NotEmpty(fake.Mocks);
-        }
-
-        [Fact]
-        public void Verify_FakeInvalidInput_Throws()
-        {
-            var fake = new Fake(typeof(TestClass));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action<TestClass>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action>)null));
-        }
-
-        [Fact]
-        public void Verify_GenericFakeInvalidInput_Throws()
-        {
-            var genericFake = new Fake<TestClass>();
-            Fake fake = genericFake;
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action<TestClass>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Func<object>>)null));
-            Assert.Throws<ArgumentNullException>(() => fake.Verify((Expression<Action>)null));
-            Assert.Throws<ArgumentNullException>(() => genericFake.Verify((Expression<Func<TestClass, object>>)null));
-            Assert.Throws<ArgumentNullException>(() => genericFake.Verify((Expression<Action<TestClass>>)null));
-        }
-
-        [Theory]
-        [MemberData(nameof(GetCallbacks))]
-        public void Verify_Fake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake(typeof(TestClass));
-
-            fake.Verify(callback);
-
-            Assert.NotEmpty(fake.Mocks);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetCallbacks))]
-        internal void Verify_GenericFake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake<TestClass>();
-
-            fake.Verify(callback);
-
-            Assert.NotEmpty(fake.Mocks);
         }
 
         [Fact]
@@ -175,12 +50,10 @@ namespace AutoFake.UnitTests
         public void Rewrite_Fake_Throws(dynamic callback)
         {
             var fake = new Fake(typeof(TestClass));
-            var mock = new Mock<IMock>();
-            fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
 
-            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
+            Assert.NotNull(fake.Mocks.Single().Method);
         }
 
         [Theory]
@@ -188,24 +61,10 @@ namespace AutoFake.UnitTests
         public void Rewrite_GenericFake_Throws(dynamic callback)
         {
             var fake = new Fake<TestClass>();
-            var mock = new Mock<IMock>();
-            fake.Mocks.Add(mock.Object);
 
             fake.Rewrite(callback);
 
-            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
-        }
-
-        [Fact]
-        public void Reset_ClearsSetups()
-        {
-            var fake = new Fake<FakeTests>();
-            fake.Verify(f => f.Reset_ClearsSetups())
-                .ExpectedCalls(1);
-            Assert.NotEmpty(fake.Mocks);
-
-            fake.Reset();
-            Assert.Empty(fake.Mocks);
+            Assert.NotNull(fake.Mocks.Single().Method);
         }
 
         [Fact]
@@ -254,8 +113,8 @@ namespace AutoFake.UnitTests
         {
             const string testString = "testString";
             var fake = new Fake<TestClass>();
-            fake.Replace(f => f.StringInstanceMethod()).Return(() => testString);
-            fake.Rewrite(f => f.StringInstanceMethod());
+            fake.Rewrite(f => f.StringInstanceMethod())
+                .Replace(f => f.StringInstanceMethod()).Return(() => testString);
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.FailingMethod()));
             await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.FailingMethodAsync()));
@@ -276,8 +135,8 @@ namespace AutoFake.UnitTests
         {
             const string testString = "testString";
             var fake = new Fake(typeof(TestClass));
-            fake.Replace((TestClass t) => t.StringInstanceMethod()).Return(() => testString);
-            fake.Rewrite((TestClass t) => t.StringInstanceMethod());
+            fake.Rewrite((TestClass t) => t.StringInstanceMethod())
+                .Replace((TestClass t) => t.StringInstanceMethod()).Return(() => testString);
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
             await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
@@ -291,58 +150,6 @@ namespace AutoFake.UnitTests
                 Assert.Equal(testString, prms.Single());
                 await tst.Execute((TestClass t) => t.FailingMethodAsync());
             }));
-        }
-
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Append_GenericFake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake<TestClass>();
-            var action = callback.Compile();
-
-            fake.Append(action);
-
-            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Append_Fake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake(typeof(TestClass));
-            var action = callback.Compile();
-
-            fake.Append(action);
-
-            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Prepend_GenericFake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake<TestClass>();
-            var action = callback.Compile();
-
-            fake.Prepend(action);
-
-            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
-        }
-
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Prepend_Fake_MockAdded(dynamic callback)
-        {
-            var fake = new Fake(typeof(TestClass));
-            var action = callback.Compile();
-
-            fake.Prepend(action);
-
-            var mock = Assert.IsType<InsertMock>(fake.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
         }
 
         public static IEnumerable<object[]> GetCallbacks()
