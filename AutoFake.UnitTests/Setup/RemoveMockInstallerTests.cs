@@ -2,7 +2,6 @@
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using System;
-using System.Linq;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup

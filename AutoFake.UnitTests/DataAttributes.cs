@@ -1,15 +1,15 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoMoq;
-using AutoFixture.Kernel;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Xunit;
 using Xunit.Sdk;
+using MethodAttributes = Mono.Cecil.MethodAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.UnitTests
 {
@@ -25,7 +25,13 @@ namespace AutoFake.UnitTests
         {
             public void Customize(IFixture fixture)
             {
-                fixture.Inject<TypeReference>(new FunctionPointerType());
+                fixture.Behaviors.Add(new OmitOnRecursionBehavior(1));
+                fixture.Inject(ModuleDefinition.CreateModule("TestModule", ModuleKind.Dll));
+                var typeDefinition = new TypeDefinition("TestNs", "TestType", TypeAttributes.Class);
+                fixture.Inject(typeDefinition);
+                fixture.Inject(new MethodDefinition("Method", MethodAttributes.Public, typeDefinition));
+                fixture.Inject(new ParameterInfo[0]);
+                fixture.Customize<Mono.Cecil.Cil.MethodBody>(c => c.Without(m => m.Scope));
             }
         }
     }
