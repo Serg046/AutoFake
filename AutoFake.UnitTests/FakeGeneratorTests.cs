@@ -7,7 +7,6 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.UnitTests
 {
