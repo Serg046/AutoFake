@@ -5,9 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Setup.Configurations;
 using Mono.Cecil;
-using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests
