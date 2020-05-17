@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
@@ -11,23 +7,11 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.UnitTests.Setup
 {
     public class ReplaceMockTests
     {
-        //private readonly Mock<IMocker> _mocker;
-        //private readonly MockedMemberInfo _mockedMemberInfo;
-        //private readonly ReplaceMock _replaceMock;
-
-        //public ReplaceMockTests()
-        //{
-        //    _replaceMock = GetReplaceMock();
-
-        //    var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-        //}
-
         [Theory]
         [InlineAutoMoqData(false, false, false)]
         [InlineAutoMoqData(false, true, true)]
@@ -41,10 +25,8 @@ namespace AutoFake.UnitTests.Setup
         {
             mock.CheckArguments = needCheckArguments;
             mock.ExpectedCalls = expectedCallsCountFunc ? descriptor : null;
-            var emitter = Mock.Of<IEmitter>();
-            var instruction = Instruction.Create(OpCodes.Nop);
 
-            mock.Inject(emitter, instruction);
+            mock.Inject(Mock.Of<IEmitter>(), Nop());
 
             proc.Verify(m => m.SaveMethodCall(It.IsAny<VariableDefinition>(), needCheckArguments),
                 mustBeInjected ? Times.Once() : Times.Never());
@@ -61,153 +43,145 @@ namespace AutoFake.UnitTests.Setup
             [Frozen]Mock<IProcessor> proc,
             ReplaceMock mock)
         {
-            var emitter = Mock.Of<IEmitter>();
-            var instruction = Instruction.Create(OpCodes.Nop);
             mock.CheckArguments = needCheckArguments;
             mock.ExpectedCalls = expectedCallsCountFunc ? descriptor : null;
 
-            mock.Inject(emitter, instruction);
+            mock.Inject(Mock.Of<IEmitter>(), Nop());
 
             proc.Verify(m => m.RemoveMethodArgumentsIfAny(), mustBeInjected ? Times.Once() : Times.Never());
         }
 
-        //[Theory]
-        //[InlineData(true)]
-        //[InlineData(false)]
-        //public void Inject_NonStaticMethod_OneStackArgumentMustBeRemoved(bool isMethodStatic)
-        //{
-        //    var methodName = isMethodStatic ? nameof(TestClass.StaticTestMethod) : nameof(TestClass.TestMethod);
-        //    var mock = GetReplaceMock(methodName);
-        //    var ilProcessor = GetILProcessor();
+        [Theory]
+        [InlineAutoMoqData(true)]
+        [InlineAutoMoqData(false)]
+        internal void Inject_NonStaticMethod_OneStackArgumentMustBeRemoved(
+            bool isNonStaticMethod,
+            [Frozen]Mock<ISourceMember> sourceMember,
+            [Frozen]Mock<IProcessor> proc,
+            ReplaceMock mock)
+        {
+            sourceMember.Setup(m => m.HasStackInstance).Returns(isNonStaticMethod);
 
-        //    var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-        //    var methodDefinition = typeInfo.Methods.Single(m => m.Name == methodName);
-        //    var instruction = Instruction.Create(OpCodes.Call, methodDefinition);
-        //    instruction.Operand = methodDefinition;
+            mock.Inject(Mock.Of<IEmitter>(), Nop());
 
-        //    mock.Inject(_mocker.Object, ilProcessor, instruction);
+            proc.Verify(m => m.RemoveStackArgument(), isNonStaticMethod ? Times.Once() : Times.Never());
+        }
 
-        //    _mocker.Verify(m => m.RemoveStackArgument(ilProcessor, instruction), isMethodStatic ? Times.Never() : Times.Once());
-        //}
+        [Theory]
+        [InlineAutoMoqData(true)]
+        [InlineAutoMoqData(false)]
+        internal void Inject_IsReturnObjectSet_ReplaceToRetValueFieldInjected(
+            bool noReturnObject,
+            [Frozen]Mock<IProcessor> proc,
+            [Frozen]FieldDefinition field,
+            MethodDefinition method,
+            ReplaceMock mock)
+        {
+            if (noReturnObject) mock.ReturnObject = null;
+            mock.BeforeInjection(method);
 
-        //[Theory]
-        //[InlineData(true)]
-        //[InlineData(false)]
-        //public void Inject_IsReturnObjectSet_ReplaceToRetValueFieldInjected(bool isReturnObjectSet)
-        //{
-        //    if (isReturnObjectSet) _replaceMock.ReturnObject = new MethodDescriptor("testType", "testName");
-        //    var ilProcessor = GetILProcessor();
-        //    var instruction = GetInstruction();
+            mock.Inject(Mock.Of<IEmitter>(), Nop());
 
-        //    _replaceMock.Inject(_mocker.Object, ilProcessor, instruction);
+            proc.Verify(m => m.ReplaceToRetValueField(field), noReturnObject ? Times.Never() : Times.Once());
+        }
 
-        //    _mocker.Verify(m => m.ReplaceToRetValueField(ilProcessor, instruction), isReturnObjectSet ? Times.Once() : Times.Never());
-        //}
+        [Theory]
+        [InlineAutoMoqData(true)]
+        [InlineAutoMoqData(false)]
+        internal void Inject_ReturnObjectIsNotSet_InstructionRemoved(
+            bool noReturnObject,
+            [Frozen]Mock<IProcessor> proc,
+            ReplaceMock mock)
+        {
+            if (noReturnObject) mock.ReturnObject = null;
+            var instruction = Nop();
 
-        //[Theory]
-        //[InlineData(true)]
-        //[InlineData(false)]
-        //public void Inject_IsReturnObjectNotSet_InstructionRemoved(bool isReturnObjectSet)
-        //{
-        //    if (isReturnObjectSet) _replaceMock.ReturnObject = new MethodDescriptor("testType", "testName");
-        //    var ilProcessor = GetILProcessor();
-        //    var instruction = GetInstruction();
+            mock.Inject(Mock.Of<IEmitter>(), instruction);
 
-        //    _replaceMock.Inject(_mocker.Object, ilProcessor, instruction);
+            proc.Verify(m => m.RemoveInstruction(instruction), noReturnObject ? Times.Once(): Times.Never());
+        }
 
-        //    _mocker.Verify(m => m.RemoveInstruction(ilProcessor, instruction), isReturnObjectSet ? Times.Never() : Times.Once());
-        //}
+        [Theory, AutoMoqData]
+        internal void Initialize_NoRetValueField_NoEffect(ReplaceMock mock)
+        {
+            mock.ReturnObject = null;
 
-        //[Fact]
-        //public void Initialize_NoRetValueField_NoEffect()
-        //{
-        //    var mockedMemberInfo = GetMockedMemberInfo();
+            Assert.Null(TestClass.RetValueField);
+            mock.Initialize(typeof(TestClass));
 
-        //    _replaceMock.Initialize(mockedMemberInfo, typeof(TestClass));
+            Assert.Null(TestClass.RetValueField);
+        }
 
-        //    Assert.Null(TestClass.RetValueField);
-        //}
+        [Theory, AutoMoqData]
+        internal void Initialize_IncorrectRetValueField_Fails(
+            [Frozen]Mock<IPrePostProcessor> preProc,
+            [Frozen]FieldDefinition field,
+            MethodDefinition method,
+            ReplaceMock mock)
+        {
+            field.Name = nameof(TestClass.RetValueField) + "salt";
+            var type = typeof(TestClass);
+            mock.ReturnObject = new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
+            mock.BeforeInjection(method);
 
-        //[Fact]
-        //public void Initialize_IncorrectRetValueField_Fails()
-        //{
-        //    _replaceMock.ReturnObject = new MethodDescriptor(typeof(TestClass).FullName, nameof(TestClass.GetValue));
-        //    var mockedMemberInfo = GetMockedMemberInfo();
-        //    mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField) + "salt");
+            Assert.Throws<FakeGeneretingException>(() => mock.Initialize(type));
+        }
 
-        //    Assert.Throws<FakeGeneretingException>(() => _replaceMock.Initialize(mockedMemberInfo, typeof(TestClass)));
-        //}
+        [Theory, AutoMoqData]
+        internal void Initialize_RetValue_Success(
+            [Frozen]Mock<IPrePostProcessor> preProc,
+            [Frozen]FieldDefinition field,
+            MethodDefinition method,
+            ReplaceMock mock)
+        {
+            field.Name = nameof(TestClass.RetValueField);
+            var type = typeof(TestClass);
+            mock.ReturnObject = new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
+            mock.BeforeInjection(method);
 
-        //[Fact]
-        //public void Initialize_RetValue_Success()
-        //{
-        //    var type = typeof(TestClass);
-        //    _replaceMock.ReturnObject = new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
-        //    var mockedMemberInfo = GetMockedMemberInfo();
-        //    mockedMemberInfo.RetValueField = CreateFieldDefinition(nameof(TestClass.RetValueField));
+            Assert.Null(TestClass.RetValueField);
+            mock.Initialize(type);
 
-        //    Assert.Null(TestClass.RetValueField);
-        //    _replaceMock.Initialize(mockedMemberInfo, type);
+            Assert.Equal(TestClass.VALUE, TestClass.RetValueField);
+            TestClass.RetValueField = null;
+        }
 
-        //    Assert.Equal(TestClass.VALUE, TestClass.RetValueField);
-        //    TestClass.RetValueField = null;
-        //}
+        [Theory]
+        [InlineAutoMoqData(false, true)]
+        [InlineAutoMoqData(true, false)]
+        internal void BeforeInjection_ReturnObjectIsSet_RetValueFieldInjected(
+            bool noReturnObject,
+            bool shouldBeInjected,
+            [Frozen]Mock<IPrePostProcessor> proc,
+            MethodDefinition method,
+            ReplaceMock mock)
+        {
+            if (noReturnObject) mock.ReturnObject = null;
 
-        //[Theory]
-        //[InlineData(false, false)]
-        //[InlineData(true, true)]
-        //public void BeforeInjection_ReturnObjectIsSet_RetValueFieldInjected(bool isReturnObjectSet, bool shouldBeInjected)
-        //{
-        //    if (isReturnObjectSet) _replaceMock.ReturnObject = new MethodDescriptor("testType", "testName");
-        //    var mocker = new Mock<IMocker>();
+            mock.BeforeInjection(method);
 
-        //    _replaceMock.BeforeInjection(mocker.Object);
+            proc.Verify(m => m.GenerateRetValueField(It.IsAny<string>(),It.IsAny<Type>()),
+                shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
+        }
 
-        //    mocker.Verify(m => m.GenerateRetValueField(It.IsAny<Type>()), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
-        //}
+        private static Instruction Nop() => Instruction.Create(OpCodes.Nop);
 
-        //private ILProcessor GetILProcessor() => new MethodBody(null).GetILProcessor();
-        //private Instruction GetInstruction() => GetInstruction(OpCodes.Call);
-        //private Instruction GetInstruction(OpCode opCode)
-        //{
-        //    var type = typeof(TestClass);
-        //    var method = type.GetMethod(nameof(TestClass.TestMethod), BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(int) }, null);
-        //    var typeInfo = new TypeInfo(type, new List<FakeDependency>());
-        //    return Instruction.Create(opCode, typeInfo.Module.Import(method));
-        //}
+        private class TestClass
+        {
+            internal static object RetValueField;
 
-        //private ISourceMember GetSourceMember(string name)
-        //    => new SourceMethod(typeof(TestClass).GetMethod(name));
+            public void TestMethod(int argument)
+            {
+                StaticTestMethod();
+            }
 
-        //private ReplaceMock GetReplaceMock() => GetReplaceMock(nameof(TestClass.TestMethod));
+            public static void StaticTestMethod()
+            {
+            }
 
-        //private ReplaceMock GetReplaceMock(string methodName)
-        //    => new ReplaceMock(Moq.Mock.Of<IInvocationExpression>(e => e.GetSourceMember() == GetSourceMember(methodName)));
+            public const int VALUE = 55;
 
-        //private FieldDefinition CreateFieldDefinition(string fieldName) => new FieldDefinition(fieldName, Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
-
-        //private FakeArgument CreateArgument(int arg) => new FakeArgument(new EqualityArgumentChecker(arg));
-
-        //private MockedMemberInfo GetMockedMemberInfo() => new MockedMemberInfo(_replaceMock, "suffix");
-
-        //private class TestClass
-        //{
-        //    internal static object RetValueField;
-        //    internal static Func<byte, bool> ExpectedCallsFuncField;
-        //    internal static Action CallbackField;
-
-        //    public void TestMethod(int argument)
-        //    {
-        //        StaticTestMethod();
-        //    }
-
-        //    public static void StaticTestMethod()
-        //    {
-        //    }
-
-        //    public const int VALUE = 55;
-
-        //    internal int GetValue() => VALUE;
-        //}
+            internal int GetValue() => VALUE;
+        }
     }
 }
