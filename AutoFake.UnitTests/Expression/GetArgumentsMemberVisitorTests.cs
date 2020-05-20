@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Expression;
+using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests.Expression

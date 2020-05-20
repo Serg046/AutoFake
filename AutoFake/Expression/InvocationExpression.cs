@@ -39,18 +39,9 @@ namespace AutoFake.Expression
 
         private void Analyze(MethodCallExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Method);
 
-        [ExcludeFromCodeCoverage]
         private void Analyze(MemberExpression expression, IMemberVisitor visitor)
         {
-            try
-            {
-                Analyze((dynamic)expression.Member, visitor);
-            }
-            catch (RuntimeBinderException)
-            {
-                throw new NotSupportedExpressionException(
-                    $"Ivalid MemberExpression format. Type '{expression.Member.GetType().FullName}'. Source: {expression}.");
-            }
+            Analyze((dynamic) expression.Member, visitor);
         }
 
         private void Analyze(NewExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Constructor);

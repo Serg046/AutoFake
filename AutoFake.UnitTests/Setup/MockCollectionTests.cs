@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Setup;
@@ -18,6 +19,11 @@ namespace AutoFake.UnitTests.Setup
             sut.Add(method.Object, mocks);
 
             var item = sut.Single();
+            Assert.Equal(method.Object, item.Method);
+            Assert.Equal(mocks, item.Mocks);
+            var enumerator = (sut as IEnumerable).GetEnumerator();
+            enumerator.MoveNext();
+            item = enumerator.Current as MockCollection.Item;
             Assert.Equal(method.Object, item.Method);
             Assert.Equal(mocks, item.Mocks);
         }
