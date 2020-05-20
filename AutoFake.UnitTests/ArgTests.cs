@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoFake.Setup;
 using Xunit;
 
 namespace AutoFake.UnitTests

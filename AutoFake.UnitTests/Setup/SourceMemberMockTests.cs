@@ -1,191 +1,126 @@
 ﻿using System;
-using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
+using AutoFixture.Xunit2;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
-using FieldAttributes = Mono.Cecil.FieldAttributes;
 
 namespace AutoFake.UnitTests.Setup
 {
     public class SourceMemberMockTests
     {
-        [Fact]
-        public void Initialize_SetupBodyField_ExpressionSet()
+        [Theory, AutoMoqData]
+        internal void Initialize_SetupBodyField_ExpressionSet(
+            [Frozen]IInvocationExpression expression,
+            [Frozen]FieldDefinition field,
+            MethodDefinition method,
+            Mock mock)
         {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            var mockedMember = new MockedMemberInfo(mock, null);
-            mockedMember.SetupBodyField = new FieldDefinition(nameof(TestClass.InvocationExpression),
-                Mono.Cecil.FieldAttributes.Assembly, new FunctionPointerType());
+            field.Name = nameof(TestClass.InvocationExpression);
+            mock.BeforeInjection(method);
 
             Assert.Null(TestClass.InvocationExpression);
-            mock.Initialize(mockedMember, typeof(TestClass));
+            mock.Initialize(typeof(TestClass));
 
-            Assert.Equal(mock.InvocationExpression, TestClass.InvocationExpression);
+            Assert.Equal(expression, TestClass.InvocationExpression);
             TestClass.InvocationExpression = null;
         }
 
-        [Fact]
-        public void Initialize_IncorrectSetupBodyField_Fails()
+        [Theory, AutoMoqData]
+        internal void Initialize_IncorrectSetupBodyField_Fails(
+            [Frozen]IInvocationExpression expression,
+            [Frozen]FieldDefinition field,
+            MethodDefinition method,
+            Mock mock)
         {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            var mockedMember = new MockedMemberInfo(mock, null);
-            mockedMember.SetupBodyField = new FieldDefinition(nameof(TestClass.InvocationExpression) + "salt",
-                Mono.Cecil.FieldAttributes.Assembly, new FunctionPointerType());
+            field.Name = nameof(TestClass.InvocationExpression) + "salt";
+            mock.BeforeInjection(method);
 
-            Assert.Throws<FakeGeneretingException>(() => mock.Initialize(mockedMember, typeof(TestClass)));
+            Assert.Throws<FakeGeneretingException>(() => mock.Initialize(typeof(TestClass)));
         }
 
-        [Fact]
-        public void Initialize_NoSetupBodyField_NoEffect()
+        [Theory, AutoMoqData]
+        internal void Initialize_NoSetupBodyField_NoEffect(Mock mock)
         {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            var mockedMemberInfo = new MockedMemberInfo(mock, null);
-
-            mock.Initialize(mockedMemberInfo, typeof(TestClass));
+            Assert.Null(TestClass.InvocationExpression);
+            mock.Initialize(typeof(TestClass));
 
             Assert.Null(TestClass.InvocationExpression);
         }
 
-        [Fact]
-        public void Initialize_ExpectedCallsFunc_Set()
-        {
-            var type = typeof(TestClass);
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            mock.ExpectedCallsFunc = i => true;
-            var mockedMemberInfo = new MockedMemberInfo(mock, null);
-            mockedMemberInfo.ExpectedCallsFuncField = new FieldDefinition(nameof(TestClass.ExpectedCallsFuncField),
-                FieldAttributes.Assembly, new FunctionPointerType());
-
-            Assert.Null(TestClass.ExpectedCallsFuncField);
-            mock.Initialize(mockedMemberInfo, type);
-
-            Assert.Equal(mock.ExpectedCallsFunc, TestClass.ExpectedCallsFuncField);
-            TestClass.ExpectedCallsFuncField = null;
-        }
-
-        [Fact]
-        public void Initialize_IncorrectExpectedCallsField_Fails()
-        {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            mock.ExpectedCallsFunc = i => true;
-            var mockedMemberInfo = new MockedMemberInfo(mock, null);
-            mockedMemberInfo.ExpectedCallsFuncField = new FieldDefinition(nameof(TestClass.ExpectedCallsFuncField) + "salt",
-                FieldAttributes.Assembly, new FunctionPointerType());
-
-            Assert.Throws<FakeGeneretingException>(() => mock.Initialize(mockedMemberInfo, typeof(TestClass)));
-        }
-
-        [Fact]
-        public void Initialize_NoExpectedCallsField_NoEffect()
-        {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            var mockedMemberInfo = new MockedMemberInfo(mock, null);
-
-            mock.Initialize(mockedMemberInfo, typeof(TestClass));
-
-            Assert.Null(TestClass.ExpectedCallsFuncField);
-        }
-
         [Theory]
-        [InlineData(false, false, false)]
-        [InlineData(false, true, true)]
-        [InlineData(true, false, true)]
-        [InlineData(true, true, true)]
-        public void BeforeInjection_NeedCheckArgumentsOrExpectedCallsCount_GenerateSetupBodyFieldInjected(
-            bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected)
+        [InlineAutoMoqData(false, false, false)]
+        [InlineAutoMoqData(false, true, true)]
+        [InlineAutoMoqData(true, false, true)]
+        [InlineAutoMoqData(true, true, true)]
+        internal void BeforeInjection_NeedCheckArgumentsOrExpectedCallsCount_Injected(
+            bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected,
+            [Frozen]Mock<IPrePostProcessor> preProc,
+            MethodDefinition method,
+            Mock mock)
         {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
             mock.CheckArguments = needCheckArguments;
-            mock.ExpectedCallsFunc = expectedCallsCount ? i => i == 1 : (Func<byte, bool>)null;
-            var mocker = new Mock<IMocker>();
+            if (!expectedCallsCount) mock.ExpectedCalls = null;
 
-            mock.BeforeInjection(mocker.Object);
+            mock.BeforeInjection(method);
 
-            mocker.Verify(m => m.GenerateSetupBodyField(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
+            var times = shouldBeInjected ? Times.AtLeastOnce() : Times.Never();
+            preProc.Verify(m => m.GenerateSetupBodyField(It.IsAny<string>()), times);
+            preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<MethodBody>()), times);
         }
 
-        [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, true)]
-        public void BeforeInjection_ExpectedCallsFunc_Injected(bool callsCounter, bool shouldBeInjected)
+        [Theory, AutoMoqData]
+        internal void IsSourceInstruction_Cmd_CallsSourceMember(
+            [Frozen]Mock<ISourceMember> member,
+            Mock mock)
         {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
-            if (callsCounter) mock.ExpectedCallsFunc = i => true;
-            var mocker = new Mock<IMocker>();
-
-            mock.BeforeInjection(mocker.Object);
-
-            mocker.Verify(m => m.GenerateCallsCounterFuncField(), shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
-        }
-
-        [Fact]
-        public void IsSourceInstruction_Cmd_CallsSourceMember()
-        {
-            var sourceMember = new Mock<ISourceMember>();
-            var mock = new MockFake(sourceMember.Object);
             var cmd = Instruction.Create(OpCodes.Nop);
 
-            mock.IsSourceInstruction(null, null, cmd);
+            mock.IsSourceInstruction(null, cmd);
 
-            sourceMember.Verify(s => s.IsSourceInstruction(null, cmd));
+            member.Verify(s => s.IsSourceInstruction(It.IsAny<ITypeInfo>(), cmd));
         }
 
         [Theory]
-        [InlineData(false, false, false)]
-        [InlineData(true, false, true)]
-        [InlineData(false, true, true)]
-        [InlineData(true, true, true)]
-        public void AfterInjection_Flags_VerificationInjected(bool checkArgs, bool expectedCalls, bool injected)
+        [InlineAutoMoqData(false, false, false)]
+        [InlineAutoMoqData(true, false, true)]
+        [InlineAutoMoqData(false, true, true)]
+        [InlineAutoMoqData(true, true, true)]
+        internal void AfterInjection_Flags_VerificationInjected(
+            bool checkArgs, bool expectedCalls, bool injected,
+            [Frozen]Mock<IPrePostProcessor> postProc,
+            IEmitter emitter,
+            Mock mock)
         {
-            var mock = new MockFake(GetMethod(nameof(TestClass.TestMethod)));
             mock.CheckArguments = checkArgs;
-            mock.ExpectedCallsFunc = expectedCalls ? i => true : (Func<byte, bool>)null;
-            var mocker = new Mock<IMocker>();
+            if (!expectedCalls) mock.ExpectedCalls = null;
 
-            mock.AfterInjection(mocker.Object, null);
+            mock.AfterInjection(emitter);
 
-            mocker.Verify(m => m.InjectVerification(null, checkArgs, expectedCalls), injected ? Times.Once() : Times.Never());
+            postProc.Verify(m => m.InjectVerification(emitter, checkArgs, mock.ExpectedCalls,
+                    It.IsAny<FieldDefinition>(), It.IsAny<VariableDefinition>()),
+                injected ? Times.Once() : Times.Never());
         }
 
-        private MethodInfo GetMethod(string methodName, params Type[] arguments) => GetMethod<TestClass>(methodName, arguments);
-        private MethodInfo GetMethod<T>(string methodName, params Type[] arguments) => typeof(T).GetMethod(methodName, arguments);
-
-        private class MockFake : SourceMemberMock
+        internal class Mock: SourceMemberMock
         {
-            public MockFake(MethodInfo method) : this(new SourceMethod(method))
+            public Mock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression) : base(processorFactory, invocationExpression)
             {
             }
 
-            public MockFake(ISourceMember sourceMember) : this(Moq.Mock.Of<IInvocationExpression>(
-                m => m.GetSourceMember() == sourceMember))
+            public override void Inject(IEmitter emitter, Instruction instruction)
             {
+                throw new NotImplementedException();
             }
-
-            private MockFake(IInvocationExpression invocationExpression) : base(invocationExpression)
-            {
-                InvocationExpression = invocationExpression;
-            }
-
-            public IInvocationExpression InvocationExpression { get; }
-
-            public override void Inject(IMethodMocker methodMocker, ILProcessor ilProcessor, Instruction instruction)
-                => throw new NotImplementedException();
         }
 
         private class TestClass
         {
-            internal static Func<byte, bool> ExpectedCallsFuncField;
             internal static IInvocationExpression InvocationExpression;
-
-            public void TestMethod()
-            {
-            }
-
-            public int TestMethod(int arg) => 5;
         }
     }
 }

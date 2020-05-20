@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -11,26 +11,21 @@ namespace AutoFake
         private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
 
         private readonly ITypeInfo _typeInfo;
-        private readonly MockerFactory _mockerFactory;
 
-        public FakeGenerator(ITypeInfo typeInfo, MockerFactory mockerFactory)
+        public FakeGenerator(ITypeInfo typeInfo)
         {
             _typeInfo = typeInfo;
-            _mockerFactory = mockerFactory;
         }
 
-        public void Generate(ICollection<IMock> mocks, ICollection<MockedMemberInfo> mockedMembers, MethodBase executeFunc)
+        public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
             foreach (var mock in mocks)
             {
-                var mocker = _mockerFactory.CreateMocker(_typeInfo, new MockedMemberInfo(mock, executeFunc.Name,
-                    (byte)mockedMembers.Count(m => m.TestMethodName == executeFunc.Name)));
-                mock.BeforeInjection(mocker);
                 var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
-                var testMethod = new TestMethod(method, mock, mocker);
+                mock.BeforeInjection(method);
+                var testMethod = new TestMethod(method, mock);
                 testMethod.Rewrite();
-                mock.AfterInjection(mocker, method.Body.GetILProcessor());
-                mockedMembers.Add(mocker.MemberInfo);
+                mock.AfterInjection(method.Body.GetEmitter());
             }
         }
 
@@ -38,13 +33,11 @@ namespace AutoFake
         {
             private readonly MethodDefinition _originalMethod;
             private readonly IMock _mock;
-            private readonly IMocker _mocker;
 
-            public TestMethod(MethodDefinition originalMethod, IMock mock, IMocker mocker)
+            public TestMethod(MethodDefinition originalMethod, IMock mock)
             {
                 _originalMethod = originalMethod;
                 _mock = mock;
-                _mocker = mocker;
             }
 
             public void Rewrite() => Rewrite(_originalMethod);
@@ -56,14 +49,13 @@ namespace AutoFake
                     Rewrite(asyncMethod);
                 }
 
-                var ilProcessor = currentMethod.Body.GetILProcessor();
                 foreach (var instruction in currentMethod.Body.Instructions.ToList())
                 {
-                    if (_mock.IsSourceInstruction(_mocker.TypeInfo, _originalMethod.Body, instruction))
+                    if (_mock.IsSourceInstruction(_originalMethod, instruction))
                     {
-                        _mock.Inject(_mocker, ilProcessor, instruction);
+                        _mock.Inject(currentMethod.Body.GetEmitter(), instruction);
                     }
-                    else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method, _mocker))
+                    else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
                     {
                         var methodDefinition = method.Resolve();
                         Rewrite(methodDefinition);
@@ -71,8 +63,8 @@ namespace AutoFake
                 }
             }
 
-            private bool IsFakeAssemblyMethod(MethodReference methodReference, IMocker mocker)
-                => methodReference.DeclaringType.Scope is ModuleDefinition module && module == mocker.TypeInfo.Module;
+            private bool IsFakeAssemblyMethod(MethodReference methodReference)
+                => methodReference.DeclaringType.Scope is ModuleDefinition module && module == _originalMethod.Module;
 
             private bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
             {

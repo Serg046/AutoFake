@@ -1,4 +1,6 @@
-﻿using AutoFake.Setup;
+﻿using AutoFake.Setup.Mocks;
+using AutoFixture.Xunit2;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
@@ -12,44 +14,42 @@ namespace AutoFake.UnitTests.Setup
         [InlineData(InsertMock.Location.Bottom, 1, 2, false)]
         internal void IsSourceInstruction_Instruction_Success(InsertMock.Location location, int first, int last, bool shouldBeFirst)
         {
-            var method = new MethodBody(null);
+            var method = new MethodDefinition(null, MethodAttributes.Assembly, new FunctionPointerType());
             var firstInstruction = Instruction.Create(OpCodes.Ldc_I4, first);
             var lastInstruction = Instruction.Create(OpCodes.Ldc_I4, last);
-            method.Instructions.Add(firstInstruction);
-            method.Instructions.Add(lastInstruction);
+            method.Body.Instructions.Add(firstInstruction);
+            method.Body.Instructions.Add(lastInstruction);
 
-            var mock = new InsertMock(null, location);
+            var mock = new InsertMock(null, null, location);
 
-            Assert.True(mock.IsSourceInstruction(null, method, shouldBeFirst ? firstInstruction : lastInstruction));
-            Assert.False(mock.IsSourceInstruction(null, method, shouldBeFirst ? lastInstruction : firstInstruction));
+            Assert.True(mock.IsSourceInstruction(method, shouldBeFirst ? firstInstruction : lastInstruction));
+            Assert.False(mock.IsSourceInstruction(method, shouldBeFirst ? lastInstruction : firstInstruction));
         }
 
         [Fact]
         public void IsSourceInstruction_UnexpectedLocation_False()
         {
-	        var mock = new InsertMock(null, (InsertMock.Location)(-1));
+            var mock = new InsertMock(null, null, (InsertMock.Location)(-1));
 
-            Assert.False(mock.IsSourceInstruction(null, null, null));
-		}
+            Assert.False(mock.IsSourceInstruction(null, null));
+        }
 
-        [Fact]
-        public void Inject_Instruction_Injected()
+        [Theory, AutoMoqData]
+        internal void Inject_Instruction_Injected([Frozen]Mock<IProcessor> proc, InsertMock sut)
         {
-            var mocker = new Mock<IMethodMocker>();
-            var mock = new InsertMock(null, InsertMock.Location.Top);
             var cmd = Instruction.Create(OpCodes.Nop);
 
-            mock.Inject(mocker.Object, null, cmd);
+            sut.Inject(null, cmd);
 
-            mocker.Verify(m => m.InjectCallback(null, cmd, It.IsAny<MethodDescriptor>(), true));
+            proc.Verify(m => m.InjectCallback(sut.Action, true));
         }
 
         [Fact]
         public void Initialize_GeneratedType_Nothing()
         {
-            var mock = new InsertMock(null, InsertMock.Location.Top);
+            var mock = new InsertMock(null, null, InsertMock.Location.Top);
 
-            var parameters = mock.Initialize(null, null);
+            var parameters = mock.Initialize(null);
 
             Assert.Empty(parameters);
         }
