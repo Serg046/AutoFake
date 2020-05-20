@@ -1,5 +1,6 @@
 ﻿using AutoFake.Expression;
-using AutoFake.Setup;
+using AutoFake.Setup.Configurations;
+using AutoFake.Setup.Mocks;
 using Moq;
 using Xunit;
 
@@ -8,12 +9,13 @@ namespace AutoFake.UnitTests.Setup
     public class SourceMemberInsertMockInstallerTests
     {
         private readonly SourceMemberInsertMock _mock;
-        private readonly SourceMemberInsertMockInstaller _installer;
+        private readonly SourceMemberInsertMockConfiguration _installer;
 
         public SourceMemberInsertMockInstallerTests()
         {
-            _mock = new SourceMemberInsertMock(Mock.Of<IInvocationExpression>(), null, InsertMock.Location.Top);
-            _installer = new SourceMemberInsertMockInstaller(_mock);
+            _mock = new SourceMemberInsertMock(new ProcessorFactory(null),
+                Mock.Of<IInvocationExpression>(), null, InsertMock.Location.Top);
+            _installer = new SourceMemberInsertMockConfiguration(_mock);
         }
 
         [Fact]
@@ -24,22 +26,24 @@ namespace AutoFake.UnitTests.Setup
             Assert.True(_mock.CheckArguments);
         }
 
-        [Fact]
-        public void ExpectedCalls_Byte_Success()
-        {
-            _installer.ExpectedCalls(3);
+        //[Fact]
+        //public void ExpectedCalls_Byte_Success()
+        //{
+        //    _installer.ExpectedCalls(3);
 
-            Assert.True(_mock.ExpectedCallsFunc(3));
-            Assert.False(_mock.ExpectedCallsFunc(2));
-        }
+        //    Assert.True(_mock.ExpectedCallsFunc(3));
+        //    Assert.False(_mock.ExpectedCallsFunc(2));
+        //}
 
         [Fact]
         public void ExpectedCalls_Func_Success()
         {
-            _installer.ExpectedCalls(x => x > 2);
+            System.Func<byte, bool> func = x => x > 2;
 
-            Assert.True(_mock.ExpectedCallsFunc(3));
-            Assert.False(_mock.ExpectedCallsFunc(2));
+            _installer.ExpectedCalls(func);
+
+            Assert.Equal(func.Method.Name, _mock.ExpectedCalls.Name);
+            Assert.Equal(func.Method.DeclaringType.FullName, _mock.ExpectedCalls.DeclaringType);
         }
     }
 }

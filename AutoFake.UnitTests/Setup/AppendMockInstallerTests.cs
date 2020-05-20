@@ -2,20 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using AutoFake.Setup;
+using AutoFake.Setup.Configurations;
+using AutoFake.Setup.Mocks;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
 {
     public class AppendMockInstallerTests
     {
-        [Theory, MemberData(nameof(GetActions))]
-        public void After_Installer_MockReplaced(dynamic callback)
+        [Theory, MemberAutoMoqData(nameof(GetActions))]
+        internal void After_Installer_MockReplaced(
+            dynamic callback,
+            MethodDescriptor descriptor,
+            IProcessorFactory factory)
         {
             var mocks = new List<IMock>();
             mocks.Add(null);
-            var descriptor = new MethodDescriptor("testType", "testMethodName");
-            var installer = new AppendMockInstaller(mocks, 0, descriptor);
+            var installer = new AppendMockConfiguration(factory, (m, i) => mocks[i] = m, 0, descriptor);
 
             installer.After(callback);
 
@@ -23,13 +26,15 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(descriptor, mock.Action);
         }
 
-        [Theory, MemberData(nameof(GetActions))]
-        public void After_GenericInstaller_MockReplaced(dynamic callback)
+        [Theory, MemberAutoMoqData(nameof(GetActions))]
+        internal void After_GenericInstaller_MockReplaced(
+            dynamic callback,
+            MethodDescriptor descriptor,
+            IProcessorFactory factory)
         {
             var mocks = new List<IMock>();
             mocks.Add(null);
-            var descriptor = new MethodDescriptor("testType", "testMethodName");
-            var installer = new AppendMockInstaller<TestClass>(mocks, 0, descriptor);
+            var installer = new AppendMockConfiguration<TestClass>(factory, (m, i) => mocks[i] = m, 0, descriptor);
 
             installer.After(callback);
 

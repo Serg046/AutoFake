@@ -14,5 +14,7 @@ namespace AutoFake
 
         public static MethodDescriptor ToMethodDescriptor(this Delegate action)
             => new MethodDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name);
+
+        public static IEmitter GetEmitter(this Mono.Cecil.Cil.MethodBody method) => new Emitter(method);
     }
 }

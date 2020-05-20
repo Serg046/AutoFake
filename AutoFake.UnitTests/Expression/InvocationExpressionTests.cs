@@ -8,7 +8,6 @@ using AutoFake.Expression;
 using Moq;
 using Xunit;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
-using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.UnitTests.Expression
 {

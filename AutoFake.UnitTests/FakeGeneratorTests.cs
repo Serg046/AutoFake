@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.UnitTests
 {
@@ -18,7 +17,7 @@ namespace AutoFake.UnitTests
         public FakeGeneratorTests()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            _fakeGenerator = new FakeGenerator(typeInfo, Moq.Mock.Of<MockerFactory>());
+            _fakeGenerator = new FakeGenerator(typeInfo);
         }
 
         [Fact]
@@ -27,25 +26,9 @@ namespace AutoFake.UnitTests
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
 
-            _fakeGenerator.Generate(new[] { mock.Object }, new List<MockedMemberInfo>(), testMethod);
+            _fakeGenerator.Generate(new[] { mock.Object }, testMethod);
 
-            mock.Verify(m => m.BeforeInjection(It.IsAny<IMocker>()));
-        }
-
-        [Fact]
-        public void Generate_MultipleMocks_SuffixUpdated()
-        {
-            var simpleMethodName = nameof(TestClass.SimpleMethod);
-            var testMethod = GetMethodInfo(simpleMethodName);
-            var mock = new Mock<IMock>();
-            var mockedMembers = new List<MockedMemberInfo>();
-
-            _fakeGenerator.Generate(new[] { mock.Object, mock.Object, mock.Object }, mockedMembers, testMethod);
-
-            Assert.Equal(3, mockedMembers.Count);
-            Assert.EndsWith(simpleMethodName, mockedMembers[0].UniqueName);
-            Assert.EndsWith(simpleMethodName + "1", mockedMembers[1].UniqueName);
-            Assert.EndsWith(simpleMethodName + "2", mockedMembers[2].UniqueName);
+            mock.Verify(m => m.BeforeInjection(It.Is<MethodDefinition>(met => met.Name == testMethod.Name)));
         }
 
         [Fact]
@@ -54,13 +37,12 @@ namespace AutoFake.UnitTests
             var testMethod = GetMethodInfo(nameof(TestClass.TestMethod));
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(), It.IsAny<MethodBody>(),
+            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)))).Returns(true);
-            var mockedMembers = new List<MockedMemberInfo>();
 
-            _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, testMethod);
+            _fakeGenerator.Generate(new[] { mock.Object }, testMethod);
 
-            mock.Verify(m => m.Inject(It.IsAny<IMethodMocker>(), It.IsAny<ILProcessor>(), It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
+            mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 
         [Fact]
@@ -69,11 +51,10 @@ namespace AutoFake.UnitTests
             var asyncMethod = GetMethodInfo(nameof(TestClass.AsyncMethod));
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
-            var mockedMembers = new List<MockedMemberInfo>();
 
-            _fakeGenerator.Generate(new[] { mock.Object }, mockedMembers, asyncMethod);
+            _fakeGenerator.Generate(new[] { mock.Object }, asyncMethod);
 
-            mock.Verify(m => m.IsSourceInstruction(It.IsAny<ITypeInfo>(), It.IsAny<MethodBody>(),
+            mock.Verify(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 

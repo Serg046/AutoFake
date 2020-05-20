@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using AutoFake.Setup;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -17,6 +18,6 @@ namespace AutoFake
         void AddMethod(MethodDefinition method);
         void WriteAssembly(Stream stream);
         object CreateInstance(Type type);
-        FakeObjectInfo CreateFakeObject(IEnumerable<MockedMemberInfo> mockedMembers);
+        FakeObjectInfo CreateFakeObject(MockCollection mocks);
     }
 }
