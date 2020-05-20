@@ -39,18 +39,9 @@ namespace AutoFake.Expression
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
             => Arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
-        //[ExcludeFromCodeCoverage]
         private FakeArgument TryGetArgument(LinqExpression expression)
         {
-            try
-            {
-                return GetArgument((dynamic)expression);
-            }
-            catch (RuntimeBinderException)
-            {
-                throw new NotSupportedExpressionException(
-                    $"Ivalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
-            }
+            return GetArgument((dynamic)expression);
         }
 
         private FakeArgument GetArgument(ConstantExpression expression) => CreateFakeArgument(expression.Value);
