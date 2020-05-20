@@ -82,11 +82,13 @@
   <ItemGroup>
     <Compile Include="ArgTests.cs" />
     <Compile Include="DataAttributes.cs" />
+    <Compile Include="EmitterTests.cs" />
     <Compile Include="Expression\GetArgumentsMemberVisitorTests.cs" />
     <Compile Include="Expression\GetSourceMemberVisitorTests.cs" />
     <Compile Include="Expression\GetTestMethodVisitorTests.cs" />
     <Compile Include="Expression\InvocationExpressionTests.cs" />
     <Compile Include="LambdaCheckerTests.cs" />
+    <Compile Include="PrePostProcessorTests.cs" />
     <Compile Include="Setup\AppendMockInstallerTests.cs" />
     <Compile Include="Setup\InsertMockTests.cs" />
     <Compile Include="Setup\MockConfigurationTests.cs" />
@@ -109,8 +111,9 @@
     <Compile Include="FakeGeneratorTests.cs" />
     <Compile Include="FakeTests.cs" />
     <Compile Include="Expression\GetValueMemberVisitorTests.cs" />
-    <Compile Include="MockerTests.cs" />
+    <Compile Include="ProcessorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestUtils\TypeExtensions.cs" />
     <Compile Include="TypeInfoTests.cs" />
     <Compile Include="TypeWrapperTests.cs" />
   </ItemGroup>

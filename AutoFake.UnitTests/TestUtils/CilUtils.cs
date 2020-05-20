@@ -9,7 +9,12 @@ namespace AutoFake.UnitTests.TestUtils
     {
         public static bool Ordered(this IEnumerable<Instruction> instructions, params OpCode[] opCodes)
         {
-            if (opCodes == null || opCodes.Length < 1)
+            return Ordered(instructions, (IList<OpCode>)opCodes);
+        }
+
+        public static bool Ordered(this IEnumerable<Instruction> instructions, IList<OpCode> opCodes)
+        {
+            if (opCodes == null || opCodes.Count < 1)
                 throw new ArgumentException("opCodes is empty");
 
             Func<Instruction, bool> filter = i => i.OpCode != opCodes[0];
@@ -17,7 +22,7 @@ namespace AutoFake.UnitTests.TestUtils
 
             while (tmp.Any())
             {
-                if (tmp.Take(opCodes.Length).Select(i => i.OpCode).SequenceEqual(opCodes))
+                if (tmp.Take(opCodes.Count).Select(i => i.OpCode).SequenceEqual(opCodes))
                 {
                     return true;
                 }
@@ -29,7 +34,12 @@ namespace AutoFake.UnitTests.TestUtils
 
         public static bool Ordered(this IEnumerable<Instruction> instructions, params Cil[] cilCmds)
         {
-            if (cilCmds == null || cilCmds.Length < 1)
+            return Ordered(instructions, (IList<Cil>) cilCmds);
+        }
+
+        public static bool Ordered(this IEnumerable<Instruction> instructions, IList<Cil> cilCmds)
+        {
+            if (cilCmds == null || cilCmds.Count < 1)
                 throw new ArgumentException("cilCmds is empty");
 
             Func<Instruction, bool> filter = i => i.OpCode != cilCmds[0].OpCode && i.Operand != cilCmds[0].Operand;
@@ -37,7 +47,7 @@ namespace AutoFake.UnitTests.TestUtils
 
             while (tmp.Any())
             {
-                if (cilCmds.SequenceEqual(tmp.Take(cilCmds.Length).Select(i => Cil.Cmd(i.OpCode, i.Operand))))
+                if (cilCmds.SequenceEqual(tmp.Take(cilCmds.Count).Select(i => Cil.Cmd(i.OpCode, i.Operand))))
                 {
                     return true;
                 }
