@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Mono.Cecil.Cil;
 using Xunit;
 using Xunit.Sdk;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -25,14 +26,19 @@ namespace AutoFake.UnitTests
         {
             public void Customize(IFixture fixture)
             {
-                fixture.Behaviors.Add(new OmitOnRecursionBehavior(1));
-                fixture.Inject(ModuleDefinition.CreateModule("TestModule", ModuleKind.Dll));
-                var typeDefinition = new TypeDefinition("TestNs", "TestType", TypeAttributes.Class);
-                fixture.Inject(typeDefinition);
-                fixture.Inject(new MethodDefinition("Method", MethodAttributes.Public, typeDefinition));
-                fixture.Inject(new ParameterInfo[0]);
-                fixture.Customize<Mono.Cecil.Cil.MethodBody>(c => c.Without(m => m.Scope));
+                fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+                fixture.Register(() => ModuleDefinition.CreateModule("TestModule", ModuleKind.Dll));
+                fixture.Register(() => new TypeDefinition("TestNs", "TestType", TypeAttributes.Class));
+                fixture.Register(() => new MethodDefinition("Method", MethodAttributes.Public, fixture.Create<TypeDefinition>()));
+                fixture.Register(() => Instruction.Create(OpCodes.Nop));
+                fixture.Register<ParameterInfo>(() => new Parameter {PrmType = fixture.Create<Type>()});
             }
+        }
+
+        private class Parameter : ParameterInfo
+        {
+            public Type PrmType { get; set; }
+            public override Type ParameterType => PrmType;
         }
     }
 
