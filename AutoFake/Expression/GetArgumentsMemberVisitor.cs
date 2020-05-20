@@ -39,7 +39,7 @@ namespace AutoFake.Expression
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
             => Arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
-        [ExcludeFromCodeCoverage]
+        //[ExcludeFromCodeCoverage]
         private FakeArgument TryGetArgument(LinqExpression expression)
         {
             try

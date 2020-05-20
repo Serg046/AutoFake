@@ -89,8 +89,10 @@
     <Compile Include="Expression\InvocationExpressionTests.cs" />
     <Compile Include="LambdaCheckerTests.cs" />
     <Compile Include="PrePostProcessorTests.cs" />
+    <Compile Include="ProcessorFactoryTests.cs" />
     <Compile Include="Setup\AppendMockInstallerTests.cs" />
     <Compile Include="Setup\InsertMockTests.cs" />
+    <Compile Include="Setup\MockCollectionTests.cs" />
     <Compile Include="Setup\MockConfigurationTests.cs" />
     <Compile Include="Setup\PrependMockInstallerTests.cs" />
     <Compile Include="Setup\RemoveMockInstallerTests.cs" />
