@@ -24,8 +24,7 @@ namespace AutoFake
             _dependencies = dependencies;
             _addedFields = new Dictionary<string, ushort>();
 
-            //TODO: remove reading mode parameter when a new version of mono.cecil will be available, see https://github.com/jbevain/cecil/issues/295
-            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, new ReaderParameters(ReadingMode.Immediate));
+            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName);
 
             var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, runtimeName: true);
             _typeDefinition = type.Resolve();
