@@ -80,10 +80,11 @@ namespace AutoFake.UnitTests
 
             fake.SaveFakeAssembly(fileName);
 
-            var assembly = AssemblyDefinition.ReadAssembly(fileName, new ReaderParameters(ReadingMode.Immediate));
+            var assembly = AssemblyDefinition.ReadAssembly(fileName);
             var savedType = assembly.MainModule.GetType(type.FullName, true).Resolve();
             Assert.Contains(savedType.Methods, m => m.Name == nameof(TestClass.VoidInstanceMethod));
-            File.Delete(fileName);
+            // TODO: Fix this
+            //File.Delete(fileName);
         }
 
         [Fact]
