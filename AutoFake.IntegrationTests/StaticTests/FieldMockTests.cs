@@ -16,7 +16,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetDynamicStaticValue())
                 .Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, TestClass.GetDynamicStaticValue()));
+            fake.Execute(() => Assert.Equal(7, TestClass.GetDynamicStaticValue()));
         }
 
         [Fact]
@@ -27,7 +27,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue())
                 .Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, TestClass.GetHelperDynamicStaticValue()));
+            fake.Execute(() => Assert.Equal(7, TestClass.GetHelperDynamicStaticValue()));
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetFrameworkValue())
                 .Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
 
-            fake.Execute(tst => Assert.Equal(cmd, TestClass.GetFrameworkValue()));
+            fake.Execute(() => Assert.Equal(cmd, TestClass.GetFrameworkValue()));
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetStaticStructValueByAddress())
                 .Replace(() => TestClass.StaticStructValue).Return(() => new HelperStruct { Value = value });
 
-            fake.Execute(tst => Assert.Equal(value, TestClass.GetStaticStructValueByAddress()));
+            fake.Execute(() => Assert.Equal(value, TestClass.GetStaticStructValueByAddress()));
         }
 
         private static class TestClass
