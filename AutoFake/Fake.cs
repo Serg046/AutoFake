@@ -88,7 +88,6 @@ namespace AutoFake
 
         public MockConfiguration Rewrite(Expression<Action> voidStaticRewriteFunc) => RewriteImpl(voidStaticRewriteFunc);
 
-
         public void Execute(Action<TypeWrapper> action) => Execute(action.Method, gen => new TypeWrapper(gen));
 
         public void Execute(Action<TypeWrapper, IList<object>> action) => Execute(action.Method, gen => new object[] { new TypeWrapper(gen), gen.Parameters });
