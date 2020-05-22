@@ -13,7 +13,6 @@ namespace AutoFake
         ModuleDefinition Module { get; }
         ICollection<FieldDefinition> Fields { get; }
         ICollection<MethodDefinition> Methods { get; }
-        string GetMonoCecilTypeName(Type declaringType);
         void AddField(FieldDefinition field);
         void AddMethod(MethodDefinition method);
         void WriteAssembly(Stream stream);

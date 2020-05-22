@@ -27,7 +27,7 @@ namespace AutoFake
 
         public FieldDefinition GenerateRetValueField(string name, Type returnType)
         {
-            var type = _typeInfo.Module.GetType(_typeInfo.GetMonoCecilTypeName(returnType))
+            var type = _typeInfo.Module.GetType(returnType.FullName, true)
                             ?? _typeInfo.Module.Import(returnType);
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
