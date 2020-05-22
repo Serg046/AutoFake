@@ -16,7 +16,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetDynamicStaticValue())
                 .Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetDynamicStaticValue())));
+            fake.Execute(tst => Assert.Equal(7, TestClass.GetDynamicStaticValue()));
         }
 
         [Fact]
@@ -27,7 +27,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue())
                 .Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.Execute(() => TestClass.GetHelperDynamicStaticValue())));
+            fake.Execute(tst => Assert.Equal(7, TestClass.GetHelperDynamicStaticValue()));
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetFrameworkValue())
                 .Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
 
-            fake.Execute(tst => Assert.Equal(cmd, tst.Execute(() => TestClass.GetFrameworkValue())));
+            fake.Execute(tst => Assert.Equal(cmd, TestClass.GetFrameworkValue()));
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.GetFrameworkStaticValue())
                 .Replace(() => DateTime.Now).Return(() => new DateTime(2016, 9, 25));
 
-            fake.Execute((tst, prms) => Assert.Equal(prms.Single(), tst.Execute(() => TestClass.GetFrameworkStaticValue())));
+            fake.Execute((tst, prms) => Assert.Equal(prms.Single(), TestClass.GetFrameworkStaticValue()));
         }
 
         private static class TestClass
