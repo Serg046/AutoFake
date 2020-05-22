@@ -36,22 +36,6 @@ namespace AutoFake
 
         public ModuleDefinition Module => _assemblyDefinition.MainModule;
 
-        public string GetMonoCecilTypeName(Type declaringType)
-            => declaringType == SourceType
-                ? _typeDefinition.FullName
-                : declaringType.Namespace + "." + GetAllTypes(declaringType)
-                    .Aggregate(string.Empty, (current, next) => next + "/" + current)
-                    .TrimEnd('/');
-
-        private IEnumerable<string> GetAllTypes(Type type)
-        {
-            var tmpType = type;
-            do
-            {
-                yield return tmpType.Name;
-            } while ((tmpType = tmpType.DeclaringType) != null);
-        }
-
         public void AddField(FieldDefinition field)
         {
             if (!_addedFields.ContainsKey(field.Name))
