@@ -40,7 +40,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(m => m.FirstMethod()).Replace(m => m.GetValue()).Return(() => 1);
-            fake.Rewrite(m => m.FirstMethod(Arg.DefaultOf<int>())).Replace(m => m.GetValue()).Return(() => 2);
+            fake.Rewrite(m => m.FirstMethod(Arg.IsAny<int>())).Replace(m => m.GetValue()).Return(() => 2);
 
             fake.Execute(tst =>
             {

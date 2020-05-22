@@ -62,7 +62,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             var method = fake.Rewrite(f => f.GetOverloadCtorTestClass());
             method.Replace(() => new OverloadCtorTestClass()).Return(() => new OverloadCtorTestClass(6));
-            method.Replace(() => new OverloadCtorTestClass(Arg.DefaultOf<int>())).Return(() => new OverloadCtorTestClass(7));
+            method.Replace(() => new OverloadCtorTestClass(Arg.IsAny<int>())).Return(() => new OverloadCtorTestClass(7));
 
             fake.Execute(tst => Assert.Equal(7, tst.GetOverloadCtorTestClass().Value));
         }

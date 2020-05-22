@@ -38,11 +38,11 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void DefaultOf_ReturnsDefaultValueOfType()
+        public void IsAny_ReturnsDefaultValueOfType()
         {
-            Assert.Equal(0, Arg.DefaultOf<int>());
-            Assert.Equal(null, Arg.DefaultOf<int?>());
-            Assert.Equal(null, Arg.DefaultOf<string>());
+            Assert.Equal(0, Arg.IsAny<int>());
+            Assert.Equal(null, Arg.IsAny<int?>());
+            Assert.Equal(null, Arg.IsAny<string>());
         }
     }
 }

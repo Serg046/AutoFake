@@ -85,7 +85,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             fake.Rewrite(t => t.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local))
                 .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(
-                    Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>())).Return(() => DateTime.MinValue);
+                    Arg.IsAny<DateTime>(), Arg.IsAny<TimeZoneInfo>())).Return(() => DateTime.MinValue);
 
             fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.UtcNow, TimeZoneInfo.Local)));
         }
@@ -159,7 +159,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()))
+            fake.Rewrite(f => f.GetValueByArguments(Arg.IsAny<DateTime>(), Arg.IsAny<TimeZoneInfo>()))
                 .Verify(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.Is<DateTime>(d => d > new DateTime(2016, 11, 04)),
                     Arg.Is<TimeZoneInfo>(t => t.BaseUtcOffset.Hours > 0))).CheckArguments();
 
@@ -180,7 +180,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(f => f.GetRecursionValue(2))
-                .Replace(f => f.GetRecursionValue(Arg.DefaultOf<int>())).Return(() => -1);
+                .Replace(f => f.GetRecursionValue(Arg.IsAny<int>())).Return(() => -1);
 
             fake.Execute(tst => Assert.Equal(-1, tst.GetRecursionValue(2)));
         }
