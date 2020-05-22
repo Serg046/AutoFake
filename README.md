@@ -3,7 +3,7 @@
 [![NuGet version](https://badge.fury.io/nu/AutoFake.svg)](https://badge.fury.io/nu/AutoFake)
 
 ```csharp
-class Calendar
+public class Calendar
 {
     public static DateTime Yesterday => DateTime.Now.AddDays(-1);
 }
