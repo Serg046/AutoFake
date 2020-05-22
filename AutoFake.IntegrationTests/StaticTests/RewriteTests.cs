@@ -12,7 +12,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.FirstMethod()).Replace(() => TestClass.GetValue()).Return(() => 1);
             fake.Rewrite(() => TestClass.SecondMethod()).Replace(() => TestClass.GetValue()).Return(() => 1);
 
-            fake.Execute(tst =>
+            fake.Execute(() =>
             {
                 Assert.Equal(1, TestClass.FirstMethod());
                 Assert.Equal(1, TestClass.SecondMethod());
@@ -27,7 +27,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.FirstMethod()).Replace(() => TestClass.GetValue()).Return(() => 1);
             fake.Rewrite(() => TestClass.SecondMethod()).Replace(() => TestClass.GetValue()).Return(() => 2);
 
-            fake.Execute(tst =>
+            fake.Execute(() =>
             {
                 Assert.Equal(1, TestClass.FirstMethod());
                 Assert.Equal(2, TestClass.SecondMethod());
@@ -42,7 +42,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Rewrite(() => TestClass.FirstMethod()).Replace(() => TestClass.GetValue()).Return(() => 1);
             fake.Rewrite(() => TestClass.FirstMethod(Arg.IsAny<int>())).Replace(() => TestClass.GetValue()).Return(() => 2);
 
-            fake.Execute(tst =>
+            fake.Execute(() =>
             {
                 Assert.Equal(1, TestClass.FirstMethod());
                 Assert.Equal(3, TestClass.FirstMethod(1));

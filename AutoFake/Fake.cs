@@ -88,10 +88,14 @@ namespace AutoFake
 
         public MockConfiguration Rewrite(Expression<Action> voidStaticRewriteFunc) => RewriteImpl(voidStaticRewriteFunc);
 
+        public void Execute(Action action) => ExecuteWithoutParameters(action.Method);
+
         public void Execute(Action<TypeWrapper> action) => Execute(action.Method, gen => new TypeWrapper(gen));
 
         public void Execute(Action<TypeWrapper, IList<object>> action) => Execute(action.Method, gen => new object[] { new TypeWrapper(gen), gen.Parameters });
 
+        public Task ExecuteAsync(Func<Task> action) => (Task)ExecuteWithoutParameters(action.Method);
+        
         public Task ExecuteAsync(Func<TypeWrapper, Task> action) => (Task)Execute(action.Method, gen => new TypeWrapper(gen));
 
         public Task ExecuteAsync(Func<TypeWrapper, IList<object>, Task> action)
@@ -102,14 +106,24 @@ namespace AutoFake
         internal object Execute(MethodInfo method, Func<FakeObjectInfo, object[]> fake)
         {
             var fakeObject = TypeInfo.CreateFakeObject(Mocks);
+            return Execute(fakeObject.Type, method, fake(fakeObject));
+        }
 
-            var delegateType = fakeObject.Type.Assembly.GetType(method.DeclaringType.FullName, true);
+        internal object ExecuteWithoutParameters(MethodInfo method)
+        {
+            var fakeObject = TypeInfo.CreateFakeObject(Mocks);
+            return Execute(fakeObject.Type, method, new object[0]);
+        }
+
+        private object Execute(Type type, MethodInfo method, object[] parameters)
+        {
+            var delegateType = type.Assembly.GetType(method.DeclaringType.FullName, true);
             var generatedMethod = delegateType.GetMethod(method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
             var instance = Activator.CreateInstance(delegateType);
 
             try
             {
-                return generatedMethod.Invoke(instance, fake(fakeObject));
+                return generatedMethod.Invoke(instance, parameters);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
