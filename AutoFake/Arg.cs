@@ -14,8 +14,8 @@ namespace AutoFake
         }
 
         //Used by expression's engine, see GetArgumentsMemberVisitor::GetArgument(MethodCallExpression expression)
-        public static T Is<T>(Func<T, bool> checkArgumentFunc) => DefaultOf<T>();
+        public static T Is<T>(Func<T, bool> checkArgumentFunc) => IsAny<T>();
 
-        public static T DefaultOf<T>() => default(T);
+        public static T IsAny<T>() => default(T);
     }
 }

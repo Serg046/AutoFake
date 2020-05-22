@@ -40,7 +40,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             var fake = new Fake(typeof(TestClass));
 
             fake.Rewrite(() => TestClass.FirstMethod()).Replace(() => TestClass.GetValue()).Return(() => 1);
-            fake.Rewrite(() => TestClass.FirstMethod(Arg.DefaultOf<int>())).Replace(() => TestClass.GetValue()).Return(() => 2);
+            fake.Rewrite(() => TestClass.FirstMethod(Arg.IsAny<int>())).Replace(() => TestClass.GetValue()).Return(() => 2);
 
             fake.Execute(tst =>
             {

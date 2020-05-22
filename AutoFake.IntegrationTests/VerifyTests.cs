@@ -12,7 +12,7 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetValueByArguments(Arg.DefaultOf<DateTime>(), Arg.DefaultOf<TimeZoneInfo>()))
+            fake.Rewrite(f => f.GetValueByArguments(Arg.IsAny<DateTime>(), Arg.IsAny<TimeZoneInfo>()))
                 .Verify(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc)).CheckArguments();
 
             fake.Execute(tst =>
