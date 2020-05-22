@@ -8,7 +8,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_Action_Executed()
         {
-            var fakeObjectInfo = new FakeObjectInfo(new object[0], typeof(TestType));
+            var fakeObjectInfo = new FakeObjectInfo(new object[0], typeof(TestType), new TestType());
             var typeWrapper = new TypeWrapper(fakeObjectInfo);
 
             Assert.Throws<NotImplementedException>(() => typeWrapper.Execute((TestType t) => t.Method()));
@@ -17,7 +17,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_Func_Executed()
         {
-            var fakeObjectInfo = new FakeObjectInfo(new object[0], typeof(TestType));
+            var fakeObjectInfo = new FakeObjectInfo(new object[0], typeof(TestType), new TestType());
             var typeWrapper = new TypeWrapper(fakeObjectInfo);
 
             const int expectedValue = 7;
