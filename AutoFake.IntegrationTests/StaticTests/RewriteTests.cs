@@ -14,8 +14,8 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Execute(tst =>
             {
-                Assert.Equal(1, tst.Execute(() => TestClass.FirstMethod()));
-                Assert.Equal(1, tst.Execute(() => TestClass.SecondMethod()));
+                Assert.Equal(1, TestClass.FirstMethod());
+                Assert.Equal(1, TestClass.SecondMethod());
             });
         }
 
@@ -29,8 +29,8 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Execute(tst =>
             {
-                Assert.Equal(1, tst.Execute(() => TestClass.FirstMethod()));
-                Assert.Equal(2, tst.Execute(() => TestClass.SecondMethod()));
+                Assert.Equal(1, TestClass.FirstMethod());
+                Assert.Equal(2, TestClass.SecondMethod());
             });
         }
 
@@ -44,8 +44,8 @@ namespace AutoFake.IntegrationTests.StaticTests
 
             fake.Execute(tst =>
             {
-                Assert.Equal(1, tst.Execute(() => TestClass.FirstMethod()));
-                Assert.Equal(3, tst.Execute(() => TestClass.FirstMethod(1)));
+                Assert.Equal(1, TestClass.FirstMethod());
+                Assert.Equal(3, TestClass.FirstMethod(1));
             });
         }
 
