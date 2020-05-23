@@ -5,7 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using AutoFake.Setup;
+using AutoFixture.Xunit2;
 using Mono.Cecil;
+using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -115,8 +118,12 @@ namespace AutoFake.UnitTests
             fake.Rewrite(f => f.StringInstanceMethod())
                 .Replace(f => f.StringInstanceMethod()).Return(() => testString);
 
+            Assert.Throws<NotImplementedException>(() => fake.Execute(() => TestClass.FailingStaticMethod()));
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.FailingMethod()));
+
+            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(() => TestClass.FailingStaticMethodAsync()));
             await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.FailingMethodAsync()));
+            
             Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
             {
                 Assert.Equal(testString, prms.Single());
@@ -137,8 +144,12 @@ namespace AutoFake.UnitTests
             fake.Rewrite((TestClass t) => t.StringInstanceMethod())
                 .Replace((TestClass t) => t.StringInstanceMethod()).Return(() => testString);
 
+            Assert.Throws<NotImplementedException>(() => fake.Execute(() => TestClass.FailingStaticMethod()));
             Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
+            
+            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(() => TestClass.FailingStaticMethodAsync()));
             await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
+            
             Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
             {
                 Assert.Equal(testString, prms.Single());
@@ -176,13 +187,15 @@ namespace AutoFake.UnitTests
 
             public void SomeMethod() { }
 
+            internal static void FailingStaticMethod() => throw new NotImplementedException();
             internal void FailingMethod() => throw new NotImplementedException();
             internal void VoidInstanceMethod() { }
             internal string StringInstanceMethod() => string.Empty;
             internal static void StaticVoidInstanceMethod() { }
             internal static string StaticStringInstanceMethod() => string.Empty;
 
-            internal async Task FailingMethodAsync()
+            internal Task FailingMethodAsync() => FailingStaticMethodAsync();
+            internal static async Task FailingStaticMethodAsync()
             {
                 await Task.Delay(1);
                 throw new NotImplementedException();

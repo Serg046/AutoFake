@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup;
 using Mono.Cecil.Cil;
+using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -116,6 +117,24 @@ namespace AutoFake.UnitTests.Setup
             var sourceField = new SourceField(field);
 
             Assert.Equal(field.ToString(), sourceField.ToString());
+        }
+
+        [Theory, AutoMoqData]
+        public void Equals_ValidInput_True()
+        {
+            var field = new Mock<FieldInfo>();
+            var field2 = new Mock<FieldInfo>();
+            field.Setup(m => m.Equals(It.IsAny<FieldInfo>())).Returns(true);
+            field.Setup(m => m.Equals(field2.Object)).Returns(false);
+            field2.Setup(m => m.Equals(field.Object)).Returns(false);
+
+            var sut = new SourceField(field.Object);
+
+            Assert.NotEqual(field.Object, field2.Object);
+            Assert.False(sut.Equals(null));
+            Assert.False(sut.Equals(new object()));
+            Assert.False(sut.Equals(new SourceField(field2.Object)));
+            Assert.True(sut.Equals(new SourceField(field.Object)));
         }
 
         private class TestClass

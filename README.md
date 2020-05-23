@@ -18,7 +18,7 @@ public void Yesterday_SomeDay_ThePrevDay()
         .Replace(() => DateTime.Now)
         .Return(() => new DateTime(2016, 8, day: 8));
 
-    fake.Execute(calendar => Assert.Equal(new DateTime(2016, 8, 7), Calendar.Yesterday));
+    fake.Execute(() => Assert.Equal(new DateTime(2016, 8, 7), Calendar.Yesterday));
 }
 
 [Fact]

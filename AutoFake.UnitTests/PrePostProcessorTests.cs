@@ -43,6 +43,24 @@ namespace AutoFake.UnitTests
         }
 
         [Theory, AutoMoqData]
+        internal void GenerateRetValueField_TypeExists_Reused(
+            [Frozen]ModuleDefinition module,
+            [Frozen]Mock<ITypeInfo> typeInfo,
+            string propName, Type propType,
+            PrePostProcessor proc)
+        {
+            var typeDef = new TypeDefinition(propType.Namespace, propType.Name, TypeAttributes.Class);
+            module.Types.Add(typeDef);
+            var field = proc.GenerateRetValueField(propName, propType);
+
+            Assert.Equal(propName, field.Name);
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
+            Assert.Equal(propType.FullName, field.FieldType.FullName);
+            typeInfo.Verify(t => t.AddField(field));
+        }
+
+        [Theory, AutoMoqData]
         internal void GenerateCallsCounterFuncField_FieldName_CounterFieldAdded(
             [Frozen]ModuleDefinition module,
             MethodBody method,
