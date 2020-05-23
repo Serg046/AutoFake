@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Setup;
+using AutoFixture.Xunit2;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -107,6 +110,21 @@ namespace AutoFake.UnitTests.Setup
             var sourceMethod = new SourceMethod(method);
 
             Assert.Equal(method.ToString(), sourceMethod.ToString());
+        }
+
+        [Theory, AutoMoqData]
+        public void Equals_ValidInput_True(Mock<MethodInfo> method, Mock<MethodInfo> method2)
+        {
+            method.Setup(m => m.Equals(method2.Object)).Returns(false);
+            method2.Setup(m => m.Equals(method.Object)).Returns(false);
+
+            var sut = new SourceMethod(method.Object);
+
+            Assert.NotEqual(method.Object, method2.Object);
+            Assert.False(sut.Equals(null));
+            Assert.False(sut.Equals(new object()));
+            Assert.False(sut.Equals(new SourceMethod(method2.Object)));
+            Assert.True(sut.Equals(new SourceMethod(method.Object)));
         }
 
         private MethodInfo GetMethod(string methodName, params Type[] arguments) => GetMethod<TestClass>(methodName, arguments);
