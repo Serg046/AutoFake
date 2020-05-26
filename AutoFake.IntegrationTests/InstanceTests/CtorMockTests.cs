@@ -14,7 +14,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(f => f.GetTestClass())
-                .Replace(() => new TestClass()).Return(() => testClass);
+                .Replace(() => new TestClass()).Return(testClass);
 
             fake.Execute(tst => Assert.Equal(testClass, tst.GetTestClass()));
         }
@@ -26,7 +26,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(f => f.GetHelperClass())
-                .Replace(() => new HelperClass()).Return(() => helperClass);
+                .Replace(() => new HelperClass()).Return(helperClass);
 
             fake.Execute(tst => Assert.Equal(helperClass, tst.GetHelperClass()));
         }
@@ -38,7 +38,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(f => f.GetSqlCommand())
-                .Replace(() => new SqlCommand()).Return(() => cmd);
+                .Replace(() => new SqlCommand()).Return(cmd);
 
             fake.Execute(tst => Assert.Equal(cmd, tst.GetSqlCommand()));
         }
@@ -50,7 +50,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
             
             fake.Rewrite(f => f.GetStringReader())
-                .Replace(() => new StringReader("")).Return(() => reader);
+                .Replace(() => new StringReader("")).Return(reader);
 
             fake.Execute(tst => Assert.Equal(reader, tst.GetStringReader()));
         }

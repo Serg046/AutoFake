@@ -39,6 +39,7 @@
     <Compile Include="EqualityArgumentChecker.cs" />
     <Compile Include="Exceptions\ExpectedCallsException.cs" />
     <Compile Include="Exceptions\FakeGeneretingException.cs" />
+    <Compile Include="Exceptions\InitializationException.cs" />
     <Compile Include="Exceptions\NotSupportedExpressionException.cs" />
     <Compile Include="Exceptions\VerifiableException.cs" />
     <Compile Include="ExcludeFromCodeCoverageAttribute.cs" />

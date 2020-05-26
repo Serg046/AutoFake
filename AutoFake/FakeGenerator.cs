@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -40,7 +41,11 @@ namespace AutoFake
                 _mock = mock;
             }
 
-            public void Rewrite() => Rewrite(_originalMethod);
+            public void Rewrite()
+            {
+                _mock.ProcessInstruction(Instruction.Create(OpCodes.Call, _originalMethod));
+                Rewrite(_originalMethod);
+            }
 
             private void Rewrite(MethodDefinition currentMethod)
             {
@@ -60,6 +65,7 @@ namespace AutoFake
                         var methodDefinition = method.Resolve();
                         Rewrite(methodDefinition);
                     }
+                    _mock.ProcessInstruction(instruction);
                 }
             }
 
