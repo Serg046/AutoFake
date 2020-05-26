@@ -167,7 +167,7 @@ namespace AutoFake.UnitTests
             DateTime d1 = DateTime.Now, d2 = DateTime.Now;
             var fake = new Fake<TestClass>();
 
-            Assert.Throws<InitializationException>(() => fake.Execute(() => Debug.WriteLine(d2 - d1)));
+            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d2 - d1)));
         }
 
         [Fact]
@@ -176,7 +176,7 @@ namespace AutoFake.UnitTests
             var d1 = DateTime.Now;
             var fake = new Fake<TestClass>();
 
-            Assert.Throws<InitializationException>(() => fake.Execute(() => Debug.WriteLine(d1)));
+            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
         }
 
         [Fact]
@@ -188,7 +188,7 @@ namespace AutoFake.UnitTests
             fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
             fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
 
-            Assert.Throws<InitializationException>(() => fake.Execute(() => Debug.WriteLine(d1)));
+            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
         }
 
         public static IEnumerable<object[]> GetCallbacks()

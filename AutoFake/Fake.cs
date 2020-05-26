@@ -149,7 +149,7 @@ namespace AutoFake
             var delegateType = TypeInfo.Module.GetType(method.DeclaringType.FullName, true).Resolve();
             var delegateRef = delegateType.Methods.Single(m => m.Name == method.Name);
             var fieldGroups = delegateRef.Body.Instructions
-                .Where(c => c.OpCode == OpCodes.Ldfld)
+                .Where(c => c.OpCode == OpCodes.Ldfld || c.OpCode == OpCodes.Ldflda)
                 .Select(c => (FieldDefinition)c.Operand)
                 .Where(field => field.DeclaringType == delegateType &&
                     !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field))
