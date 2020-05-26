@@ -76,7 +76,45 @@ namespace AutoFake.IntegrationTests
             fake.Execute(tst => Assert.Equal(6, tst.Sum(0, 1)));
         }
 
-        private class TestClass
+        [Fact]
+        public void Replace_SourceAsmInstance_Replaced()
+        {
+            var date = new DateTime(2020, 5, 23);
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.GetValueByArguments(Arg.IsAny<DateTime>(), Arg.IsAny<TimeZoneInfo>()))
+                .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
+                .CheckArguments()
+                .Return(date);
+
+            fake.Execute(tst =>
+            {
+                Assert.Equal(date, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
+            });
+        }
+
+        [Fact]
+        public void Replace_Class_Replaced()
+        {
+            const int mutator = 4;
+            var cl2 = new TestClass2()
+            {
+                Value = 2
+            };
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.MutateTestClass2(Arg.IsAny<TestClass2>(), mutator))
+                .Replace(f => f.Mutator(Arg.IsAny<TestClass2>(), mutator))
+                .Return(cl2);
+
+            fake.Execute(tst =>
+            {
+                var t1 = new TestClass2();
+                Assert.Equal(cl2, tst.MutateTestClass2(t1, mutator));
+            });
+        }
+
+        public class TestClass
         {
             public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
             {
@@ -108,6 +146,22 @@ namespace AutoFake.IntegrationTests
                 }
                 return CodeBranch(0, 0);
             }
+
+            public TestClass2 MutateTestClass2(TestClass2 cl, int value)
+            {
+                return Mutator(cl, value);
+            }
+
+            public TestClass2 Mutator(TestClass2 cl, int value)
+            {
+                cl.Value = value;
+                return cl;
+            }
+        }
+
+        public class TestClass2
+        {
+            public int Value { get; set; }
         }
     }
 }

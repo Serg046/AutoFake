@@ -112,6 +112,11 @@ namespace AutoFake.UnitTests.Setup
             {
             }
 
+            public override void ProcessInstruction(Instruction instruction)
+            {
+                throw new NotImplementedException();
+            }
+
             public override void Inject(IEmitter emitter, Instruction instruction)
             {
                 throw new NotImplementedException();

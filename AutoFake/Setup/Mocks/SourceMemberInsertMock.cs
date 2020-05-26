@@ -16,6 +16,11 @@ namespace AutoFake.Setup.Mocks
 
         public MethodDescriptor Action { get; }
 
+        [ExcludeFromCodeCoverage]
+        public override void ProcessInstruction(Instruction instruction)
+        {
+        }
+
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);

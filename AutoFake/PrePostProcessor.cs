@@ -70,5 +70,7 @@ namespace AutoFake
                 .GetMethod(nameof(InvocationExpression.MatchArguments)));
             emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Callvirt, matchMethod));
         }
+
+        public TypeReference GetTypeReference(Type type) => _typeInfo.Module.ImportReference(type);
     }
 }

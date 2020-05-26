@@ -41,6 +41,8 @@ namespace AutoFake.Setup.Mocks
             }
         }
 
+        public abstract void ProcessInstruction(Instruction instruction);
+
         public abstract void Inject(IEmitter emitter, Instruction instruction);
 
         public virtual IList<object> Initialize(Type type)

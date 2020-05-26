@@ -11,5 +11,6 @@ namespace AutoFake
         FieldDefinition GenerateSetupBodyField(string name);
         void InjectVerification(IEmitter emitter, bool checkArguments, MethodDescriptor expectedCalls,
             FieldDefinition setupBody, VariableDefinition callsAccumulator);
+        TypeReference GetTypeReference(Type type);
     }
 }

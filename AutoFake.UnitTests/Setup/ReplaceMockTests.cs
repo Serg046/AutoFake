@@ -121,7 +121,7 @@ namespace AutoFake.UnitTests.Setup
         {
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
-            mock.ReturnObject = new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
+            mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
             mock.BeforeInjection(method);
 
             Assert.Throws<FakeGeneretingException>(() => mock.Initialize(type));
@@ -136,7 +136,7 @@ namespace AutoFake.UnitTests.Setup
         {
             field.Name = nameof(TestClass.RetValueField);
             var type = typeof(TestClass);
-            mock.ReturnObject = new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
+            mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));new MethodDescriptor(type.FullName, nameof(TestClass.GetValue));
             mock.BeforeInjection(method);
 
             Assert.Null(TestClass.RetValueField);
