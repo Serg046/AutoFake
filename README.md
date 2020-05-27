@@ -16,7 +16,7 @@ public void Yesterday_SomeDay_ThePrevDay()
 
     fake.Rewrite(f => Calendar.Yesterday)
         .Replace(() => DateTime.Now)
-        .Return(() => new DateTime(2016, 8, day: 8));
+        .Return(new DateTime(2016, 8, day: 8));
 
     fake.Execute(() => Assert.Equal(new DateTime(2016, 8, 7), Calendar.Yesterday));
 }
@@ -24,15 +24,16 @@ public void Yesterday_SomeDay_ThePrevDay()
 [Fact]
 public void AddSomeMinutes_SomeDay_MinutesAdded()
 {
+    var randomValue = 7;
     var fake = new Fake<Calendar>();
 
     fake.Rewrite(f => f.AddSomeMinutes(Arg.IsAny<DateTime>()))
         .Replace((Random r) => r.Next(1, 10)) // Arg.Is<int>(i => i == 10) is also possible
         .CheckArguments() // r.Next(1, 11) fails with "Expected - 11, actual - 10"
         .ExpectedCalls(c => c > 0) // c => c > 1 fails with "Actual value - 1"
-        .Return(() => 7);
+        .Return(randomValue);
 
-    fake.Execute(calendar => Assert.Equal(new DateTime(2016, 8, 8, 0, minute: 7, 0),
+    fake.Execute(calendar => Assert.Equal(new DateTime(2016, 8, 8, 0, minute: randomValue, 0),
         calendar.AddSomeMinutes(new DateTime(2016, 8, 8, hour: 0, minute: 0, second: 0))));
 }
 ```
