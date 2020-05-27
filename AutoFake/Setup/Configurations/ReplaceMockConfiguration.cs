@@ -12,9 +12,15 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
+        public ReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
+        {
+            _mock.ReturnObject = new ReplaceMock.Return(returnObject);
+            return this;
+        }
+
         public ReplaceMockConfiguration<TReturn> Return(Func<TReturn> returnObject)
         {
-            _mock.ReturnObject = new MethodDescriptor(returnObject.Method.DeclaringType.FullName, returnObject.Method.Name);
+            _mock.ReturnObject = new ReplaceMock.Return(returnObject.ToMethodDescriptor());
             return this;
         }
 

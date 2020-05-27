@@ -86,7 +86,7 @@ namespace AutoFake
             return constructor.Invoke(_dependencies.Select(d => d.Instance).ToArray());
         }
 
-        private string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
+        internal static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
 
         public FakeObjectInfo CreateFakeObject(MockCollection mocks)
         {

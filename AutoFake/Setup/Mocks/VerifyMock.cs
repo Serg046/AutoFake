@@ -10,6 +10,11 @@ namespace AutoFake.Setup.Mocks
         {
         }
 
+        [ExcludeFromCodeCoverage]
+        public override void ProcessInstruction(Instruction instruction)
+        {
+        }
+
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
             if (CheckSourceMemberCalls)

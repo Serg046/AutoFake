@@ -5,10 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake
@@ -103,23 +106,33 @@ namespace AutoFake
 
         internal object Execute(MethodInfo method, Func<FakeObjectInfo, object> fake) => Execute(method, gen => new[] { fake(gen) });
 
-        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object[]> fake)
-        {
-            var fakeObject = TypeInfo.CreateFakeObject(Mocks);
-            return Execute(fakeObject.Type, method, fake(fakeObject));
-        }
-
         internal object ExecuteWithoutParameters(MethodInfo method)
         {
+            // Should be materialized before .CreateFakeObject(...) call
+            var fields = GetDelegateFields(method).ToList();
             var fakeObject = TypeInfo.CreateFakeObject(Mocks);
-            return Execute(fakeObject.Type, method, new object[0]);
+            return Execute(fakeObject.Type, method, new object[0], fields);
         }
 
-        private object Execute(Type type, MethodInfo method, object[] parameters)
+        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object[]> fake)
+        {
+            // Should be materialized before .CreateFakeObject(...) call
+            var fields = GetDelegateFields(method).ToList();
+            var fakeObject = TypeInfo.CreateFakeObject(Mocks);
+            return Execute(fakeObject.Type, method, fake(fakeObject), fields);
+        }
+
+        private object Execute(Type type, MethodInfo method, object[] parameters, IEnumerable<DelegateField> fields)
         {
             var delegateType = type.Assembly.GetType(method.DeclaringType.FullName, true);
             var generatedMethod = delegateType.GetMethod(method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
             var instance = Activator.CreateInstance(delegateType);
+
+            foreach (var fieldDef in fields)
+            {
+                var field = delegateType.GetField(fieldDef.Field.Name);
+                field.SetValue(instance, fieldDef.Instance);
+            }
 
             try
             {
@@ -129,6 +142,49 @@ namespace AutoFake
             {
                 throw ex.InnerException;
             }
+        }
+
+        private IEnumerable<DelegateField> GetDelegateFields(MethodInfo method)
+        {
+            var delegateType = TypeInfo.Module.GetType(method.DeclaringType.FullName, true).Resolve();
+            var delegateRef = delegateType.Methods.Single(m => m.Name == method.Name);
+            var fieldGroups = delegateRef.Body.Instructions
+                .Where(c => c.OpCode == OpCodes.Ldfld || c.OpCode == OpCodes.Ldflda)
+                .Select(c => (FieldDefinition)c.Operand)
+                .Distinct()
+                .Where(field => field.DeclaringType == delegateType &&
+                    !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field))
+                .GroupBy(f => f.FieldType);
+
+            foreach (var fieldGroup in fieldGroups)
+            {
+                var fields = fieldGroup.ToList();
+                if (fields.Count > 1) throw new InitializationException("Multiple captured members with the same type are not supported. Use Replace(() => new SomeType()) instead of Replace(someInstance).");
+
+                var field = fields[0];
+                var replaceMocks = Mocks.SelectMany(m => m.Mocks)
+                    .OfType<ReplaceMock>()
+                    .Where(m => m.ReturnObject?.Instance != null && m.ReturnObject.Instance
+                        .GetType().FullName == AutoFake.TypeInfo.GetClrName(field.FieldType.FullName))
+                    .ToList();
+                if (replaceMocks.Count == 0) throw new InitializationException("There is no any return instances configured. Use Replace(someInstance) instead of Replace(() => new SomeType()).");
+                if (replaceMocks.Count > 1) throw new InitializationException($"There are more than one return instance configured with the type {field.FieldType}");
+
+                var captured = replaceMocks[0];
+                captured.ProcessInstruction(Instruction.Create(OpCodes.Ldfld, field));
+                yield return new DelegateField(field, captured.ReturnObject.Instance);
+            }
+        }
+
+        private class DelegateField
+        {
+            public DelegateField(FieldDefinition field, object instance)
+            {
+                Field = field;
+                Instance = instance;
+            }
+            public FieldDefinition Field { get; }
+            public object Instance { get; }
         }
     }
 }
