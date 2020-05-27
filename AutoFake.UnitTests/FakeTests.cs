@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Setup;
-using AutoFixture.Xunit2;
+using AutoFake.Exceptions;
 using Mono.Cecil;
-using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -162,6 +159,58 @@ namespace AutoFake.UnitTests
             }));
         }
 
+        [Fact]
+        public void Execute_MultipleCapturedVarWithTheSameType_Throws()
+        {
+            DateTime d1 = DateTime.Now, d2 = DateTime.Now;
+            var fake = new Fake<TestClass>();
+
+            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d2 - d1)));
+        }
+
+        [Fact]
+        public void Execute_CapturedVarWithoutMocks_Throws()
+        {
+            var d1 = DateTime.Now;
+            var fake = new Fake<TestClass>();
+
+            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
+        }
+
+        [Fact]
+        public void Execute_CapturedVarWith2Mocks_Throws()
+        {
+            var d1 = new DateTime(2020, 5, 27);
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+
+            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
+        }
+
+        [Fact]
+        public void Execute_CapturedVarWithAppropriateMock_DoesNotFail()
+        {
+            var d1 = new DateTime(2020, 5, 27);
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+
+            fake.Execute(() => Console.WriteLine(d1));
+        }
+
+        [Fact]
+        public void Execute_MultipleCallsWithTheSameField_DoesNotFail()
+        {
+            var d1 = new DateTime(2020, 5, 27);
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+
+            fake.Execute(() => Console.WriteLine(d1 - d1));
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 
@@ -183,8 +232,6 @@ namespace AutoFake.UnitTests
 
         internal class TestClass
         {
-            public const int CONST_FIELD = 5;
-
             public void SomeMethod() { }
 
             internal static void FailingStaticMethod() => throw new NotImplementedException();

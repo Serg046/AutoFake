@@ -30,6 +30,11 @@ namespace AutoFake.Setup.Mocks
         {
         }
 
+        [ExcludeFromCodeCoverage]
+        public void ProcessInstruction(Instruction instruction)
+        {
+        }
+
         public IList<object> Initialize(Type type)
         {
             return new List<object>();
