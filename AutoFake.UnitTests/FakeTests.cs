@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
-using AutoFixture.Xunit2;
 using Mono.Cecil;
 using Xunit;
 
@@ -189,6 +187,28 @@ namespace AutoFake.UnitTests
             fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
 
             Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
+        }
+
+        [Fact]
+        public void Execute_CapturedVarWithAppropriateMock_DoesNotFail()
+        {
+            var d1 = new DateTime(2020, 5, 27);
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+
+            fake.Execute(() => Console.WriteLine(d1));
+        }
+
+        [Fact]
+        public void Execute_MultipleCallsWithTheSameField_DoesNotFail()
+        {
+            var d1 = new DateTime(2020, 5, 27);
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+
+            fake.Execute(() => Console.WriteLine(d1 - d1));
         }
 
         public static IEnumerable<object[]> GetCallbacks()
