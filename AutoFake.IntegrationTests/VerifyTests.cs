@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using Xunit;
 
@@ -78,6 +79,19 @@ namespace AutoFake.IntegrationTests
             fake.Execute(tst => Assert.Equal(0, tst.Sum(0, 1)));
         }
 
+        [Fact]
+        public async Task AsyncTest()
+        {
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(f => f.DoSomethingAsync())
+                .Verify(f => f.Sum(1, 2))
+                .CheckArguments()
+                .ExpectedCalls(i => i == 1);
+
+            await fake.ExecuteAsync(tst => tst.DoSomethingAsync());
+        }
+
         private class TestClass
         {
             public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
@@ -107,6 +121,8 @@ namespace AutoFake.IntegrationTests
                 }
                 return CodeBranch(0, 0);
             }
+
+            public Task DoSomethingAsync() => Task.Run(() => Sum(1, 2));
         }
     }
 }
