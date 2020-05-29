@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoFake.Expression;
 using AutoFake.UnitTests.TestUtils;
 using AutoFixture.Xunit2;
@@ -123,6 +124,44 @@ namespace AutoFake.UnitTests
                 && m.DeclaringType.Name == nameof(InvocationExpression)));
             instructions.Add(Cil.Cmd(OpCodes.Ret));
             Assert.True(emitter.Body.Instructions.Ordered(instructions));
+        }
+
+        [Theory]
+        [InlineAutoMoqData(typeof(Task))]
+        [InlineAutoMoqData(typeof(Task<int>))]
+        internal void InjectVerification_AsyncMethod_Injected(
+            Type asyncType,
+            [Frozen]ModuleDefinition module,
+            [Frozen]Emitter emitter,
+            TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
+            FieldDefinition setupBody, FieldDefinition accumulator,
+            PrePostProcessor proc)
+        {
+            var taskType = module.ImportReference(asyncType);
+            emitter.Body.Method.ReturnType = taskType;
+            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+            ctor.Name = ".ctor";
+            type.Methods.Add(ctor);
+            type.Methods.Add(method);
+            module.Types.Add(type);
+            var callsCounterDescriptor = new MethodDescriptor(type.FullName, method.Name);
+
+            proc.InjectVerification(emitter, true, callsCounterDescriptor, setupBody, accumulator);
+
+            Assert.True(emitter.Body.Instructions.Ordered(
+                Cil.Cmd(OpCodes.Stloc, (VariableDefinition o) => o.VariableType == taskType),
+                Cil.Cmd(OpCodes.Ldsfld, setupBody),
+                Cil.Cmd(OpCodes.Ldloc, (VariableDefinition o) => o.VariableType == taskType),
+                Cil.Cmd(OpCodes.Ldsfld, accumulator),
+                Cil.Cmd(OpCodes.Ldc_I4_1),
+                Cil.Cmd(OpCodes.Newobj, ctor),
+                Cil.Cmd(OpCodes.Ldftn, method),
+                Cil.Cmd(OpCodes.Newobj, (MemberReference m) => m.Name == ".ctor"
+                    && m.DeclaringType.FullName == "System.Func`2<System.Byte,System.Boolean>"),
+                Cil.Cmd(OpCodes.Callvirt, (MethodReference m) =>
+                    m.Name == nameof(InvocationExpression.MatchArgumentsAsync)
+                    && m.DeclaringType.Name == nameof(InvocationExpression))
+            ));
         }
     }
 }
