@@ -49,7 +49,7 @@ namespace AutoFake
 
             private void Rewrite(MethodDefinition currentMethod)
             {
-                if (IsAsyncMethod(currentMethod, out var asyncMethod))
+                if (currentMethod.IsAsync(out var asyncMethod))
                 {
                     Rewrite(asyncMethod);
                 }
@@ -71,21 +71,6 @@ namespace AutoFake
 
             private bool IsFakeAssemblyMethod(MethodReference methodReference)
                 => methodReference.DeclaringType.Scope is ModuleDefinition module && module == _originalMethod.Module;
-
-            private bool IsAsyncMethod(MethodDefinition method, out MethodDefinition asyncMethod)
-            {
-                //for .net 4, it is available in .net 4.5
-                dynamic asyncAttribute = method.CustomAttributes
-                    .SingleOrDefault(a => a.AttributeType.Name == ASYNC_STATE_MACHINE_ATTRIBUTE);
-                if (asyncAttribute != null)
-                {
-                    TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
-                    asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
-                    return true;
-                }
-                asyncMethod = null;
-                return false;
-            }
         }
     }
 }

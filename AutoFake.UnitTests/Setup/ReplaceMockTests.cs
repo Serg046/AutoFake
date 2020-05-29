@@ -28,7 +28,7 @@ namespace AutoFake.UnitTests.Setup
 
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
-            proc.Verify(m => m.SaveMethodCall(It.IsAny<VariableDefinition>(), needCheckArguments),
+            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments),
                 mustBeInjected ? Times.Once() : Times.Never());
         }
 

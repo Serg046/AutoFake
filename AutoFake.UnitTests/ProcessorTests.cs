@@ -12,7 +12,7 @@ namespace AutoFake.UnitTests
     {
         [Theory, AutoMoqData]
         internal void SaveMethodCall_MethodWithTwoArgs_ReturnsTwoVariables(
-            MethodDefinition method, VariableDefinition accumulator,
+            MethodDefinition method, FieldDefinition accumulator,
             IFixture fixture)
         {
             method.Parameters.Add(new ParameterDefinition(new FunctionPointerType()));
@@ -28,7 +28,7 @@ namespace AutoFake.UnitTests
         internal void SaveMethodCall_CheckArgs_ArgsSaved(
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             TypeDefinition refType,
-            MethodDefinition method, VariableDefinition accumulator,
+            MethodDefinition method, FieldDefinition accumulator,
             IFixture fixture)
         {
             method.Parameters.Add(new ParameterDefinition(TypeExtensions.ValueTypeDef()));

@@ -70,7 +70,7 @@ namespace AutoFake.UnitTests.Setup
 
             var times = shouldBeInjected ? Times.AtLeastOnce() : Times.Never();
             preProc.Verify(m => m.GenerateSetupBodyField(It.IsAny<string>()), times);
-            preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<MethodBody>()), times);
+            preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>()), times);
         }
 
         [Theory, AutoMoqData]
@@ -99,10 +99,10 @@ namespace AutoFake.UnitTests.Setup
             mock.CheckArguments = checkArgs;
             if (!expectedCalls) mock.ExpectedCalls = null;
 
-            mock.AfterInjection(emitter);
+            try { mock.AfterInjection(emitter); } catch { }
 
             postProc.Verify(m => m.InjectVerification(emitter, checkArgs, mock.ExpectedCalls,
-                    It.IsAny<FieldDefinition>(), It.IsAny<VariableDefinition>()),
+                    It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()),
                 injected ? Times.Once() : Times.Never());
         }
 

@@ -6,11 +6,11 @@ namespace AutoFake
 {
     internal interface IPrePostProcessor
     {
-        VariableDefinition GenerateCallsAccumulator(MethodBody method);
+        FieldDefinition GenerateCallsAccumulator(string name, MethodBody method);
         FieldDefinition GenerateRetValueField(string name, Type returnType);
         FieldDefinition GenerateSetupBodyField(string name);
         void InjectVerification(IEmitter emitter, bool checkArguments, MethodDescriptor expectedCalls,
-            FieldDefinition setupBody, VariableDefinition callsAccumulator);
+            FieldDefinition setupBody, FieldDefinition callsAccumulator);
         TypeReference GetTypeReference(Type type);
     }
 }
