@@ -34,22 +34,24 @@ namespace AutoFake
             return field;
         }
 
-        public VariableDefinition GenerateCallsAccumulator(MethodBody method)
+        public FieldDefinition GenerateCallsAccumulator(string name, MethodBody method)
         {
-            var accumulator = new VariableDefinition(_typeInfo.Module.Import(typeof(List<object[]>)));
-            method.Variables.Add(accumulator);
+            var type = _typeInfo.Module.Import(typeof(List<object[]>));
+            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
+            _typeInfo.AddField(field);
+
             method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj,
                 _typeInfo.Module.Import(typeof(List<object[]>).GetConstructor(new Type[0]))));
-            method.Instructions.Insert(1, Instruction.Create(OpCodes.Stloc, accumulator));
-            return accumulator;
+            method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, field));
+            return field;
         }
 
         public void InjectVerification(IEmitter emitter, bool checkArguments, MethodDescriptor expectedCalls,
-            FieldDefinition setupBody, VariableDefinition callsAccumulator)
+            FieldDefinition setupBody, FieldDefinition callsAccumulator)
         {
             var retInstruction = emitter.Body.Instructions.Last();
             emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBody));
-            emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, callsAccumulator));
+            emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, callsAccumulator));
             emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
             if (expectedCalls != null)
             {

@@ -6,6 +6,7 @@ using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.Setup.Mocks
 {
@@ -24,7 +25,7 @@ namespace AutoFake.Setup.Mocks
         protected IProcessorFactory ProcessorFactory { get; }
         protected IPrePostProcessor PrePostProcessor { get; }
         protected FieldDefinition SetupBodyField { get; private set; }
-        protected VariableDefinition CallsAccumulator { get; private set; }
+        protected FieldDefinition CallsAccumulator { get; private set; }
 
         public bool CheckArguments { get; set; }
         public MethodDescriptor ExpectedCalls { get; set; }
@@ -37,7 +38,8 @@ namespace AutoFake.Setup.Mocks
             if (CheckSourceMemberCalls)
             {
                 SetupBodyField = PrePostProcessor.GenerateSetupBodyField(GetFieldName(method.Name, "Setup"));
-                CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(method.Body);
+                CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(
+                    GetFieldName(method.Name, "CallsAccumulator"), method.Body);
             }
         }
 
@@ -82,6 +84,15 @@ namespace AutoFake.Setup.Mocks
             {
                 PrePostProcessor.InjectVerification(emitter, CheckArguments, ExpectedCalls,
                     SetupBodyField, CallsAccumulator);
+            }
+
+            if (ExpectedCalls != null)
+            {
+                var type = ProcessorFactory.TypeInfo.Module.GetType(ExpectedCalls.DeclaringType, true).Resolve();
+                if (type.Attributes.HasFlag(TypeAttributes.NestedPrivate))
+                {
+                    type.Attributes = TypeAttributes.NestedAssembly;
+                }
             }
         }
     }
