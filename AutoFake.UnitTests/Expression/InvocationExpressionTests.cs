@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Moq;
@@ -94,6 +95,30 @@ namespace AutoFake.UnitTests.Expression
             var arguments = new[] { new object[] { arg, arg.ToString() }};
 
             expr.MatchArguments(arguments, checkArguments, null);
+        }
+
+        [Theory]
+        [InlineData(4, false)]
+        [InlineData(5, true)]
+        public void MatchArgumentsAsync_ValidInput_Passes(int arg, bool checkArguments)
+        {
+            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
+            var expr = new InvocationExpression(methodExpr);
+            var arguments = new[] { new object[] { arg, arg.ToString() } };
+
+            expr.MatchArgumentsAsync(Task.CompletedTask, arguments, checkArguments, null);
+        }
+
+        [Theory]
+        [InlineData(4, false)]
+        [InlineData(5, true)]
+        public void MatchArgumentsAsync_ValidGenericInput_Passes(int arg, bool checkArguments)
+        {
+            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
+            var expr = new InvocationExpression(methodExpr);
+            var arguments = new[] { new object[] { arg, arg.ToString() } };
+
+            expr.MatchArgumentsAsync(Task.FromResult(1), arguments, checkArguments, null);
         }
 
         public static IEnumerable<object[]> GetAcceptMemberVisitorTestData()

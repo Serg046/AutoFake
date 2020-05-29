@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using Microsoft.CSharp.RuntimeBinder;
@@ -64,6 +65,25 @@ namespace AutoFake.Expression
             var visitor = new GetArgumentsMemberVisitor();
             AcceptMemberVisitor(visitor);
             return visitor.Arguments;
+        }
+
+        public Task MatchArgumentsAsync(Task task, ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
+        {
+            return MatchArguments((dynamic)task, arguments, checkArguments, expectedCalls);
+        }
+
+        private Task MatchArguments(Task task, ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
+        {
+            return task.ContinueWith(t => MatchArguments(arguments, checkArguments, expectedCalls));
+        }
+
+        private Task<T> MatchArguments<T>(Task<T> task, ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
+        {
+            return task.ContinueWith(t =>
+            {
+                MatchArguments(arguments, checkArguments, expectedCalls);
+                return t.Result;
+            });
         }
 
         public void MatchArguments(ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)

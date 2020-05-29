@@ -12,6 +12,6 @@ namespace AutoFake
         void RemoveMethodArgumentsIfAny();
         void RemoveStackArgument();
         void ReplaceToRetValueField(FieldDefinition retField);
-        IList<VariableDefinition> SaveMethodCall(VariableDefinition accumulator, bool checkArguments);
+        IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments);
     }
 }
