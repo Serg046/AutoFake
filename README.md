@@ -6,7 +6,8 @@
 public class Calendar
 {
     public static DateTime Yesterday => DateTime.Now.AddDays(-1);
-    internal DateTime AddSomeMinutes(DateTime date) => date.AddMinutes(new Random().Next(1, 10));
+    internal Task<DateTime> AddSomeMinutesAsync(DateTime date)
+        => Task.Run(() => date.AddMinutes(new Random().Next(1, 10)));
 }
 
 [Fact]
@@ -22,18 +23,18 @@ public void Yesterday_SomeDay_ThePrevDay()
 }
 
 [Fact]
-public void AddSomeMinutes_SomeDay_MinutesAdded()
+public async Task AddSomeMinutes_SomeDay_MinutesAdded()
 {
     var randomValue = 7;
     var fake = new Fake<Calendar>();
 
-    fake.Rewrite(f => f.AddSomeMinutes(Arg.IsAny<DateTime>()))
+    fake.Rewrite(f => f.AddSomeMinutesAsync(Arg.IsAny<DateTime>()))
         .Replace((Random r) => r.Next(1, 10)) // Arg.Is<int>(i => i == 10) is also possible
         .CheckArguments() // r.Next(1, 11) fails with "Expected - 11, actual - 10"
         .ExpectedCalls(c => c > 0) // c => c > 1 fails with "Actual value - 1"
         .Return(randomValue);
 
-    fake.Execute(calendar => Assert.Equal(new DateTime(2016, 8, 8, 0, minute: randomValue, 0),
-        calendar.AddSomeMinutes(new DateTime(2016, 8, 8, hour: 0, minute: 0, second: 0))));
+    await fake.ExecuteAsync(async calendar => Assert.Equal(new DateTime(2016, 8, 8, 0, minute: randomValue, 0),
+        await calendar.AddSomeMinutesAsync(new DateTime(2016, 8, 8, hour: 0, minute: 0, second: 0))));
 }
 ```
