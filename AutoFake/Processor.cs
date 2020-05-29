@@ -61,7 +61,7 @@ namespace AutoFake
             }
         }
 
-        public IList<VariableDefinition> SaveMethodCall(VariableDefinition accumulator, bool checkArguments)
+        public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments)
         {
             var method = (MethodReference)_instruction.Operand;
             var variables = new Stack<VariableDefinition>();
@@ -81,7 +81,7 @@ namespace AutoFake
 
             SaveMethodArguments(checkArguments, variables, arrVar);
 
-            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, accumulator));
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, accumulator));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
             var addMethod = _typeInfo.Module.Import(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, addMethod));

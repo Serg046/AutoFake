@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoFake.Expression;
 using AutoFake.UnitTests.TestUtils;
 using AutoFixture.Xunit2;
@@ -46,17 +47,17 @@ namespace AutoFake.UnitTests
         internal void GenerateRetValueField_TypeExists_Reused(
             [Frozen]ModuleDefinition module,
             [Frozen]Mock<ITypeInfo> typeInfo,
-            string propName, Type propType,
+            string fieldName, Type fieldType,
             PrePostProcessor proc)
         {
-            var typeDef = new TypeDefinition(propType.Namespace, propType.Name, TypeAttributes.Class);
+            var typeDef = new TypeDefinition(fieldType.Namespace, fieldType.Name, TypeAttributes.Class);
             module.Types.Add(typeDef);
-            var field = proc.GenerateRetValueField(propName, propType);
+            var field = proc.GenerateRetValueField(fieldName, fieldType);
 
-            Assert.Equal(propName, field.Name);
+            Assert.Equal(fieldName, field.Name);
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(propType.FullName, field.FieldType.FullName);
+            Assert.Equal(fieldType.FullName, field.FieldType.FullName);
             typeInfo.Verify(t => t.AddField(field));
         }
 
@@ -64,32 +65,31 @@ namespace AutoFake.UnitTests
         internal void GenerateCallsCounterFuncField_FieldName_CounterFieldAdded(
             [Frozen]ModuleDefinition module,
             MethodBody method,
+            string fieldName,
             PrePostProcessor proc)
         {
-            var accumulator = proc.GenerateCallsAccumulator(method);
+            var accumulator = proc.GenerateCallsAccumulator(fieldName, method);
 
             var type = module.Import(typeof(List<object[]>));
-            Assert.Equal(type.FullName,
-                accumulator.VariableType.FullName);
-            Assert.Contains(accumulator, method.Variables);
+            Assert.Equal(type.FullName, accumulator.FieldType.FullName);
             Assert.True(method.Instructions.Ordered(
                 Cil.Cmd(OpCodes.Newobj, (MethodReference m) => m.Name == ".ctor"
                                                                && m.DeclaringType.FullName == type.FullName),
-                Cil.Cmd(OpCodes.Stloc, accumulator)
+                Cil.Cmd(OpCodes.Stsfld, accumulator)
             ));
         }
 
         [Theory]
-        [InlineAutoMoqData(false, false, false)]
-        [InlineAutoMoqData(true, false, true)]
-        [InlineAutoMoqData(false, true, true)]
-        [InlineAutoMoqData(true, true, true)]
+        [InlineAutoMoqData(false, false)]
+        [InlineAutoMoqData(true, false)]
+        [InlineAutoMoqData(false, true)]
+        [InlineAutoMoqData(true, true)]
         internal void InjectVerification_CheckCalls_Injected(
-            bool checkArguments, bool callsCounter, bool injected,
+            bool checkArguments, bool callsCounter,
             [Frozen]ModuleDefinition module,
             [Frozen]Emitter emitter,
             TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
-            FieldDefinition setupBody, VariableDefinition accumulator,
+            FieldDefinition setupBody, FieldDefinition accumulator,
             PrePostProcessor proc)
         {
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
@@ -105,7 +105,7 @@ namespace AutoFake.UnitTests
             var instructions = new List<Cil>
             {
                 Cil.Cmd(OpCodes.Ldsfld, setupBody),
-                Cil.Cmd(OpCodes.Ldloc, accumulator),
+                Cil.Cmd(OpCodes.Ldsfld, accumulator),
                 Cil.Cmd(checkArgsCode)
             };
             if (callsCounter)
@@ -124,6 +124,44 @@ namespace AutoFake.UnitTests
                 && m.DeclaringType.Name == nameof(InvocationExpression)));
             instructions.Add(Cil.Cmd(OpCodes.Ret));
             Assert.True(emitter.Body.Instructions.Ordered(instructions));
+        }
+
+        [Theory]
+        [InlineAutoMoqData(typeof(Task))]
+        [InlineAutoMoqData(typeof(Task<int>))]
+        internal void InjectVerification_AsyncMethod_Injected(
+            Type asyncType,
+            [Frozen]ModuleDefinition module,
+            [Frozen]Emitter emitter,
+            TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
+            FieldDefinition setupBody, FieldDefinition accumulator,
+            PrePostProcessor proc)
+        {
+            var taskType = module.ImportReference(asyncType);
+            emitter.Body.Method.ReturnType = taskType;
+            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+            ctor.Name = ".ctor";
+            type.Methods.Add(ctor);
+            type.Methods.Add(method);
+            module.Types.Add(type);
+            var callsCounterDescriptor = new MethodDescriptor(type.FullName, method.Name);
+
+            proc.InjectVerification(emitter, true, callsCounterDescriptor, setupBody, accumulator);
+
+            Assert.True(emitter.Body.Instructions.Ordered(
+                Cil.Cmd(OpCodes.Stloc, (VariableDefinition o) => o.VariableType == taskType),
+                Cil.Cmd(OpCodes.Ldsfld, setupBody),
+                Cil.Cmd(OpCodes.Ldloc, (VariableDefinition o) => o.VariableType == taskType),
+                Cil.Cmd(OpCodes.Ldsfld, accumulator),
+                Cil.Cmd(OpCodes.Ldc_I4_1),
+                Cil.Cmd(OpCodes.Newobj, ctor),
+                Cil.Cmd(OpCodes.Ldftn, method),
+                Cil.Cmd(OpCodes.Newobj, (MemberReference m) => m.Name == ".ctor"
+                    && m.DeclaringType.FullName == "System.Func`2<System.Byte,System.Boolean>"),
+                Cil.Cmd(OpCodes.Callvirt, (MethodReference m) =>
+                    m.Name == nameof(InvocationExpression.MatchArgumentsAsync)
+                    && m.DeclaringType.Name == nameof(InvocationExpression))
+            ));
         }
     }
 }

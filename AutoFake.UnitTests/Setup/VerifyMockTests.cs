@@ -21,15 +21,15 @@ namespace AutoFake.UnitTests.Setup
             [Frozen]Mock<IPrePostProcessor> preProc,
             [Frozen]Mock<IProcessor> proc,
             MethodDefinition method,
-            VariableDefinition accumulator,
+            FieldDefinition accumulator,
             IEmitter emitter,
             VerifyMock mock)
         {
             if (!expectedCallsCountFunc) mock.ExpectedCalls = null;
             mock.CheckArguments = needCheckArguments;
             var runtimeArgs = new List<VariableDefinition>();
-            preProc.Setup(p => p.GenerateCallsAccumulator(It.IsAny<MethodBody>())).Returns(accumulator);
-            proc.Setup(p => p.SaveMethodCall(It.IsAny<VariableDefinition>(), needCheckArguments)).Returns(runtimeArgs);
+            preProc.Setup(p => p.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>())).Returns(accumulator);
+            proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments)).Returns(runtimeArgs);
             mock.BeforeInjection(method);
 
             mock.Inject(emitter, Instruction.Create(OpCodes.Call, method));
@@ -41,7 +41,7 @@ namespace AutoFake.UnitTests.Setup
             }
             else
             {
-                proc.Verify(m => m.SaveMethodCall(It.IsAny<VariableDefinition>(), needCheckArguments), Times.Never);
+                proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments), Times.Never);
                 proc.Verify(m => m.PushMethodArguments(It.IsAny<IEnumerable<VariableDefinition>>()), Times.Never);
             }
         }

@@ -70,7 +70,7 @@ namespace AutoFake.UnitTests.Setup
 
             var times = shouldBeInjected ? Times.AtLeastOnce() : Times.Never();
             preProc.Verify(m => m.GenerateSetupBodyField(It.IsAny<string>()), times);
-            preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<MethodBody>()), times);
+            preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>()), times);
         }
 
         [Theory, AutoMoqData]
@@ -92,18 +92,38 @@ namespace AutoFake.UnitTests.Setup
         [InlineAutoMoqData(true, true, true)]
         internal void AfterInjection_Flags_VerificationInjected(
             bool checkArgs, bool expectedCalls, bool injected,
+            [Frozen]ModuleDefinition module,
             [Frozen]Mock<IPrePostProcessor> postProc,
+            TypeDefinition type,
             IEmitter emitter,
             Mock mock)
         {
+            module.Types.Add(type);
             mock.CheckArguments = checkArgs;
-            if (!expectedCalls) mock.ExpectedCalls = null;
+            mock.ExpectedCalls = expectedCalls ? new MethodDescriptor(type.FullName, string.Empty) : null;
 
             mock.AfterInjection(emitter);
 
             postProc.Verify(m => m.InjectVerification(emitter, checkArgs, mock.ExpectedCalls,
-                    It.IsAny<FieldDefinition>(), It.IsAny<VariableDefinition>()),
+                    It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()),
                 injected ? Times.Once() : Times.Never());
+        }
+
+        [Theory, AutoMoqData]
+        internal void AfterInjection_NestedPrivateType_ChangedToAssemblyAccess(
+            [Frozen]ModuleDefinition module,
+            TypeDefinition type,
+            IEmitter emitter,
+            Mock mock)
+        {
+            type.Attributes = TypeAttributes.NestedPrivate;
+            module.Types.Add(type);
+
+            mock.ExpectedCalls = new MethodDescriptor(type.FullName, string.Empty);
+
+            mock.AfterInjection(emitter);
+
+            Assert.Equal(TypeAttributes.NestedAssembly, type.Attributes);
         }
 
         internal class Mock: SourceMemberMock

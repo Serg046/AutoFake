@@ -28,7 +28,7 @@ namespace AutoFake.UnitTests.Setup
 
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
-            proc.Verify(m => m.SaveMethodCall(It.IsAny<VariableDefinition>(), needCheckArguments),
+            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments),
                 mustBeInjected ? Times.Once() : Times.Never());
         }
 
@@ -200,6 +200,26 @@ namespace AutoFake.UnitTests.Setup
 
             Assert.Equal(module, method.ReturnType.Scope);
             Assert.All(method.Parameters, prm => Assert.Equal(module, prm.ParameterType.Scope));
+        }
+
+        [Theory, AutoMoqData]
+        internal void ProcessInstruction_MethodArgTypeIsDifferent_OriginalType(
+            [Frozen]ModuleDefinition module,
+            [Frozen]Mock<IPrePostProcessor> proc,
+            MethodReference method,
+            ReplaceMock mock)
+        {
+            proc.Setup(p => p.GetTypeReference(It.IsAny<Type>()))
+                .Returns(new TypeReference("System", "Int32", module, module));
+            var originalType = new TypeReference("System", "Int64", module, null);
+            method.ReturnType = originalType;
+            method.Parameters.Clear();
+            method.Parameters.Add(new ParameterDefinition(originalType));
+            mock.ReturnObject = new ReplaceMock.Return(5);
+
+            mock.ProcessInstruction(Instruction.Create(OpCodes.Call, method));
+
+            Assert.All(method.Parameters, prm => Assert.Equal("Int64", prm.ParameterType.Name));
         }
 
         [Theory, AutoMoqData]
