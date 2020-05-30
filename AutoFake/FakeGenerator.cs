@@ -9,8 +9,6 @@ namespace AutoFake
 {
     internal class FakeGenerator
     {
-        private const string ASYNC_STATE_MACHINE_ATTRIBUTE = "AsyncStateMachineAttribute";
-
         private readonly ITypeInfo _typeInfo;
 
         public FakeGenerator(ITypeInfo typeInfo)
@@ -22,7 +20,8 @@ namespace AutoFake
         {
             foreach (var mock in mocks)
             {
-                var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFunc));
+                var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
+                var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFuncRef));
                 mock.BeforeInjection(method);
                 var testMethod = new TestMethod(method, mock);
                 testMethod.Rewrite();

@@ -78,7 +78,7 @@ namespace AutoFake.Setup.Mocks
             return fieldName.Append("_").Append(suffix).ToString();
         }
 
-        public void AfterInjection(IEmitter emitter)
+        public virtual void AfterInjection(IEmitter emitter)
         {
             if (CheckSourceMemberCalls)
             {
