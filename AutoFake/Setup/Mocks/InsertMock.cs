@@ -23,6 +23,11 @@ namespace AutoFake.Setup.Mocks
         [ExcludeFromCodeCoverage]
         public void AfterInjection(IEmitter emitter)
         {
+            var type = _processorFactory.TypeInfo.Module.GetType(Action.DeclaringType, true).Resolve();
+            if (type.Attributes.HasFlag(TypeAttributes.NestedPrivate))
+            {
+                type.Attributes = TypeAttributes.NestedAssembly;
+            }
         }
 
         [ExcludeFromCodeCoverage]

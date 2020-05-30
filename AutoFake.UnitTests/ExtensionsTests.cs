@@ -19,7 +19,7 @@ namespace AutoFake.UnitTests
             var typeInfo = GetTypeInfo();
 
             var methodReference = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 0);
-            var method = GetMethodInfo(t => t.Other());
+            var method = typeInfo.Methods.Single(m => m.Name == "Other");
 
             Assert.False(methodReference.EquivalentTo(method));
         }
@@ -30,7 +30,8 @@ namespace AutoFake.UnitTests
             var typeInfo = GetTypeInfo();
 
             var methodReference = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 0);
-            var method = GetMethodInfo(t => t.Test(""));
+            var method = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 1
+                                                                       && m.Parameters[0].ParameterType.FullName == "System.String");
 
             Assert.False(methodReference.EquivalentTo(method));
         }
@@ -41,7 +42,8 @@ namespace AutoFake.UnitTests
             var typeInfo = GetTypeInfo();
 
             var methodReference = GetStringOverloadMethodReference(typeInfo);
-            var method = GetMethodInfo(t => t.Test(1));
+            var method = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 1
+                                                                       && m.Parameters[0].ParameterType.FullName == "System.Int32");
 
             Assert.False(methodReference.EquivalentTo(method));
         }
@@ -58,7 +60,9 @@ namespace AutoFake.UnitTests
             var typeInfo = GetTypeInfo();
 
             var methodReference = GetStringOverloadMethodReference(typeInfo);
-            var method = GetMethodInfo(t => t.Test(""));
+            var method = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 1
+                                                                       && m.Parameters[0].ParameterType.FullName == "System.String");
+
 
             Assert.True(methodReference.EquivalentTo(method));
         }

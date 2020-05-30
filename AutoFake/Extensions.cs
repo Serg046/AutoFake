@@ -7,10 +7,11 @@ namespace AutoFake
 {
     internal static class Extensions
     {
-        public static bool EquivalentTo(this MethodReference methodReference, MethodBase method)
+        public static bool EquivalentTo(this MethodReference methodReference, MethodReference method)
             => methodReference.Name == method.Name &&
-               methodReference.Parameters.Select(p => TypeInfo.GetClrName(p.ParameterType.FullName))
-                   .SequenceEqual(method.GetParameters().Select(p => p.ParameterType.FullName));
+               methodReference.Parameters.Select(p => p.ParameterType.FullName)
+         .SequenceEqual(method.Parameters.Select(p => p.ParameterType.FullName)) &&
+               methodReference.ReturnType.FullName == method.ReturnType.FullName;
 
         public static MethodDescriptor ToMethodDescriptor(this Delegate action)
             => new MethodDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name);
