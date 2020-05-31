@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,21 +45,35 @@ namespace AutoFake
 
         public void RemoveInstruction(Instruction instruction) => _emitter.Remove(instruction);
 
-        public void InjectCallback(MethodDescriptor callback, bool beforeInstruction)
+        public void InjectClosure(ClosureDescriptor closure, bool beforeInstruction,
+            IDictionary<CapturedMember, FieldDefinition> generatedMembers)
         {
-            var type = _typeInfo.Module.GetType(callback.DeclaringType, true).Resolve();
+            var instructions = GetInstructions(closure, generatedMembers);
+            if (!beforeInstruction) instructions = instructions.Reverse();
+            var emit = beforeInstruction ? _emitter.InsertBefore : (Action<Instruction, Instruction>)_emitter.InsertAfter;
+            foreach (var instruction in instructions)
+            {
+                emit(_instruction, instruction);
+            }
+        }
+
+        private IEnumerable<Instruction> GetInstructions(ClosureDescriptor closure,
+            IDictionary<CapturedMember, FieldDefinition> generatedMembers)
+        {
+            var type = _typeInfo.Module.GetType(closure.DeclaringType, true).Resolve();
             var ctor = type.Methods.Single(m => m.Name == ".ctor");
-            var method = type.Methods.Single(m => m.Name == callback.Name);
-            if (beforeInstruction)
+            var method = type.Methods.Single(m => m.Name == closure.Name);
+            yield return Instruction.Create(OpCodes.Newobj, ctor);
+
+            foreach (var member in generatedMembers)
             {
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newobj, ctor));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, method));
+                yield return Instruction.Create(OpCodes.Dup);
+                yield return Instruction.Create(OpCodes.Ldsfld, member.Value);
+                yield return Instruction.Create(OpCodes.Stfld, member.Key.Field);
+
             }
-            else
-            {
-                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Call, method));
-                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Newobj, ctor));
-            }
+
+            yield return Instruction.Create(OpCodes.Call, method);
         }
 
         public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments)

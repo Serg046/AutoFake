@@ -62,6 +62,21 @@ namespace AutoFake.UnitTests
         }
 
         [Theory, AutoMoqData]
+        internal void GenerateField_FieldName_Added(
+            [Frozen]Mock<ITypeInfo> typeInfo,
+            string propName, Type propType,
+            PrePostProcessor proc)
+        {
+            var field = proc.GenerateField(propName, propType);
+
+            Assert.Equal(propName, field.Name);
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
+            Assert.Equal(propType.FullName, field.FieldType.FullName);
+            typeInfo.Verify(t => t.AddField(field));
+        }
+
+        [Theory, AutoMoqData]
         internal void GenerateCallsCounterFuncField_FieldName_CounterFieldAdded(
             [Frozen]ModuleDefinition module,
             MethodBody method,
