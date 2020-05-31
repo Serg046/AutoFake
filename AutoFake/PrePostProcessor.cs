@@ -20,7 +20,7 @@ namespace AutoFake
 
         public FieldDefinition GenerateSetupBodyField(string name)
         {
-            var type = _typeInfo.Module.Import(typeof(InvocationExpression));
+            var type = _typeInfo.Module.ImportReference(typeof(InvocationExpression));
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
             return field;
@@ -29,7 +29,7 @@ namespace AutoFake
         public FieldDefinition GenerateRetValueField(string name, Type returnType)
         {
             var type = _typeInfo.Module.GetType(returnType.FullName, true)
-                       ?? _typeInfo.Module.Import(returnType);
+                       ?? _typeInfo.Module.ImportReference(returnType);
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
             return field;
@@ -45,12 +45,12 @@ namespace AutoFake
 
         public FieldDefinition GenerateCallsAccumulator(string name, MethodBody method)
         {
-            var type = _typeInfo.Module.Import(typeof(List<object[]>));
+            var type = _typeInfo.Module.ImportReference(typeof(List<object[]>));
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
 
             method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj,
-                _typeInfo.Module.Import(typeof(List<object[]>).GetConstructor(new Type[0]))));
+                _typeInfo.Module.ImportReference(typeof(List<object[]>).GetConstructor(new Type[0]))));
             method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, field));
             return field;
         }
@@ -82,7 +82,7 @@ namespace AutoFake
                 emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldftn, method));
                 var funcCtor = typeof(Func<byte, bool>).GetConstructors().Single();
                 emitter.InsertBefore(retInstruction,
-                    Instruction.Create(OpCodes.Newobj, _typeInfo.Module.Import(funcCtor)));
+                    Instruction.Create(OpCodes.Newobj, _typeInfo.Module.ImportReference(funcCtor)));
             }
             else
             {

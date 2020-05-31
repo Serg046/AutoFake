@@ -119,7 +119,7 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(field.ToString(), sourceField.ToString());
         }
 
-        [Theory, AutoMoqData]
+        [Fact]
         public void Equals_ValidInput_True()
         {
             var field = new Mock<FieldInfo>();
@@ -137,6 +137,7 @@ namespace AutoFake.UnitTests.Setup
             Assert.True(sut.Equals(new SourceField(field.Object)));
         }
 
+#pragma warning disable 0649
         private class TestClass
         {
             public int Field;

@@ -61,6 +61,7 @@ namespace AutoFake.UnitTests.Expression
             Assert.Equal(newExpression.Constructor, _visitor.Method);
         }
 
+#pragma warning disable 0649
         private class TestClass
         {
             public static int Field;

@@ -70,6 +70,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             fake.Execute(() => Assert.Equal(value, TestClass.GetStaticStructValueByAddress()));
         }
 
+#pragma warning disable 0649
         private static class TestClass
         {
             public static int DynamicStaticValue = 5;

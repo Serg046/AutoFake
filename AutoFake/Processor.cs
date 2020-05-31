@@ -87,10 +87,10 @@ namespace AutoFake
                 _emitter.Body.Variables.Add(variable);
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
             }
-            var objRef = _typeInfo.Module.Import(typeof(object));
+            var objRef = _typeInfo.Module.ImportReference(typeof(object));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, variables.Count));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newarr, objRef));
-            var arrVar = new VariableDefinition(_typeInfo.Module.Import(typeof(object[])));
+            var arrVar = new VariableDefinition(_typeInfo.Module.ImportReference(typeof(object[])));
             _emitter.Body.Variables.Add(arrVar);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
@@ -98,7 +98,7 @@ namespace AutoFake
 
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, accumulator));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
-            var addMethod = _typeInfo.Module.Import(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
+            var addMethod = _typeInfo.Module.ImportReference(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, addMethod));
 
             return variables.ToList();

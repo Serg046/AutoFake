@@ -39,7 +39,7 @@ namespace AutoFake.Setup
                 method.Name == _method.Name &&
                 method.DeclaringType.Name == _method.DeclaringType.Name)
             {
-                if (_monoCecilMethod == null) _monoCecilMethod = typeInfo.Module.Import(_method).Resolve();
+                if (_monoCecilMethod == null) _monoCecilMethod = typeInfo.Module.ImportReference(_method).Resolve();
                 return method.Resolve().ToString() == _monoCecilMethod.ToString();
             }
             return false;
