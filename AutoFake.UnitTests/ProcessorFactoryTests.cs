@@ -31,7 +31,6 @@ namespace AutoFake.UnitTests
 
         [Theory, AutoMoqData]
         internal void CreateProcessor_TypeInfo_Injected(
-            string name,
             [Frozen]Mock<ITypeInfo> type, Instruction cmd,
             IEmitter emitter, 
             ProcessorFactory factory)
@@ -40,7 +39,7 @@ namespace AutoFake.UnitTests
 
             try
             {
-                proc.InjectCallback(null, false);
+                proc.InjectClosure(null, false, null);
             }
             catch { }
 

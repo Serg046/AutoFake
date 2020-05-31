@@ -29,7 +29,15 @@ namespace AutoFake
         public FieldDefinition GenerateRetValueField(string name, Type returnType)
         {
             var type = _typeInfo.Module.GetType(returnType.FullName, true)
-                            ?? _typeInfo.Module.Import(returnType);
+                       ?? _typeInfo.Module.Import(returnType);
+            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
+            _typeInfo.AddField(field);
+            return field;
+        }
+
+        public FieldDefinition GenerateField(string name, Type returnType)
+        {
+            var type = _typeInfo.Module.ImportReference(returnType);
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
             return field;

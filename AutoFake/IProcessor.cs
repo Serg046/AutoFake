@@ -6,7 +6,7 @@ namespace AutoFake
 {
     internal interface IProcessor
     {
-        void InjectCallback(MethodDescriptor callback, bool beforeInstruction);
+        void InjectClosure(ClosureDescriptor closure, bool beforeInstruction, IDictionary<CapturedMember, FieldDefinition> generatedMembers);
         void PushMethodArguments(IEnumerable<VariableDefinition> variables);
         void RemoveInstruction(Instruction instruction);
         void RemoveMethodArgumentsIfAny();

@@ -13,7 +13,7 @@ namespace AutoFake.UnitTests.Setup
         [Theory, MemberAutoMoqData(nameof(GetActions))]
         internal void Before_Installer_MockReplaced(
             dynamic callback,
-            MethodDescriptor descriptor,
+            ClosureDescriptor descriptor,
             IProcessorFactory factory)
         {
             var mocks = new List<IMock>();
@@ -23,13 +23,13 @@ namespace AutoFake.UnitTests.Setup
             installer.Before(callback);
 
             var mock = Assert.IsType<SourceMemberInsertMock>(mocks.Single());
-            Assert.Equal(descriptor, mock.Action);
+            Assert.Equal(descriptor, mock.Closure);
         }
 
         [Theory, MemberAutoMoqData(nameof(GetActions))]
         internal void Before_GenericInstaller_MockReplaced(
             dynamic callback,
-            MethodDescriptor descriptor,
+            ClosureDescriptor descriptor,
             IProcessorFactory factory)
         {
             var mocks = new List<IMock>();
@@ -39,7 +39,7 @@ namespace AutoFake.UnitTests.Setup
             installer.Before(callback);
 
             var mock = Assert.IsType<SourceMemberInsertMock>(mocks.Single());
-            Assert.Equal(descriptor, mock.Action);
+            Assert.Equal(descriptor, mock.Closure);
         }
 
         public static IEnumerable<object[]> GetActions()

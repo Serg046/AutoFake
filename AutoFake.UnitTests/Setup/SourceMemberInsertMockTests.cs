@@ -1,6 +1,8 @@
-﻿using AutoFake.Expression;
+﻿using System.Collections.Generic;
+using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
@@ -15,7 +17,7 @@ namespace AutoFake.UnitTests.Setup
         internal void Inject_MethodDescriptor_Injected(
             InsertMock.Location location,
             bool injectBeforeCmd,
-            MethodDescriptor descriptor,
+            ClosureDescriptor descriptor,
             [Frozen]Mock<IProcessor> proc,
             [Frozen]IProcessorFactory factory)
         {
@@ -24,7 +26,7 @@ namespace AutoFake.UnitTests.Setup
 
             mock.Inject(null, cmd);
 
-            proc.Verify(m => m.InjectCallback(descriptor, injectBeforeCmd));
+            proc.Verify(m => m.InjectClosure(descriptor, injectBeforeCmd, It.IsAny<IDictionary<CapturedMember, FieldDefinition>>()));
         }
     }
 }

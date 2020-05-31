@@ -34,7 +34,7 @@ namespace AutoFake.UnitTests
             string propName, Type propType,
             PrePostProcessor proc)
         {
-            var field = proc.GenerateRetValueField(propName, propType);
+            var field = proc.GenerateField(propName, propType);
 
             Assert.Equal(propName, field.Name);
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
@@ -52,7 +52,7 @@ namespace AutoFake.UnitTests
         {
             var typeDef = new TypeDefinition(fieldType.Namespace, fieldType.Name, TypeAttributes.Class);
             module.Types.Add(typeDef);
-            var field = proc.GenerateRetValueField(fieldName, fieldType);
+            var field = proc.GenerateField(fieldName, fieldType);
 
             Assert.Equal(fieldName, field.Name);
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));

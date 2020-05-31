@@ -51,7 +51,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory]
-        [MemberData(nameof(GetFuncs))]
+        [MemberData(nameof(GetFuncExpressions))]
         public void Replace_Fake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
@@ -62,7 +62,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory]
-        [MemberData(nameof(GetFuncs))]
+        [MemberData(nameof(GetFuncExpressions))]
         internal void Replace_GenericFake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
@@ -73,7 +73,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory]
-        [MemberData(nameof(GetActions))]
+        [MemberData(nameof(GetActionExpressions))]
         public void Remove_Fake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
@@ -84,7 +84,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory]
-        [MemberData(nameof(GetActions))]
+        [MemberData(nameof(GetActionExpressions))]
         internal void Remove_GenericFake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
@@ -118,7 +118,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory]
-        [MemberData(nameof(GetCallbacks))]
+        [MemberData(nameof(GetCallbackExpressions))]
         public void Verify_Fake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
@@ -129,7 +129,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory]
-        [MemberData(nameof(GetCallbacks))]
+        [MemberData(nameof(GetCallbackExpressions))]
         internal void Verify_GenericFake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
@@ -144,12 +144,11 @@ namespace AutoFake.UnitTests.Setup
         public void Append_GenericFake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            var action = callback.Compile();
 
-            cfg.Append(action);
+            cfg.Append(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
+            Assert.Equal(callback.Method.Name, mock.Closure.Name);
         }
 
         [Theory]
@@ -157,12 +156,11 @@ namespace AutoFake.UnitTests.Setup
         public void Append_Fake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
-            var action = callback.Compile();
 
-            cfg.Append(action);
+            cfg.Append(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
+            Assert.Equal(callback.Method.Name, mock.Closure.Name);
         }
 
         [Theory]
@@ -170,12 +168,11 @@ namespace AutoFake.UnitTests.Setup
         public void Prepend_GenericFake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            var action = callback.Compile();
 
-            cfg.Prepend(action);
+            cfg.Prepend(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
+            Assert.Equal(callback.Method.Name, mock.Closure.Name);
         }
 
         [Theory]
@@ -183,18 +180,17 @@ namespace AutoFake.UnitTests.Setup
         public void Prepend_Fake_MockAdded(dynamic callback)
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
-            var action = callback.Compile();
 
-            cfg.Prepend(action);
+            cfg.Prepend(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(action.Method.Name, mock.Action.Name);
+            Assert.Equal(callback.Method.Name, mock.Closure.Name);
         }
 
-        public static IEnumerable<object[]> GetCallbacks()
-            => GetFuncs().Concat(GetActions());
+        public static IEnumerable<object[]> GetCallbackExpressions()
+            => GetFuncExpressions().Concat(GetActionExpressions());
 
-        public static IEnumerable<object[]> GetFuncs()
+        public static IEnumerable<object[]> GetFuncExpressions()
         {
             Expression<Func<TestClass, string>> instanceFunc = tst => tst.StringInstanceMethod();
             yield return new object[] { instanceFunc };
@@ -202,11 +198,19 @@ namespace AutoFake.UnitTests.Setup
             yield return new object[] { staticFunc };
         }
 
-        public static IEnumerable<object[]> GetActions()
+        public static IEnumerable<object[]> GetActionExpressions()
         {
             Expression<Action<TestClass>> instanceAction = tst => tst.VoidInstanceMethod();
             yield return new object[] { instanceAction };
             Expression<Action> staticAction = () => TestClass.StaticVoidInstanceMethod();
+            yield return new object[] { staticAction };
+        }
+
+        public static IEnumerable<object[]> GetActions()
+        {
+            Action<TestClass> instanceAction = tst => tst.VoidInstanceMethod();
+            yield return new object[] { instanceAction };
+            Action staticAction = () => TestClass.StaticVoidInstanceMethod();
             yield return new object[] { staticAction };
         }
 

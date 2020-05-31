@@ -9,6 +9,7 @@
         }
 
         public string DeclaringType { get; }
+
         public string Name { get; }
     }
 }
