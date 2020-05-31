@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Reflection;
 using Mono.Cecil;
 using System.Linq;
+using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -31,6 +31,28 @@ namespace AutoFake
             }
             asyncMethod = null;
             return false;
+        }
+
+        public static void ReplaceType(this Instruction instruction, TypeReference typeRef)
+        {
+            if (instruction.Operand is FieldReference field && field.FieldType.FullName == typeRef.FullName)
+            {
+                field.FieldType = typeRef;
+            }
+            else if (instruction.Operand is MethodReference method)
+            {
+                if (method.ReturnType.FullName == typeRef.FullName)
+                {
+                    method.ReturnType = typeRef;
+                }
+                for (var i = 0; i < method.Parameters.Count; i++)
+                {
+                    if (method.Parameters[i].ParameterType.FullName == typeRef.FullName)
+                    {
+                        method.Parameters[i].ParameterType = typeRef;
+                    }
+                }
+            }
         }
     }
 }

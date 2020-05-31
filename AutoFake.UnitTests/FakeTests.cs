@@ -90,11 +90,9 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Execute_TargetInvocationException_InnerExceptionThrown()
         {
-            var type = typeof(TestClass);
-            var fake = new Fake(type);
+            var fake = new Fake<TestClass>();
 
-            Assert.Throws<NotImplementedException>(() => fake.Execute(type.GetMethod(nameof(TestClass.FailingMethod),
-                BindingFlags.Instance | BindingFlags.NonPublic), gen => new object[0]));
+            Assert.Throws<NotImplementedException>(() => fake.Execute(t => t.FailingMethod()));
         }
 
         [Fact]
@@ -103,8 +101,9 @@ namespace AutoFake.UnitTests
             var type = typeof(TestClass);
             var fake = new Fake(type);
 
-            Assert.Throws<TargetParameterCountException>(() => fake.Execute(type.GetMethod(nameof(TestClass.FailingMethod),
-                BindingFlags.Instance | BindingFlags.NonPublic), gen => new object[1]));
+            Assert.Throws<TargetParameterCountException>(() => fake.Execute(
+                new Action<TestClass>(t => t.FailingMethod()),
+                gen => new object[2]));
         }
 
         [Fact]
@@ -158,37 +157,7 @@ namespace AutoFake.UnitTests
                 await tst.Execute((TestClass t) => t.FailingMethodAsync());
             }));
         }
-
-        [Fact]
-        public void Execute_MultipleCapturedVarWithTheSameType_Throws()
-        {
-            DateTime d1 = DateTime.Now, d2 = DateTime.Now;
-            var fake = new Fake<TestClass>();
-
-            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d2 - d1)));
-        }
-
-        [Fact]
-        public void Execute_CapturedVarWithoutMocks_Throws()
-        {
-            var d1 = DateTime.Now;
-            var fake = new Fake<TestClass>();
-
-            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
-        }
-
-        [Fact]
-        public void Execute_CapturedVarWith2Mocks_Throws()
-        {
-            var d1 = new DateTime(2020, 5, 27);
-            var fake = new Fake<TestClass>();
-
-            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
-            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
-
-            Assert.Throws<InitializationException>(() => fake.Execute(() => Console.WriteLine(d1)));
-        }
-
+        
         [Fact]
         public void Execute_CapturedVarWithAppropriateMock_DoesNotFail()
         {
@@ -207,6 +176,15 @@ namespace AutoFake.UnitTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
+
+            fake.Execute(() => Console.WriteLine(d1 - d1));
+        }
+
+        [Fact]
+        public void Execute_CapturedVarsWithoutMocks_DoesNotFail()
+        {
+            var d1 = new DateTime(2020, 5, 27);
+            var fake = new Fake<TestClass>();
 
             fake.Execute(() => Console.WriteLine(d1 - d1));
         }

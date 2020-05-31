@@ -36,24 +36,7 @@ namespace AutoFake.Setup.Mocks
         {
             if (_typeReference != null)
             {
-                if (instruction.Operand is FieldReference field && field.FieldType.FullName == _typeReference.FullName)
-                {
-                    field.FieldType = _typeReference;
-                }
-                else if (instruction.Operand is MethodReference method)
-                {
-                    if (method.ReturnType.FullName == _typeReference.FullName)
-                    {
-                        method.ReturnType = _typeReference;
-                    }
-                    for (var i = 0; i < method.Parameters.Count; i++)
-                    {
-                        if (method.Parameters[i].ParameterType.FullName == _typeReference.FullName)
-                        {
-                            method.Parameters[i].ParameterType = _typeReference;
-                        }
-                    }
-                }
+                instruction.ReplaceType(_typeReference);
             }
         }
 
