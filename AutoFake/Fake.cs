@@ -38,13 +38,13 @@ namespace AutoFake
 
         public MockConfiguration<T> Rewrite(Expression<Action<T>> action) => RewriteImpl(action);
 
-        public void Execute(Action<T> action) => Execute(action.Method, gen => gen.Instance);
+        public void Execute(Action<T> action) => Execute(action, gen => gen.Instance);
 
-        public void Execute(Action<T, IList<object>> action) => Execute(action.Method, gen => new[] { gen.Instance, gen.Parameters });
+        public void Execute(Action<T, IList<object>> action) => Execute(action, gen => new[] { gen.Instance, gen.Parameters });
 
-        public Task ExecuteAsync(Func<T, Task> action) => (Task)Execute(action.Method, gen => gen.Instance);
+        public Task ExecuteAsync(Func<T, Task> action) => (Task)Execute(action, gen => gen.Instance);
 
-        public Task ExecuteAsync(Func<T, IList<object>, Task> action) => (Task)Execute(action.Method, gen => new[] { gen.Instance, gen.Parameters});
+        public Task ExecuteAsync(Func<T, IList<object>, Task> action) => (Task)Execute(action, gen => new[] { gen.Instance, gen.Parameters});
     }
 
     public class Fake
@@ -91,41 +91,41 @@ namespace AutoFake
 
         public MockConfiguration Rewrite(Expression<Action> voidStaticRewriteFunc) => RewriteImpl(voidStaticRewriteFunc);
 
-        public void Execute(Action action) => ExecuteWithoutParameters(action.Method);
+        public void Execute(Action action) => ExecuteWithoutParameters(action);
 
-        public void Execute(Action<TypeWrapper> action) => Execute(action.Method, gen => new TypeWrapper(gen));
+        public void Execute(Action<TypeWrapper> action) => Execute(action, gen => new TypeWrapper(gen));
 
-        public void Execute(Action<TypeWrapper, IList<object>> action) => Execute(action.Method, gen => new object[] { new TypeWrapper(gen), gen.Parameters });
+        public void Execute(Action<TypeWrapper, IList<object>> action) => Execute(action, gen => new object[] { new TypeWrapper(gen), gen.Parameters });
 
-        public Task ExecuteAsync(Func<Task> action) => (Task)ExecuteWithoutParameters(action.Method);
+        public Task ExecuteAsync(Func<Task> action) => (Task)ExecuteWithoutParameters(action);
         
-        public Task ExecuteAsync(Func<TypeWrapper, Task> action) => (Task)Execute(action.Method, gen => new TypeWrapper(gen));
+        public Task ExecuteAsync(Func<TypeWrapper, Task> action) => (Task)Execute(action, gen => new TypeWrapper(gen));
 
         public Task ExecuteAsync(Func<TypeWrapper, IList<object>, Task> action)
-            => (Task)Execute(action.Method, gen => new object[] {new TypeWrapper(gen), gen.Parameters});
+            => (Task)Execute(action, gen => new object[] {new TypeWrapper(gen), gen.Parameters});
 
-        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object> fake) => Execute(method, gen => new[] { fake(gen) });
+        internal object Execute(Delegate action, Func<FakeObjectInfo, object> fake) => Execute(action, gen => new[] { fake(gen) });
 
-        internal object ExecuteWithoutParameters(MethodInfo method)
+        internal object ExecuteWithoutParameters(Delegate action)
         {
             // Should be materialized before .CreateFakeObject(...) call
-            var fields = GetDelegateFields(method).ToList();
+            var fields = GetDelegateFields(action).ToList();
             var fakeObject = TypeInfo.CreateFakeObject(Mocks);
-            return Execute(fakeObject.Type, method, new object[0], fields);
+            return Execute(fakeObject.Type, action, new object[0], fields);
         }
 
-        internal object Execute(MethodInfo method, Func<FakeObjectInfo, object[]> fake)
+        internal object Execute(Delegate action, Func<FakeObjectInfo, object[]> fake)
         {
             // Should be materialized before .CreateFakeObject(...) call
-            var fields = GetDelegateFields(method).ToList();
+            var fields = GetDelegateFields(action).ToList();
             var fakeObject = TypeInfo.CreateFakeObject(Mocks);
-            return Execute(fakeObject.Type, method, fake(fakeObject), fields);
+            return Execute(fakeObject.Type, action, fake(fakeObject), fields);
         }
 
-        private object Execute(Type type, MethodInfo method, object[] parameters, IEnumerable<DelegateField> fields)
+        private object Execute(Type type, Delegate action, object[] parameters, IEnumerable<DelegateField> fields)
         {
-            var delegateType = type.Assembly.GetType(method.DeclaringType.FullName, true);
-            var generatedMethod = delegateType.GetMethod(method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var delegateType = type.Assembly.GetType(action.Method.DeclaringType.FullName, true);
+            var generatedMethod = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
             var instance = Activator.CreateInstance(delegateType);
 
             foreach (var fieldDef in fields)
@@ -144,36 +144,25 @@ namespace AutoFake
             }
         }
 
-        private IEnumerable<DelegateField> GetDelegateFields(MethodInfo method)
+        private IEnumerable<DelegateField> GetDelegateFields(Delegate action)
         {
-            var delegateType = TypeInfo.Module.GetType(method.DeclaringType.FullName, true).Resolve();
-            var delegateRef = delegateType.Methods.Single(m => m.Name == method.Name);
+            var delegateType = TypeInfo.Module.GetType(action.Method.DeclaringType.FullName, true).Resolve();
+            var delegateRef = delegateType.Methods.Single(m => m.Name == action.Method.Name);
             if (delegateRef.IsAsync(out var asyncMethod)) delegateRef = asyncMethod;
-            var fieldGroups = delegateRef.Body.Instructions
+            var fields = delegateRef.Body.Instructions
                 .Where(c => c.OpCode == OpCodes.Ldfld || c.OpCode == OpCodes.Ldflda)
                 .Select(c => (FieldDefinition)c.Operand)
                 .Distinct()
                 .Where(field => field.DeclaringType == delegateType &&
-                    !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field))
-                .GroupBy(f => f.FieldType);
+                    !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field));
 
-            foreach (var fieldGroup in fieldGroups)
+            foreach (var field in fields)
             {
-                var fields = fieldGroup.ToList();
-                if (fields.Count > 1) throw new InitializationException("Multiple captured members with the same type are not supported. Use Replace(() => new SomeType()) instead of Replace(someInstance).");
-
-                var field = fields[0];
-                var replaceMocks = Mocks.SelectMany(m => m.Mocks)
-                    .OfType<ReplaceMock>()
-                    .Where(m => m.ReturnObject?.Instance != null && m.ReturnObject.Instance
-                        .GetType().FullName == AutoFake.TypeInfo.GetClrName(field.FieldType.FullName))
-                    .ToList();
-                if (replaceMocks.Count == 0) throw new InitializationException("There is no any return instances configured. Use Replace(someInstance) instead of Replace(() => new SomeType()).");
-                if (replaceMocks.Count > 1) throw new InitializationException($"There are more than one return instance configured with the type {field.FieldType}");
-
-                var captured = replaceMocks[0];
-                captured.ProcessInstruction(Instruction.Create(OpCodes.Ldfld, field));
-                yield return new DelegateField(field, captured.ReturnObject.Instance);
+                var capturedField = action.Target.GetType().GetField(field.Name);
+                var capturedValue = capturedField.GetValue(action.Target);
+                var capturedFieldTypeRef = TypeInfo.Module.ImportReference(capturedField.FieldType);
+                Instruction.Create(OpCodes.Ldfld, field).ReplaceType(capturedFieldTypeRef);
+                yield return new DelegateField(field, capturedValue);
             }
         }
 
