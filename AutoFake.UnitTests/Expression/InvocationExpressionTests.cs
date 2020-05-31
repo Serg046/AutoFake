@@ -156,8 +156,7 @@ namespace AutoFake.UnitTests.Expression
             yield return new object[] { staticFldExprWithCast, field };
         }
 
-        private event EventHandler _testEvent;
-
+#pragma warning disable 0649
         private class TestClass
         {
             public void Method() {}

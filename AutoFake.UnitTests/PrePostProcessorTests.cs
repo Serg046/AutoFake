@@ -85,7 +85,7 @@ namespace AutoFake.UnitTests
         {
             var accumulator = proc.GenerateCallsAccumulator(fieldName, method);
 
-            var type = module.Import(typeof(List<object[]>));
+            var type = module.ImportReference(typeof(List<object[]>));
             Assert.Equal(type.FullName, accumulator.FieldType.FullName);
             Assert.True(method.Instructions.Ordered(
                 Cil.Cmd(OpCodes.Newobj, (MethodReference m) => m.Name == ".ctor"

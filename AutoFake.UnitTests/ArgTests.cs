@@ -33,16 +33,16 @@ namespace AutoFake.UnitTests
         public void Is_ReturnsDefaultValueOfType()
         {
             Assert.Equal(0, Arg.Is<int>(x => x > 5));
-            Assert.Equal(null, Arg.Is<int?>(x => x != 5));
-            Assert.Equal(null, Arg.Is<string>(x => !string.IsNullOrEmpty(x)));
+            Assert.Null(Arg.Is<int?>(x => x != 5));
+            Assert.Null(Arg.Is<string>(x => !string.IsNullOrEmpty(x)));
         }
 
         [Fact]
         public void IsAny_ReturnsDefaultValueOfType()
         {
             Assert.Equal(0, Arg.IsAny<int>());
-            Assert.Equal(null, Arg.IsAny<int?>());
-            Assert.Equal(null, Arg.IsAny<string>());
+            Assert.Null(Arg.IsAny<int?>());
+            Assert.Null(Arg.IsAny<string>());
         }
     }
 }

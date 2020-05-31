@@ -104,6 +104,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 tst.GetStaticStructValueByAddress()));
         }
 
+#pragma warning disable 0649
         private class TestClass
         {
             public int DynamicValue = 5;

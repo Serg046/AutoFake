@@ -32,7 +32,6 @@ namespace AutoFake.UnitTests.Setup
 
         [Theory, AutoMoqData]
         internal void Initialize_IncorrectSetupBodyField_Fails(
-            [Frozen]IInvocationExpression expression,
             [Frozen]FieldDefinition field,
             MethodDefinition method,
             Mock mock)

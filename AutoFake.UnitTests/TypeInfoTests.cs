@@ -53,7 +53,7 @@ namespace AutoFake.UnitTests
             var sourceType = typeof(TestClass);
             var typeInfo = new TypeInfo(sourceType, new List<FakeDependency>());
 
-            Assert.Equal(sourceType.Module.FullyQualifiedName, typeInfo.Module.FullyQualifiedName);
+            Assert.Equal(sourceType.Module.FullyQualifiedName, typeInfo.Module.FileName);
         }
 
         [Fact]
