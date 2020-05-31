@@ -48,6 +48,7 @@ public async Task AddSomeMinutes_SomeDay_MinutesAdded()
     addSomeMinutesAsync
         .Append(() => events.Add("The last line"));
 
+    // Act & Assert
     await fake.ExecuteAsync(async calendar =>
     {
         Assert.Equal(new DateTime(2016, 8, 8, 0, minute: randomValue, 0),
