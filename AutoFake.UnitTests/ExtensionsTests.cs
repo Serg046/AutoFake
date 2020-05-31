@@ -91,6 +91,21 @@ namespace AutoFake.UnitTests
             Assert.Equal(func.Method.Name, descriptor.Name);
         }
 
+        [Fact]
+        public void ToClosureDescriptor_Closure_Success()
+        {
+            var date = DateTime.Now;
+            Action action = () => Console.WriteLine(date - date);
+            var typeInfo = new TypeInfo(action.Method.DeclaringType, new FakeDependency[0]);
+
+            var descriptor = action.ToClosureDescriptor(typeInfo.Module);
+
+            Assert.Equal(action.Method.DeclaringType.FullName, descriptor.DeclaringType);
+            Assert.Equal(action.Method.Name, descriptor.Name);
+            Assert.Single(descriptor.CapturedMembers, d => d.Field.Name == nameof(date)
+                                                           && d.Instance.Equals(date));
+        }
+
         private class TestClass
         {
             public void Test()

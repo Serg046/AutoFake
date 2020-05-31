@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.Setup.Mocks
 {
@@ -10,29 +13,36 @@ namespace AutoFake.Setup.Mocks
     {
         private readonly Location _location;
         private readonly IProcessorFactory _processorFactory;
+        private readonly IPrePostProcessor _prePostProcessor;
+        private readonly Dictionary<CapturedMember, FieldDefinition> _capturedMembers;
 
-        public InsertMock(IProcessorFactory processorFactory, MethodDescriptor action, Location location)
+        public InsertMock(IProcessorFactory processorFactory, ClosureDescriptor closure, Location location)
         {
             _processorFactory = processorFactory;
+            _prePostProcessor = _processorFactory.CreatePrePostProcessor();
             _location = location;
-            Action = action;
+            Closure = closure;
+            _capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
         }
 
-        public MethodDescriptor Action { get; }
+        public ClosureDescriptor Closure { get; }
 
-        [ExcludeFromCodeCoverage]
         public void AfterInjection(IEmitter emitter)
         {
-            var type = _processorFactory.TypeInfo.Module.GetType(Action.DeclaringType, true).Resolve();
+            var type = _processorFactory.TypeInfo.Module.GetType(Closure.DeclaringType, true).Resolve();
             if (type.Attributes.HasFlag(TypeAttributes.NestedPrivate))
             {
                 type.Attributes = TypeAttributes.NestedAssembly;
             }
         }
 
-        [ExcludeFromCodeCoverage]
         public void BeforeInjection(MethodDefinition method)
         {
+            foreach (var member in Closure.CapturedMembers)
+            {
+                _capturedMembers[member] = _prePostProcessor.GenerateField(
+                    $"Captured_{member.Field.Name}_{Guid.NewGuid()}", member.Instance.GetType());
+            }
         }
 
         [ExcludeFromCodeCoverage]
@@ -42,13 +52,19 @@ namespace AutoFake.Setup.Mocks
 
         public IList<object> Initialize(Type type)
         {
+            foreach (var captured in _capturedMembers)
+            {
+                var field = type.GetField(captured.Value.Name, BindingFlags.NonPublic | BindingFlags.Static)
+                    ?? throw new InitializationException($"'{captured.Value.Name}' is not found in the generated object"); ;
+                field.SetValue(null, captured.Key.Instance);
+            }
             return new List<object>();
         }
 
         public void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = _processorFactory.CreateProcessor(emitter, instruction);
-            processor.InjectCallback(Action, beforeInstruction: true);
+            processor.InjectClosure(Closure, beforeInstruction: true, _capturedMembers);
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)

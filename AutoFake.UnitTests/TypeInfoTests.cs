@@ -16,11 +16,11 @@ namespace AutoFake.UnitTests
         public void CreateInstance_InvalidDependencies_Throws()
         {
             var type = typeof(TestClass);
-            Assert.Throws<FakeGeneretingException>(
+            Assert.Throws<InitializationException>(
                 () => new TypeInfo(type, GetDependencies(new StringBuilder())).CreateInstance(type));
-            Assert.Throws<FakeGeneretingException>(
+            Assert.Throws<InitializationException>(
                 () => new TypeInfo(type, GetDependencies(new StringBuilder(), new StringBuilder(), new StringBuilder())).CreateInstance(type));
-            Assert.Throws<FakeGeneretingException>(
+            Assert.Throws<InitializationException>(
                 () => new TypeInfo(type, GetDependencies(1, 1)).CreateInstance(type));
             new TypeInfo(type, GetDependencies(new StringBuilder(), new StringBuilder())).CreateInstance(type);
         }
@@ -39,7 +39,7 @@ namespace AutoFake.UnitTests
         {
             var type = typeof(AmbiguousCtorTestClass);
 
-            Assert.Throws<FakeGeneretingException>(
+            Assert.Throws<InitializationException>(
                 () => new TypeInfo(type, GetDependencies(new object[] {null})).CreateInstance(type));
             new TypeInfo(type, new[] {Arg.IsNull<StreamReader>()}).CreateInstance(type);
             new TypeInfo(type, new[] {Arg.IsNull<StreamWriter>()}).CreateInstance(type);

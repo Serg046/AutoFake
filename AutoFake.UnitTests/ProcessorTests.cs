@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using AutoFake.UnitTests.TestUtils;
 using AutoFixture;
 using AutoFixture.Xunit2;
@@ -168,12 +169,13 @@ namespace AutoFake.UnitTests
         [Theory]
         [InlineAutoMoqData(true)]
         [InlineAutoMoqData(false)]
-        internal void InjectCallback_ValidInput_Injected(
+        internal void InjectClosure_ValidInput_Injected(
             bool beforeInstruction,
             [Frozen]ModuleDefinition module,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             [Frozen]Instruction cmd,
             TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
+            FieldDefinition field1, FieldDefinition field2,
             Processor proc)
         {
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
@@ -183,14 +185,19 @@ namespace AutoFake.UnitTests
             module.Types.Add(type);
 
             emitter.Body.Instructions.Add(cmd);
-            var methodDescriptor = new MethodDescriptor(type.FullName, method.Name);
+            var descriptor = new ClosureDescriptor(type.FullName, method.Name, null);
+            var capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
+            capturedMembers.Add(new CapturedMember(field1, 5), field2);
 
-            proc.InjectCallback(methodDescriptor, beforeInstruction);
+            proc.InjectClosure(descriptor, beforeInstruction, capturedMembers);
 
             var sourceCmd = new[] {Cil.Cmd(cmd.OpCode) };
             var cmds = new[]
             {
                 Cil.Cmd(OpCodes.Newobj, ctor),
+                Cil.Cmd(OpCodes.Dup),
+                Cil.Cmd(OpCodes.Ldsfld, field2),
+                Cil.Cmd(OpCodes.Stfld, field1),
                 Cil.Cmd(OpCodes.Call, method)
             };
             var orderedCmds = beforeInstruction ? cmds.Concat(sourceCmd) : sourceCmd.Concat(cmds);

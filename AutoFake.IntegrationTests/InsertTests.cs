@@ -91,6 +91,21 @@ namespace AutoFake.IntegrationTests
             });
         }
 
+        [Fact]
+        public void Should_AddNumberToLocalVar_When_Append()
+        {
+            var numbers = new List<int>();
+            var fake = new Fake<TestClass>();
+
+            fake.Rewrite(t => t.SomeMethod()).Append(() => numbers.Add(-1));
+
+            fake.Execute(tst =>
+            {
+                tst.SomeMethod();
+                Assert.Equal(new[] { -1 }, numbers);
+            });
+        }
+
         private class TestClass
         {
             public static List<int> Numbers { get; } = new List<int>();

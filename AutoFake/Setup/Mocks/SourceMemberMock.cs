@@ -52,7 +52,7 @@ namespace AutoFake.Setup.Mocks
             if (SetupBodyField != null)
             {
                 var field = GetField(type, SetupBodyField.Name);
-                if (field == null) throw new FakeGeneretingException($"'{SetupBodyField.Name}' is not found in the generated object");
+                if (field == null) throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
                 field.SetValue(null, _invocationExpression);
             }
             return new List<object>();
