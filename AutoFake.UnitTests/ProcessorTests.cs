@@ -175,6 +175,7 @@ namespace AutoFake.UnitTests
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             [Frozen]Instruction cmd,
             TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
+            FieldDefinition field1, FieldDefinition field2,
             Processor proc)
         {
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
@@ -185,13 +186,18 @@ namespace AutoFake.UnitTests
 
             emitter.Body.Instructions.Add(cmd);
             var descriptor = new ClosureDescriptor(type.FullName, method.Name, null);
+            var capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
+            capturedMembers.Add(new CapturedMember(field1, 5), field2);
 
-            proc.InjectClosure(descriptor, beforeInstruction, new Dictionary<CapturedMember, FieldDefinition>());
+            proc.InjectClosure(descriptor, beforeInstruction, capturedMembers);
 
             var sourceCmd = new[] {Cil.Cmd(cmd.OpCode) };
             var cmds = new[]
             {
                 Cil.Cmd(OpCodes.Newobj, ctor),
+                Cil.Cmd(OpCodes.Dup),
+                Cil.Cmd(OpCodes.Ldsfld, field2),
+                Cil.Cmd(OpCodes.Stfld, field1),
                 Cil.Cmd(OpCodes.Call, method)
             };
             var orderedCmds = beforeInstruction ? cmds.Concat(sourceCmd) : sourceCmd.Concat(cmds);

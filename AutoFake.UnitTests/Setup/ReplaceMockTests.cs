@@ -119,12 +119,13 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
+            preProc.Setup(p => p.GenerateSetupBodyField(It.IsAny<string>())).Returns((FieldDefinition)null);
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
             mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));
             mock.BeforeInjection(method);
 
-            Assert.Throws<FakeGeneretingException>(() => mock.Initialize(type));
+            Assert.Throws<InitializationException>(() => mock.Initialize(type));
         }
 
         [Theory, AutoMoqData]
@@ -134,6 +135,7 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
+            preProc.Setup(p => p.GenerateSetupBodyField(It.IsAny<string>())).Returns((FieldDefinition)null);
             field.Name = nameof(TestClass.RetValueField);
             var type = typeof(TestClass);
             mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));
