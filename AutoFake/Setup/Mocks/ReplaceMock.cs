@@ -73,7 +73,7 @@ namespace AutoFake.Setup.Mocks
                 var returnInstance = ReturnObject.Instance
                                  ?? ReflectionUtils.Invoke(type.Assembly, ReturnObject.Descriptor);
                 var field = GetField(type, _retValueField.Name)
-                    ?? throw new FakeGeneretingException($"'{_retValueField.Name}' is not found in the generated object");
+                    ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
                 field.SetValue(null, returnInstance);
                 parameters.Add(returnInstance);
             }

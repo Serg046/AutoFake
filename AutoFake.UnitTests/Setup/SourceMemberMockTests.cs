@@ -40,7 +40,7 @@ namespace AutoFake.UnitTests.Setup
             field.Name = nameof(TestClass.InvocationExpression) + "salt";
             mock.BeforeInjection(method);
 
-            Assert.Throws<FakeGeneretingException>(() => mock.Initialize(typeof(TestClass)));
+            Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
         }
 
         [Theory, AutoMoqData]

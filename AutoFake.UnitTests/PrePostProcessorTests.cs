@@ -34,7 +34,7 @@ namespace AutoFake.UnitTests
             string propName, Type propType,
             PrePostProcessor proc)
         {
-            var field = proc.GenerateField(propName, propType);
+            var field = proc.GenerateRetValueField(propName, propType);
 
             Assert.Equal(propName, field.Name);
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
@@ -52,12 +52,27 @@ namespace AutoFake.UnitTests
         {
             var typeDef = new TypeDefinition(fieldType.Namespace, fieldType.Name, TypeAttributes.Class);
             module.Types.Add(typeDef);
-            var field = proc.GenerateField(fieldName, fieldType);
+            var field = proc.GenerateRetValueField(fieldName, fieldType);
 
             Assert.Equal(fieldName, field.Name);
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
             Assert.Equal(fieldType.FullName, field.FieldType.FullName);
+            typeInfo.Verify(t => t.AddField(field));
+        }
+
+        [Theory, AutoMoqData]
+        internal void GenerateField_FieldName_Added(
+            [Frozen]Mock<ITypeInfo> typeInfo,
+            string propName, Type propType,
+            PrePostProcessor proc)
+        {
+            var field = proc.GenerateField(propName, propType);
+
+            Assert.Equal(propName, field.Name);
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
+            Assert.Equal(propType.FullName, field.FieldType.FullName);
             typeInfo.Verify(t => t.AddField(field));
         }
 

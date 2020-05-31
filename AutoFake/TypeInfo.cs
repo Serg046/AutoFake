@@ -72,7 +72,7 @@ namespace AutoFake
                 }
                 catch (AmbiguousMatchException)
                 {
-                    throw new FakeGeneretingException(
+                    throw new InitializationException(
                         $"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
                 }
             }
@@ -81,7 +81,7 @@ namespace AutoFake
                 null, _dependencies.Select(d => d.Type).ToArray(), null);
 
             if (constructor == null)
-                throw new FakeGeneretingException("Constructor is not found");
+                throw new InitializationException("Constructor is not found");
 
             return constructor.Invoke(_dependencies.Select(d => d.Instance).ToArray());
         }

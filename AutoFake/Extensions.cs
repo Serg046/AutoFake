@@ -22,7 +22,7 @@ namespace AutoFake
         public static ClosureDescriptor ToClosureDescriptor(this Delegate action, ModuleDefinition module)
         {
             var members = GetCapturedMembers(action, module);
-            return new ClosureDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name, members);
+            return new ClosureDescriptor(action.Method.DeclaringType.FullName, action.Method.Name, members);
         }
 
         public static IEmitter GetEmitter(this MethodBody method) => new Emitter(method);

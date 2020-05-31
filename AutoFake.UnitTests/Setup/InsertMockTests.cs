@@ -5,6 +5,7 @@ using Mono.Cecil.Cil;
 using Moq;
 using System;
 using System.Collections.Generic;
+using AutoFake.Exceptions;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -57,7 +58,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory, AutoMoqData]
-        internal void Initialize_RetValue_Success(
+        internal void Initialize_CapturedField_Success(
             [Frozen]Mock<IPrePostProcessor> prePostProc,
             FieldDefinition field1, FieldDefinition field2,
             IProcessorFactory factory)
@@ -74,6 +75,53 @@ namespace AutoFake.UnitTests.Setup
 
             Assert.Equal(5, TestClass.Field);
             TestClass.Field = 0;
+        }
+
+        [Theory, AutoMoqData]
+        internal void Initialize_IncorrectField_Fails(
+            [Frozen]Mock<IPrePostProcessor> prePostProc,
+            FieldDefinition field1, FieldDefinition field2,
+            IProcessorFactory factory)
+        {
+            field1.Name = nameof(TestClass.Field) + "salt";
+            prePostProc
+                .Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
+                .Returns(field1);
+            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, 5) });
+            var mock = new InsertMock(factory, closure, InsertMock.Location.Top);
+            mock.BeforeInjection(null);
+
+            Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
+        }
+
+        [Theory, AutoMoqData]
+        internal void AfterInjection_NestedPrivateType_ChangedToNestedAssembly(
+            [Frozen]ModuleDefinition module,
+            IProcessorFactory processorFactory)
+        {
+            var closure = new ClosureDescriptor("TestNs.TestClass", "", new CapturedMember[0]);
+            var typeDef = new TypeDefinition("TestNs", "TestClass", TypeAttributes.NestedPrivate);
+            module.Types.Add(typeDef);
+            var mock = new InsertMock(processorFactory, closure, InsertMock.Location.Top);
+
+            mock.AfterInjection(null);
+
+            Assert.Equal(TypeAttributes.NestedAssembly, typeDef.Attributes);
+        }
+
+        [Theory, AutoMoqData]
+        internal void AfterInjection_NestedPublicType_NothingChanged(
+            [Frozen]ModuleDefinition module,
+            IProcessorFactory processorFactory)
+        {
+            var closure = new ClosureDescriptor("TestNs.TestClass", "", new CapturedMember[0]);
+            var typeDef = new TypeDefinition("TestNs", "TestClass", TypeAttributes.NestedPublic);
+            module.Types.Add(typeDef);
+            var mock = new InsertMock(processorFactory, closure, InsertMock.Location.Top);
+
+            mock.AfterInjection(null);
+
+            Assert.Equal(TypeAttributes.NestedPublic, typeDef.Attributes);
         }
 
         private class TestClass

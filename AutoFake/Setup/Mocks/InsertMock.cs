@@ -55,7 +55,7 @@ namespace AutoFake.Setup.Mocks
             foreach (var captured in _capturedMembers)
             {
                 var field = type.GetField(captured.Value.Name, BindingFlags.NonPublic | BindingFlags.Static)
-                    ?? throw new FakeGeneretingException($"'{captured.Value.Name}' is not found in the generated object"); ;
+                    ?? throw new InitializationException($"'{captured.Value.Name}' is not found in the generated object"); ;
                 field.SetValue(null, captured.Key.Instance);
             }
             return new List<object>();
