@@ -35,6 +35,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CapturedMember.cs" />
+    <Compile Include="ClosureDescriptor.cs" />
     <Compile Include="Emitter.cs" />
     <Compile Include="EqualityArgumentChecker.cs" />
     <Compile Include="Exceptions\ExpectedCallsException.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Mono.Cecil;
 using System.Linq;
 using Mono.Cecil.Cil;
@@ -14,9 +15,17 @@ namespace AutoFake
                methodReference.ReturnType.FullName == method.ReturnType.FullName;
 
         public static MethodDescriptor ToMethodDescriptor(this Delegate action)
-            => new MethodDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name);
+        {
+            return new MethodDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name);
+        }
 
-        public static IEmitter GetEmitter(this Mono.Cecil.Cil.MethodBody method) => new Emitter(method);
+        public static ClosureDescriptor ToClosureDescriptor(this Delegate action, ModuleDefinition module)
+        {
+            var members = GetCapturedMembers(action, module);
+            return new ClosureDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name, members);
+        }
+
+        public static IEmitter GetEmitter(this MethodBody method) => new Emitter(method);
 
         public static bool IsAsync(this MethodDefinition method, out MethodDefinition asyncMethod)
         {
@@ -53,6 +62,27 @@ namespace AutoFake
                     }
                 }
             }
+        }
+
+        public static ICollection<CapturedMember> GetCapturedMembers(this Delegate action, ModuleDefinition module)
+        {
+            var delegateType = module.GetType(action.Method.DeclaringType.FullName, true).Resolve();
+            var delegateRef = delegateType.Methods.Single(m => m.Name == action.Method.Name);
+            if (delegateRef.IsAsync(out var asyncMethod)) delegateRef = asyncMethod;
+            return delegateRef.Body.Instructions
+                .Where(c => c.OpCode == OpCodes.Ldfld || c.OpCode == OpCodes.Ldflda)
+                .Select(c => (FieldDefinition)c.Operand)
+                .Distinct()
+                .Where(field => field.DeclaringType == delegateType &&
+                                !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field))
+                .Select(field =>
+                {
+                    var capturedField = action.Target.GetType().GetField(field.Name);
+                    var capturedValue = capturedField.GetValue(action.Target);
+                    var capturedFieldTypeRef = module.ImportReference(capturedField.FieldType);
+                    Instruction.Create(OpCodes.Ldfld, field).ReplaceType(capturedFieldTypeRef);
+                    return new CapturedMember(field, capturedValue);
+                }).ToList();
         }
     }
 }

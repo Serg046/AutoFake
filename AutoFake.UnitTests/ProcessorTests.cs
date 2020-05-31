@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using AutoFake.UnitTests.TestUtils;
 using AutoFixture;
 using AutoFixture.Xunit2;
@@ -168,7 +169,7 @@ namespace AutoFake.UnitTests
         [Theory]
         [InlineAutoMoqData(true)]
         [InlineAutoMoqData(false)]
-        internal void InjectCallback_ValidInput_Injected(
+        internal void InjectClosure_ValidInput_Injected(
             bool beforeInstruction,
             [Frozen]ModuleDefinition module,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
@@ -183,9 +184,9 @@ namespace AutoFake.UnitTests
             module.Types.Add(type);
 
             emitter.Body.Instructions.Add(cmd);
-            var methodDescriptor = new MethodDescriptor(type.FullName, method.Name);
+            var descriptor = new ClosureDescriptor(type.FullName, method.Name, null);
 
-            proc.InjectCallback(methodDescriptor, beforeInstruction);
+            proc.InjectClosure(descriptor, beforeInstruction, new Dictionary<CapturedMember, FieldDefinition>());
 
             var sourceCmd = new[] {Cil.Cmd(cmd.OpCode) };
             var cmds = new[]

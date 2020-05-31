@@ -108,21 +108,19 @@ namespace AutoFake
 
         internal object ExecuteWithoutParameters(Delegate action)
         {
-            // Should be materialized before .CreateFakeObject(...) call
-            var fields = GetDelegateFields(action).ToList();
+            var fields = action.GetCapturedMembers(TypeInfo.Module);
             var fakeObject = TypeInfo.CreateFakeObject(Mocks);
             return Execute(fakeObject.Type, action, new object[0], fields);
         }
 
         internal object Execute(Delegate action, Func<FakeObjectInfo, object[]> fake)
         {
-            // Should be materialized before .CreateFakeObject(...) call
-            var fields = GetDelegateFields(action).ToList();
+            var fields = action.GetCapturedMembers(TypeInfo.Module);
             var fakeObject = TypeInfo.CreateFakeObject(Mocks);
             return Execute(fakeObject.Type, action, fake(fakeObject), fields);
         }
 
-        private object Execute(Type type, Delegate action, object[] parameters, IEnumerable<DelegateField> fields)
+        private object Execute(Type type, Delegate action, object[] parameters, IEnumerable<CapturedMember> fields)
         {
             var delegateType = type.Assembly.GetType(action.Method.DeclaringType.FullName, true);
             var generatedMethod = delegateType.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
@@ -142,39 +140,6 @@ namespace AutoFake
             {
                 throw ex.InnerException;
             }
-        }
-
-        private IEnumerable<DelegateField> GetDelegateFields(Delegate action)
-        {
-            var delegateType = TypeInfo.Module.GetType(action.Method.DeclaringType.FullName, true).Resolve();
-            var delegateRef = delegateType.Methods.Single(m => m.Name == action.Method.Name);
-            if (delegateRef.IsAsync(out var asyncMethod)) delegateRef = asyncMethod;
-            var fields = delegateRef.Body.Instructions
-                .Where(c => c.OpCode == OpCodes.Ldfld || c.OpCode == OpCodes.Ldflda)
-                .Select(c => (FieldDefinition)c.Operand)
-                .Distinct()
-                .Where(field => field.DeclaringType == delegateType &&
-                    !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field));
-
-            foreach (var field in fields)
-            {
-                var capturedField = action.Target.GetType().GetField(field.Name);
-                var capturedValue = capturedField.GetValue(action.Target);
-                var capturedFieldTypeRef = TypeInfo.Module.ImportReference(capturedField.FieldType);
-                Instruction.Create(OpCodes.Ldfld, field).ReplaceType(capturedFieldTypeRef);
-                yield return new DelegateField(field, capturedValue);
-            }
-        }
-
-        private class DelegateField
-        {
-            public DelegateField(FieldDefinition field, object instance)
-            {
-                Field = field;
-                Instance = instance;
-            }
-            public FieldDefinition Field { get; }
-            public object Instance { get; }
         }
     }
 }
