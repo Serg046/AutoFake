@@ -1,109 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AutoFake</RootNamespace>
-    <AssemblyName>AutoFake</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.2" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="CapturedMember.cs" />
-    <Compile Include="ClosureDescriptor.cs" />
-    <Compile Include="Emitter.cs" />
-    <Compile Include="EqualityArgumentChecker.cs" />
-    <Compile Include="Exceptions\ExpectedCallsException.cs" />
-    <Compile Include="Exceptions\InitializationException.cs" />
-    <Compile Include="Exceptions\NotSupportedExpressionException.cs" />
-    <Compile Include="Exceptions\VerifiableException.cs" />
-    <Compile Include="ExcludeFromCodeCoverageAttribute.cs" />
-    <Compile Include="Expression\GetArgumentsMemberVisitor.cs" />
-    <Compile Include="Expression\GetTestMethodVisitor.cs" />
-    <Compile Include="Expression\IInvocationExpression.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="FakeArgument.cs" />
-    <Compile Include="Expression\GetSourceMemberVisitor.cs" />
-    <Compile Include="Expression\GetValueMemberVisitor.cs" />
-    <Compile Include="IEmitter.cs" />
-    <Compile Include="IFakeArgumentChecker.cs" />
-    <Compile Include="Arg.cs" />
-    <Compile Include="Expression\InvocationExpression.cs" />
-    <Compile Include="IPrePostProcessor.cs" />
-    <Compile Include="IProcessor.cs" />
-    <Compile Include="IProcessorFactory.cs" />
-    <Compile Include="ITypeInfo.cs" />
-    <Compile Include="LambdaChecker.cs" />
-    <Compile Include="MethodDescriptor.cs" />
-    <Compile Include="ProcessorFactory.cs" />
-    <Compile Include="Setup\MockCollection.cs" />
-    <Compile Include="PrePostProcessor.cs" />
-    <Compile Include="Processor.cs" />
-    <Compile Include="ReflectionUtils.cs" />
-    <Compile Include="Setup\Mocks\InsertMock.cs" />
-    <Compile Include="Setup\Configurations\AppendMockConfiguration.cs" />
-    <Compile Include="Setup\Mocks\IMock.cs" />
-    <Compile Include="Setup\Configurations\MockConfiguration.cs" />
-    <Compile Include="Setup\Configurations\PrependMockConfiguration.cs" />
-    <Compile Include="Setup\Configurations\RemoveMockConfiguration.cs" />
-    <Compile Include="Setup\Mocks\ReplaceMock.cs" />
-    <Compile Include="Setup\ISourceMember.cs" />
-    <Compile Include="Setup\SourceField.cs" />
-    <Compile Include="Setup\Mocks\SourceMemberInsertMock.cs" />
-    <Compile Include="Setup\Configurations\SourceMemberInsertMockConfiguration.cs" />
-    <Compile Include="Setup\SourceMethod.cs" />
-    <Compile Include="Setup\Mocks\VerifyMock.cs" />
-    <Compile Include="Fake.cs" />
-    <Compile Include="FakeDependency.cs" />
-    <Compile Include="FakeGenerator.cs" />
-    <Compile Include="Expression\IMemberVisitor.cs" />
-    <Compile Include="Setup\Mocks\SourceMemberMock.cs" />
-    <Compile Include="FakeObjectInfo.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Setup\Configurations\ReplaceMockConfiguration.cs" />
-    <Compile Include="Setup\Configurations\VerifyMockConfiguration.cs" />
-    <Compile Include="TypeInfo.cs" />
-    <Compile Include="TypeWrapper.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Mono.Cecil">
-      <Version>0.11.2</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

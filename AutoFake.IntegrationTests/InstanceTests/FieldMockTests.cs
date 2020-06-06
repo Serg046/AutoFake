@@ -190,3 +190,20 @@ namespace AutoFake.IntegrationTests.InstanceTests
         }
     }
 }
+
+#if NETCOREAPP
+namespace System.Runtime.Remoting.Messaging
+{
+    public class Header
+    {
+        public string Name;
+        public object Value;
+
+        public Header(string name, object value)
+        {
+            Name = name;
+            Value = value;
+        }
+    }
+}
+#endif

@@ -30,6 +30,16 @@ namespace AutoFake.UnitTests.Expression
             Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
         }
 
+        //[Fact]
+        //public void AcceptMemberVisitor_UnsupportedMemberExpression_Throws()
+        //{
+        //    Expression<Func<int>> expression = () => 0;
+        //    var fake = new Fake<InvocationExpression>(expression);
+
+
+        //    fake.Execute(tst => tst.AcceptMemberVisitor(_memberVisitor.Object));
+        //}
+
         [Theory]
         [MemberData(nameof(GetAcceptMemberVisitorTestData))]
         public void AcceptMemberVisitor_ValidData_Success(LambdaExpression expression, MemberInfo expectedMemberInfo)
@@ -112,13 +122,13 @@ namespace AutoFake.UnitTests.Expression
         [Theory]
         [InlineData(4, false)]
         [InlineData(5, true)]
-        public void MatchArgumentsAsync_ValidGenericInput_Passes(int arg, bool checkArguments)
+        public void MatchArgumentsGenericAsync_ValidInput_Passes(int arg, bool checkArguments)
         {
             Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
             var expr = new InvocationExpression(methodExpr);
             var arguments = new[] { new object[] { arg, arg.ToString() } };
 
-            expr.MatchArgumentsAsync(Task.FromResult(1), arguments, checkArguments, null);
+            expr.MatchArgumentsGenericAsync(Task.FromResult(1), arguments, checkArguments, null);
         }
 
         public static IEnumerable<object[]> GetAcceptMemberVisitorTestData()
