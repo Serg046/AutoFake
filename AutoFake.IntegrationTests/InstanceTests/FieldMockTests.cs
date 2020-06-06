@@ -191,7 +191,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
     }
 }
 
-#if NETSTANDARD
+#if NETCOREAPP
 namespace System.Runtime.Remoting.Messaging
 {
     public class Header
