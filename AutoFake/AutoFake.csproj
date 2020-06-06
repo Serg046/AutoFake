@@ -10,6 +10,8 @@
     <RepositoryUrl>https://github.com/Serg046/AutoFake</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>AutoFake Mock Mocking Fake Fake-Data Testing Test</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
