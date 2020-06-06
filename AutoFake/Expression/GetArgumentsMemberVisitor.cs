@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Exceptions;
-using Microsoft.CSharp.RuntimeBinder;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
@@ -39,9 +38,17 @@ namespace AutoFake.Expression
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
             => Arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
+        [ExcludeFromCodeCoverage]
         private FakeArgument TryGetArgument(LinqExpression expression)
         {
-            return GetArgument((dynamic)expression);
+            switch (expression)
+            {
+                case ConstantExpression ce: return GetArgument(ce);
+                case UnaryExpression ue: return GetArgument(ue);
+                case MethodCallExpression mce: return GetArgument(mce);
+                case LinqExpression le: return GetArgument(le);
+                default: throw new NotSupportedExpressionException($"Invalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
+            }
         }
 
         private FakeArgument GetArgument(ConstantExpression expression) => CreateFakeArgument(expression.Value);
@@ -56,12 +63,6 @@ namespace AutoFake.Expression
             return CreateFakeArgument(arg);
         }
 
-        private FakeArgument CreateFakeArgument(object arg)
-        {
-            var checker = new EqualityArgumentChecker(arg);
-            return new FakeArgument(checker);
-        }
-
         private FakeArgument GetArgument(MethodCallExpression expression)
         {
             if (expression.Method.DeclaringType == typeof(Arg) && expression.Method.Name == nameof(Arg.Is))
@@ -72,6 +73,12 @@ namespace AutoFake.Expression
                 return new FakeArgument(checker);
             }
             return GetArgument((LinqExpression)expression);
+        }
+
+        private FakeArgument CreateFakeArgument(object arg)
+        {
+            var checker = new EqualityArgumentChecker(arg);
+            return new FakeArgument(checker);
         }
     }
 }

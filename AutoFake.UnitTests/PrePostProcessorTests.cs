@@ -142,10 +142,10 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        [InlineAutoMoqData(typeof(Task))]
-        [InlineAutoMoqData(typeof(Task<int>))]
+        [InlineAutoMoqData(typeof(Task), nameof(InvocationExpression.MatchArgumentsAsync))]
+        [InlineAutoMoqData(typeof(Task<int>), nameof(InvocationExpression.MatchArgumentsGenericAsync))]
         internal void InjectVerification_AsyncMethod_Injected(
-            Type asyncType,
+            Type asyncType, string checkerMethodName,
             [Frozen]ModuleDefinition module,
             [Frozen]Emitter emitter,
             TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
@@ -174,7 +174,7 @@ namespace AutoFake.UnitTests
                 Cil.Cmd(OpCodes.Newobj, (MemberReference m) => m.Name == ".ctor"
                     && m.DeclaringType.FullName == "System.Func`2<System.Byte,System.Boolean>"),
                 Cil.Cmd(OpCodes.Callvirt, (MethodReference m) =>
-                    m.Name == nameof(InvocationExpression.MatchArgumentsAsync)
+                    m.Name == checkerMethodName
                     && m.DeclaringType.Name == nameof(InvocationExpression))
             ));
         }
