@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
     <PackageId>AutoFake</PackageId>
     <Title>AutoFake</Title>
-    <Version>0.2.3.0</Version>
+    <Version>0.2.3.1</Version>
     <Authors>Sergey Aseev (Serg046)</Authors>
     <PackageProjectUrl>https://github.com/Serg046/AutoFake</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Serg046/AutoFake</RepositoryUrl>
