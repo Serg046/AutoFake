@@ -29,12 +29,11 @@ namespace AutoFake
 
         public static bool IsAsync(this MethodDefinition method, out MethodDefinition asyncMethod)
         {
-            //for .net 4, it is available in .net 4.5
-            dynamic asyncAttribute = method.CustomAttributes
+            var asyncAttribute = method.CustomAttributes
                 .SingleOrDefault(a => a.AttributeType.Name == "AsyncStateMachineAttribute");
             if (asyncAttribute != null)
             {
-                TypeReference generatedAsyncType = asyncAttribute.ConstructorArguments[0].Value;
+                var generatedAsyncType = (TypeReference)asyncAttribute.ConstructorArguments[0].Value;
                 asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
                 return true;
             }

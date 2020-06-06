@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
+using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake
 {
@@ -93,15 +95,29 @@ namespace AutoFake
 
         private MethodReference GetArgumentsMatcher(MethodReference method, out bool isAsync)
         {
-            var returnType = method.ReturnType.Resolve();
-            isAsync = returnType.FullName == typeof(Task).FullName ||
-                      (returnType.Namespace == typeof(Task).Namespace && returnType.Name == "Task`1");
-            var methodName = isAsync
-                ? nameof(InvocationExpression.MatchArgumentsAsync)
-                : nameof(InvocationExpression.MatchArguments);
-
-            var checker = typeof(InvocationExpression).GetMethod(methodName);
-            return _typeInfo.Module.ImportReference(checker);
+            var returnType = method.ReturnType;
+            if (returnType.FullName == typeof(Task).FullName)
+            {
+                isAsync = true;
+                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArgumentsAsync));
+                return _typeInfo.Module.ImportReference(methodInfo);
+            }
+            else if (returnType.Namespace == typeof(Task).Namespace && returnType.Name == "Task`1" &&
+                     returnType is GenericInstanceType genericReturnType)
+            {
+                isAsync = true;
+                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArgumentsGenericAsync));
+                var open = _typeInfo.Module.ImportReference(methodInfo);
+                var closed = new GenericInstanceMethod(open);
+                closed.GenericArguments.Add(genericReturnType.GenericArguments.Single());
+                return closed;
+            }
+            else
+            {
+                isAsync = false;
+                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArguments));
+                return _typeInfo.Module.ImportReference(methodInfo);
+            }
         }
 
         public TypeReference GetTypeReference(Type type) => _typeInfo.Module.ImportReference(type);
