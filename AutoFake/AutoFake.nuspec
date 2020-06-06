@@ -14,6 +14,9 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\$Configuration$\AutoFake.dll" target="lib" />
+    <file src="bin\$Configuration$\net40\AutoFake.dll" target="lib\net40" />
+    <file src="bin\$Configuration$\net40\AutoFake.pdb" target="lib\net40" />
+    <file src="bin\$Configuration$\netstandard2.0\AutoFake.dll" target="lib\netstandard2.0" />
+    <file src="bin\$Configuration$\netstandard2.0\AutoFake.pdb" target="lib\netstandard2.0" />
   </files>
 </package>

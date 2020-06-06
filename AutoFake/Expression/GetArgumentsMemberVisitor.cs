@@ -38,6 +38,7 @@ namespace AutoFake.Expression
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
             => Arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
+        [ExcludeFromCodeCoverage]
         private FakeArgument TryGetArgument(LinqExpression expression)
         {
             switch (expression)
