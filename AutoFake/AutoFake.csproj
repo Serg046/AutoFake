@@ -2,7 +2,15 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <PackageId>AutoFake</PackageId>
+    <Title>AutoFake</Title>
+    <Version>0.2.3.0</Version>
+    <Authors>Sergey Aseev (Serg046)</Authors>
+    <PackageProjectUrl>https://github.com/Serg046/AutoFake</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Serg046/AutoFake</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>AutoFake Mock Mocking Fake Fake-Data Testing Test</PackageTags>
+    <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>
 
   <ItemGroup>
