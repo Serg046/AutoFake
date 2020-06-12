@@ -5,13 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake
@@ -22,28 +19,16 @@ namespace AutoFake
         {
         }
 
-        private MockConfiguration<T> RewriteImpl(LambdaExpression expression)
-        {
-            if (expression == null) throw new ArgumentNullException(nameof(expression));
-
-            var invocationExpression = new InvocationExpression(expression);
-            var visitor = new GetTestMethodVisitor();
-            invocationExpression.AcceptMemberVisitor(visitor);
-            var mocks = new List<IMock>();
-            Mocks.Add(visitor.Method, mocks);
-            return new MockConfiguration<T>(mocks, new ProcessorFactory(TypeInfo));
-        }
-
-        public MockConfiguration<T> Rewrite<TReturn>(Expression<Func<T, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
-
-        public MockConfiguration<T> Rewrite(Expression<Action<T>> action) => RewriteImpl(action);
-
+        public FuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression) => base.Rewrite(expression);
+        
+        public ActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression) => base.Rewrite(expression);
+        
         public void Execute(Action<T> action) => Execute(action, gen => gen.Instance);
-
+        
         public void Execute(Action<T, IList<object>> action) => Execute(action, gen => new[] { gen.Instance, gen.Parameters });
-
+        
         public Task ExecuteAsync(Func<T, Task> action) => (Task)Execute(action, gen => gen.Instance);
-
+        
         public Task ExecuteAsync(Func<T, IList<object>, Task> action) => (Task)Execute(action, gen => new[] { gen.Instance, gen.Parameters});
     }
 
@@ -71,25 +56,37 @@ namespace AutoFake
             }
         }
 
-        private MockConfiguration RewriteImpl(LambdaExpression expression)
+        public FuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
-            if (expression == null) throw new ArgumentNullException(nameof(expression));
-
-            var invocationExpression = new InvocationExpression(expression);
-            var visitor = new GetTestMethodVisitor();
-            invocationExpression.AcceptMemberVisitor(visitor);
-            var mocks = new List<IMock>();
-            Mocks.Add(visitor.Method, mocks);
-            return new MockConfiguration(mocks, new ProcessorFactory(TypeInfo));
+            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+            var mocks = GetMocksContainer(invocationExpression);
+            return new FuncMockConfiguration<TInput, TReturn>(mocks, new ProcessorFactory(TypeInfo),
+                new Executor<TReturn>(this, invocationExpression));
         }
 
-        public MockConfiguration Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceRewriteFunc) => RewriteImpl(instanceRewriteFunc);
+        public ActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)
+        {
+            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+            var mocks = GetMocksContainer(invocationExpression);
+            return new ActionMockConfiguration<TInput>(mocks, new ProcessorFactory(TypeInfo),
+                new Executor(this, invocationExpression));
+        }
 
-        public MockConfiguration Rewrite<TInput>(Expression<Action<TInput>> voidInstanceRewriteFunc) => RewriteImpl(voidInstanceRewriteFunc);
+        public FuncMockConfiguration<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
+        {
+            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+            var mocks = GetMocksContainer(invocationExpression);
+            return new FuncMockConfiguration<TReturn>(mocks, new ProcessorFactory(TypeInfo),
+                new Executor<TReturn>(this, invocationExpression));
+        }
 
-        public MockConfiguration Rewrite<TReturn>(Expression<Func<TReturn>> staticRewriteFunc) => RewriteImpl(staticRewriteFunc);
-
-        public MockConfiguration Rewrite(Expression<Action> voidStaticRewriteFunc) => RewriteImpl(voidStaticRewriteFunc);
+        public MockConfiguration Rewrite(Expression<Action> expression)
+        {
+            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+            var mocks = GetMocksContainer(invocationExpression);
+            return new ActionMockConfiguration(mocks, new ProcessorFactory(TypeInfo),
+                new Executor(this, invocationExpression));
+        }
 
         public void Execute(Action action) => ExecuteWithoutParameters(action);
 
@@ -140,6 +137,17 @@ namespace AutoFake
             {
                 throw ex.InnerException;
             }
+        }
+
+        internal FakeObjectInfo CreateFakeObject() => TypeInfo.CreateFakeObject(Mocks);
+
+        private IList<IMock> GetMocksContainer(InvocationExpression invocationExpression)
+        {
+            var visitor = new GetTestMethodVisitor();
+            invocationExpression.AcceptMemberVisitor(visitor);
+            var mocks = new List<IMock>();
+            Mocks.Add(visitor.Method, mocks);
+            return mocks;
         }
     }
 }

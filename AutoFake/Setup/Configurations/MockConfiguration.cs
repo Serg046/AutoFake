@@ -5,6 +5,55 @@ using System.Linq.Expressions;
 
 namespace AutoFake.Setup.Configurations
 {
+    public class FuncMockConfiguration<TSut, TReturn> : MockConfiguration<TSut>
+    {
+        private readonly Executor<TReturn> _executor;
+
+        internal FuncMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
+        {
+            _executor = executor;
+        }
+
+        public TReturn Execute() => _executor.Execute();
+    }
+
+    public class ActionMockConfiguration<TSut> : MockConfiguration<TSut>
+    {
+        private readonly Executor _executor;
+
+        internal ActionMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
+        {
+            _executor = executor;
+        }
+
+        public void Execute() => _executor.Execute();
+    }
+
+    public class FuncMockConfiguration<TReturn> : MockConfiguration
+    {
+        private readonly Executor<TReturn> _executor;
+
+        internal FuncMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
+        {
+            _executor = executor;
+        }
+
+        public TReturn Execute() => _executor.Execute();
+    }
+
+    public class ActionMockConfiguration : MockConfiguration
+    {
+        private readonly Executor _executor;
+
+        internal ActionMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
+        {
+            _executor = executor;
+        }
+
+        public void Execute() => _executor.Execute();
+    }
+
+    // TODO: Make it abstract
     public class MockConfiguration<T> : MockConfiguration
     {
         internal MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory)

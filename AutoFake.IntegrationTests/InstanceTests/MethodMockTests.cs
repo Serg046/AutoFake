@@ -17,10 +17,10 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetDynamicValue())
-                .Replace(t => t.DynamicValue()).Return(() => 7);
+            var sut = fake.Rewrite(f => f.GetDynamicValue());
+            sut.Replace(t => t.DynamicValue()).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.GetDynamicValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
