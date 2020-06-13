@@ -11,7 +11,6 @@ namespace AutoFake.Setup.Mocks
     internal class ReplaceMock : SourceMemberMock
     {
         private FieldDefinition _retValueField;
-        private TypeReference _typeReference;
 
         public ReplaceMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
             : base(processorFactory, invocationExpression)
@@ -25,18 +24,6 @@ namespace AutoFake.Setup.Mocks
             set
             {
                 _returnObject = value;
-                if (_returnObject?.Instance != null)
-                {
-                    _typeReference = PrePostProcessor.GetTypeReference(_returnObject.Instance.GetType());
-                }
-            }
-        }
-
-        public override void ProcessInstruction(Instruction instruction)
-        {
-            if (_typeReference != null)
-            {
-                instruction.ReplaceType(_typeReference);
             }
         }
 
@@ -85,12 +72,7 @@ namespace AutoFake.Setup.Mocks
             base.BeforeInjection(method);
             if (ReturnObject != null)
             {
-                _retValueField = PrePostProcessor.GenerateRetValueField(
-                    GetFieldName(method.Name, "RetValue"), SourceMember.ReturnType);
-                if (_typeReference != null)
-                {
-                    _retValueField.FieldType = _typeReference;
-                }
+                _retValueField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "RetValue"), SourceMember.ReturnType);
             }
         }
 

@@ -119,7 +119,7 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
-            preProc.Setup(p => p.GenerateSetupBodyField(It.IsAny<string>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
             mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));
@@ -135,7 +135,7 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
-            preProc.Setup(p => p.GenerateSetupBodyField(It.IsAny<string>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
             field.Name = nameof(TestClass.RetValueField);
             var type = typeof(TestClass);
             mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));
@@ -162,66 +162,8 @@ namespace AutoFake.UnitTests.Setup
 
             mock.BeforeInjection(method);
 
-            proc.Verify(m => m.GenerateRetValueField(It.IsAny<string>(),It.IsAny<Type>()),
+            proc.Verify(m => m.GenerateField(It.IsAny<string>(),It.IsAny<Type>()),
                 shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
-        }
-
-        [Theory, AutoMoqData]
-        internal void ProcessInstruction_Field_Rewritten(
-            [Frozen]ModuleDefinition module,
-            [Frozen]Mock<IPrePostProcessor> proc,
-            FieldReference field,
-            ReplaceMock mock)
-        {
-            proc.Setup(p => p.GetTypeReference(It.IsAny<Type>()))
-                .Returns(new TypeReference("System", "Int32", module, module));
-            field.FieldType = new TypeReference("System", "Int32", module, null);
-            mock.ReturnObject = new ReplaceMock.Return(5);
-
-            mock.ProcessInstruction(Instruction.Create(OpCodes.Ldfld, field));
-
-            Assert.Equal(module, field.FieldType.Scope);
-        }
-
-        [Theory, AutoMoqData]
-        internal void ProcessInstruction_Method_Rewritten(
-            [Frozen]ModuleDefinition module,
-            [Frozen]Mock<IPrePostProcessor> proc,
-            MethodReference method,
-            ReplaceMock mock)
-        {
-            proc.Setup(p => p.GetTypeReference(It.IsAny<Type>()))
-                .Returns(new TypeReference("System", "Int32", module, module));
-            var originalType = new TypeReference("System", "Int32", module, null);
-            method.ReturnType = originalType;
-            method.Parameters.Clear();
-            method.Parameters.Add(new ParameterDefinition(originalType));
-            mock.ReturnObject = new ReplaceMock.Return(5);
-
-            mock.ProcessInstruction(Instruction.Create(OpCodes.Call, method));
-
-            Assert.Equal(module, method.ReturnType.Scope);
-            Assert.All(method.Parameters, prm => Assert.Equal(module, prm.ParameterType.Scope));
-        }
-
-        [Theory, AutoMoqData]
-        internal void ProcessInstruction_MethodArgTypeIsDifferent_OriginalType(
-            [Frozen]ModuleDefinition module,
-            [Frozen]Mock<IPrePostProcessor> proc,
-            MethodReference method,
-            ReplaceMock mock)
-        {
-            proc.Setup(p => p.GetTypeReference(It.IsAny<Type>()))
-                .Returns(new TypeReference("System", "Int32", module, module));
-            var originalType = new TypeReference("System", "Int64", module, null);
-            method.ReturnType = originalType;
-            method.Parameters.Clear();
-            method.Parameters.Add(new ParameterDefinition(originalType));
-            mock.ReturnObject = new ReplaceMock.Return(5);
-
-            mock.ProcessInstruction(Instruction.Create(OpCodes.Call, method));
-
-            Assert.All(method.Parameters, prm => Assert.Equal("Int64", prm.ParameterType.Name));
         }
 
         [Theory, AutoMoqData]
@@ -248,8 +190,8 @@ namespace AutoFake.UnitTests.Setup
             ReplaceMock mock)
         {
             field.Name = nameof(TestClass.RetValueField);
-            preProc.Setup(p => p.GenerateSetupBodyField(It.IsAny<string>())).Returns((FieldDefinition)null);
-            preProc.Setup(p => p.GenerateRetValueField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
             mock.ReturnObject = new ReplaceMock.Return(5);
 
             Assert.Null(TestClass.RetValueField);

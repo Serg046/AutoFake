@@ -14,54 +14,6 @@ namespace AutoFake.UnitTests
     public class PrePostProcessorTests
     {
         [Theory, AutoMoqData]
-        internal void GenerateSetupBodyField_FieldName_Added(
-            [Frozen]Mock<ITypeInfo> typeInfo,
-            string propName,
-            PrePostProcessor proc)
-        {
-            var field = proc.GenerateSetupBodyField(propName);
-
-            Assert.Equal(propName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(typeof(InvocationExpression).FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
-        }
-
-        [Theory, AutoMoqData]
-        internal void GenerateRetValueField_FieldName_Added(
-            [Frozen]Mock<ITypeInfo> typeInfo,
-            string propName, Type propType,
-            PrePostProcessor proc)
-        {
-            var field = proc.GenerateRetValueField(propName, propType);
-
-            Assert.Equal(propName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(propType.FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
-        }
-
-        [Theory, AutoMoqData]
-        internal void GenerateRetValueField_TypeExists_Reused(
-            [Frozen]ModuleDefinition module,
-            [Frozen]Mock<ITypeInfo> typeInfo,
-            string fieldName, Type fieldType,
-            PrePostProcessor proc)
-        {
-            var typeDef = new TypeDefinition(fieldType.Namespace, fieldType.Name, TypeAttributes.Class);
-            module.Types.Add(typeDef);
-            var field = proc.GenerateRetValueField(fieldName, fieldType);
-
-            Assert.Equal(fieldName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(fieldType.FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
-        }
-
-        [Theory, AutoMoqData]
         internal void GenerateField_FieldName_Added(
             [Frozen]Mock<ITypeInfo> typeInfo,
             string propName, Type propType,

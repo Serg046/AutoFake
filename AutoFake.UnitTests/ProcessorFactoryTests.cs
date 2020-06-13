@@ -1,4 +1,6 @@
 ﻿using System;
+using AutoFake.Expression;
+using AutoFake.UnitTests.Expression;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -24,7 +26,7 @@ namespace AutoFake.UnitTests
             ProcessorFactory factory)
         {
             var proc = factory.CreatePrePostProcessor();
-            proc.GenerateSetupBodyField(name);
+            proc.GenerateField(name, typeof(InvocationExpression));
 
             type.Verify(t => t.AddField(It.Is<FieldDefinition>(f => f.Name == name)));
         }

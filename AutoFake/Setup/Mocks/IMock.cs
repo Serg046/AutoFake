@@ -9,7 +9,6 @@ namespace AutoFake.Setup.Mocks
     {
         bool IsSourceInstruction(MethodDefinition method, Instruction instruction);
         void BeforeInjection(MethodDefinition method);
-        void ProcessInstruction(Instruction instruction);
         void Inject(IEmitter emitter, Instruction instruction);
         void AfterInjection(IEmitter emitter);
         IList<object> Initialize(Type type);

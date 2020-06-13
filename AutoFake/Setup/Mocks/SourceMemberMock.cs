@@ -37,13 +37,11 @@ namespace AutoFake.Setup.Mocks
         {
             if (CheckSourceMemberCalls)
             {
-                SetupBodyField = PrePostProcessor.GenerateSetupBodyField(GetFieldName(method.Name, "Setup"));
+                SetupBodyField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "Setup"), typeof(InvocationExpression));
                 CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(
                     GetFieldName(method.Name, "CallsAccumulator"), method.Body);
             }
         }
-
-        public abstract void ProcessInstruction(Instruction instruction);
 
         public abstract void Inject(IEmitter emitter, Instruction instruction);
 

@@ -20,23 +20,6 @@ namespace AutoFake
             _typeInfo = typeInfo;
         }
 
-        public FieldDefinition GenerateSetupBodyField(string name)
-        {
-            var type = _typeInfo.Module.ImportReference(typeof(InvocationExpression));
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
-            _typeInfo.AddField(field);
-            return field;
-        }
-
-        public FieldDefinition GenerateRetValueField(string name, Type returnType)
-        {
-            var type = _typeInfo.Module.GetType(returnType.FullName, true)
-                       ?? _typeInfo.Module.ImportReference(returnType);
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
-            _typeInfo.AddField(field);
-            return field;
-        }
-
         public FieldDefinition GenerateField(string name, Type returnType)
         {
             var type = _typeInfo.Module.ImportReference(returnType);
