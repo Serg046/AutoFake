@@ -34,6 +34,8 @@ namespace AutoFake
 
     public class Fake
     {
+        private FakeObjectInfo _fakeObjectInfo;
+
         public Fake(Type type, params object[] constructorArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
@@ -80,7 +82,7 @@ namespace AutoFake
                 new Executor<TReturn>(this, invocationExpression));
         }
 
-        public MockConfiguration Rewrite(Expression<Action> expression)
+        public ActionMockConfiguration Rewrite(Expression<Action> expression)
         {
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
             var mocks = GetMocksContainer(invocationExpression);
@@ -139,7 +141,11 @@ namespace AutoFake
             }
         }
 
-        internal FakeObjectInfo CreateFakeObject() => TypeInfo.CreateFakeObject(Mocks);
+        internal FakeObjectInfo CreateFakeObject()
+        {
+            if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks);
+            return _fakeObjectInfo;
+        }
 
         private IList<IMock> GetMocksContainer(InvocationExpression invocationExpression)
         {

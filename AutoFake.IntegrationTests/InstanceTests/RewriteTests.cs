@@ -9,14 +9,11 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(m => m.FirstMethod()).Replace(m => m.GetValue()).Return(() => 1);
-            fake.Rewrite(m => m.SecondMethod()).Replace(m => m.GetValue()).Return(() => 1);
+            var sut1 = fake.Rewrite(m => m.FirstMethod()); sut1.Replace(m => m.GetValue()).Return(1);
+            var sut2 = fake.Rewrite(m => m.SecondMethod()); sut2.Replace(m => m.GetValue()).Return(1);
 
-            fake.Execute(tst =>
-            {
-                Assert.Equal(1, tst.FirstMethod());
-                Assert.Equal(1, tst.SecondMethod());
-            });
+            Assert.Equal(1, sut1.Execute());
+            Assert.Equal(1, sut2.Execute());
         }
 
         [Fact]
@@ -24,14 +21,11 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(m => m.FirstMethod()).Replace(m => m.GetValue()).Return(() => 1);
-            fake.Rewrite(m => m.SecondMethod()).Replace(m => m.GetValue()).Return(() => 2);
+            var sut1 = fake.Rewrite(m => m.FirstMethod()); sut1.Replace(m => m.GetValue()).Return(1);
+            var sut2 = fake.Rewrite(m => m.SecondMethod()); sut2.Replace(m => m.GetValue()).Return(2);
 
-            fake.Execute(tst =>
-            {
-                Assert.Equal(1, tst.FirstMethod());
-                Assert.Equal(2, tst.SecondMethod());
-            });
+            Assert.Equal(1, sut1.Execute());
+            Assert.Equal(2, sut2.Execute());
         }
 
         [Fact]
@@ -39,14 +33,11 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(m => m.FirstMethod()).Replace(m => m.GetValue()).Return(() => 1);
-            fake.Rewrite(m => m.FirstMethod(Arg.IsAny<int>())).Replace(m => m.GetValue()).Return(() => 2);
+            var sut1 = fake.Rewrite(m => m.FirstMethod()); sut1.Replace(m => m.GetValue()).Return(1);
+            var sut2 = fake.Rewrite(m => m.FirstMethod(1)); sut2.Replace(m => m.GetValue()).Return(2);
 
-            fake.Execute(tst =>
-            {
-                Assert.Equal(1, tst.FirstMethod());
-                Assert.Equal(3, tst.FirstMethod(1));
-            });
+            Assert.Equal(1, sut1.Execute());
+            Assert.Equal(3, sut2.Execute());
         }
 
         private class TestClass

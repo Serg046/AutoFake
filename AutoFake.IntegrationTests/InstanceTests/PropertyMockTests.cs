@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.InstanceTests
@@ -13,10 +12,10 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetDynamicValue())
-                .Replace(t => t.DynamicValue).Return(() => 7);
+            var sut = fake.Rewrite(f => f.GetDynamicValue());
+            sut.Replace(t => t.DynamicValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.GetDynamicValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -24,10 +23,10 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetHelperDynamicValue())
-                .Replace((HelperClass h) => h.DynamicValue).Return(() => 7);
+            var sut = fake.Rewrite(f => f.GetHelperDynamicValue());
+            sut.Replace((HelperClass h) => h.DynamicValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.GetHelperDynamicValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -35,10 +34,10 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetDynamicStaticValue())
-                .Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
+            var sut = fake.Rewrite(f => f.GetDynamicStaticValue());
+            sut.Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.GetDynamicStaticValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -46,10 +45,10 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetHelperDynamicStaticValue())
-                .Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
+            var sut = fake.Rewrite(f => f.GetHelperDynamicStaticValue());
+            sut.Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
 
-            fake.Execute(tst => Assert.Equal(7, tst.GetHelperDynamicStaticValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -58,10 +57,10 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             const string cmd = "select * from Test";
-            fake.Rewrite(f => f.GetFrameworkValue())
-                .Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
+            var sut = fake.Rewrite(f => f.GetFrameworkValue());
+            sut.Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
 
-            fake.Execute(tst => Assert.Equal(cmd, tst.GetFrameworkValue()));
+            Assert.Equal(cmd, sut.Execute());
         }
 
         [Fact]
@@ -69,10 +68,11 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetFrameworkStaticValue())
-                .Replace(() => DateTime.Now).Return(() => new DateTime(2016, 9, 25));
+            var date = new DateTime(2016, 9, 25);
+            var sut = fake.Rewrite(f => f.GetFrameworkStaticValue());
+            sut.Replace(() => DateTime.Now).Return(date);
 
-            fake.Execute((tst, prms) => Assert.Equal(prms.Single(), tst.GetFrameworkStaticValue()));
+            Assert.Equal(date, sut.Execute());
         }
 
         private class TestClass
