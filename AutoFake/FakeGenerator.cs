@@ -42,7 +42,6 @@ namespace AutoFake
 
             public void Rewrite()
             {
-                _mock.ProcessInstruction(Instruction.Create(OpCodes.Call, _originalMethod));
                 Rewrite(_originalMethod);
             }
 
@@ -64,7 +63,6 @@ namespace AutoFake
                         var methodDefinition = method.Resolve();
                         Rewrite(methodDefinition);
                     }
-                    _mock.ProcessInstruction(instruction);
                 }
             }
 

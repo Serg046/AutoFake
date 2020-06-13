@@ -68,7 +68,7 @@ namespace AutoFake.UnitTests.Setup
             mock.BeforeInjection(method);
 
             var times = shouldBeInjected ? Times.AtLeastOnce() : Times.Never();
-            preProc.Verify(m => m.GenerateSetupBodyField(It.IsAny<string>()), times);
+            preProc.Verify(m => m.GenerateField(It.IsAny<string>(), It.IsAny<Type>()), times);
             preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>()), times);
         }
 
@@ -129,11 +129,6 @@ namespace AutoFake.UnitTests.Setup
         {
             public Mock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression) : base(processorFactory, invocationExpression)
             {
-            }
-
-            public override void ProcessInstruction(Instruction instruction)
-            {
-                throw new NotImplementedException();
             }
 
             public override void Inject(IEmitter emitter, Instruction instruction)
