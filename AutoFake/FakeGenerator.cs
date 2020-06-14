@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -18,26 +17,47 @@ namespace AutoFake
 
         public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
-            foreach (var mock in mocks)
+            var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
+            var executeFuncDef = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFuncRef));
+
+            if (executeFunc is MethodInfo methodInfo)
             {
-                var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
-                var method = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFuncRef));
-                mock.BeforeInjection(method);
-                var testMethod = new TestMethod(method, mock);
-                testMethod.Rewrite();
-                mock.AfterInjection(method.Body.GetEmitter());
+                if (methodInfo.ReturnType.Module == methodInfo.Module)
+                {
+                    var replaceTypeRefMocks = GetReplaceTypeRefMocks(methodInfo, executeFuncDef);
+                    mocks = mocks.Concat(replaceTypeRefMocks);
+                }
             }
+
+            foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
+            var testMethod = new TestMethod(executeFuncDef, mocks);
+            testMethod.Rewrite();
+            foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
+        }
+
+        private ReplaceTypeRefMock[] GetReplaceTypeRefMocks(MethodInfo methodInfo, MethodDefinition executeFuncDef)
+        {
+            var returnTypeRef = _typeInfo.Module.ImportReference(methodInfo.ReturnType);
+            executeFuncDef.ReturnType = returnTypeRef;
+            var replaceTypeRefMocks = new[] {new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType)};
+
+            foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
+            {
+                new TestMethod(ctor, replaceTypeRefMocks).Rewrite();
+            }
+
+            return replaceTypeRefMocks;
         }
 
         private class TestMethod
         {
             private readonly MethodDefinition _originalMethod;
-            private readonly IMock _mock;
+            private readonly IEnumerable<IMock> _mocks;
 
-            public TestMethod(MethodDefinition originalMethod, IMock mock)
+            public TestMethod(MethodDefinition originalMethod, IEnumerable<IMock> mocks)
             {
                 _originalMethod = originalMethod;
-                _mock = mock;
+                _mocks = mocks;
             }
 
             public void Rewrite()
@@ -53,10 +73,11 @@ namespace AutoFake
                 }
 
                 foreach (var instruction in currentMethod.Body.Instructions.ToList())
+                foreach (var mock in _mocks)
                 {
-                    if (_mock.IsSourceInstruction(_originalMethod, instruction))
+                    if (mock.IsSourceInstruction(_originalMethod, instruction))
                     {
-                        _mock.Inject(currentMethod.Body.GetEmitter(), instruction);
+                        mock.Inject(currentMethod.Body.GetEmitter(), instruction);
                     }
                     else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
                     {
