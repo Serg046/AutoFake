@@ -20,16 +20,28 @@ namespace AutoFake
             var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
             var executeFuncDef = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFuncRef));
 
-            ReplaceTypeRefMock[] replaceTypeRefMocks = null;
+            var replaceTypeRefMocks = new HashSet<ReplaceTypeRefMock>();
             if (executeFunc is MethodInfo methodInfo)
             {
                 if (methodInfo.ReturnType.Module == methodInfo.Module)
                 {
-                    var returnTypeRef = _typeInfo.Module.ImportReference(methodInfo.ReturnType);
-                    executeFuncDef.ReturnType = returnTypeRef;
-                    replaceTypeRefMocks = new[] { new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType) };
-                    mocks = mocks.Concat(replaceTypeRefMocks);
+                    var typeRef = _typeInfo.Module.ImportReference(methodInfo.ReturnType);
+                    executeFuncDef.ReturnType = typeRef;
+                    replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType));
                 }
+
+                var parameters = methodInfo.GetParameters();
+                for (var i = 0; i < parameters.Length; i++)
+                {
+                    if (parameters[i].ParameterType.Module == methodInfo.Module)
+                    {
+                        var typeRef = _typeInfo.Module.ImportReference(parameters[i].ParameterType);
+                        executeFuncDef.Parameters[i].ParameterType = typeRef;
+                        replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, parameters[i].ParameterType));
+                    }
+                }
+
+                mocks = mocks.Concat(replaceTypeRefMocks);
             }
 
             foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
@@ -37,7 +49,7 @@ namespace AutoFake
             testMethod.Rewrite();
             foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
 
-            if (replaceTypeRefMocks != null)
+            if (replaceTypeRefMocks.Any())
             {
                 foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
                 {
