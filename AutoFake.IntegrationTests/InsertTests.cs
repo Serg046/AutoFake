@@ -13,7 +13,8 @@ namespace AutoFake.IntegrationTests
             var sut = fake.Rewrite(t => t.SomeMethod());
             sut.Append(() => TestClass.Numbers.Add(-1));
 
-            Assert.Equal(new[] {3, 5, 7, -1}, sut.Execute());
+            sut.Execute();
+            Assert.Equal(new[] {3, 5, 7, -1}, fake.Execute(() => TestClass.Numbers));
         }
 
         [Fact]
@@ -24,7 +25,8 @@ namespace AutoFake.IntegrationTests
             var sut = fake.Rewrite(t => t.SomeMethod());
             sut.Prepend(() => TestClass.Numbers.Add(-1));
 
-            Assert.Equal(new[] {-1, 3, 5, 7}, sut.Execute());
+            sut.Execute();
+            Assert.Equal(new[] { -1, 3, 5, 7 }, fake.Execute(() => TestClass.Numbers));
         }
 
         [Fact]
@@ -36,7 +38,8 @@ namespace AutoFake.IntegrationTests
             sut.Append(() => TestClass.Numbers.Add(-1))
                 .After((List<int> list) => list.AddRange(new int[0]));
 
-            Assert.Equal(new[] { 3, 5, -1, 7 }, sut.Execute());
+            sut.Execute();
+            Assert.Equal(new[] { 3, 5, -1, 7 }, fake.Execute(() => TestClass.Numbers));
         }
 
         [Fact]
@@ -48,7 +51,8 @@ namespace AutoFake.IntegrationTests
             sut.Prepend(() => TestClass.Numbers.Add(-1));
             sut.Append(() => TestClass.Numbers.Add(-2));
 
-            Assert.Equal(new[] { -1, 3, 5, 7, -2 }, sut.Execute());
+            sut.Execute();
+            Assert.Equal(new[] { -1, 3, 5, 7, -2 }, fake.Execute(() => TestClass.Numbers));
         }
 
         [Fact]
@@ -60,7 +64,8 @@ namespace AutoFake.IntegrationTests
             sut.Prepend(() => TestClass.Numbers.Add(-1))
                 .Before((List<int> list) => list.AddRange(new int[0]));
 
-            Assert.Equal(new[] { 3, -1, 5, 7 }, sut.Execute());
+            sut.Execute();
+            Assert.Equal(new[] { 3, -1, 5, 7 }, fake.Execute(() => TestClass.Numbers));
         }
 
         [Fact]
@@ -80,12 +85,11 @@ namespace AutoFake.IntegrationTests
         {
             public static List<int> Numbers { get; } = new List<int>();
 
-            public IList<int> SomeMethod()
+            public void SomeMethod()
             {
                 Numbers.Add(3);
                 Numbers.AddRange(new [] {5});
                 Numbers.Add(7);
-                return Numbers;
             }
         }
     }
