@@ -16,6 +16,16 @@ namespace AutoFake.IntegrationTests.InstanceTests
         }
 
         [Fact]
+        public void StructCtorTest()
+        {
+            var fake = new Fake<TestClass>();
+            var sut = fake.Rewrite(f => f.GetStructCtorResult());
+            sut.Replace(() => DateTime.Now).Return(() => DateTime.Now);
+
+            Assert.Equal(7, sut.Execute().Prop);
+        }
+
+        [Fact]
         public void ClassCtorWithArgsTest()
         {
             var fake = new Fake<TestClass>();
@@ -64,6 +74,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             private HelperStruct _helperStructField;
 
             public HelperClass GetClassCtorResult() => new HelperClass{Prop = 7};
+            public HelperStruct GetStructCtorResult() => new HelperStruct { Prop = 7};
             public HelperClass GetClassCtorWithArgsResult() => new HelperClass(1, "2") {Prop = 7};
 
             public HelperClass GetClassField()
