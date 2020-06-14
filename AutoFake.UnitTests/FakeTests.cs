@@ -94,69 +94,6 @@ namespace AutoFake.UnitTests
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(t => t.FailingMethod()));
         }
-
-        [Fact]
-        public void Execute_NonTargetInvocationException_TheSameExceptionThrown()
-        {
-            var type = typeof(TestClass);
-            var fake = new Fake(type);
-
-            Assert.Throws<TargetParameterCountException>(() => fake.Execute(
-                new Action<TestClass>(t => t.FailingMethod()),
-                gen => new object[2]));
-        }
-
-        [Fact]
-        public async Task Execute_GenericFake_CallbackExecuted()
-        {
-            const string testString = "testString";
-            var fake = new Fake<TestClass>();
-            fake.Rewrite(f => f.StringInstanceMethod())
-                .Replace(f => f.StringInstanceMethod()).Return(() => testString);
-
-            Assert.Throws<NotImplementedException>(() => fake.Execute(() => TestClass.FailingStaticMethod()));
-            Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.FailingMethod()));
-
-            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(() => TestClass.FailingStaticMethodAsync()));
-            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.FailingMethodAsync()));
-            
-            Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
-            {
-                Assert.Equal(testString, prms.Single());
-                tst.FailingMethod();
-            }));
-            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
-            {
-                Assert.Equal(testString, prms.Single());
-                await tst.FailingMethodAsync();
-            }));
-        }
-
-        [Fact]
-        public async Task Execute_Fake_CallbackExecuted()
-        {
-            const string testString = "testString";
-            var fake = new Fake(typeof(TestClass));
-            fake.Rewrite((TestClass t) => t.StringInstanceMethod())
-                .Replace((TestClass t) => t.StringInstanceMethod()).Return(() => testString);
-
-            Assert.Throws<NotImplementedException>(() => fake.Execute(() => TestClass.FailingStaticMethod()));
-            Assert.Throws<NotImplementedException>(() => fake.Execute(tst => tst.Execute((TestClass t) => t.FailingMethod())));
-            
-            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(() => TestClass.FailingStaticMethodAsync()));
-            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(tst => tst.Execute((TestClass t) => t.FailingMethodAsync())));
-            
-            Assert.Throws<NotImplementedException>(() => fake.Execute((tst, prms) =>
-            {
-                Assert.Equal(testString, prms.Single());
-                tst.Execute((TestClass t) => t.FailingMethod());
-            }));
-            await Assert.ThrowsAsync<NotImplementedException>(() => fake.ExecuteAsync(async (tst, prms) =>
-            {
-                Assert.Equal(testString, prms.Single());
-                await tst.Execute((TestClass t) => t.FailingMethodAsync());
-            }));
-        }
         
         [Fact]
         public void Execute_CapturedVarWithAppropriateMock_DoesNotFail()
