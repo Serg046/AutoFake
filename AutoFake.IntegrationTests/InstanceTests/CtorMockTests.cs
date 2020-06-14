@@ -64,7 +64,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             sut.Replace(() => new OverloadCtorTestClass()).Return(new OverloadCtorTestClass(6));
             sut.Replace(() => new OverloadCtorTestClass(Arg.IsAny<int>())).Return(new OverloadCtorTestClass(7));
 
-            fake.Execute(tst => Assert.Equal(7, sut.Execute().Value));
+            Assert.Equal(7, sut.Execute().Value);
         }
 
         private class TestClass

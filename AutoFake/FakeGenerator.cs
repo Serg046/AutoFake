@@ -20,11 +20,14 @@ namespace AutoFake
             var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
             var executeFuncDef = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFuncRef));
 
+            ReplaceTypeRefMock[] replaceTypeRefMocks = null;
             if (executeFunc is MethodInfo methodInfo)
             {
                 if (methodInfo.ReturnType.Module == methodInfo.Module)
                 {
-                    var replaceTypeRefMocks = GetReplaceTypeRefMocks(methodInfo, executeFuncDef);
+                    var returnTypeRef = _typeInfo.Module.ImportReference(methodInfo.ReturnType);
+                    executeFuncDef.ReturnType = returnTypeRef;
+                    replaceTypeRefMocks = new[] { new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType) };
                     mocks = mocks.Concat(replaceTypeRefMocks);
                 }
             }
@@ -33,20 +36,14 @@ namespace AutoFake
             var testMethod = new TestMethod(executeFuncDef, mocks);
             testMethod.Rewrite();
             foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
-        }
 
-        private ReplaceTypeRefMock[] GetReplaceTypeRefMocks(MethodInfo methodInfo, MethodDefinition executeFuncDef)
-        {
-            var returnTypeRef = _typeInfo.Module.ImportReference(methodInfo.ReturnType);
-            executeFuncDef.ReturnType = returnTypeRef;
-            var replaceTypeRefMocks = new[] {new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType)};
-
-            foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
+            if (replaceTypeRefMocks != null)
             {
-                new TestMethod(ctor, replaceTypeRefMocks).Rewrite();
+                foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
+                {
+                    new TestMethod(ctor, replaceTypeRefMocks).Rewrite();
+                }
             }
-
-            return replaceTypeRefMocks;
         }
 
         private class TestMethod
