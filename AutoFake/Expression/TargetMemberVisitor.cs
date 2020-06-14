@@ -27,7 +27,9 @@ namespace AutoFake.Expression
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
         {
             var paramTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-            var method = _targetType.GetMethod(methodInfo.Name, paramTypes);
+            var method = _targetType.GetMethod(methodInfo.Name, paramTypes)
+                ?? _targetType.GetMethod(methodInfo.Name, BindingFlags.NonPublic |
+                (methodInfo.IsStatic ? BindingFlags.Static : BindingFlags.Instance), null, paramTypes, null);
 
             _requestedVisitor.Visit(methodExpression, method);
         }
