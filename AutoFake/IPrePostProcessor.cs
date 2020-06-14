@@ -8,7 +8,7 @@ namespace AutoFake
     {
         FieldDefinition GenerateCallsAccumulator(string name, MethodBody method);
         FieldDefinition GenerateField(string name, Type returnType);
-        void InjectVerification(IEmitter emitter, bool checkArguments, MethodDescriptor expectedCalls,
+        void InjectVerification(IEmitter emitter, bool checkArguments, ClosureDescriptor expectedCalls,
             FieldDefinition setupBody, FieldDefinition callsAccumulator);
         TypeReference GetTypeReference(Type type);
     }

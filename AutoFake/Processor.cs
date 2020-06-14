@@ -45,10 +45,9 @@ namespace AutoFake
 
         public void RemoveInstruction(Instruction instruction) => _emitter.Remove(instruction);
 
-        public void InjectClosure(ClosureDescriptor closure, bool beforeInstruction,
-            IDictionary<CapturedMember, FieldDefinition> generatedMembers)
+        public void InjectClosure(ClosureDescriptor closure, bool beforeInstruction)
         {
-            var instructions = GetInstructions(closure, generatedMembers);
+            var instructions = GetInstructions(closure);
             if (!beforeInstruction) instructions = instructions.Reverse();
             var emit = beforeInstruction ? _emitter.InsertBefore : (Action<Instruction, Instruction>)_emitter.InsertAfter;
             foreach (var instruction in instructions)
@@ -57,19 +56,18 @@ namespace AutoFake
             }
         }
 
-        private IEnumerable<Instruction> GetInstructions(ClosureDescriptor closure,
-            IDictionary<CapturedMember, FieldDefinition> generatedMembers)
+        private IEnumerable<Instruction> GetInstructions(ClosureDescriptor closure)
         {
             var type = _typeInfo.Module.GetType(closure.DeclaringType, true).Resolve();
             var ctor = type.Methods.Single(m => m.Name == ".ctor");
             var method = type.Methods.Single(m => m.Name == closure.Name);
             yield return Instruction.Create(OpCodes.Newobj, ctor);
 
-            foreach (var member in generatedMembers)
+            foreach (var member in closure.CapturedMembers)
             {
                 yield return Instruction.Create(OpCodes.Dup);
-                yield return Instruction.Create(OpCodes.Ldsfld, member.Value);
-                yield return Instruction.Create(OpCodes.Stfld, member.Key.Field);
+                yield return Instruction.Create(OpCodes.Ldsfld, member.GeneratedField);
+                yield return Instruction.Create(OpCodes.Stfld, member.ClosureField);
 
             }
 

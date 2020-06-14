@@ -14,7 +14,7 @@ namespace AutoFake.UnitTests.Setup
         public RemoveMockInstallerTests()
         {
             _mock = new ReplaceMock(new ProcessorFactory(null), Moq.Mock.Of<IInvocationExpression>());
-            _removeMockInstaller = new RemoveMockConfiguration(_mock);
+            _removeMockInstaller = new RemoveMockConfiguration(_mock, default);
         }
 
         [Fact]

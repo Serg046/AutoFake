@@ -13,16 +13,12 @@ namespace AutoFake.Setup.Mocks
     {
         private readonly Location _location;
         private readonly IProcessorFactory _processorFactory;
-        private readonly IPrePostProcessor _prePostProcessor;
-        private readonly Dictionary<CapturedMember, FieldDefinition> _capturedMembers;
 
         public InsertMock(IProcessorFactory processorFactory, ClosureDescriptor closure, Location location)
         {
             _processorFactory = processorFactory;
-            _prePostProcessor = _processorFactory.CreatePrePostProcessor();
             _location = location;
             Closure = closure;
-            _capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
         }
 
         public ClosureDescriptor Closure { get; }
@@ -36,27 +32,18 @@ namespace AutoFake.Setup.Mocks
             }
         }
 
-        public void BeforeInjection(MethodDefinition method)
-        {
-            foreach (var member in Closure.CapturedMembers)
-            {
-                _capturedMembers[member] = _prePostProcessor.GenerateField(
-                    $"Captured_{member.Field.Name}_{Guid.NewGuid()}", member.Instance.GetType());
-            }
-        }
-
         [ExcludeFromCodeCoverage]
-        public void ProcessInstruction(Instruction instruction)
+        public void BeforeInjection(MethodDefinition method)
         {
         }
 
         public IList<object> Initialize(Type type)
         {
-            foreach (var captured in _capturedMembers)
+            foreach (var captured in Closure.CapturedMembers)
             {
-                var field = type.GetField(captured.Value.Name, BindingFlags.NonPublic | BindingFlags.Static)
-                    ?? throw new InitializationException($"'{captured.Value.Name}' is not found in the generated object"); ;
-                field.SetValue(null, captured.Key.Instance);
+                var field = type.GetField(captured.GeneratedField.Name, BindingFlags.NonPublic | BindingFlags.Static)
+                    ?? throw new InitializationException($"'{captured.GeneratedField.Name}' is not found in the generated object"); ;
+                field.SetValue(null, captured.Instance);
             }
             return new List<object>();
         }
@@ -64,7 +51,7 @@ namespace AutoFake.Setup.Mocks
         public void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = _processorFactory.CreateProcessor(emitter, instruction);
-            processor.InjectClosure(Closure, beforeInstruction: true, _capturedMembers);
+            processor.InjectClosure(Closure, beforeInstruction: true);
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)

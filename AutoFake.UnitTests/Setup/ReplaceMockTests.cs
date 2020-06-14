@@ -19,7 +19,7 @@ namespace AutoFake.UnitTests.Setup
         [InlineAutoMoqData(true, true, true)]
         internal void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_SaveMethodCall(
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
-            MethodDescriptor descriptor,
+            ClosureDescriptor descriptor,
             [Frozen]Mock<IProcessor> proc,
             ReplaceMock mock)
         {
@@ -39,7 +39,7 @@ namespace AutoFake.UnitTests.Setup
         [InlineAutoMoqData(true, true, false)]
         internal void Inject_ArgsAndNotNeedCheckArguments_ArgumentsRemoved(
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
-            MethodDescriptor descriptor,
+            ClosureDescriptor descriptor,
             [Frozen]Mock<IProcessor> proc,
             ReplaceMock mock)
         {

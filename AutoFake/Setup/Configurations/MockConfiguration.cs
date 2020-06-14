@@ -76,7 +76,7 @@ namespace AutoFake.Setup.Configurations
         public AppendMockConfiguration<T> Append(Action<T> action)
         {
             var position = (ushort)Mocks.Count;
-            var descriptor = action.ToClosureDescriptor(ProcessorFactory.TypeInfo.Module);
+            var descriptor = action.ToClosureDescriptor(ProcessorFactory);
             Mocks.Add(new InsertMock(ProcessorFactory, descriptor, InsertMock.Location.Bottom));
             return new AppendMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, descriptor);
@@ -85,7 +85,7 @@ namespace AutoFake.Setup.Configurations
         public PrependMockConfiguration<T> Prepend(Action<T> action)
         {
             var position = (ushort)Mocks.Count;
-            var descriptor = action.ToClosureDescriptor(ProcessorFactory.TypeInfo.Module);
+            var descriptor = action.ToClosureDescriptor(ProcessorFactory);
             Mocks.Add(new InsertMock(ProcessorFactory, descriptor, InsertMock.Location.Top));
             return new PrependMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, descriptor);
@@ -110,7 +110,7 @@ namespace AutoFake.Setup.Configurations
             var invocationExpression = new Expression.InvocationExpression(expression);
             var mock = new ReplaceMock(ProcessorFactory, invocationExpression);
             Mocks.Add(mock);
-            return new ReplaceMockConfiguration<TReturn>(mock);
+            return new ReplaceMockConfiguration<TReturn>(mock, ProcessorFactory);
         }
 
         protected RemoveMockConfiguration RemoveImpl(LambdaExpression expression)
@@ -119,7 +119,7 @@ namespace AutoFake.Setup.Configurations
             var invocationExpression = new Expression.InvocationExpression(expression);
             var mock = new ReplaceMock(ProcessorFactory, invocationExpression);
             Mocks.Add(mock);
-            return new RemoveMockConfiguration(mock);
+            return new RemoveMockConfiguration(mock, ProcessorFactory);
         }
 
         public ReplaceMockConfiguration<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
@@ -140,7 +140,7 @@ namespace AutoFake.Setup.Configurations
             var invocationExpression = new Expression.InvocationExpression(expression);
             var mock = new VerifyMock(ProcessorFactory, invocationExpression);
             Mocks.Add(mock);
-            return new VerifyMockConfiguration(mock);
+            return new VerifyMockConfiguration(mock, ProcessorFactory);
         }
 
         public VerifyMockConfiguration Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
@@ -158,7 +158,7 @@ namespace AutoFake.Setup.Configurations
         public AppendMockConfiguration<T> Append<T>(Action<T> action)
         {
             var position = (ushort)Mocks.Count;
-            var descriptor = action.ToClosureDescriptor(ProcessorFactory.TypeInfo.Module);
+            var descriptor = action.ToClosureDescriptor(ProcessorFactory);
             Mocks.Add(new InsertMock(ProcessorFactory, descriptor, InsertMock.Location.Bottom));
             return new AppendMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, descriptor);
@@ -167,7 +167,7 @@ namespace AutoFake.Setup.Configurations
         public AppendMockConfiguration Append(Action action)
         {
             var position = (ushort)Mocks.Count;
-            var descriptor = action.ToClosureDescriptor(ProcessorFactory.TypeInfo.Module);
+            var descriptor = action.ToClosureDescriptor(ProcessorFactory);
             Mocks.Add(new InsertMock(ProcessorFactory, descriptor, InsertMock.Location.Bottom));
             return new AppendMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, descriptor);
@@ -176,7 +176,7 @@ namespace AutoFake.Setup.Configurations
         public PrependMockConfiguration<T> Prepend<T>(Action<T> action)
         {
             var position = (ushort)Mocks.Count;
-            var descriptor = action.ToClosureDescriptor(ProcessorFactory.TypeInfo.Module);
+            var descriptor = action.ToClosureDescriptor(ProcessorFactory);
             Mocks.Add(new InsertMock(ProcessorFactory, descriptor, InsertMock.Location.Top));
             return new PrependMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, descriptor);
@@ -185,7 +185,7 @@ namespace AutoFake.Setup.Configurations
         public PrependMockConfiguration Prepend(Action action)
         {
             var position = (ushort)Mocks.Count;
-            var descriptor = action.ToClosureDescriptor(ProcessorFactory.TypeInfo.Module);
+            var descriptor = action.ToClosureDescriptor(ProcessorFactory);
             Mocks.Add(new InsertMock(ProcessorFactory, descriptor, InsertMock.Location.Top));
             return new PrependMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, descriptor);

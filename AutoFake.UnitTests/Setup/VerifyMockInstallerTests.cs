@@ -13,7 +13,7 @@ namespace AutoFake.UnitTests.Setup
         public VerifyMockInstallerTests()
         {
             _mock = new VerifyMock(new ProcessorFactory(null), Moq.Mock.Of<IInvocationExpression>());
-            _verifyMockInstaller = new VerifyMockConfiguration(_mock);
+            _verifyMockInstaller = new VerifyMockConfiguration(_mock, default);
         }
 
         [Fact]

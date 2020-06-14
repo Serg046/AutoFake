@@ -41,7 +41,7 @@ namespace AutoFake.UnitTests
 
             try
             {
-                proc.InjectClosure(null, false, null);
+                proc.InjectClosure(null, false);
             }
             catch { }
 

@@ -6,10 +6,12 @@ namespace AutoFake.Setup.Configurations
     public class SourceMemberInsertMockConfiguration
     {
         private readonly SourceMemberInsertMock _mock;
+        private readonly IProcessorFactory _processorFactory;
 
-        internal SourceMemberInsertMockConfiguration(SourceMemberInsertMock mock)
+        internal SourceMemberInsertMockConfiguration(SourceMemberInsertMock mock, IProcessorFactory processorFactory)
         {
             _mock = mock;
+            _processorFactory = processorFactory;
         }
 
         public SourceMemberInsertMockConfiguration CheckArguments()
@@ -25,7 +27,7 @@ namespace AutoFake.Setup.Configurations
 
         public SourceMemberInsertMockConfiguration ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc.ToMethodDescriptor();
+            _mock.ExpectedCalls = expectedCallsCountFunc.ToClosureDescriptor(_processorFactory);
             return this;
         }
     }

@@ -39,7 +39,7 @@ namespace AutoFake.Setup.Configurations
             var mock = new SourceMemberInsertMock(_processorFactory, new Expression.InvocationExpression(expression),
                 _closure, InsertMock.Location.Top);
             _setMock(mock, _position);
-            return new SourceMemberInsertMockConfiguration(mock);
+            return new SourceMemberInsertMockConfiguration(mock, _processorFactory);
         }
     }
 }

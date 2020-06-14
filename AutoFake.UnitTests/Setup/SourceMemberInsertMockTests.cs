@@ -28,18 +28,18 @@ namespace AutoFake.UnitTests.Setup
 
             mock.Inject(null, cmd);
 
-            proc.Verify(m => m.InjectClosure(descriptor, injectBeforeCmd, It.IsAny<IDictionary<CapturedMember, FieldDefinition>>()));
+            proc.Verify(m => m.InjectClosure(descriptor, injectBeforeCmd));
         }
 
         [Theory, AutoMoqData]
-        internal void BeforeInjection_CapturedMembers_FirldsGenerated(
+        internal void BeforeInjection_CapturedMembers_FieldsGenerated(
             [Frozen]Mock<IPrePostProcessor> prePostProcessor,
             IProcessorFactory processorFactory, IInvocationExpression expression,
             FieldDefinition field,
             MethodDefinition method)
         {
             var members = new List<CapturedMember>();
-            members.Add(new CapturedMember(field, 5));
+            members.Add(new CapturedMember(field, null, 5));
             var closure = new ClosureDescriptor("", "", members);
             var mock = new SourceMemberInsertMock(processorFactory, expression, closure, InsertMock.Location.Top);
 
@@ -101,7 +101,7 @@ namespace AutoFake.UnitTests.Setup
             prePostProc
                 .Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
                 .Returns(field1);
-            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, 5) });
+            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, null, 5) });
             var mock = new SourceMemberInsertMock(factory, expression, closure, InsertMock.Location.Top);
             mock.BeforeInjection(null);
 
@@ -122,7 +122,7 @@ namespace AutoFake.UnitTests.Setup
             prePostProc
                 .Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
                 .Returns(field1);
-            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, 5) });
+            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, null, 5) });
             var mock = new SourceMemberInsertMock(factory, expression, closure, InsertMock.Location.Top);
             mock.BeforeInjection(null);
 

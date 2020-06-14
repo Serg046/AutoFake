@@ -107,16 +107,18 @@ namespace AutoFake
 
         internal object ExecuteWithoutParameters(Delegate action)
         {
-            var fields = action.GetCapturedMembers(TypeInfo.Module);
-            var fakeObject = TypeInfo.CreateFakeObject(Mocks);
-            return Execute(fakeObject.Type, action, new object[0], fields);
+            return -1;
+            //var fields = action.GetCapturedMembers(TypeInfo);
+            //var fakeObject = TypeInfo.CreateFakeObject(Mocks);
+            //return Execute(fakeObject.Type, action, new object[0], fields);
         }
 
         internal object Execute(Delegate action, Func<FakeObjectInfo, object[]> fake)
         {
-            var fields = action.GetCapturedMembers(TypeInfo.Module);
-            var fakeObject = TypeInfo.CreateFakeObject(Mocks);
-            return Execute(fakeObject.Type, action, fake(fakeObject), fields);
+            return -1;
+            //var fields = action.GetCapturedMembers(TypeInfo);
+            //var fakeObject = TypeInfo.CreateFakeObject(Mocks);
+            //return Execute(fakeObject.Type, action, fake(fakeObject), fields);
         }
 
         private object Execute(Type type, Delegate action, object[] parameters, IEnumerable<CapturedMember> fields)
@@ -127,7 +129,7 @@ namespace AutoFake
 
             foreach (var fieldDef in fields)
             {
-                var field = delegateType.GetField(fieldDef.Field.Name);
+                var field = delegateType.GetField(fieldDef.ClosureField.Name);
                 field.SetValue(instance, fieldDef.Instance);
             }
 

@@ -99,7 +99,7 @@ namespace AutoFake.UnitTests.Setup
         {
             module.Types.Add(type);
             mock.CheckArguments = checkArgs;
-            mock.ExpectedCalls = expectedCalls ? new MethodDescriptor(type.FullName, string.Empty) : null;
+            mock.ExpectedCalls = expectedCalls ? new ClosureDescriptor(type.FullName, string.Empty, default) : null;
 
             mock.AfterInjection(emitter);
 
@@ -118,7 +118,7 @@ namespace AutoFake.UnitTests.Setup
             type.Attributes = TypeAttributes.NestedPrivate;
             module.Types.Add(type);
 
-            mock.ExpectedCalls = new MethodDescriptor(type.FullName, string.Empty);
+            mock.ExpectedCalls = new ClosureDescriptor(type.FullName, string.Empty, null);
 
             mock.AfterInjection(emitter);
 
