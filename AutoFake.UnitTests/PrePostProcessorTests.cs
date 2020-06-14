@@ -64,7 +64,7 @@ namespace AutoFake.UnitTests
             type.Methods.Add(ctor);
             type.Methods.Add(method);
             module.Types.Add(type);
-            var callsCounterDescriptor = callsCounter ? new MethodDescriptor(type.FullName, method.Name) : null;
+            var callsCounterDescriptor = callsCounter ? new ClosureDescriptor(type.FullName, method.Name, null) : null;
 
             proc.InjectVerification(emitter, checkArguments, callsCounterDescriptor, setupBody, accumulator);
 
@@ -111,7 +111,7 @@ namespace AutoFake.UnitTests
             type.Methods.Add(ctor);
             type.Methods.Add(method);
             module.Types.Add(type);
-            var callsCounterDescriptor = new MethodDescriptor(type.FullName, method.Name);
+            var callsCounterDescriptor = new ClosureDescriptor(type.FullName, method.Name, null);
 
             proc.InjectVerification(emitter, true, callsCounterDescriptor, setupBody, accumulator);
 

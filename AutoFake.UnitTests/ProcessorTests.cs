@@ -187,9 +187,9 @@ namespace AutoFake.UnitTests
             emitter.Body.Instructions.Add(cmd);
             var descriptor = new ClosureDescriptor(type.FullName, method.Name, null);
             var capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
-            capturedMembers.Add(new CapturedMember(field1, 5), field2);
+            capturedMembers.Add(new CapturedMember(field1, null, 5), field2);
 
-            proc.InjectClosure(descriptor, beforeInstruction, capturedMembers);
+            proc.InjectClosure(descriptor, beforeInstruction);
 
             var sourceCmd = new[] {Cil.Cmd(cmd.OpCode) };
             var cmds = new[]

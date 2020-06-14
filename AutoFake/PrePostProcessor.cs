@@ -40,7 +40,7 @@ namespace AutoFake
             return field;
         }
 
-        public void InjectVerification(IEmitter emitter, bool checkArguments, MethodDescriptor expectedCalls,
+        public void InjectVerification(IEmitter emitter, bool checkArguments, ClosureDescriptor expectedCalls,
             FieldDefinition setupBody, FieldDefinition callsAccumulator)
         {
             var retInstruction = emitter.Body.Instructions.Last();
@@ -64,6 +64,14 @@ namespace AutoFake
                 var ctor = type.Methods.Single(m => m.Name == ".ctor");
                 var method = type.Methods.Single(m => m.Name == expectedCalls.Name);
                 emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Newobj, ctor));
+
+                foreach (var member in expectedCalls.CapturedMembers)
+                {
+                    emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Dup));
+                    emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, member.GeneratedField));
+                    emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stfld, member.ClosureField));
+                }
+
                 emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldftn, method));
                 var funcCtor = typeof(Func<byte, bool>).GetConstructors().Single();
                 emitter.InsertBefore(retInstruction,

@@ -6,10 +6,12 @@ namespace AutoFake.Setup.Configurations
     public class RemoveMockConfiguration
     {
         private readonly ReplaceMock _mock;
+        private readonly IProcessorFactory _processorFactory;
 
-        internal RemoveMockConfiguration(ReplaceMock mock)
+        internal RemoveMockConfiguration(ReplaceMock mock, IProcessorFactory processorFactory)
         {
             _mock = mock;
+            _processorFactory = processorFactory;
         }
 
         public RemoveMockConfiguration CheckArguments()
@@ -25,7 +27,7 @@ namespace AutoFake.Setup.Configurations
 
         public RemoveMockConfiguration ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc.ToMethodDescriptor();
+            _mock.ExpectedCalls = expectedCallsCountFunc.ToClosureDescriptor(_processorFactory);
             return this;
         }
     }

@@ -15,7 +15,7 @@ namespace AutoFake.UnitTests.Setup
         {
             _mock = new SourceMemberInsertMock(new ProcessorFactory(null),
                 Mock.Of<IInvocationExpression>(), null, InsertMock.Location.Top);
-            _installer = new SourceMemberInsertMockConfiguration(_mock);
+            _installer = new SourceMemberInsertMockConfiguration(_mock, default);
         }
 
         [Fact]

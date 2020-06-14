@@ -4,13 +4,16 @@ namespace AutoFake
 {
     internal class CapturedMember
     {
-        public CapturedMember(FieldDefinition field, object instance)
+        public CapturedMember(FieldDefinition closureField, FieldDefinition generatedField, object instance)
         {
-            Field = field;
+            ClosureField = closureField;
             Instance = instance;
+            GeneratedField = generatedField;
         }
 
-        public FieldDefinition Field { get; }
+        public FieldDefinition ClosureField { get; }
+
+        public FieldDefinition GeneratedField { get; }
 
         public object Instance { get; }
     }

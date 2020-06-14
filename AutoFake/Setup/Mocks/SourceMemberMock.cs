@@ -28,7 +28,7 @@ namespace AutoFake.Setup.Mocks
         protected FieldDefinition CallsAccumulator { get; private set; }
 
         public bool CheckArguments { get; set; }
-        public MethodDescriptor ExpectedCalls { get; set; }
+        public ClosureDescriptor ExpectedCalls { get; set; }
 
         public bool CheckSourceMemberCalls => CheckArguments || ExpectedCalls != null;
         public ISourceMember SourceMember { get; }
@@ -52,6 +52,15 @@ namespace AutoFake.Setup.Mocks
                 var field = GetField(type, SetupBodyField.Name);
                 if (field == null) throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
                 field.SetValue(null, _invocationExpression);
+            }
+            if (ExpectedCalls != null)
+            {
+                foreach (var captured in ExpectedCalls.CapturedMembers)
+                {
+                    var field = GetField(type, captured.GeneratedField.Name)
+                                ?? throw new InitializationException($"'{captured.GeneratedField.Name}' is not found in the generated object"); ;
+                    field.SetValue(null, captured.Instance);
+                }
             }
             return new List<object>();
         }

@@ -44,7 +44,7 @@ namespace AutoFake.UnitTests.Setup
 
             sut.Inject(null, cmd);
 
-            proc.Verify(m => m.InjectClosure(sut.Closure, true, It.IsAny<IDictionary<CapturedMember, FieldDefinition>>()));
+            proc.Verify(m => m.InjectClosure(sut.Closure, true));
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace AutoFake.UnitTests.Setup
             prePostProc
                 .Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
                 .Returns(field1);
-            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, 5) });
+            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, null, 5) });
             var mock = new InsertMock(factory, closure, InsertMock.Location.Top);
             mock.BeforeInjection(null);
 
@@ -87,7 +87,7 @@ namespace AutoFake.UnitTests.Setup
             prePostProc
                 .Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
                 .Returns(field1);
-            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, 5) });
+            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, null, 5) });
             var mock = new InsertMock(factory, closure, InsertMock.Location.Top);
             mock.BeforeInjection(null);
 
