@@ -8,11 +8,13 @@ namespace AutoFake.Setup.Mocks
 {
     internal class ReplaceTypeRefMock : IMock
     {
+        private readonly Type _type;
         private readonly OpCode _opCode;
         private readonly Dictionary<string, Instruction> _instructions;
 
         public ReplaceTypeRefMock(ITypeInfo typeInfo, Type type)
         {
+            _type = type;
             if (type.IsValueType)
             {
                 _opCode = OpCodes.Initobj;
@@ -53,5 +55,9 @@ namespace AutoFake.Setup.Mocks
         }
 
         public IList<object> Initialize(Type type) => new List<object>();
+
+        public override int GetHashCode() => _type.GetHashCode();
+
+        public override bool Equals(object obj) => obj is ReplaceTypeRefMock mock && mock._type == _type;
     }
 }
