@@ -97,8 +97,9 @@ namespace AutoFake.UnitTests
             var date = DateTime.Now;
             Action action = () => Console.WriteLine(date - date);
             var typeInfo = new TypeInfo(action.Method.DeclaringType, new FakeDependency[0]);
+            var processorFactory = new ProcessorFactory(typeInfo);
 
-            var descriptor = action.ToClosureDescriptor(default);
+            var descriptor = action.ToClosureDescriptor(processorFactory);
 
             Assert.Equal(action.Method.DeclaringType.FullName, descriptor.DeclaringType);
             Assert.Equal(action.Method.Name, descriptor.Name);

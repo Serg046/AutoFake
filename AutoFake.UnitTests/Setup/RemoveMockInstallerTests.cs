@@ -1,28 +1,23 @@
-﻿using AutoFake.Expression;
-using AutoFake.Setup.Configurations;
+﻿using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
 {
     public class RemoveMockInstallerTests
     {
-        private readonly ReplaceMock _mock;
-        private readonly RemoveMockConfiguration _removeMockInstaller;
-
-        public RemoveMockInstallerTests()
+        [Theory, AutoMoqData]
+        internal void CheckArguments_ReturnsTrue(ReplaceMock mock, IProcessorFactory processorFactory)
         {
-            _mock = new ReplaceMock(new ProcessorFactory(null), Moq.Mock.Of<IInvocationExpression>());
-            _removeMockInstaller = new RemoveMockConfiguration(_mock, default);
-        }
+            mock.CheckArguments = false;
+            var sut = new RemoveMockConfiguration(mock, processorFactory);
 
-        [Fact]
-        public void CheckArguments_ReturnsTrue()
-        {
-            Assert.False(_mock.CheckArguments);
-            _removeMockInstaller.CheckArguments();
-            Assert.True(_mock.CheckArguments);
+            Assert.False(mock.CheckArguments);
+            sut.CheckArguments();
+
+            Assert.True(mock.CheckArguments);
         }
 
         //[Fact]
@@ -34,15 +29,17 @@ namespace AutoFake.UnitTests.Setup
         //    Assert.False(_mock.ExpectedCallsFunc(2));
         //}
 
-        [Fact]
-        public void ExpectedCalls_Func_Success()
+        [Theory, AutoMoqData]
+        internal void ExpectedCalls_Func_Success(ReplaceMock mock)
         {
             Func<byte, bool> func = x => x > 2;
+            var typeInfo = new TypeInfo(func.Method.DeclaringType, new List<FakeDependency>());
+            var sut = new RemoveMockConfiguration(mock, new ProcessorFactory(typeInfo));
 
-            _removeMockInstaller.ExpectedCalls(func);
+            sut.ExpectedCalls(func);
 
-            Assert.Equal(func.Method.Name, _mock.ExpectedCalls.Name);
-            Assert.Equal(func.Method.DeclaringType.FullName, _mock.ExpectedCalls.DeclaringType);
+            Assert.Equal(func.Method.Name, mock.ExpectedCalls.Name);
+            Assert.Equal(func.Method.DeclaringType.FullName, mock.ExpectedCalls.DeclaringType);
         }
     }
 }

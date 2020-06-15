@@ -105,6 +105,7 @@ namespace AutoFake.UnitTests.Setup
         internal void Initialize_NoRetValueField_NoEffect(ReplaceMock mock)
         {
             mock.ReturnObject = null;
+            mock.ExpectedCalls = null;
 
             Assert.Null(TestClass.RetValueField);
             mock.Initialize(typeof(TestClass));
@@ -135,7 +136,7 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
-            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
             field.Name = nameof(TestClass.RetValueField);
             var type = typeof(TestClass);
             mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));
@@ -158,29 +159,17 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
-            if (noReturnObject) mock.ReturnObject = null;
+            if (noReturnObject)
+            {
+                mock.ReturnObject = null;
+                mock.ExpectedCalls = null;
+                mock.CheckArguments = false;
+            }
 
             mock.BeforeInjection(method);
 
             proc.Verify(m => m.GenerateField(It.IsAny<string>(),It.IsAny<Type>()),
                 shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
-        }
-
-        [Theory, AutoMoqData]
-        internal void BeforeInjection_TypeReference_Rewritten(
-            [Frozen]Mock<IProcessor> proc,
-            [Frozen]Mock<IPrePostProcessor> preProc,
-            MethodDefinition method,
-            ReplaceMock mock)
-        {
-            preProc.Setup(p => p.GetTypeReference(It.IsAny<Type>()))
-                .Returns(new TypeReference("TestNs", "SomeType", null, null));
-            mock.ReturnObject = new ReplaceMock.Return(5);
-
-            mock.BeforeInjection(method);
-            mock.Inject(null, null);
-
-            proc.Verify(p => p.ReplaceToRetValueField(It.Is<FieldDefinition>(f => f.FieldType.FullName == "TestNs.SomeType")));
         }
 
         [Theory, AutoMoqData]
@@ -193,6 +182,7 @@ namespace AutoFake.UnitTests.Setup
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
             mock.ReturnObject = new ReplaceMock.Return(5);
+            mock.ExpectedCalls = null;
 
             Assert.Null(TestClass.RetValueField);
             mock.BeforeInjection(method);

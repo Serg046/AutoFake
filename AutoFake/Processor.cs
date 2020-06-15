@@ -68,7 +68,6 @@ namespace AutoFake
                 yield return Instruction.Create(OpCodes.Dup);
                 yield return Instruction.Create(OpCodes.Ldsfld, member.GeneratedField);
                 yield return Instruction.Create(OpCodes.Stfld, member.ClosureField);
-
             }
 
             yield return Instruction.Create(OpCodes.Call, method);

@@ -185,9 +185,8 @@ namespace AutoFake.UnitTests
             module.Types.Add(type);
 
             emitter.Body.Instructions.Add(cmd);
-            var descriptor = new ClosureDescriptor(type.FullName, method.Name, null);
-            var capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
-            capturedMembers.Add(new CapturedMember(field1, null, 5), field2);
+            var descriptor = new ClosureDescriptor(type.FullName, method.Name,
+                new List<CapturedMember> {new CapturedMember(field1, field2, 5)});
 
             proc.InjectClosure(descriptor, beforeInstruction);
 

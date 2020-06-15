@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
@@ -21,6 +22,8 @@ namespace AutoFake.UnitTests.Setup
             Mock mock)
         {
             field.Name = nameof(TestClass.InvocationExpression);
+            mock.ExpectedCalls = null;
+            mock.CheckArguments = true;
             mock.BeforeInjection(method);
 
             Assert.Null(TestClass.InvocationExpression);
@@ -45,6 +48,9 @@ namespace AutoFake.UnitTests.Setup
         [Theory, AutoMoqData]
         internal void Initialize_NoSetupBodyField_NoEffect(Mock mock)
         {
+            mock.CheckArguments = false;
+            mock.ExpectedCalls = null;
+
             Assert.Null(TestClass.InvocationExpression);
             mock.Initialize(typeof(TestClass));
 
@@ -106,23 +112,6 @@ namespace AutoFake.UnitTests.Setup
             postProc.Verify(m => m.InjectVerification(emitter, checkArgs, mock.ExpectedCalls,
                     It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()),
                 injected ? Times.Once() : Times.Never());
-        }
-
-        [Theory, AutoMoqData]
-        internal void AfterInjection_NestedPrivateType_ChangedToAssemblyAccess(
-            [Frozen]ModuleDefinition module,
-            TypeDefinition type,
-            IEmitter emitter,
-            Mock mock)
-        {
-            type.Attributes = TypeAttributes.NestedPrivate;
-            module.Types.Add(type);
-
-            mock.ExpectedCalls = new ClosureDescriptor(type.FullName, string.Empty, null);
-
-            mock.AfterInjection(emitter);
-
-            Assert.Equal(TypeAttributes.NestedAssembly, type.Attributes);
         }
 
         internal class Mock: SourceMemberMock
