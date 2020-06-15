@@ -35,7 +35,7 @@ namespace AutoFake.IntegrationTests
             var sut = fake.Rewrite(f => f.AddSomeMinutesAsync(date));
             sut.Replace((Random r) => r.Next(1, 10)) // Arg.Is<int>(i => i == 10) is also possible
                 .CheckArguments() // r.Next(1, 11) fails with "Expected - 11, actual - 10"
-                .ExpectedCalls(c => c > 0) // c => c > 1 fails with "Actual value - 1"
+                .ExpectedCalls(1) // c => c > 1 fails with "Actual value - 1"
                 .Return(randomValue);
 
             Assert.Equal(date.AddMinutes(randomValue), await sut.Execute());

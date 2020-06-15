@@ -110,7 +110,7 @@ namespace AutoFake.Setup.Configurations
             var invocationExpression = new Expression.InvocationExpression(expression);
             var mock = new ReplaceMock(ProcessorFactory, invocationExpression);
             Mocks.Add(mock);
-            return new ReplaceMockConfiguration<TReturn>(mock, ProcessorFactory);
+            return new ReplaceMockConfiguration<TReturn>(mock);
         }
 
         protected RemoveMockConfiguration RemoveImpl(LambdaExpression expression)
@@ -119,7 +119,7 @@ namespace AutoFake.Setup.Configurations
             var invocationExpression = new Expression.InvocationExpression(expression);
             var mock = new ReplaceMock(ProcessorFactory, invocationExpression);
             Mocks.Add(mock);
-            return new RemoveMockConfiguration(mock, ProcessorFactory);
+            return new RemoveMockConfiguration(mock);
         }
 
         public ReplaceMockConfiguration<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
@@ -140,7 +140,7 @@ namespace AutoFake.Setup.Configurations
             var invocationExpression = new Expression.InvocationExpression(expression);
             var mock = new VerifyMock(ProcessorFactory, invocationExpression);
             Mocks.Add(mock);
-            return new VerifyMockConfiguration(mock, ProcessorFactory);
+            return new VerifyMockConfiguration(mock);
         }
 
         public VerifyMockConfiguration Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)

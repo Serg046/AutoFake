@@ -40,7 +40,7 @@ namespace AutoFake
             return field;
         }
 
-        public void InjectVerification(IEmitter emitter, bool checkArguments, ClosureDescriptor expectedCalls,
+        public void InjectVerification(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
             FieldDefinition setupBody, FieldDefinition callsAccumulator)
         {
             var retInstruction = emitter.Body.Instructions.Last();
@@ -60,22 +60,7 @@ namespace AutoFake
             emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
             if (expectedCalls != null)
             {
-                var type = _typeInfo.Module.GetType(expectedCalls.DeclaringType, true).Resolve();
-                var ctor = type.Methods.Single(m => m.Name == ".ctor");
-                var method = type.Methods.Single(m => m.Name == expectedCalls.Name);
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Newobj, ctor));
-
-                foreach (var member in expectedCalls.CapturedMembers)
-                {
-                    emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Dup));
-                    emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, member.GeneratedField));
-                    emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stfld, member.ClosureField));
-                }
-
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldftn, method));
-                var funcCtor = typeof(Func<byte, bool>).GetConstructors().Single();
-                emitter.InsertBefore(retInstruction,
-                    Instruction.Create(OpCodes.Newobj, _typeInfo.Module.ImportReference(funcCtor)));
+                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCalls));
             }
             else
             {

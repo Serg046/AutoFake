@@ -25,9 +25,10 @@ namespace AutoFake.Setup.Mocks
         protected IPrePostProcessor PrePostProcessor { get; }
         protected FieldDefinition SetupBodyField { get; private set; }
         protected FieldDefinition CallsAccumulator { get; private set; }
+        protected FieldDefinition CallsChecker { get; private set; }
 
         public bool CheckArguments { get; set; }
-        public ClosureDescriptor ExpectedCalls { get; set; }
+        public Func<byte, bool> ExpectedCalls { get; set; }
 
         public bool CheckSourceMemberCalls => CheckArguments || ExpectedCalls != null;
         public ISourceMember SourceMember { get; }
@@ -39,6 +40,7 @@ namespace AutoFake.Setup.Mocks
                 SetupBodyField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "Setup"), typeof(InvocationExpression));
                 CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(
                     GetFieldName(method.Name, "CallsAccumulator"), method.Body);
+                CallsChecker = PrePostProcessor.GenerateField(GetFieldName(method.Name, "CallsChecker"), typeof(Func<byte, bool>));
             }
         }
 
@@ -54,12 +56,9 @@ namespace AutoFake.Setup.Mocks
             }
             if (ExpectedCalls != null)
             {
-                foreach (var captured in ExpectedCalls.CapturedMembers)
-                {
-                    var field = GetField(type, captured.GeneratedField.Name)
-                                ?? throw new InitializationException($"'{captured.GeneratedField.Name}' is not found in the generated object"); ;
-                    field.SetValue(null, captured.Instance);
-                }
+                var field = GetField(type, CallsChecker.Name)
+                            ?? throw new InitializationException($"'{CallsChecker.Name}' is not found in the generated object"); ;
+                field.SetValue(null, ExpectedCalls);
             }
             return new List<object>();
         }
@@ -88,7 +87,7 @@ namespace AutoFake.Setup.Mocks
         {
             if (CheckSourceMemberCalls)
             {
-                PrePostProcessor.InjectVerification(emitter, CheckArguments, ExpectedCalls,
+                PrePostProcessor.InjectVerification(emitter, CheckArguments, CallsChecker,
                     SetupBodyField, CallsAccumulator);
             }
         }

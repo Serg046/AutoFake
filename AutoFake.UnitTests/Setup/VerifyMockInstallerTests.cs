@@ -9,10 +9,10 @@ namespace AutoFake.UnitTests.Setup
     public class VerifyMockInstallerTests
     {
         [Theory, AutoMoqData]
-        internal void CheckArguments_ReturnsTrue(VerifyMock mock, IProcessorFactory processorFactory)
+        internal void CheckArguments_ReturnsTrue(VerifyMock mock)
         {
             mock.CheckArguments = false;
-            var sut = new VerifyMockConfiguration(mock, processorFactory);
+            var sut = new VerifyMockConfiguration(mock);
 
             Assert.False(mock.CheckArguments);
             sut.CheckArguments();
@@ -20,26 +20,26 @@ namespace AutoFake.UnitTests.Setup
             Assert.True(mock.CheckArguments);
         }
 
-        //[Fact]
-        //public void ExpectedCalls_Byte_Success()
-        //{
-        //    _verifyMockInstaller.ExpectedCalls(3);
+        [Theory, AutoMoqData]
+        internal void ExpectedCalls_Byte_Success(VerifyMock mock)
+        {
+            var sut = new VerifyMockConfiguration(mock);
 
-        //    Assert.True(_mock.ExpectedCallsFunc(3));
-        //    Assert.False(_mock.ExpectedCallsFunc(2));
-        //}
-        
+            sut.ExpectedCalls(3);
+
+            Assert.True(mock.ExpectedCalls(3));
+            Assert.False(mock.ExpectedCalls(2));
+        }
+
         [Theory, AutoMoqData]
         internal void ExpectedCalls_Func_Success(VerifyMock mock)
         {
             Func<byte, bool> func = x => x > 2;
-            var typeInfo = new TypeInfo(func.Method.DeclaringType, new List<FakeDependency>());
-            var sut = new VerifyMockConfiguration(mock, new ProcessorFactory(typeInfo));
+            var sut = new VerifyMockConfiguration(mock);
 
             sut.ExpectedCalls(func);
 
-            Assert.Equal(func.Method.Name, mock.ExpectedCalls.Name);
-            Assert.Equal(func.Method.DeclaringType.FullName, mock.ExpectedCalls.DeclaringType);
+            Assert.Equal(func, mock.ExpectedCalls);
         }
     }
 }

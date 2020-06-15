@@ -118,7 +118,7 @@ namespace AutoFake
             return _fakeObjectInfo;
         }
 
-        private IList<IMock> GetMocksContainer(InvocationExpression invocationExpression)
+        private IList<IMock> GetMocksContainer(IInvocationExpression invocationExpression)
         {
             var visitor = new GetTestMethodVisitor();
             invocationExpression.AcceptMemberVisitor(visitor);
