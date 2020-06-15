@@ -4,10 +4,10 @@ namespace AutoFake
 {
     public class FakeDependency
     {
-        internal FakeDependency(Type type, object instane)
+        internal FakeDependency(Type type, object instance)
         {
             Type = type;
-            Instance = instane;
+            Instance = instance;
         }
 
         public Type Type { get; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoFake.Exceptions;
 using AutoFake.IntegrationTests.Sut;
 using Xunit;
 
@@ -22,17 +23,31 @@ namespace AutoFake.IntegrationTests
             fake.Execute(f => f.InternalMethod());
         }
 
-        [Fact]
-        public void When_ExpectedCallsFunc_ShouldPass()
+        [Theory]
+        [InlineData(true, 2, true)]
+        [InlineData(false, 0, false)]
+        public void When_ExpectedCallsFunc_ShouldPass(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<SystemUnderTest>();
+            Func<byte, bool> checker;
+            if (equalOp) checker = x => x == arg;
+            else checker = x => x > arg;
+
 
             var sut = fake.Rewrite(f => f.GetCurrentDate());
             sut.Replace(() => DateTime.Now)
-                .ExpectedCalls(b => b > 0)
+                .CheckArguments()
+                .ExpectedCalls(checker)
                 .Return(DateTime.MaxValue);
 
-            Assert.Equal(DateTime.MaxValue, sut.Execute());
+            if (throws)
+            {
+                Assert.Throws<ExpectedCallsException>(() => sut.Execute());
+            }
+            else
+            {
+                Assert.Equal(DateTime.MaxValue, sut.Execute());
+            }
         }
     }
 }

@@ -9,16 +9,17 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-    internal class InvocationExpression : IInvocationExpression
+    public class InvocationExpression : IInvocationExpression
     {
         private readonly LinqExpression _expression;
 
-        public InvocationExpression(LinqExpression expression)
+        internal InvocationExpression(LinqExpression expression)
         {
             _expression = expression;
         }
 
-        public void AcceptMemberVisitor(IMemberVisitor visitor) => AnalyzeExpression(_expression, visitor);
+        void IInvocationExpression.AcceptMemberVisitor(IMemberVisitor visitor) => AcceptMemberVisitor(visitor);
+        internal void AcceptMemberVisitor(IMemberVisitor visitor) => AnalyzeExpression(_expression, visitor);
 
         private void AnalyzeExpression(LinqExpression expression, IMemberVisitor visitor)
         {
@@ -58,17 +59,18 @@ namespace AutoFake.Expression
 
         //-----------------------------------------------------------------------------------------------------------
 
-        public ISourceMember GetSourceMember()
+        ISourceMember IInvocationExpression.GetSourceMember() => GetSourceMember();
+        internal ISourceMember GetSourceMember()
         {
             var memberVisitor = new GetSourceMemberVisitor();
-            AcceptMemberVisitor(memberVisitor);
+            ((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
             return memberVisitor.SourceMember;
         }
 
         private IList<FakeArgument> GetArguments()
         {
             var visitor = new GetArgumentsMemberVisitor();
-            AcceptMemberVisitor(visitor);
+            ((IInvocationExpression)this).AcceptMemberVisitor(visitor);
             return visitor.Arguments;
         }
 

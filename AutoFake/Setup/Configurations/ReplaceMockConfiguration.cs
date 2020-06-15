@@ -6,12 +6,10 @@ namespace AutoFake.Setup.Configurations
     public class ReplaceMockConfiguration<TReturn>
     {
         private readonly ReplaceMock _mock;
-        private readonly IProcessorFactory _processorFactory;
 
-        internal ReplaceMockConfiguration(ReplaceMock mock, IProcessorFactory processorFactory)
+        internal ReplaceMockConfiguration(ReplaceMock mock)
         {
             _mock = mock;
-            _processorFactory = processorFactory;
         }
 
         public ReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
@@ -32,14 +30,14 @@ namespace AutoFake.Setup.Configurations
             return this;
         }
 
-        //public ReplaceMockInstaller<TReturn> ExpectedCalls(byte expectedCallsCount)
-        //{
-        //    return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
-        //}
+        public ReplaceMockConfiguration<TReturn> ExpectedCalls(byte expectedCallsCount)
+        {
+            return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
+        }
 
         public ReplaceMockConfiguration<TReturn> ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc.ToClosureDescriptor(_processorFactory);
+            _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
     }

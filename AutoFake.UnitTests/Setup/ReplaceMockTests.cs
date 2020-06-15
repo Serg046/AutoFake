@@ -19,12 +19,11 @@ namespace AutoFake.UnitTests.Setup
         [InlineAutoMoqData(true, true, true)]
         internal void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_SaveMethodCall(
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
-            ClosureDescriptor descriptor,
             [Frozen]Mock<IProcessor> proc,
             ReplaceMock mock)
         {
             mock.CheckArguments = needCheckArguments;
-            mock.ExpectedCalls = expectedCallsCountFunc ? descriptor : null;
+            if (!expectedCallsCountFunc) mock.ExpectedCalls = null;
 
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
@@ -39,12 +38,11 @@ namespace AutoFake.UnitTests.Setup
         [InlineAutoMoqData(true, true, false)]
         internal void Inject_ArgsAndNotNeedCheckArguments_ArgumentsRemoved(
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
-            ClosureDescriptor descriptor,
             [Frozen]Mock<IProcessor> proc,
             ReplaceMock mock)
         {
             mock.CheckArguments = needCheckArguments;
-            mock.ExpectedCalls = expectedCallsCountFunc ? descriptor : null;
+            if (!expectedCallsCountFunc) mock.ExpectedCalls = null;
 
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
@@ -120,7 +118,7 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
-            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
             mock.ReturnObject = new ReplaceMock.Return(new MethodDescriptor(type.FullName, nameof(TestClass.GetValue)));

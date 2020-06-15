@@ -22,8 +22,8 @@ namespace AutoFake.UnitTests.Setup
             Mock mock)
         {
             field.Name = nameof(TestClass.InvocationExpression);
-            mock.ExpectedCalls = null;
             mock.CheckArguments = true;
+            mock.ExpectedCalls = null;
             mock.BeforeInjection(method);
 
             Assert.Null(TestClass.InvocationExpression);
@@ -105,11 +105,11 @@ namespace AutoFake.UnitTests.Setup
         {
             module.Types.Add(type);
             mock.CheckArguments = checkArgs;
-            mock.ExpectedCalls = expectedCalls ? new ClosureDescriptor(type.FullName, string.Empty, default) : null;
+            if (!expectedCalls) mock.ExpectedCalls = null;
 
             mock.AfterInjection(emitter);
 
-            postProc.Verify(m => m.InjectVerification(emitter, checkArgs, mock.ExpectedCalls,
+            postProc.Verify(m => m.InjectVerification(emitter, checkArgs, It.IsAny<FieldDefinition>(),
                     It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()),
                 injected ? Times.Once() : Times.Never());
         }
