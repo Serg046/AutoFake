@@ -6,7 +6,6 @@ using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.Setup.Mocks
 {
@@ -91,15 +90,6 @@ namespace AutoFake.Setup.Mocks
             {
                 PrePostProcessor.InjectVerification(emitter, CheckArguments, ExpectedCalls,
                     SetupBodyField, CallsAccumulator);
-            }
-
-            if (ExpectedCalls != null)
-            {
-                var type = ProcessorFactory.TypeInfo.Module.GetType(ExpectedCalls.DeclaringType, true).Resolve();
-                if (type.Attributes.HasFlag(TypeAttributes.NestedPrivate))
-                {
-                    type.Attributes = TypeAttributes.NestedAssembly;
-                }
             }
         }
     }

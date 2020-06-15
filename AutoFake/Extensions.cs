@@ -66,7 +66,7 @@ namespace AutoFake
         public static ICollection<CapturedMember> GetCapturedMembers(this Delegate action, IProcessorFactory processorFactory)
         {
             var proc = processorFactory.CreatePrePostProcessor();
-            var delegateType = processorFactory.TypeInfo.Module.GetType(action.Method.DeclaringType.FullName, true).Resolve();
+            var delegateType = processorFactory.TypeInfo.Module.GetType(action.Method.DeclaringType.FullName, true) as TypeDefinition;
             var delegateRef = delegateType.Methods.Single(m => m.Name == action.Method.Name);
             if (delegateRef.IsAsync(out var asyncMethod)) delegateRef = asyncMethod;
             return delegateRef.Body.Instructions
@@ -79,8 +79,6 @@ namespace AutoFake
                 {
                     var capturedField = action.Target.GetType().GetField(field.Name);
                     var capturedValue = capturedField.GetValue(action.Target);
-                    //var capturedFieldTypeRef = typeInfo.Module.ImportReference(capturedField.FieldType);
-                    //Instruction.Create(OpCodes.Ldfld, field).ReplaceType(capturedFieldTypeRef);
                     var generatedField = proc.GenerateField(
                         $"Captured_{field.Name}_{Guid.NewGuid()}", capturedValue.GetType());
                     return new CapturedMember(field, generatedField, capturedValue);

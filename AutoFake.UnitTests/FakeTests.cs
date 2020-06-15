@@ -94,37 +94,6 @@ namespace AutoFake.UnitTests
 
             Assert.Throws<NotImplementedException>(() => fake.Execute(t => t.FailingMethod()));
         }
-        
-        [Fact]
-        public void Execute_CapturedVarWithAppropriateMock_DoesNotFail()
-        {
-            var d1 = new DateTime(2020, 5, 27);
-            var fake = new Fake<TestClass>();
-
-            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
-
-            fake.Execute(() => Console.WriteLine(d1));
-        }
-
-        [Fact]
-        public void Execute_MultipleCallsWithTheSameField_DoesNotFail()
-        {
-            var d1 = new DateTime(2020, 5, 27);
-            var fake = new Fake<TestClass>();
-
-            fake.Rewrite(f => f.SomeMethod()).Replace(() => DateTime.Now).Return(d1);
-
-            fake.Execute(() => Console.WriteLine(d1 - d1));
-        }
-
-        [Fact]
-        public void Execute_CapturedVarsWithoutMocks_DoesNotFail()
-        {
-            var d1 = new DateTime(2020, 5, 27);
-            var fake = new Fake<TestClass>();
-
-            fake.Execute(() => Console.WriteLine(d1 - d1));
-        }
 
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());

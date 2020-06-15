@@ -5,7 +5,6 @@ using System.Reflection;
 using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.Setup.Mocks
 {
@@ -23,13 +22,9 @@ namespace AutoFake.Setup.Mocks
 
         public ClosureDescriptor Closure { get; }
 
+        [ExcludeFromCodeCoverage]
         public void AfterInjection(IEmitter emitter)
         {
-            var type = _processorFactory.TypeInfo.Module.GetType(Closure.DeclaringType, true).Resolve();
-            if (type.Attributes.HasFlag(TypeAttributes.NestedPrivate))
-            {
-                type.Attributes = TypeAttributes.NestedAssembly;
-            }
         }
 
         [ExcludeFromCodeCoverage]
