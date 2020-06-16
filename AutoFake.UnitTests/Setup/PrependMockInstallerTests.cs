@@ -13,7 +13,7 @@ namespace AutoFake.UnitTests.Setup
         [Theory, MemberAutoMoqData(nameof(GetActions))]
         internal void Before_Installer_MockReplaced(
             dynamic callback,
-            ClosureDescriptor descriptor,
+            Action descriptor,
             IProcessorFactory factory)
         {
             var mocks = new List<IMock>();
@@ -29,7 +29,7 @@ namespace AutoFake.UnitTests.Setup
         [Theory, MemberAutoMoqData(nameof(GetActions))]
         internal void Before_GenericInstaller_MockReplaced(
             dynamic callback,
-            ClosureDescriptor descriptor,
+            Action descriptor,
             IProcessorFactory factory)
         {
             var mocks = new List<IMock>();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AutoFake.Exceptions;
 using AutoFake.IntegrationTests.Sut;
 using Xunit;
@@ -26,7 +27,7 @@ namespace AutoFake.IntegrationTests
         [Theory]
         [InlineData(true, 2, true)]
         [InlineData(false, 0, false)]
-        public void When_ExpectedCallsFunc_ShouldPass(bool equalOp, int arg, bool throws)
+        public void When_ExpectedCallsFunc_Should_Pass(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<SystemUnderTest>();
             Func<byte, bool> checker;
@@ -48,6 +49,23 @@ namespace AutoFake.IntegrationTests
             {
                 Assert.Equal(DateTime.MaxValue, sut.Execute());
             }
+        }
+
+        [Fact]
+        public void When_ActionToInsert_Should_Pass()
+        {
+            var fake = new Fake<SystemUnderTest>();
+            var events = new List<int>();
+
+            var sut = fake.Rewrite(f => f.GetCurrentDate());
+            sut.Prepend(() => events.Add(0));
+            sut.Prepend(() => events.Add(1)).Before(() => DateTime.Now);
+            sut.Append(() => events.Add(2)).After(() => DateTime.Now);
+            sut.Append(() => events.Add(3));
+
+            sut.Execute();
+
+            Assert.Equal(new[] {0, 1, 2, 3}, events);
         }
     }
 }

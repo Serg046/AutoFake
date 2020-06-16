@@ -11,16 +11,19 @@ namespace AutoFake.Setup.Mocks
     internal class InsertMock : IMock
     {
         private readonly Location _location;
+        private readonly IPrePostProcessor _prePostProcessor;
         private readonly IProcessorFactory _processorFactory;
+        private FieldDefinition _closureField;
 
-        public InsertMock(IProcessorFactory processorFactory, ClosureDescriptor closure, Location location)
+        public InsertMock(IProcessorFactory processorFactory, Action closure, Location location)
         {
+            _prePostProcessor = processorFactory.CreatePrePostProcessor();
             _processorFactory = processorFactory;
             _location = location;
             Closure = closure;
         }
 
-        public ClosureDescriptor Closure { get; }
+        public Action Closure { get; }
 
         [ExcludeFromCodeCoverage]
         public void AfterInjection(IEmitter emitter)
@@ -30,23 +33,22 @@ namespace AutoFake.Setup.Mocks
         [ExcludeFromCodeCoverage]
         public void BeforeInjection(MethodDefinition method)
         {
+            _closureField = _prePostProcessor.GenerateField(
+                $"{method.Name}InsertCallback{Guid.NewGuid()}", Closure.GetType());
         }
 
         public IList<object> Initialize(Type type)
         {
-            foreach (var captured in Closure.CapturedMembers)
-            {
-                var field = type.GetField(captured.GeneratedField.Name, BindingFlags.NonPublic | BindingFlags.Static)
-                    ?? throw new InitializationException($"'{captured.GeneratedField.Name}' is not found in the generated object"); ;
-                field.SetValue(null, captured.Instance);
-            }
+            var field = type.GetField(_closureField.Name, BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
+            field.SetValue(null, Closure);
             return new List<object>();
         }
 
         public void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = _processorFactory.CreateProcessor(emitter, instruction);
-            processor.InjectClosure(Closure, beforeInstruction: true);
+            processor.InjectClosure(_closureField, Location.Top);
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)

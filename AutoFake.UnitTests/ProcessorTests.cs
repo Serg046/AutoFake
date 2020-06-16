@@ -165,42 +165,5 @@ namespace AutoFake.UnitTests
             Assert.Equal(OpCodes.Ldsfld, replacedCmd.OpCode);
             Assert.Equal(field, replacedCmd.Operand);
         }
-
-        [Theory]
-        [InlineAutoMoqData(true)]
-        [InlineAutoMoqData(false)]
-        internal void InjectClosure_ValidInput_Injected(
-            bool beforeInstruction,
-            [Frozen]ModuleDefinition module,
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen]Instruction cmd,
-            TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
-            FieldDefinition field1, FieldDefinition field2,
-            Processor proc)
-        {
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-            ctor.Name = ".ctor";
-            type.Methods.Add(ctor);
-            type.Methods.Add(method);
-            module.Types.Add(type);
-
-            emitter.Body.Instructions.Add(cmd);
-            var descriptor = new ClosureDescriptor(type.FullName, method.Name,
-                new List<CapturedMember> {new CapturedMember(field1, field2, 5)});
-
-            proc.InjectClosure(descriptor, beforeInstruction);
-
-            var sourceCmd = new[] {Cil.Cmd(cmd.OpCode) };
-            var cmds = new[]
-            {
-                Cil.Cmd(OpCodes.Newobj, ctor),
-                Cil.Cmd(OpCodes.Dup),
-                Cil.Cmd(OpCodes.Ldsfld, field2),
-                Cil.Cmd(OpCodes.Stfld, field1),
-                Cil.Cmd(OpCodes.Call, method)
-            };
-            var orderedCmds = beforeInstruction ? cmds.Concat(sourceCmd) : sourceCmd.Concat(cmds);
-            Assert.True(emitter.Body.Instructions.Ordered(orderedCmds.ToArray()));
-        }
     }
 }

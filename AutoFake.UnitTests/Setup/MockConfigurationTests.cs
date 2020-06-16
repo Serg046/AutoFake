@@ -139,52 +139,52 @@ namespace AutoFake.UnitTests.Setup
             Assert.NotEmpty(cfg.Mocks);
         }
 
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Append_GenericFake_MockAdded(dynamic callback)
+        [Fact]
+        public void Append_GenericFake_MockAdded()
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            Action callback = () => { };
 
             cfg.Append(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(callback.Method.Name, mock.Closure.Name);
+            Assert.Equal(callback, mock.Closure);
         }
 
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Append_Fake_MockAdded(dynamic callback)
+        [Fact]
+        public void Append_Fake_MockAdded()
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            Action callback = () => { };
 
             cfg.Append(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(callback.Method.Name, mock.Closure.Name);
+            Assert.Equal(callback, mock.Closure);
         }
 
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Prepend_GenericFake_MockAdded(dynamic callback)
+        [Fact]
+        public void Prepend_GenericFake_MockAdded()
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            Action callback = () => { };
 
             cfg.Prepend(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(callback.Method.Name, mock.Closure.Name);
+            Assert.Equal(callback, mock.Closure);
         }
 
-        [Theory]
-        [MemberData(nameof(GetActions))]
-        public void Prepend_Fake_MockAdded(dynamic callback)
+        [Fact]
+        public void Prepend_Fake_MockAdded()
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            Action callback = () => { };
 
             cfg.Prepend(callback);
 
             var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
-            Assert.Equal(callback.Method.Name, mock.Closure.Name);
+            Assert.Equal(callback, mock.Closure);
         }
 
         public static IEnumerable<object[]> GetCallbackExpressions()

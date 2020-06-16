@@ -4,7 +4,6 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using System;
-using System.Collections.Generic;
 using AutoFake.Exceptions;
 using Xunit;
 
@@ -38,58 +37,40 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory, AutoMoqData]
-        internal void Inject_Instruction_Injected([Frozen]Mock<IProcessor> proc, InsertMock sut)
-        {
-            var cmd = Instruction.Create(OpCodes.Nop);
-
-            sut.Inject(null, cmd);
-
-            proc.Verify(m => m.InjectClosure(sut.Closure, true));
-        }
-
-        [Fact]
-        public void Initialize_GeneratedType_Nothing()
-        {
-            var mock = new InsertMock(Mock.Of<IProcessorFactory>(), 
-                new ClosureDescriptor("", "", new List<CapturedMember>()), InsertMock.Location.Top);
-
-            var parameters = mock.Initialize(null);
-
-            Assert.Empty(parameters);
-        }
-
-        [Theory, AutoMoqData]
         internal void Initialize_CapturedField_Success(
-            FieldDefinition field1, FieldDefinition field2,
-            IProcessorFactory factory)
+            [Frozen]Mock<IPrePostProcessor> proc,
+            [Frozen]Action action,
+            MethodDefinition method, FieldDefinition field1,
+            InsertMock mock)
         {
-            field1.Name = nameof(TestClass.Field);
-            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, field1, 5) });
-            var mock = new InsertMock(factory, closure, InsertMock.Location.Top);
-            mock.BeforeInjection(null);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
+                .Returns(field1);
+            field1.Name = nameof(TestClass.Action);
+            mock.BeforeInjection(method);
 
             mock.Initialize(typeof(TestClass));
 
-            Assert.Equal(5, TestClass.Field);
-            TestClass.Field = 0;
+            Assert.Equal(action, TestClass.Action);
+            TestClass.Action = null;
         }
 
         [Theory, AutoMoqData]
         internal void Initialize_IncorrectField_Fails(
-            FieldDefinition field1, FieldDefinition field2,
-            IProcessorFactory factory)
+            [Frozen]Mock<IPrePostProcessor> proc,
+            MethodDefinition method, FieldDefinition field1,
+            InsertMock mock)
         {
-            field1.Name = nameof(TestClass.Field) + "salt";
-            var closure = new ClosureDescriptor("", "", new[] { new CapturedMember(field2, field1, 5) });
-            var mock = new InsertMock(factory, closure, InsertMock.Location.Top);
-            mock.BeforeInjection(null);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
+                .Returns(field1);
+            field1.Name = nameof(TestClass.Action) + "salt";
+            mock.BeforeInjection(method);
 
             Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
         }
 
         private class TestClass
         {
-            internal static int Field;
+            internal static Action Action;
         }
     }
 }

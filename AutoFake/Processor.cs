@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Setup.Mocks;
 
 namespace AutoFake
 {
@@ -45,32 +46,20 @@ namespace AutoFake
 
         public void RemoveInstruction(Instruction instruction) => _emitter.Remove(instruction);
 
-        public void InjectClosure(ClosureDescriptor closure, bool beforeInstruction)
+        public void InjectClosure(FieldDefinition closure, InsertMock.Location location)
         {
-            var instructions = GetInstructions(closure);
-            if (!beforeInstruction) instructions = instructions.Reverse();
-            var emit = beforeInstruction ? _emitter.InsertBefore : (Action<Instruction, Instruction>)_emitter.InsertAfter;
-            foreach (var instruction in instructions)
+            if (location == InsertMock.Location.Top)
             {
-                emit(_instruction, instruction);
+                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, closure));
+                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call,
+                    _typeInfo.Module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
             }
-        }
-
-        private IEnumerable<Instruction> GetInstructions(ClosureDescriptor closure)
-        {
-            var type = _typeInfo.Module.GetType(closure.DeclaringType, true).Resolve();
-            var ctor = type.Methods.Single(m => m.Name == ".ctor");
-            var method = type.Methods.Single(m => m.Name == closure.Name);
-            yield return Instruction.Create(OpCodes.Newobj, ctor);
-
-            foreach (var member in closure.CapturedMembers)
+            else
             {
-                yield return Instruction.Create(OpCodes.Dup);
-                yield return Instruction.Create(OpCodes.Ldsfld, member.GeneratedField);
-                yield return Instruction.Create(OpCodes.Stfld, member.ClosureField);
+                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Call,
+                    _typeInfo.Module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
+                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Ldsfld, closure));
             }
-
-            yield return Instruction.Create(OpCodes.Call, method);
         }
 
         public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments)

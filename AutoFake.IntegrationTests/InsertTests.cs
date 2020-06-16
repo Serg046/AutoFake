@@ -9,63 +9,68 @@ namespace AutoFake.IntegrationTests
         public void Should_AddNumberInTheEnd_When_Append()
         {
             var fake = new Fake<TestClass>();
+            var numbers = new List<int>();
 
-            var sut = fake.Rewrite(t => t.SomeMethod());
-            sut.Append(() => TestClass.Numbers.Add(-1));
+            var sut = fake.Rewrite(t => t.SomeMethod(numbers));
+            sut.Append(() => numbers.Add(-1));
 
             sut.Execute();
-            Assert.Equal(new[] {3, 5, 7, -1}, fake.Execute(() => TestClass.Numbers));
+            Assert.Equal(new[] {3, 5, 7, -1}, numbers);
         }
 
         [Fact]
         public void Should_AddNumberInTheBeginning_When_Prepend()
         {
             var fake = new Fake<TestClass>();
+            var numbers = new List<int>();
 
-            var sut = fake.Rewrite(t => t.SomeMethod());
-            sut.Prepend(() => TestClass.Numbers.Add(-1));
+            var sut = fake.Rewrite(t => t.SomeMethod(numbers));
+            sut.Prepend(() => numbers.Add(-1));
 
             sut.Execute();
-            Assert.Equal(new[] { -1, 3, 5, 7 }, fake.Execute(() => TestClass.Numbers));
+            Assert.Equal(new[] { -1, 3, 5, 7 }, numbers);
         }
 
         [Fact]
         public void Should_AddNumberAfterCmd_When_AppendWithSourceMember()
         {
             var fake = new Fake<TestClass>();
+            var numbers = new List<int>();
 
-            var sut = fake.Rewrite(t => t.SomeMethod());
-            sut.Append(() => TestClass.Numbers.Add(-1))
+            var sut = fake.Rewrite(t => t.SomeMethod(numbers));
+            sut.Append(() => numbers.Add(-1))
                 .After((List<int> list) => list.AddRange(new int[0]));
 
             sut.Execute();
-            Assert.Equal(new[] { 3, 5, -1, 7 }, fake.Execute(() => TestClass.Numbers));
+            Assert.Equal(new[] { 3, 5, -1, 7 }, numbers);
         }
 
         [Fact]
         public void Should_AddBothNumbers_When_MultipleCallbacks()
         {
             var fake = new Fake<TestClass>();
+            var numbers = new List<int>();
 
-            var sut = fake.Rewrite(t => t.SomeMethod());
-            sut.Prepend(() => TestClass.Numbers.Add(-1));
-            sut.Append(() => TestClass.Numbers.Add(-2));
+            var sut = fake.Rewrite(t => t.SomeMethod(numbers));
+            sut.Prepend(() => numbers.Add(-1));
+            sut.Append(() => numbers.Add(-2));
 
             sut.Execute();
-            Assert.Equal(new[] { -1, 3, 5, 7, -2 }, fake.Execute(() => TestClass.Numbers));
+            Assert.Equal(new[] { -1, 3, 5, 7, -2 }, numbers);
         }
 
         [Fact]
         public void Should_AddNumberBeforeCmd_When_PrependWithSourceMember()
         {
             var fake = new Fake<TestClass>();
+            var numbers = new List<int>();
 
-            var sut = fake.Rewrite(t => t.SomeMethod());
-            sut.Prepend(() => TestClass.Numbers.Add(-1))
+            var sut = fake.Rewrite(t => t.SomeMethod(numbers));
+            sut.Prepend(() => numbers.Add(-1))
                 .Before((List<int> list) => list.AddRange(new int[0]));
 
             sut.Execute();
-            Assert.Equal(new[] { 3, -1, 5, 7 }, fake.Execute(() => TestClass.Numbers));
+            Assert.Equal(new[] { 3, -1, 5, 7 }, numbers);
         }
 
         [Fact]
@@ -74,7 +79,7 @@ namespace AutoFake.IntegrationTests
             var numbers = new List<int>();
             var fake = new Fake<TestClass>();
 
-            var sut = fake.Rewrite(t => t.SomeMethod());
+            var sut = fake.Rewrite(t => t.SomeMethod(new List<int>()));
             sut.Append(() => numbers.Add(-1));
 
             sut.Execute();
@@ -83,13 +88,11 @@ namespace AutoFake.IntegrationTests
 
         private class TestClass
         {
-            public static List<int> Numbers { get; } = new List<int>();
-
-            public void SomeMethod()
+            public void SomeMethod(List<int> numbers)
             {
-                Numbers.Add(3);
-                Numbers.AddRange(new [] {5});
-                Numbers.Add(7);
+                numbers.Add(3);
+                numbers.AddRange(new [] {5});
+                numbers.Add(7);
             }
         }
     }
