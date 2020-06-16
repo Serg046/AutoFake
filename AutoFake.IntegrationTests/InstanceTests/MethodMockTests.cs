@@ -18,7 +18,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetDynamicValue());
-            sut.Replace(t => t.DynamicValue()).Return(() => 7);
+            sut.Replace(t => t.DynamicValue()).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -29,7 +29,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetHelperDynamicValue());
-            sut.Replace((HelperClass h) => h.DynamicValue()).Return(() => 7);
+            sut.Replace((HelperClass h) => h.DynamicValue()).Return(7);
             
             Assert.Equal(7, sut.Execute());
         }
@@ -40,7 +40,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetDynamicStaticValue());
-            sut.Replace(() => TestClass.DynamicStaticValue()).Return(() => 7);
+            sut.Replace(() => TestClass.DynamicStaticValue()).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -51,7 +51,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetHelperDynamicStaticValue());
-            sut.Replace(() => HelperClass.DynamicStaticValue()).Return(() => 7);
+            sut.Replace(() => HelperClass.DynamicStaticValue()).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -62,7 +62,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetFrameworkValue());
-            sut.Replace((SqlCommand c) => c.ExecuteScalar()).Return(() => 7);
+            sut.Replace((SqlCommand c) => c.ExecuteScalar()).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -111,8 +111,8 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetDynValueByOveloadedMethodCalls());
-            sut.Replace(t => t.DynamicValue()).Return(() => 7);
-            sut.Replace(t => t.DynamicValue(5)).Return(() => 7);
+            sut.Replace(t => t.DynamicValue()).Return(7);
+            sut.Replace(t => t.DynamicValue(5)).Return(7);
 
             Assert.Equal(14, sut.Execute());
         }
@@ -123,7 +123,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<AsyncTestClass>();
 
             var sut = fake.Rewrite(f => f.GetValueAsync());
-            sut.Replace(a => a.GetDynamicValueAsync()).Return(() => Task.FromResult(7));
+            sut.Replace(a => a.GetDynamicValueAsync()).Return(Task.FromResult(7));
 
             Assert.Equal(7, await sut.Execute());
         }
@@ -134,7 +134,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<AsyncTestClass>();
 
             var sut = fake.Rewrite(f => f.GetStaticValueAsync());
-            sut.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Return(() => Task.FromResult(7));
+            sut.Replace(() => AsyncTestClass.GetStaticDynamicValueAsync()).Return(Task.FromResult(7));
 
             Assert.Equal(7, await sut.Execute());
         }
@@ -144,13 +144,13 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<ParamsTestClass>();
             var sut = fake.Rewrite(f => f.Test());
-            sut.Replace(p => p.GetValue(1, 2, 3)).Return(() => -1);
+            sut.Replace(p => p.GetValue(1, 2, 3)).Return(-1);
 
             Assert.Equal(-1, sut.Execute());
 
             fake = new Fake<ParamsTestClass>();
             sut = fake.Rewrite(f => f.Test());
-            sut.Replace(p => p.GetValue(new[] { 1, 2, 3 })).Return(() => -1);
+            sut.Replace(p => p.GetValue(new[] { 1, 2, 3 })).Return(-1);
 
             Assert.Equal(-1, sut.Execute());
         }
@@ -188,7 +188,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetRecursionValue(2));
-            sut.Replace(f => f.GetRecursionValue(Arg.IsAny<int>())).Return(() => -1);
+            sut.Replace(f => f.GetRecursionValue(Arg.IsAny<int>())).Return(-1);
 
             Assert.Equal(-1, sut.Execute());
         }

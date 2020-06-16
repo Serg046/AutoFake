@@ -10,7 +10,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.GetClassCtorResult());
-            sut.Replace(() => DateTime.Now).Return(() => DateTime.Now);
+            sut.Replace(() => DateTime.Now).Return(DateTime.Now);
 
             Assert.Equal(7, sut.Execute().Prop);
         }
@@ -20,7 +20,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.GetStructCtorResult());
-            sut.Replace(() => DateTime.Now).Return(() => DateTime.Now);
+            sut.Replace(() => DateTime.Now).Return(DateTime.Now);
 
             Assert.Equal(7, sut.Execute().Prop);
         }
@@ -30,7 +30,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.GetClassCtorWithArgsResult());
-            sut.Replace(() => DateTime.Now).Return(() => DateTime.Now);
+            sut.Replace(() => DateTime.Now).Return(DateTime.Now);
 
             Assert.Equal(7, sut.Execute().Prop);
         }
@@ -40,7 +40,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.GetClassField());
-            sut.Replace(() => DateTime.Now).Return(() => DateTime.Now);
+            sut.Replace(() => DateTime.Now).Return(DateTime.Now);
 
             Assert.Equal(7, sut.Execute().Prop);
         }
@@ -50,7 +50,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.GetStructField());
-            sut.Replace(() => DateTime.Now).Return(() => DateTime.Now);
+            sut.Replace(() => DateTime.Now).Return(DateTime.Now);
 
             Assert.Equal(7, sut.Execute().Prop);
         }
