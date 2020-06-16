@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using Xunit;
 
@@ -14,7 +13,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
         
             var sut = fake.Rewrite(f => f.GetDynamicValue());
-            sut.Replace(t => t.DynamicValue).Return(() => 7);
+            sut.Replace(t => t.DynamicValue).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -25,7 +24,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetHelperDynamicValue());
-            sut.Replace((HelperClass h) => h.DynamicValue).Return(() => 7);
+            sut.Replace((HelperClass h) => h.DynamicValue).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -36,7 +35,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetDynamicStaticValue());
-            sut.Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
+            sut.Replace(() => TestClass.DynamicStaticValue).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -47,7 +46,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.GetHelperDynamicStaticValue());
-            sut.Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
+            sut.Replace(() => HelperClass.DynamicStaticValue).Return(7);
 
             Assert.Equal(7, sut.Execute());
         }
@@ -59,7 +58,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             const string header = "Test header";
             var sut = fake.Rewrite(f => f.GetFrameworkValue());
-            sut.Replace((Header hd) => hd.Name).Return(() => header);
+            sut.Replace((Header hd) => hd.Name).Return(header);
 
             Assert.Equal(header, sut.Execute());
         }

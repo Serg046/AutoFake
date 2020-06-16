@@ -66,47 +66,7 @@ namespace AutoFake.UnitTests
 
             Assert.True(methodReference.EquivalentTo(method));
         }
-
-        [Fact]
-        public void ToMethodDescriptor_Action_Success()
-        {
-            Action action = () => { };
-
-            var descriptor = action.ToMethodDescriptor();
-
-            Assert.Equal(action.Method.DeclaringType.FullName, descriptor.DeclaringType);
-            Assert.Equal(action.Method.Name, descriptor.Name);
-        }
-
-        [Fact]
-        public void ToMethodDescriptor_CompiledAction_Success()
-        {
-            Expression<Func<int>> expression = () => 5;
-            var func = expression.Compile();
-
-            var descriptor = func.ToMethodDescriptor();
-
-            Assert.Null(func.Method.DeclaringType);
-            Assert.Null(descriptor.DeclaringType);
-            Assert.Equal(func.Method.Name, descriptor.Name);
-        }
-
-        [Fact]
-        public void ToClosureDescriptor_Closure_Success()
-        {
-            var date = DateTime.Now;
-            Action action = () => Console.WriteLine(date - date);
-            var typeInfo = new TypeInfo(action.Method.DeclaringType, new FakeDependency[0]);
-            var processorFactory = new ProcessorFactory(typeInfo);
-
-            var descriptor = action.ToClosureDescriptor(processorFactory);
-
-            Assert.Equal(action.Method.DeclaringType.FullName, descriptor.DeclaringType);
-            Assert.Equal(action.Method.Name, descriptor.Name);
-            Assert.Single(descriptor.CapturedMembers, d => d.ClosureField.Name == nameof(date)
-                                                           && d.Instance.Equals(date));
-        }
-
+        
         private class TestClass
         {
             public void Test()

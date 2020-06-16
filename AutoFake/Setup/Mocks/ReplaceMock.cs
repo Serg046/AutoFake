@@ -17,7 +17,7 @@ namespace AutoFake.Setup.Mocks
         {
         }
 
-        public Return ReturnObject { get; set; }
+        public object ReturnObject { get; set; }
 
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
@@ -49,12 +49,10 @@ namespace AutoFake.Setup.Mocks
             var parameters = base.Initialize(type).ToList();
             if (ReturnObject != null)
             {
-                var returnInstance = ReturnObject.Instance
-                                 ?? ReflectionUtils.Invoke(type.Assembly, ReturnObject.Descriptor);
                 var field = GetField(type, _retValueField.Name)
-                    ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
-                field.SetValue(null, returnInstance);
-                parameters.Add(returnInstance);
+                            ?? throw new InitializationException(
+                                $"'{_retValueField.Name}' is not found in the generated object");
+                field.SetValue(null, ReturnObject);
             }
             return parameters;
         }
@@ -66,22 +64,6 @@ namespace AutoFake.Setup.Mocks
             {
                 _retValueField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "RetValue"), SourceMember.ReturnType);
             }
-        }
-
-        internal class Return
-        {
-            public Return(MethodDescriptor descriptor)
-            {
-                Descriptor = descriptor;
-            }
-
-            public Return(object instance)
-            {
-                Instance = instance;
-            }
-
-            public MethodDescriptor Descriptor { get; }
-            public object Instance { get; }
         }
     }
 }
