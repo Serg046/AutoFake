@@ -7,10 +7,12 @@ namespace AutoFake.Setup.Configurations
     public class PrependMockConfiguration<T> : PrependMockConfiguration
     {
         internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock, ushort> setMock,
-            ushort position, ClosureDescriptor closure) : base(processorFactory, setMock, position, closure)
+            ushort position, Action closure) : base(processorFactory, setMock, position, closure)
         {
         }
 
+        public SourceMemberInsertMockConfiguration Before<TOut>(Expression<Func<T, TOut>> expression) => BeforeImpl(expression);
+        
         public SourceMemberInsertMockConfiguration Before(Expression<Action<T>> expression) => BeforeImpl(expression);
     }
 
@@ -19,10 +21,10 @@ namespace AutoFake.Setup.Configurations
         private readonly IProcessorFactory _processorFactory;
         private readonly Action<IMock, ushort> _setMock;
         private readonly ushort _position;
-        private readonly ClosureDescriptor _closure;
+        private readonly Action _closure;
 
         internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock, ushort> setMock,
-            ushort position, ClosureDescriptor closure)
+            ushort position, Action closure)
         {
             _processorFactory = processorFactory;
             _setMock = setMock;
@@ -30,9 +32,14 @@ namespace AutoFake.Setup.Configurations
             _closure = closure;
         }
 
-        public SourceMemberInsertMockConfiguration Before<T>(Expression<Action<T>> expression) => BeforeImpl(expression);
+        public SourceMemberInsertMockConfiguration Before<TIn, TOut>(Expression<Func<TIn, TOut>> expression) => BeforeImpl(expression);
+        
+        public SourceMemberInsertMockConfiguration Before<TIn>(Expression<Action<TIn>> expression) => BeforeImpl(expression);
 
+        public SourceMemberInsertMockConfiguration Before<TOut>(Expression<Func<TOut>> expression) => BeforeImpl(expression);
+        
         public SourceMemberInsertMockConfiguration Before(Expression<Action> expression) => BeforeImpl(expression);
+        
 
         protected SourceMemberInsertMockConfiguration BeforeImpl(LambdaExpression expression)
         {
