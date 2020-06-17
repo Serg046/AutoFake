@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using Xunit;
@@ -8,18 +7,6 @@ namespace AutoFake.UnitTests.Setup
 {
     public class SourceMemberInsertMockInstallerTests
     {
-        [Theory, AutoMoqData]
-        internal void CheckArguments_ReturnsTrue(SourceMemberInsertMock mock)
-        {
-            mock.CheckArguments = false;
-            var sut = new SourceMemberInsertMockConfiguration(mock);
-
-            Assert.False(mock.CheckArguments);
-            sut.CheckArguments();
-
-            Assert.True(mock.CheckArguments);
-        }
-
         [Theory, AutoMoqData]
         internal void ExpectedCalls_Byte_Success(SourceMemberInsertMock mock)
         {

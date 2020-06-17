@@ -21,8 +21,7 @@ namespace AutoFake.IntegrationTests
                 : TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
 
             var sut = fake.Rewrite(f => f.GetValueByArguments(date, zone));
-            sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
-                .CheckArguments();
+            sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
 
             if (throws)
             {
@@ -42,7 +41,6 @@ namespace AutoFake.IntegrationTests
         public void ExpectedCallsCountTest(string op, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
-
             Func<byte, bool> checker;
             switch (op)
             {
@@ -51,9 +49,11 @@ namespace AutoFake.IntegrationTests
                 case "<": checker = x => x < arg; break;
                 default: throw new InvalidOperationException();
             }
-            var sut = fake.Rewrite(f => f.GetValueByArguments(new DateTime(2019, 1, 1),
-                    TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", "")));
-            sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Local))
+            var originalDate = new DateTime(2019, 1, 1);
+            var zone = TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", "");
+
+            var sut = fake.Rewrite(f => f.GetValueByArguments(originalDate, zone));
+            sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(originalDate, zone))
                 .ExpectedCalls(checker);
 
             if (throws)
@@ -72,7 +72,6 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.Sum(1, 2));
             sut.Verify(t => t.CodeBranch(1, 2))
-                .CheckArguments()
                 .ExpectedCalls(i => i == 1);
 
             Assert.Equal(6, sut.Execute());
@@ -92,7 +91,6 @@ namespace AutoFake.IntegrationTests
 
             var sut = fake.Rewrite(f => f.DoSomethingAsync());
             sut.Verify(f => f.Sum(1, 2))
-                .CheckArguments()
                 .ExpectedCalls(i => i == 1);
 
             await sut.Execute();

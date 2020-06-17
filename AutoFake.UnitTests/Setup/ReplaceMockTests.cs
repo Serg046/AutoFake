@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
@@ -20,10 +22,17 @@ namespace AutoFake.UnitTests.Setup
         internal void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_SaveMethodCall(
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
             [Frozen]Mock<IProcessor> proc,
-            ReplaceMock mock)
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression)
         {
-            mock.CheckArguments = needCheckArguments;
-            if (!expectedCallsCountFunc) mock.ExpectedCalls = null;
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(needCheckArguments
+                    ? new EqualityArgumentChecker(1)
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new ReplaceMock(processorFactory, expression.Object);
+            mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null;
 
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
@@ -39,10 +48,17 @@ namespace AutoFake.UnitTests.Setup
         internal void Inject_ArgsAndNotNeedCheckArguments_ArgumentsRemoved(
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
             [Frozen]Mock<IProcessor> proc,
-            ReplaceMock mock)
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression)
         {
-            mock.CheckArguments = needCheckArguments;
-            if (!expectedCallsCountFunc) mock.ExpectedCalls = null;
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(needCheckArguments
+                    ? new EqualityArgumentChecker(1)
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new ReplaceMock(processorFactory, expression.Object);
+            mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null; 
 
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
@@ -155,13 +171,13 @@ namespace AutoFake.UnitTests.Setup
             bool shouldBeInjected,
             [Frozen]Mock<IPrePostProcessor> proc,
             MethodDefinition method,
+            [Frozen(Matching.ImplementedInterfaces)]SuccessfulArgumentChecker checker,
             ReplaceMock mock)
         {
             if (noReturnObject)
             {
                 mock.ReturnObject = null;
                 mock.ExpectedCalls = null;
-                mock.CheckArguments = false;
             }
 
             mock.BeforeInjection(method);

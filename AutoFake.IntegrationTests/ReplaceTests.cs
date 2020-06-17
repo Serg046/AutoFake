@@ -21,7 +21,6 @@ namespace AutoFake.IntegrationTests
 
             var sut = fake.Rewrite(f => f.GetValueByArguments(date, zone));
             sut.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
-                .CheckArguments()
                 .Return(DateTime.MinValue);
 
             if (throws)
@@ -66,7 +65,6 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.Sum(1, 2));
             sut.Replace(t => t.CodeBranch(1, 2))
-                .CheckArguments()
                 .ExpectedCalls(i => i == 1)
                 .Return(6);
 
@@ -75,7 +73,6 @@ namespace AutoFake.IntegrationTests
             fake = new Fake<TestClass>();
             sut = fake.Rewrite(f => f.Sum(0, 1));
             sut.Replace(t => t.CodeBranch(0, 0))
-                .CheckArguments()
                 .ExpectedCalls(i => i == 1)
                 .Return(6);
 
@@ -90,7 +87,6 @@ namespace AutoFake.IntegrationTests
 
             var sut = fake.Rewrite(f => f.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
             sut.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
-                .CheckArguments()
                 .Return(date);
 
             Assert.Equal(date, sut.Execute());

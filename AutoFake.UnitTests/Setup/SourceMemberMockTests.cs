@@ -22,7 +22,6 @@ namespace AutoFake.UnitTests.Setup
             Mock mock)
         {
             field.Name = nameof(TestClass.InvocationExpression);
-            mock.CheckArguments = true;
             mock.ExpectedCalls = null;
             mock.BeforeInjection(method);
 
@@ -48,7 +47,6 @@ namespace AutoFake.UnitTests.Setup
         [Theory, AutoMoqData]
         internal void Initialize_NoSetupBodyField_NoEffect(Mock mock)
         {
-            mock.CheckArguments = false;
             mock.ExpectedCalls = null;
 
             Assert.Null(TestClass.InvocationExpression);
@@ -66,10 +64,17 @@ namespace AutoFake.UnitTests.Setup
             bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected,
             [Frozen]Mock<IPrePostProcessor> preProc,
             MethodDefinition method,
-            Mock mock)
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression)
         {
-            mock.CheckArguments = needCheckArguments;
-            if (!expectedCallsCount) mock.ExpectedCalls = null;
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(needCheckArguments
+                    ? new EqualityArgumentChecker(1)
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new VerifyMock(processorFactory, expression.Object);
+            mock.ExpectedCalls = expectedCallsCount ? new Func<byte, bool>(i => true) : null;
 
             mock.BeforeInjection(method);
 
@@ -99,19 +104,42 @@ namespace AutoFake.UnitTests.Setup
             bool checkArgs, bool expectedCalls, bool injected,
             [Frozen]ModuleDefinition module,
             [Frozen]Mock<IPrePostProcessor> postProc,
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression,
             TypeDefinition type,
-            IEmitter emitter,
-            Mock mock)
+            IEmitter emitter)
         {
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(checkArgs
+                    ? new EqualityArgumentChecker(1)
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new Mock(processorFactory, expression.Object);
             module.Types.Add(type);
-            mock.CheckArguments = checkArgs;
-            if (!expectedCalls) mock.ExpectedCalls = null;
+            mock.ExpectedCalls = expectedCalls ? new Func<byte, bool>(i => true) : null;
 
             mock.AfterInjection(emitter);
 
             postProc.Verify(m => m.InjectVerification(emitter, checkArgs, It.IsAny<FieldDefinition>(),
                     It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()),
                 injected ? Times.Once() : Times.Never());
+        }
+
+        [Theory, AutoMoqData]
+        internal void CheckArguments_SuccessfulCheckers_False(
+            [Frozen(Matching.ImplementedInterfaces)]SuccessfulArgumentChecker checker,
+            SourceMemberMock mock)
+        {
+            Assert.False(mock.CheckArguments);
+        }
+
+        [Theory, AutoMoqData]
+        internal void CheckArguments_EqualityArgumentCheckers_True(
+            [Frozen(Matching.ImplementedInterfaces)]EqualityArgumentChecker checker,
+            SourceMemberMock mock)
+        {
+            Assert.True(mock.CheckArguments);
         }
 
         internal class Mock: SourceMemberMock

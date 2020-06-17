@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -150,7 +151,8 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
             fake = new Fake<ParamsTestClass>();
             sut = fake.Rewrite(f => f.Test());
-            sut.Replace(p => p.GetValue(new[] { 1, 2, 3 })).Return(-1);
+            sut.Replace(p => p.GetValue(Arg.Is(new[] { 1, 2, 3 }, new IntArrayComparer())))
+                .Return(-1);
 
             Assert.Equal(-1, sut.Execute());
         }
@@ -170,7 +172,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 : TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
             var sut = fake.Rewrite(f => f.GetValueByArguments(date, zone));
             sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(Arg.Is<DateTime>(d => d > new DateTime(2016, 11, 04)),
-                Arg.Is<TimeZoneInfo>(t => t.BaseUtcOffset.Hours > 0))).CheckArguments();
+                Arg.Is<TimeZoneInfo>(t => t.BaseUtcOffset.Hours > 0)));
 
             if (throws)
             {
@@ -322,10 +324,16 @@ namespace AutoFake.IntegrationTests.InstanceTests
             public int Test()
             {
                 Debug.WriteLine("Started");
-                var value = GetValue();
+                var value = GetValue(1, 2, 3);
                 Debug.WriteLine("Finished");
                 return value;
             }
+        }
+
+        private class IntArrayComparer : IEqualityComparer<int[]>
+        {
+            public bool Equals(int[] x, int[] y) => x.SequenceEqual(y);
+            public int GetHashCode(int[] obj) => obj.GetHashCode();
         }
     }
 }

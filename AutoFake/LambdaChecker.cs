@@ -2,11 +2,11 @@
 
 namespace AutoFake
 {
-    internal class LambdaChecker : IFakeArgumentChecker
+    internal class LambdaArgumentChecker : IFakeArgumentChecker
     {
         private readonly Delegate _checker;
 
-        public LambdaChecker(Delegate checker)
+        public LambdaArgumentChecker(Delegate checker)
         {
             _checker = checker;
         }

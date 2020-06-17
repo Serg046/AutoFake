@@ -12,6 +12,7 @@ namespace AutoFake.Expression
     public class InvocationExpression : IInvocationExpression
     {
         private readonly LinqExpression _expression;
+        private IList<IFakeArgument> _arguments;
 
         internal InvocationExpression(LinqExpression expression)
         {
@@ -67,11 +68,17 @@ namespace AutoFake.Expression
             return memberVisitor.SourceMember;
         }
 
-        private IList<FakeArgument> GetArguments()
+        IList<IFakeArgument> IInvocationExpression.GetArguments() => GetArguments();
+        internal IList<IFakeArgument> GetArguments()
         {
-            var visitor = new GetArgumentsMemberVisitor();
-            ((IInvocationExpression)this).AcceptMemberVisitor(visitor);
-            return visitor.Arguments;
+            if (_arguments == null)
+            {
+                var visitor = new GetArgumentsMemberVisitor();
+                ((IInvocationExpression) this).AcceptMemberVisitor(visitor);
+                _arguments = visitor.Arguments;
+            }
+
+            return _arguments;
         }
 
         public Task MatchArgumentsAsync(Task task, ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
@@ -105,7 +112,7 @@ namespace AutoFake.Expression
                         if (!fakeArgument.Check(args[i]))
                         {
                             throw new VerifyException(
-                                $"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {args[i]}.");
+                                $"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(args[i])}.");
                         }
                     }
             }
