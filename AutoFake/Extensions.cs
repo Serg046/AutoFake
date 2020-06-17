@@ -23,8 +23,9 @@ namespace AutoFake
                 .SingleOrDefault(a => a.AttributeType.Name == "AsyncStateMachineAttribute");
             if (asyncAttribute != null)
             {
-                var generatedAsyncType = (TypeReference)asyncAttribute.ConstructorArguments[0].Value;
-                asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
+                var typeRef = asyncAttribute.ConstructorArguments[0].Value as TypeReference;
+                var generatedAsyncType = typeRef as TypeDefinition ?? typeRef.Resolve();
+                asyncMethod = generatedAsyncType.Methods.Single(m => m.Name == "MoveNext");
                 return true;
             }
             asyncMethod = null;
