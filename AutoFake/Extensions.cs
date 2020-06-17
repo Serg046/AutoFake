@@ -1,4 +1,7 @@
-﻿using Mono.Cecil;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using Mono.Cecil;
 using System.Linq;
 using Mono.Cecil.Cil;
 
@@ -26,6 +29,24 @@ namespace AutoFake
             }
             asyncMethod = null;
             return false;
+        }
+
+        public static IEqualityComparer ToNonGeneric<T>(this IEqualityComparer<T> comparer)
+            => new EqualityComparer((x, y) => comparer.Equals((T)x, (T)y), x => comparer.GetHashCode((T)x));
+
+        private class EqualityComparer : IEqualityComparer
+        {
+            private readonly Func<object, object, bool> _comparer;
+            private readonly Func<object, int> _hasher;
+
+            public EqualityComparer(Func<object, object, bool> comparer, Func<object, int> hasher)
+            {
+                _comparer = comparer;
+                _hasher = hasher;
+            }
+
+            public bool Equals(object x, object y) => _comparer(x, y);
+            public int GetHashCode(object obj) => _hasher(obj);
         }
     }
 }

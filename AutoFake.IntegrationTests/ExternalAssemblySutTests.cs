@@ -37,7 +37,6 @@ namespace AutoFake.IntegrationTests
 
             var sut = fake.Rewrite(f => f.GetCurrentDate());
             sut.Replace(() => DateTime.Now)
-                .CheckArguments()
                 .ExpectedCalls(checker)
                 .Return(DateTime.MaxValue);
 

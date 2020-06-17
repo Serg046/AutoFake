@@ -12,12 +12,6 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public VerifyMockConfiguration CheckArguments()
-        {
-            _mock.CheckArguments = true;
-            return this;
-        }
-
         public VerifyMockConfiguration ExpectedCalls(byte expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);

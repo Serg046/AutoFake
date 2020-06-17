@@ -18,12 +18,6 @@ namespace AutoFake.Setup.Configurations
             return this;
         }
 
-        public ReplaceMockConfiguration<TReturn> CheckArguments()
-        {
-            _mock.CheckArguments = true;
-            return this;
-        }
-
         public ReplaceMockConfiguration<TReturn> ExpectedCalls(byte expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);

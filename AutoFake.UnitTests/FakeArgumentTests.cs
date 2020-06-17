@@ -21,7 +21,7 @@ namespace AutoFake.UnitTests
         public void Check_LambdaChecker_Success()
         {
             Func<int, bool> lambda = arg => arg > 0; 
-            var checker = new LambdaChecker(lambda);
+            var checker = new LambdaArgumentChecker(lambda);
             var argument = new FakeArgument(checker);
 
             Assert.True(argument.Check(1));

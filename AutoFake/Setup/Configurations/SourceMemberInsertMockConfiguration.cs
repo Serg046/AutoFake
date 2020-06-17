@@ -12,12 +12,6 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public SourceMemberInsertMockConfiguration CheckArguments()
-        {
-            _mock.CheckArguments = true;
-            return this;
-        }
-
         public SourceMemberInsertMockConfiguration ExpectedCalls(byte expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);

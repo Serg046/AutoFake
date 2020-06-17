@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
@@ -19,6 +20,7 @@ namespace AutoFake.Setup.Mocks
             SourceMember = invocationExpression.GetSourceMember();
             PrePostProcessor = processorFactory.CreatePrePostProcessor();
             ProcessorFactory = processorFactory;
+            CheckArguments = invocationExpression.GetArguments().Any(arg => !(arg.Checker is SuccessfulArgumentChecker));
         }
 
         protected IProcessorFactory ProcessorFactory { get; }
@@ -27,7 +29,7 @@ namespace AutoFake.Setup.Mocks
         protected FieldDefinition CallsAccumulator { get; private set; }
         protected FieldDefinition CallsChecker { get; private set; }
 
-        public bool CheckArguments { get; set; }
+        public bool CheckArguments { get; }
         public Func<byte, bool> ExpectedCalls { get; set; }
 
         public bool CheckSourceMemberCalls => CheckArguments || ExpectedCalls != null;
