@@ -90,8 +90,7 @@ namespace AutoFake
                     }
                     else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
                     {
-                        var methodDefinition = method.Resolve();
-                        Rewrite(methodDefinition);
+                        Rewrite(method as MethodDefinition ?? method.Resolve());
                     }
                 }
             }
