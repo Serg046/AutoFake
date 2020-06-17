@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -30,7 +31,7 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void Is_ReturnsDefaultValueOfType()
+        public void Is_SomeValue_ReturnsDefaultValueOfType()
         {
             Assert.Equal(0, Arg.Is<int>(x => x > 5));
             Assert.Null(Arg.Is<int?>(x => x != 5));
@@ -38,11 +39,20 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void IsAny_ReturnsDefaultValueOfType()
+        public void IsAny_SomeValue_ReturnsDefaultValueOfType()
         {
             Assert.Equal(0, Arg.IsAny<int>());
             Assert.Null(Arg.IsAny<int?>());
             Assert.Null(Arg.IsAny<string>());
+        }
+
+        [Theory, AutoMoqData]
+        public void Is_SomeValueWithComparer_ReturnsDefaultValueOfType(
+            IEqualityComparer<int> intCmp, IEqualityComparer<int?> nullIntCmp, IEqualityComparer<string> strCmp)
+        {
+            Assert.Equal(0, Arg.Is(5, intCmp));
+            Assert.Null(Arg.Is<int?>(5, nullIntCmp));
+            Assert.Null(Arg.Is("5", strCmp));
         }
     }
 }

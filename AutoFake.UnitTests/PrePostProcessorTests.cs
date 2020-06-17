@@ -47,10 +47,10 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        //[InlineAutoMoqData(false, false)]
+        [InlineAutoMoqData(false, false)]
         [InlineAutoMoqData(true, false)]
-        //[InlineAutoMoqData(false, true)]
-        //[InlineAutoMoqData(true, true)]
+        [InlineAutoMoqData(false, true)]
+        [InlineAutoMoqData(true, true)]
         internal void InjectVerification_CheckCalls_Injected(
             bool checkArguments, bool callsCounter,
             [Frozen]ModuleDefinition module,

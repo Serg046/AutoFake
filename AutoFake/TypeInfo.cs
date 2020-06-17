@@ -36,6 +36,15 @@ namespace AutoFake
 
         public ModuleDefinition Module => _assemblyDefinition.MainModule;
 
+        public MethodDefinition GetMethod(MethodReference methodReference) =>
+            GetMethod(_typeDefinition, methodReference);
+
+        private MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
+        {
+            return type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference))
+                   ?? GetMethod(type.BaseType.Resolve(), methodReference);
+        }
+
         public void AddField(FieldDefinition field)
         {
             if (!_addedFields.ContainsKey(field.Name))

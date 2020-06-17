@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
-using AutoFake.Exceptions;
 using Mono.Cecil;
 using Xunit;
 
@@ -61,7 +59,7 @@ namespace AutoFake.UnitTests
             var fake = new Fake<TestClass>();
 
             fake.Rewrite(callback);
-
+            
             Assert.NotNull(fake.Mocks.Single().Method);
         }
 
@@ -95,22 +93,64 @@ namespace AutoFake.UnitTests
             Assert.Throws<NotImplementedException>(() => fake.Execute(t => t.FailingMethod()));
         }
 
+        [Theory]
+        [MemberData(nameof(GetCallbacks))]
+        public void Execute_GenericFake_CallbackExecuted(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+
+            Action act = () => fake.Execute(callback);
+            Assert.Throws<NotImplementedException>(act);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetCallbacks))]
+        public void Execute_Fake_CallbackExecuted(dynamic callback)
+        {
+            var fake = new Fake(typeof(TestClass));
+
+            Action act = () => fake.Execute(callback);
+            Assert.Throws<NotImplementedException>(act);
+        }
+
+        [Fact]
+        public void Execute_GenericFakeWithNull_Throws()
+        {
+            var fake = new Fake<TestClass>();
+
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Func<TestClass, string>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Func<string>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Action>)null));
+        }
+
+        [Fact]
+        public void Execute_FakeWithNull_Throws()
+        {
+            var fake = new Fake(typeof(TestClass));
+
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Func<TestClass, string>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Func<string>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Action<TestClass>>)null));
+            Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Action>)null));
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 
         public static IEnumerable<object[]> GetFuncs()
         {
-            Expression<Func<TestClass, string>> instanceFunc = tst => tst.StringInstanceMethod();
+            Expression<Func<TestClass, string>> instanceFunc = tst => tst.FailingMethod();
             yield return new object[] { instanceFunc };
-            Expression<Func<string>> staticFunc = () => TestClass.StaticStringInstanceMethod();
+            Expression<Func<string>> staticFunc = () => TestClass.FailingStaticMethod();
             yield return new object[] { staticFunc };
         }
 
         public static IEnumerable<object[]> GetActions()
         {
-            Expression<Action<TestClass>> instanceAction = tst => tst.VoidInstanceMethod();
+            Expression<Action<TestClass>> instanceAction = tst => tst.FailingVoidMethod();
             yield return new object[] { instanceAction };
-            Expression<Action> staticAction = () => TestClass.StaticVoidInstanceMethod();
+            Expression<Action> staticAction = () => TestClass.FailingVoidStaticMethod();
             yield return new object[] { staticAction };
         }
 
@@ -118,8 +158,10 @@ namespace AutoFake.UnitTests
         {
             public void SomeMethod() { }
 
-            internal static void FailingStaticMethod() => throw new NotImplementedException();
-            internal void FailingMethod() => throw new NotImplementedException();
+            internal static string FailingStaticMethod() => throw new NotImplementedException();
+            internal string FailingMethod() => throw new NotImplementedException();
+            internal static void FailingVoidStaticMethod() => throw new NotImplementedException();
+            internal void FailingVoidMethod() => throw new NotImplementedException();
             internal void VoidInstanceMethod() { }
             internal string StringInstanceMethod() => string.Empty;
             internal static void StaticVoidInstanceMethod() { }

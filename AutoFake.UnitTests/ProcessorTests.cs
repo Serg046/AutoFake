@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Setup.Mocks;
 using AutoFake.UnitTests.TestUtils;
 using AutoFixture;
 using AutoFixture.Xunit2;
 using Mono.Cecil.Cil;
 using Xunit;
 using Mono.Cecil;
+using Mono.Collections.Generic;
 
 namespace AutoFake.UnitTests
 {
@@ -164,6 +167,40 @@ namespace AutoFake.UnitTests
             Assert.DoesNotContain(emitter.Body.Instructions, i => i.Equals(cmd));
             Assert.Equal(OpCodes.Ldsfld, replacedCmd.OpCode);
             Assert.Equal(field, replacedCmd.Operand);
+        }
+
+        [Theory, AutoMoqData]
+        internal void InjectClosure_Top_Injected(
+            [Frozen]Instruction instruction,
+            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
+            FieldDefinition field, Processor proc)
+        {
+            emitter.Body.Instructions.Add(instruction);
+
+            proc.InjectClosure(field, InsertMock.Location.Top);
+
+            Assert.True(emitter.Body.Instructions.Ordered(
+                Cil.Cmd(OpCodes.Ldsfld, field),
+                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == nameof(Action.Invoke)),
+                Cil.Cmd(instruction.OpCode)
+            ));
+        }
+
+        [Theory, AutoMoqData]
+        internal void InjectClosure_Bottom_Injected(
+            [Frozen]Instruction instruction,
+            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
+            FieldDefinition field, Processor proc)
+        {
+            emitter.Body.Instructions.Add(instruction);
+
+            proc.InjectClosure(field, InsertMock.Location.Bottom);
+
+            Assert.True(emitter.Body.Instructions.Ordered(
+                Cil.Cmd(instruction.OpCode),
+                Cil.Cmd(OpCodes.Ldsfld, field),
+                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == nameof(Action.Invoke))
+            ));
         }
     }
 }

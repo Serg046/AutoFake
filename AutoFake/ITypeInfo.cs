@@ -12,7 +12,9 @@ namespace AutoFake
         string FullTypeName { get; }
         ModuleDefinition Module { get; }
         ICollection<FieldDefinition> Fields { get; }
+        //TODO: Use GetMethod
         ICollection<MethodDefinition> Methods { get; }
+        MethodDefinition GetMethod(MethodReference methodReference);
         void AddField(FieldDefinition field);
         void AddMethod(MethodDefinition method);
         void WriteAssembly(Stream stream);

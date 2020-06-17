@@ -24,13 +24,21 @@ namespace AutoFake
             if (asyncAttribute != null)
             {
                 var typeRef = asyncAttribute.ConstructorArguments[0].Value as TypeReference;
-                var generatedAsyncType = typeRef as TypeDefinition ?? typeRef.Resolve();
-                asyncMethod = generatedAsyncType.Methods.Single(m => m.Name == "MoveNext");
+                asyncMethod = typeRef.ToTypeDefinition().Methods.Single(m => m.Name == "MoveNext");
                 return true;
             }
             asyncMethod = null;
             return false;
         }
+
+        public static TypeDefinition ToTypeDefinition(this TypeReference type)
+            => type as TypeDefinition ?? type.Resolve();
+
+        public static FieldDefinition ToFieldDefinition(this FieldReference field)
+            => field as FieldDefinition ?? field.Resolve();
+
+        public static MethodDefinition ToMethodDefinition(this MethodReference method)
+            => method as MethodDefinition ?? method.Resolve();
 
         public static IEqualityComparer ToNonGeneric<T>(this IEqualityComparer<T> comparer)
             => new EqualityComparer((x, y) => comparer.Equals((T)x, (T)y), x => comparer.GetHashCode((T)x));

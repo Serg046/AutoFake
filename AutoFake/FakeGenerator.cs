@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
@@ -18,8 +19,27 @@ namespace AutoFake
         public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
             var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
-            var executeFuncDef = _typeInfo.Methods.Single(m => m.EquivalentTo(executeFuncRef));
+            var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
+            if (executeFuncDef.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
+            var replaceTypeRefMocks = ProcessOriginalMethodContract(executeFunc, executeFuncDef);
+            mocks = mocks.Concat(replaceTypeRefMocks);
+            foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
+            var testMethod = new TestMethod(executeFuncDef, mocks);
+            testMethod.Rewrite();
+            foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
+
+            if (replaceTypeRefMocks.Any())
+            {
+                foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
+                {
+                    new TestMethod(ctor, replaceTypeRefMocks).Rewrite();
+                }
+            }
+        }
+
+        private ICollection<ReplaceTypeRefMock> ProcessOriginalMethodContract(MethodBase executeFunc, MethodDefinition executeFuncDef)
+        {
             var replaceTypeRefMocks = new HashSet<ReplaceTypeRefMock>();
             if (executeFunc is MethodInfo methodInfo)
             {
@@ -40,22 +60,8 @@ namespace AutoFake
                         replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, parameters[i].ParameterType));
                     }
                 }
-
-                mocks = mocks.Concat(replaceTypeRefMocks);
             }
-
-            foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
-            var testMethod = new TestMethod(executeFuncDef, mocks);
-            testMethod.Rewrite();
-            foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
-
-            if (replaceTypeRefMocks.Any())
-            {
-                foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
-                {
-                    new TestMethod(ctor, replaceTypeRefMocks).Rewrite();
-                }
-            }
+            return replaceTypeRefMocks;
         }
 
         private class TestMethod
@@ -76,6 +82,7 @@ namespace AutoFake
 
             private void Rewrite(MethodDefinition currentMethod)
             {
+                if (currentMethod.Body == null) return;
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
                     Rewrite(asyncMethod);
@@ -90,13 +97,13 @@ namespace AutoFake
                     }
                     else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
                     {
-                        Rewrite(method as MethodDefinition ?? method.Resolve());
+                        Rewrite(method.ToMethodDefinition());
                     }
                 }
             }
 
             private bool IsFakeAssemblyMethod(MethodReference methodReference)
-                => methodReference.DeclaringType.Scope is ModuleDefinition module && module == _originalMethod.Module;
+                => methodReference.Module == _originalMethod.Module;
         }
     }
 }
