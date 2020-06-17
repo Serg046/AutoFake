@@ -5,8 +5,12 @@ using System.Linq;
 using System.Text;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
+using Moq;
 using Xunit;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
+using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace AutoFake.UnitTests
 {
@@ -68,6 +72,18 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
+        public void AddField_ExistingField_AddedWithInc()
+        {
+            const string testName = "testName";
+            var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
+
+            typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+            typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+
+            Assert.Equal(new[] { testName, testName + "1" }, typeInfo.Fields.Select(f => f.Name));
+        }
+
+        [Fact]
         public void AddMethod_Method_Added()
         {
             const string testName = "testName";
@@ -79,31 +95,57 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        [InlineData(typeof(StringBuilder), false)]
-        [InlineData(typeof(Enumerable), true)]
+        [InlineData(typeof(InternalTestClass), false)]
+        [InlineData(typeof(StaticTestClass), true)]
         public void CreateFakeObject_Type_Created(Type type, bool isStaticType)
         {
             var typeInfo = new TypeInfo(type, new FakeDependency[0]);
+            var mock = new Mock<IMock>();
+            mock.Setup(m => m.Initialize(It.IsAny<Type>())).Returns(new List<object>());
+            var mocks = new MockCollection();
+            mocks.Add(type.GetMethod("CreateFakeObjectTypeCreated"), new[] {mock.Object});
 
-            var fakeObjectInfo = typeInfo.CreateFakeObject(new MockCollection());
+            var fakeObjectInfo = typeInfo.CreateFakeObject(mocks);
 
+            mock.Verify(m => m.Initialize(It.IsAny<Type>()));
             Assert.Equal(type.FullName, fakeObjectInfo.Type.FullName);
             var instanceAssertion = isStaticType ? (Action<object>)Assert.Null : Assert.NotNull;
             instanceAssertion(fakeObjectInfo.Instance);
         }
 
-        private class TestClass
+        [Fact]
+        public void GetMethod_IsInBaseType_Returned()
+        {
+            var type = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
+            var method = new MethodDefinition(nameof(BaseTestClass.BaseTypeMethod),
+                MethodAttributes.Public, type.Module.ImportReference(typeof(void)));
+
+            var actualMethod = type.GetMethod(method);
+
+            Assert.Equal(method.ReturnType.ToString(), actualMethod.ReturnType.ToString());
+            Assert.Equal(method.Name, actualMethod.Name);
+        }
+
+        private class TestClass : BaseTestClass
         {
             public TestClass(StringBuilder dependency1, StringBuilder dependency2)
             {
             }
         }
 
+        private class BaseTestClass
+        {
+            public void BaseTypeMethod() { }
+        }
+
+        private static class StaticTestClass
+        {
+            public static void CreateFakeObjectTypeCreated() { }
+        }
+
         internal class InternalTestClass
         {
-            internal InternalTestClass()
-            {
-            }
+            public void CreateFakeObjectTypeCreated() { }
         }
 
         protected class ProtectedTestClass

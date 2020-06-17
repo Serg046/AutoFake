@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AutoFake.Setup.Mocks;
@@ -13,11 +14,12 @@ namespace AutoFake.UnitTests
     public class FakeGeneratorTests
     {
         private readonly FakeGenerator _fakeGenerator;
+        private readonly TypeInfo _typeInfo;
 
         public FakeGeneratorTests()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            _fakeGenerator = new FakeGenerator(typeInfo);
+            _typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
+            _fakeGenerator = new FakeGenerator(_typeInfo);
         }
 
         [Fact]
@@ -58,6 +60,30 @@ namespace AutoFake.UnitTests
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
 
+        [Fact]
+        internal void Generate_MembersFromTheSameModule_Success()
+        {
+            _fakeGenerator.Generate(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
+
+            var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestClass.GetTestClass));
+            Assert.Equal("AutoFake.UnitTests.dll", method.ReturnType.Module.Name);
+            Assert.Equal("AutoFake.UnitTests.dll", method.Parameters.Single().ParameterType.Module.Name);
+        }
+
+        [Fact]
+        public void Generate_MethodWithoutBody_Throws()
+        {
+            Assert.Throws<InvalidOperationException>(() => _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
+                GetMethodInfo(nameof(TestClass.GetType))));
+        }
+
+        [Fact]
+        public void Generate_MethodWhichCallsMethodWithoutBody_DoesNotThrow()
+        {
+            _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
+                GetMethodInfo(nameof(TestClass.MethodWithGetType)));
+        }
+
         private bool Equivalent(object operand, MethodInfo innerMethod) => 
             operand is MethodReference method &&
             method.Name == innerMethod.Name &&
@@ -84,11 +110,15 @@ namespace AutoFake.UnitTests
                 SimpleMethod();
             }
 
+            public Type MethodWithGetType() => GetType();
+
             public async void AsyncMethod()
             {
                 await Task.Delay(1);
                 SimpleMethod();
             }
+
+            public TestClass GetTestClass(TestClass testClass) => testClass;
         }
     }
 }

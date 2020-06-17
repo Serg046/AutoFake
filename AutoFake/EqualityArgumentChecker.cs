@@ -18,6 +18,8 @@ namespace AutoFake
 
         public override string ToString() => ToString(_value);
 
+        public override int GetHashCode() => _comparer.GetHashCode(_value);
+
         public static string ToString(object value)
         {
             return value is string str
@@ -32,11 +34,12 @@ namespace AutoFake
         {
             public bool Equals(object x, object y)
             {
+                if (x == null && y == null) return true;
                 return x is IEnumerable firstEnumerable && y is IEnumerable secondEnumerable 
                     && firstEnumerable.Cast<object>().SequenceEqual(secondEnumerable.Cast<object>());
             }
 
-            public int GetHashCode(object obj) => obj.GetHashCode();
+            public int GetHashCode(object obj) => obj?.GetHashCode() ?? 0;
         }
 
         private class DefaultEqualityComparer : IEqualityComparer
@@ -58,7 +61,7 @@ namespace AutoFake
                 return false;
             }
 
-            public int GetHashCode(object obj) => obj.GetHashCode();
+            public int GetHashCode(object obj) => obj?.GetHashCode() ?? 0;
         }
     }
 }

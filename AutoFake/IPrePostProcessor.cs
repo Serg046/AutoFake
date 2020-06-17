@@ -10,6 +10,5 @@ namespace AutoFake
         FieldDefinition GenerateField(string name, Type returnType);
         void InjectVerification(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
             FieldDefinition setupBody, FieldDefinition callsAccumulator);
-        TypeReference GetTypeReference(Type type);
     }
 }

@@ -95,7 +95,5 @@ namespace AutoFake
                 return _typeInfo.Module.ImportReference(methodInfo);
             }
         }
-
-        public TypeReference GetTypeReference(Type type) => _typeInfo.Module.ImportReference(type);
     }
 }
