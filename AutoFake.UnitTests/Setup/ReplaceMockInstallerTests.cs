@@ -8,6 +8,16 @@ namespace AutoFake.UnitTests.Setup
     public class ReplaceMockInstallerTests
     {
         [Theory, AutoMoqData]
+        internal void Return_Value_Set(ReplaceMock mock)
+        {
+            var sut = new ReplaceMockConfiguration<int>(mock);
+
+            sut.Return(3);
+
+            Assert.Equal(3, mock.ReturnObject);
+        }
+
+        [Theory, AutoMoqData]
         internal void ExpectedCalls_Byte_Success(ReplaceMock mock)
         {
             var sut = new ReplaceMockConfiguration<int>(mock);

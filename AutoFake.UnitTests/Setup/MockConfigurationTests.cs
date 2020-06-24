@@ -4,7 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using AutoFake.Expression;
+using AutoFixture;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -187,6 +190,34 @@ namespace AutoFake.UnitTests.Setup
             Assert.Equal(callback, mock.Closure);
         }
 
+        [Fact]
+        internal void Execute_FuncConfig_Executed()
+        {
+            Expression<Func<TestClass, int>> expr = t => t.FailingIntMethod();
+            var fake = new Fake<TestClass>();
+            var executor = new Executor<int>(fake, new AutoFake.Expression.InvocationExpression(expr));
+
+            var config1 = new FuncMockConfiguration<TestClass, int>(null, null, executor);
+            var config2 = new FuncMockConfiguration<int>(null, null, executor);
+
+            Assert.Throws<NotImplementedException>(() => config1.Execute());
+            Assert.Throws<NotImplementedException>(() => config2.Execute());
+        }
+
+        [Fact]
+        internal void Execute_ActionConfig_Executed()
+        {
+            Expression<Action<TestClass>> expr = t => t.FailingMethod();
+            var fake = new Fake<TestClass>();
+            var executor = new Executor(fake, new AutoFake.Expression.InvocationExpression(expr));
+
+            var config1 = new ActionMockConfiguration<TestClass>(null, null, executor);
+            var config2 = new ActionMockConfiguration(null, null, executor);
+
+            Assert.Throws<NotImplementedException>(() => config1.Execute());
+            Assert.Throws<NotImplementedException>(() => config2.Execute());
+        }
+
         public static IEnumerable<object[]> GetCallbackExpressions()
             => GetFuncExpressions().Concat(GetActionExpressions());
 
@@ -221,6 +252,7 @@ namespace AutoFake.UnitTests.Setup
             public void SomeMethod() { }
 
             internal void FailingMethod() => throw new NotImplementedException();
+            internal int FailingIntMethod() => throw new NotImplementedException();
             internal void VoidInstanceMethod() { }
             internal string StringInstanceMethod() => string.Empty;
             internal static void StaticVoidInstanceMethod() { }

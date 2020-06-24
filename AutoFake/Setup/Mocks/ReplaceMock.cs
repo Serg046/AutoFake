@@ -50,8 +50,7 @@ namespace AutoFake.Setup.Mocks
             if (ReturnObject != null)
             {
                 var field = GetField(type, _retValueField.Name)
-                            ?? throw new InitializationException(
-                                $"'{_retValueField.Name}' is not found in the generated object");
+                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
                 field.SetValue(null, ReturnObject);
             }
             return parameters;
