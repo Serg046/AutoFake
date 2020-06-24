@@ -14,30 +14,18 @@ namespace AutoFake.Setup.Configurations
 
         public ReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
         {
-            _mock.ReturnObject = new ReplaceMock.Return(returnObject);
+            _mock.ReturnObject = returnObject;
             return this;
         }
 
-        public ReplaceMockConfiguration<TReturn> Return(Func<TReturn> returnObject)
+        public ReplaceMockConfiguration<TReturn> ExpectedCalls(byte expectedCallsCount)
         {
-            _mock.ReturnObject = new ReplaceMock.Return(returnObject.ToMethodDescriptor());
-            return this;
+            return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
-
-        public ReplaceMockConfiguration<TReturn> CheckArguments()
-        {
-            _mock.CheckArguments = true;
-            return this;
-        }
-
-        //public ReplaceMockInstaller<TReturn> ExpectedCalls(byte expectedCallsCount)
-        //{
-        //    return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
-        //}
 
         public ReplaceMockConfiguration<TReturn> ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc.ToMethodDescriptor();
+            _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
     }

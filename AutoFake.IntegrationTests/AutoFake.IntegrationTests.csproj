@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AutoFake.IntegrationTests.Sut\AutoFake.IntegrationTests.Sut.csproj" />
     <ProjectReference Include="..\AutoFake\AutoFake.csproj" />
   </ItemGroup>
 

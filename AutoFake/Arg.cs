@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AutoFake
 {
@@ -16,6 +17,8 @@ namespace AutoFake
         //Used by expression's engine, see GetArgumentsMemberVisitor::GetArgument(MethodCallExpression expression)
         public static T Is<T>(Func<T, bool> checkArgumentFunc) => IsAny<T>();
 
-        public static T IsAny<T>() => default(T);
+        public static T Is<T>(T argument, IEqualityComparer<T> comparer) => IsAny<T>();
+
+        public static T IsAny<T>() => default;
     }
 }

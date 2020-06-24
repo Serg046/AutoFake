@@ -34,7 +34,7 @@ namespace AutoFake.Setup
                 field.FieldType.Name == _field.FieldType.Name)
             {
                 if (_monoCecilField == null) _monoCecilField = typeInfo.Module.ImportReference(_field).Resolve();
-                return field.Resolve().ToString() == _monoCecilField.ToString();
+                return field.ToFieldDefinition().ToString() == _monoCecilField.ToString();
             }
             return false;
         }

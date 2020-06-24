@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -6,7 +7,7 @@ namespace AutoFake
 {
     internal interface IProcessor
     {
-        void InjectClosure(ClosureDescriptor closure, bool beforeInstruction, IDictionary<CapturedMember, FieldDefinition> generatedMembers);
+        void InjectClosure(FieldDefinition closure, InsertMock.Location location);
         void PushMethodArguments(IEnumerable<VariableDefinition> variables);
         void RemoveInstruction(Instruction instruction);
         void RemoveMethodArgumentsIfAny();

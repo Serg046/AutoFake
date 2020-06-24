@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.StaticTests
@@ -13,10 +12,10 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Rewrite(() => TestClass.GetDynamicStaticValue())
-                .Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
+            var sut = fake.Rewrite(() => TestClass.GetDynamicStaticValue());
+            sut.Replace(() => TestClass.DynamicStaticValue).Return(7);
 
-            fake.Execute(() => Assert.Equal(7, TestClass.GetDynamicStaticValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -24,10 +23,10 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue())
-                .Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
+            var sut = fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue());
+            sut.Replace(() => HelperClass.DynamicStaticValue).Return(7);
 
-            fake.Execute(() => Assert.Equal(7, TestClass.GetHelperDynamicStaticValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -36,10 +35,10 @@ namespace AutoFake.IntegrationTests.StaticTests
             var fake = new Fake(typeof(TestClass));
 
             const string cmd = "select * from Test";
-            fake.Rewrite(() => TestClass.GetFrameworkValue())
-                .Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
+            var sut = fake.Rewrite(() => TestClass.GetFrameworkValue());
+            sut.Replace((SqlCommand c) => c.CommandText).Return(cmd);
 
-            fake.Execute(() => Assert.Equal(cmd, TestClass.GetFrameworkValue()));
+            Assert.Equal(cmd, sut.Execute());
         }
 
         [Fact]
@@ -47,10 +46,11 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Rewrite(() => TestClass.GetFrameworkStaticValue())
-                .Replace(() => DateTime.Now).Return(() => new DateTime(2016, 9, 25));
+            var date = new DateTime(2016, 9, 25);
+            var sut = fake.Rewrite(() => TestClass.GetFrameworkStaticValue());
+            sut.Replace(() => DateTime.Now).Return(date);
 
-            fake.Execute((tst, prms) => Assert.Equal(prms.Single(), TestClass.GetFrameworkStaticValue()));
+            Assert.Equal(date, sut.Execute());
         }
 
         private static class TestClass

@@ -39,7 +39,7 @@ namespace AutoFake.UnitTests.Expression
         [MemberData(nameof(GetVisitMethodTestData))]
         internal void Visit_Method_Success(FakeObjectInfo obj, MethodCallExpression methodExpression, MethodInfo methodInfo, int expectedValue)
         {
-            var visitor = new GetValueMemberVisitor(obj);
+            var visitor = new GetValueMemberVisitor(obj.Instance);
 
             visitor.Visit(methodExpression, methodInfo);
             
@@ -64,7 +64,7 @@ namespace AutoFake.UnitTests.Expression
         [MemberData(nameof(GetVisitPropertyTestData))]
         internal void Visit_Property_Success(FakeObjectInfo obj, PropertyInfo propertyInfo, int expectedValue)
         {
-            var visitor = new GetValueMemberVisitor(obj);
+            var visitor = new GetValueMemberVisitor(obj.Instance);
 
             visitor.Visit(propertyInfo);
 
@@ -89,7 +89,7 @@ namespace AutoFake.UnitTests.Expression
         [MemberData(nameof(GetVisitFieldTestData))]
         internal void Visit_Field_Success(FakeObjectInfo obj, FieldInfo fieldInfo, int expectedValue)
         {
-            var visitor = new GetValueMemberVisitor(obj);
+            var visitor = new GetValueMemberVisitor(obj.Instance);
 
             visitor.Visit(fieldInfo);
 
@@ -103,7 +103,7 @@ namespace AutoFake.UnitTests.Expression
             Expression<Action<SomeInstanceTypeFake>> expr = s => s.FailMethod();
             var method = fakeObjectInfo.Type.GetMethod(nameof(SomeInstanceTypeFake.FailMethod));
 
-            var visitor = new GetValueMemberVisitor(fakeObjectInfo);
+            var visitor = new GetValueMemberVisitor(fakeObjectInfo.Instance);
 
             Assert.Throws<InvalidOperationException>(() => visitor.Visit((MethodCallExpression)expr.Body, method));
         }
@@ -114,7 +114,7 @@ namespace AutoFake.UnitTests.Expression
             var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), new SomeInstanceTypeFake());
             var property = fakeObjectInfo.Type.GetProperty(nameof(SomeInstanceTypeFake.FailProperty));
 
-            var visitor = new GetValueMemberVisitor(fakeObjectInfo);
+            var visitor = new GetValueMemberVisitor(fakeObjectInfo.Instance);
 
             Assert.Throws<InvalidOperationException>(() => visitor.Visit(property));
         }

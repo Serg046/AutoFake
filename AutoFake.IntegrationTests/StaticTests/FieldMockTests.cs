@@ -1,7 +1,6 @@
 ﻿using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.StaticTests
@@ -13,10 +12,10 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Rewrite(() => TestClass.GetDynamicStaticValue())
-                .Replace(() => TestClass.DynamicStaticValue).Return(() => 7);
+            var sut = fake.Rewrite(() => TestClass.GetDynamicStaticValue());
+            sut.Replace(() => TestClass.DynamicStaticValue).Return(7);
 
-            fake.Execute(() => Assert.Equal(7, TestClass.GetDynamicStaticValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -24,10 +23,10 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue())
-                .Replace(() => HelperClass.DynamicStaticValue).Return(() => 7);
+            var sut = fake.Rewrite(() => TestClass.GetHelperDynamicStaticValue());
+            sut.Replace(() => HelperClass.DynamicStaticValue).Return(7);
 
-            fake.Execute(() => Assert.Equal(7, TestClass.GetHelperDynamicStaticValue()));
+            Assert.Equal(7, sut.Execute());
         }
 
         [Fact]
@@ -36,10 +35,10 @@ namespace AutoFake.IntegrationTests.StaticTests
             var fake = new Fake(typeof(TestClass));
 
             const string cmd = "select * from Test";
-            fake.Rewrite(() => TestClass.GetFrameworkValue())
-                .Replace((SqlCommand c) => c.CommandText).Return(() => cmd);
+            var sut = fake.Rewrite(() => TestClass.GetFrameworkValue());
+            sut.Replace((SqlCommand c) => c.CommandText).Return(cmd);
 
-            fake.Execute(() => Assert.Equal(cmd, TestClass.GetFrameworkValue()));
+            Assert.Equal(cmd, sut.Execute());
         }
 
         [Fact]
@@ -47,15 +46,13 @@ namespace AutoFake.IntegrationTests.StaticTests
         {
             var fake = new Fake(typeof(TestClass));
 
-            fake.Rewrite(() => TestClass.GetFrameworkStaticValue())
-                .Replace(() => TextReader.Null).Return(() => new StringReader(string.Empty));
+            var sr = new StringReader(string.Empty);
+            var sut = fake.Rewrite(() => TestClass.GetFrameworkStaticValue());
+            sut.Replace(() => TextReader.Null).Return(sr);
 
-            fake.Execute((tst, prms) =>
-            {
-                var actual = TestClass.GetFrameworkStaticValue();
-                Assert.Equal(prms.Single(), actual);
-                Assert.NotEqual(TextReader.Null, actual);
-            });
+            var actual = sut.Execute();
+            Assert.Equal(sr, actual);
+            Assert.NotEqual(TextReader.Null, actual);
         }
 
         [Fact]
@@ -64,10 +61,11 @@ namespace AutoFake.IntegrationTests.StaticTests
             var fake = new Fake(typeof(TestClass));
 
             const int value = 5;
-            fake.Rewrite(() => TestClass.GetStaticStructValueByAddress())
-                .Replace(() => TestClass.StaticStructValue).Return(() => new HelperStruct { Value = value });
+            var data = new HelperStruct {Value = value};
+            var sut = fake.Rewrite(() => TestClass.GetStaticStructValueByAddress());
+            sut.Replace(() => TestClass.StaticStructValue).Return(data);
 
-            fake.Execute(() => Assert.Equal(value, TestClass.GetStaticStructValueByAddress()));
+            Assert.Equal(value, sut.Execute());
         }
 
 #pragma warning disable 0649
@@ -123,7 +121,7 @@ namespace AutoFake.IntegrationTests.StaticTests
             public static int DynamicStaticValue = 5;
         }
 
-        private struct HelperStruct
+        public struct HelperStruct
         {
             public int Value;
         }

@@ -11,34 +11,13 @@ namespace AutoFake.Setup.Mocks
     internal class ReplaceMock : SourceMemberMock
     {
         private FieldDefinition _retValueField;
-        private TypeReference _typeReference;
 
         public ReplaceMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
             : base(processorFactory, invocationExpression)
         {
         }
 
-        private Return _returnObject;
-        public Return ReturnObject
-        {
-            get => _returnObject;
-            set
-            {
-                _returnObject = value;
-                if (_returnObject?.Instance != null)
-                {
-                    _typeReference = PrePostProcessor.GetTypeReference(_returnObject.Instance.GetType());
-                }
-            }
-        }
-
-        public override void ProcessInstruction(Instruction instruction)
-        {
-            if (_typeReference != null)
-            {
-                instruction.ReplaceType(_typeReference);
-            }
-        }
+        public object ReturnObject { get; set; }
 
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
@@ -70,12 +49,9 @@ namespace AutoFake.Setup.Mocks
             var parameters = base.Initialize(type).ToList();
             if (ReturnObject != null)
             {
-                var returnInstance = ReturnObject.Instance
-                                 ?? ReflectionUtils.Invoke(type.Assembly, ReturnObject.Descriptor);
                 var field = GetField(type, _retValueField.Name)
-                    ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
-                field.SetValue(null, returnInstance);
-                parameters.Add(returnInstance);
+                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
+                field.SetValue(null, ReturnObject);
             }
             return parameters;
         }
@@ -85,29 +61,8 @@ namespace AutoFake.Setup.Mocks
             base.BeforeInjection(method);
             if (ReturnObject != null)
             {
-                _retValueField = PrePostProcessor.GenerateRetValueField(
-                    GetFieldName(method.Name, "RetValue"), SourceMember.ReturnType);
-                if (_typeReference != null)
-                {
-                    _retValueField.FieldType = _typeReference;
-                }
+                _retValueField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "RetValue"), SourceMember.ReturnType);
             }
-        }
-
-        internal class Return
-        {
-            public Return(MethodDescriptor descriptor)
-            {
-                Descriptor = descriptor;
-            }
-
-            public Return(object instance)
-            {
-                Instance = instance;
-            }
-
-            public MethodDescriptor Descriptor { get; }
-            public object Instance { get; }
         }
     }
 }

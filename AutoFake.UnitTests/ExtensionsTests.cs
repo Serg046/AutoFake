@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Mono.Cecil;
+using Moq;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -67,43 +68,67 @@ namespace AutoFake.UnitTests
             Assert.True(methodReference.EquivalentTo(method));
         }
 
-        [Fact]
-        public void ToMethodDescriptor_Action_Success()
+        [Theory, AutoMoqData]
+        public void ToNonGeneric_GenericComparer_Success(IEqualityComparer<int> genericComparer)
         {
-            Action action = () => { };
+            var comparer = genericComparer.ToNonGeneric();
 
-            var descriptor = action.ToMethodDescriptor();
-
-            Assert.Equal(action.Method.DeclaringType.FullName, descriptor.DeclaringType);
-            Assert.Equal(action.Method.Name, descriptor.Name);
+            Assert.Equal(genericComparer.Equals(5, 5), comparer.Equals(5, 5));
+            Assert.Equal(genericComparer.GetHashCode(5), comparer.GetHashCode(5));
         }
 
         [Fact]
-        public void ToMethodDescriptor_CompiledAction_Success()
+        public void ToTypeDefinition_TypeReference_Resolved()
         {
-            Expression<Func<int>> expression = () => 5;
-            var func = expression.Compile();
+            var typeReference = new Mock<TypeReference>("", "");
+            var def = typeReference.Object.ToTypeDefinition();
 
-            var descriptor = func.ToMethodDescriptor();
-
-            Assert.Null(func.Method.DeclaringType);
-            Assert.Null(descriptor.DeclaringType);
-            Assert.Equal(func.Method.Name, descriptor.Name);
+            typeReference.Verify(t => t.Resolve());
+            Assert.NotSame(typeReference.Object, def);
         }
 
-        [Fact]
-        public void ToClosureDescriptor_Closure_Success()
+        [Theory, AutoMoqData]
+        public void ToTypeDefinition_TypeDefinition_Cast(TypeDefinition typeDefinition)
         {
-            var date = DateTime.Now;
-            Action action = () => Console.WriteLine(date - date);
-            var typeInfo = new TypeInfo(action.Method.DeclaringType, new FakeDependency[0]);
+            var def = typeDefinition.ToTypeDefinition();
 
-            var descriptor = action.ToClosureDescriptor(typeInfo.Module);
+            Assert.Same(typeDefinition, def);
+        }
 
-            Assert.Equal(action.Method.DeclaringType.FullName, descriptor.DeclaringType);
-            Assert.Equal(action.Method.Name, descriptor.Name);
-            Assert.Single(descriptor.CapturedMembers, d => d.Field.Name == nameof(date)
-                                                           && d.Instance.Equals(date));
+        [Theory, AutoMoqData]
+        public void ToFieldDefinition_FieldReference_Resolved(TypeReference type)
+        {
+            var fieldReference = new Mock<FieldReference>("", type);
+            var def = fieldReference.Object.ToFieldDefinition();
+
+            fieldReference.Verify(t => t.Resolve());
+            Assert.NotSame(fieldReference.Object, def);
+        }
+
+        [Theory, AutoMoqData]
+        public void ToFieldDefinition_FieldDefinition_Cast(FieldDefinition fieldDefinition)
+        {
+            var def = fieldDefinition.ToFieldDefinition();
+
+            Assert.Same(fieldDefinition, def);
+        }
+
+        [Theory, AutoMoqData]
+        public void ToMethodDefinition_TypeReference_Resolved(TypeReference type)
+        {
+            var methodReference = new Mock<MethodReference>("", type);
+            var def = methodReference.Object.ToMethodDefinition();
+
+            methodReference.Verify(t => t.Resolve());
+            Assert.NotSame(methodReference.Object, def);
+        }
+
+        [Theory, AutoMoqData]
+        public void ToMethodDefinition_TypeDefinition_Cast(MethodDefinition methodDefinition)
+        {
+            var def = methodDefinition.ToMethodDefinition();
+
+            Assert.Same(methodDefinition, def);
         }
 
         private class TestClass
