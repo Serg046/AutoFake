@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoFake.IntegrationTests.Sut;
 using Xunit;
 
 namespace AutoFake.IntegrationTests
 {
     public class DemoTests
     {
-        public class Calendar
-        {
-            public static DateTime Yesterday => DateTime.Now.AddDays(-1);
-            internal Task<DateTime> AddSomeMinutesAsync(DateTime date) => Task.Run(() => AddSomeMinutes(date));
-            public static DateTime AddSomeMinutes(DateTime date) => date.AddMinutes(new Random().Next(1, 10));
-        }
-
         [Fact]
         public void Yesterday_SomeDay_ThePrevDay()
         {
