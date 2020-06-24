@@ -69,6 +69,7 @@ namespace AutoFake.Expression
         }
 
         IList<IFakeArgument> IInvocationExpression.GetArguments() => GetArguments();
+        [ExcludeFromCodeCoverage]
         internal IList<IFakeArgument> GetArguments()
         {
             if (_arguments == null)

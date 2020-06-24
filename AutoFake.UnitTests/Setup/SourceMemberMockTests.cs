@@ -55,6 +55,57 @@ namespace AutoFake.UnitTests.Setup
             Assert.Null(TestClass.InvocationExpression);
         }
 
+        [Theory, AutoMoqData]
+        internal void Initialize_ExpectedCallsField_ExpressionSet(
+            [Frozen]Mock<IPrePostProcessor> proc,
+            FieldDefinition field,
+            MethodDefinition method,
+            Mock mock)
+        {
+            field.Name = nameof(TestClass.CallsCounter);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition)null);
+            mock.ExpectedCalls = b => true;
+            mock.BeforeInjection(method);
+
+            Assert.Null(TestClass.CallsCounter);
+            mock.Initialize(typeof(TestClass));
+
+            Assert.Equal(mock.ExpectedCalls, TestClass.CallsCounter);
+            TestClass.CallsCounter = null;
+        }
+
+        [Theory, AutoMoqData]
+        internal void Initialize_IncorrectExpectedCallsField_Fails(
+            [Frozen]Mock<IPrePostProcessor> proc,
+            FieldDefinition field,
+            MethodDefinition method,
+            Mock mock)
+        {
+            field.Name = nameof(TestClass.CallsCounter) + "salt";
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition)null);
+            mock.ExpectedCalls = b => true;
+            mock.BeforeInjection(method);
+            mock.BeforeInjection(method);
+
+            Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
+        }
+
+        [Theory, AutoMoqData]
+        internal void Initialize_NoExpectedCallsField_NoEffect(
+            [Frozen]Mock<IPrePostProcessor> proc,
+            Mock mock)
+        {
+            mock.ExpectedCalls = null;
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition)null);
+
+            Assert.Null(TestClass.CallsCounter);
+            mock.Initialize(typeof(TestClass));
+
+            Assert.Null(TestClass.CallsCounter);
+        }
+
         [Theory]
         [InlineAutoMoqData(false, false, false)]
         [InlineAutoMoqData(false, true, true)]
@@ -157,6 +208,7 @@ namespace AutoFake.UnitTests.Setup
         private class TestClass
         {
             internal static IInvocationExpression InvocationExpression;
+            internal static Func<byte, bool> CallsCounter;
         }
     }
 }

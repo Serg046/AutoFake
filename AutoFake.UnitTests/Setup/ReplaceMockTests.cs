@@ -116,8 +116,11 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory, AutoMoqData]
-        internal void Initialize_NoRetValueField_NoEffect(ReplaceMock mock)
+        internal void Initialize_NoRetValueField_NoEffect(
+            [Frozen]Mock<IPrePostProcessor> preProc,
+            ReplaceMock mock)
         {
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
             mock.ReturnObject = null;
             mock.ExpectedCalls = null;
 
@@ -134,10 +137,12 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method,
             ReplaceMock mock)
         {
-            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), mock.SourceMember.ReturnType)).Returns(field);
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
             mock.ReturnObject = TestClass.VALUE;
+            mock.ExpectedCalls = null;
             mock.BeforeInjection(method);
 
             Assert.Throws<InitializationException>(() => mock.Initialize(type));

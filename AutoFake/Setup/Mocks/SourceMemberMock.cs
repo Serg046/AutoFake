@@ -39,7 +39,7 @@ namespace AutoFake.Setup.Mocks
         {
             if (CheckSourceMemberCalls)
             {
-                SetupBodyField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "Setup"), typeof(InvocationExpression));
+                SetupBodyField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "Setup"), typeof(IInvocationExpression));
                 CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(
                     GetFieldName(method.Name, "CallsAccumulator"), method.Body);
                 CallsChecker = PrePostProcessor.GenerateField(GetFieldName(method.Name, "CallsChecker"), typeof(Func<byte, bool>));
@@ -52,14 +52,14 @@ namespace AutoFake.Setup.Mocks
         {
             if (SetupBodyField != null)
             {
-                var field = GetField(type, SetupBodyField.Name);
-                if (field == null) throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
+                var field = GetField(type, SetupBodyField.Name)
+                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
                 field.SetValue(null, _invocationExpression);
             }
             if (ExpectedCalls != null)
             {
                 var field = GetField(type, CallsChecker.Name)
-                            ?? throw new InitializationException($"'{CallsChecker.Name}' is not found in the generated object"); ;
+                            ?? throw new InitializationException($"'{CallsChecker.Name}' is not found in the generated object");
                 field.SetValue(null, ExpectedCalls);
             }
             return new List<object>();

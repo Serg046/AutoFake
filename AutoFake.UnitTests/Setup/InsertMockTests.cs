@@ -68,6 +68,23 @@ namespace AutoFake.UnitTests.Setup
             Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
         }
 
+        [Theory, AutoMoqData]
+        internal void Inject_ValidInput_Success(
+            [Frozen]Mock<IProcessorFactory> factory,
+            [Frozen]Mock<IPrePostProcessor> preProc, [Frozen]Mock<IProcessor> proc,
+            MethodDefinition method, FieldDefinition field,
+            IEmitter emitter, Instruction instruction,
+            InsertMock mock)
+        {
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(Action))).Returns(field);
+            mock.BeforeInjection(method);
+
+            mock.Inject(emitter, instruction);
+
+            factory.Verify(f => f.CreateProcessor(emitter, instruction));
+            proc.Verify(p => p.InjectClosure(field, InsertMock.Location.Top));
+        }
+
         private class TestClass
         {
             internal static Action Action;

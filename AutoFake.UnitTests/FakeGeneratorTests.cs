@@ -67,7 +67,17 @@ namespace AutoFake.UnitTests
 
             var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestClass.GetTestClass));
             Assert.Equal("AutoFake.UnitTests.dll", method.ReturnType.Module.Name);
-            Assert.Equal("AutoFake.UnitTests.dll", method.Parameters.Single().ParameterType.Module.Name);
+            Assert.All(method.Parameters, p => Assert.Equal("AutoFake.UnitTests.dll", p.ParameterType.Module.Name));
+            Assert.Equal("AutoFake.UnitTests.dll", method.Parameters[1].ParameterType.Module.Name);
+        }
+
+        [Fact]
+        internal void Generate_CtorFromTheSameModule_Success()
+        {
+            _fakeGenerator.Generate(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
+
+            var method = _typeInfo.Methods.Single(m => m.Name == ".ctor");
+            Assert.Equal("AutoFake.UnitTests.dll", method.DeclaringType.Module.Name);
         }
 
         [Fact]
@@ -118,7 +128,7 @@ namespace AutoFake.UnitTests
                 SimpleMethod();
             }
 
-            public TestClass GetTestClass(TestClass testClass) => testClass;
+            public TestClass GetTestClass(TestClass testClass, int x) => testClass;
         }
     }
 }
