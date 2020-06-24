@@ -12,20 +12,14 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public SourceMemberInsertMockConfiguration CheckArguments()
+        public SourceMemberInsertMockConfiguration ExpectedCalls(byte expectedCallsCount)
         {
-            _mock.CheckArguments = true;
-            return this;
+            return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
-
-        //public SourceMemberInsertMockInstaller ExpectedCalls(byte expectedCallsCount)
-        //{
-        //    return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
-        //}
 
         public SourceMemberInsertMockConfiguration ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc.ToMethodDescriptor();
+            _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
     }

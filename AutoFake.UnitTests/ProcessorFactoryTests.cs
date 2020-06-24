@@ -1,4 +1,4 @@
-﻿using System;
+﻿using AutoFake.Expression;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -24,26 +24,20 @@ namespace AutoFake.UnitTests
             ProcessorFactory factory)
         {
             var proc = factory.CreatePrePostProcessor();
-            proc.GenerateSetupBodyField(name);
+            proc.GenerateField(name, typeof(InvocationExpression));
 
             type.Verify(t => t.AddField(It.Is<FieldDefinition>(f => f.Name == name)));
         }
 
         [Theory, AutoMoqData]
         internal void CreateProcessor_TypeInfo_Injected(
-            [Frozen]Mock<ITypeInfo> type, Instruction cmd,
-            IEmitter emitter, 
+            Mock<IEmitter> emitter, Instruction instruction,
             ProcessorFactory factory)
         {
-            var proc = factory.CreateProcessor(emitter, cmd);
-
-            try
-            {
-                proc.InjectClosure(null, false, null);
-            }
-            catch { }
-
-            type.Verify(t => t.Module);
+            var proc = factory.CreateProcessor(emitter.Object, instruction);
+            proc.RemoveInstruction(instruction);
+            
+            emitter.Verify(e => e.Remove(instruction));
         }
     }
 }

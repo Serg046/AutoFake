@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
@@ -20,13 +22,20 @@ namespace AutoFake.UnitTests.Setup
             bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
             [Frozen]Mock<IPrePostProcessor> preProc,
             [Frozen]Mock<IProcessor> proc,
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression,
             MethodDefinition method,
             FieldDefinition accumulator,
-            IEmitter emitter,
-            VerifyMock mock)
+            IEmitter emitter)
         {
-            if (!expectedCallsCountFunc) mock.ExpectedCalls = null;
-            mock.CheckArguments = needCheckArguments;
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(needCheckArguments 
+                    ? new EqualityArgumentChecker(1) 
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new VerifyMock(processorFactory, expression.Object);
+            mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null;
             var runtimeArgs = new List<VariableDefinition>();
             preProc.Setup(p => p.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>())).Returns(accumulator);
             proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments)).Returns(runtimeArgs);

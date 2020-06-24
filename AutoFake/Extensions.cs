@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Mono.Cecil;
 using System.Linq;
@@ -13,18 +14,7 @@ namespace AutoFake
                methodReference.Parameters.Select(p => p.ParameterType.FullName)
          .SequenceEqual(method.Parameters.Select(p => p.ParameterType.FullName)) &&
                methodReference.ReturnType.FullName == method.ReturnType.FullName;
-
-        public static MethodDescriptor ToMethodDescriptor(this Delegate action)
-        {
-            return new MethodDescriptor(action.Method.DeclaringType?.FullName, action.Method.Name);
-        }
-
-        public static ClosureDescriptor ToClosureDescriptor(this Delegate action, ModuleDefinition module)
-        {
-            var members = GetCapturedMembers(action, module);
-            return new ClosureDescriptor(action.Method.DeclaringType.FullName, action.Method.Name, members);
-        }
-
+        
         public static IEmitter GetEmitter(this MethodBody method) => new Emitter(method);
 
         public static bool IsAsync(this MethodDefinition method, out MethodDefinition asyncMethod)
@@ -33,55 +23,39 @@ namespace AutoFake
                 .SingleOrDefault(a => a.AttributeType.Name == "AsyncStateMachineAttribute");
             if (asyncAttribute != null)
             {
-                var generatedAsyncType = (TypeReference)asyncAttribute.ConstructorArguments[0].Value;
-                asyncMethod = generatedAsyncType.Resolve().Methods.Single(m => m.Name == "MoveNext");
+                var typeRef = asyncAttribute.ConstructorArguments[0].Value as TypeReference;
+                asyncMethod = typeRef.ToTypeDefinition().Methods.Single(m => m.Name == "MoveNext");
                 return true;
             }
             asyncMethod = null;
             return false;
         }
 
-        public static void ReplaceType(this Instruction instruction, TypeReference typeRef)
-        {
-            if (instruction.Operand is FieldReference field && field.FieldType.FullName == typeRef.FullName)
-            {
-                field.FieldType = typeRef;
-            }
-            else if (instruction.Operand is MethodReference method)
-            {
-                if (method.ReturnType.FullName == typeRef.FullName)
-                {
-                    method.ReturnType = typeRef;
-                }
-                for (var i = 0; i < method.Parameters.Count; i++)
-                {
-                    if (method.Parameters[i].ParameterType.FullName == typeRef.FullName)
-                    {
-                        method.Parameters[i].ParameterType = typeRef;
-                    }
-                }
-            }
-        }
+        public static TypeDefinition ToTypeDefinition(this TypeReference type)
+            => type as TypeDefinition ?? type.Resolve();
 
-        public static ICollection<CapturedMember> GetCapturedMembers(this Delegate action, ModuleDefinition module)
+        public static FieldDefinition ToFieldDefinition(this FieldReference field)
+            => field as FieldDefinition ?? field.Resolve();
+
+        public static MethodDefinition ToMethodDefinition(this MethodReference method)
+            => method as MethodDefinition ?? method.Resolve();
+
+        public static IEqualityComparer ToNonGeneric<T>(this IEqualityComparer<T> comparer)
+            => new EqualityComparer((x, y) => comparer.Equals((T)x, (T)y), x => comparer.GetHashCode((T)x));
+
+        private class EqualityComparer : IEqualityComparer
         {
-            var delegateType = module.GetType(action.Method.DeclaringType.FullName, true).Resolve();
-            var delegateRef = delegateType.Methods.Single(m => m.Name == action.Method.Name);
-            if (delegateRef.IsAsync(out var asyncMethod)) delegateRef = asyncMethod;
-            return delegateRef.Body.Instructions
-                .Where(c => c.OpCode == OpCodes.Ldfld || c.OpCode == OpCodes.Ldflda)
-                .Select(c => (FieldDefinition)c.Operand)
-                .Distinct()
-                .Where(field => field.DeclaringType == delegateType &&
-                                !delegateRef.Body.Instructions.Any(c => c.OpCode == OpCodes.Stfld && c.Operand == field))
-                .Select(field =>
-                {
-                    var capturedField = action.Target.GetType().GetField(field.Name);
-                    var capturedValue = capturedField.GetValue(action.Target);
-                    var capturedFieldTypeRef = module.ImportReference(capturedField.FieldType);
-                    Instruction.Create(OpCodes.Ldfld, field).ReplaceType(capturedFieldTypeRef);
-                    return new CapturedMember(field, capturedValue);
-                }).ToList();
+            private readonly Func<object, object, bool> _comparer;
+            private readonly Func<object, int> _hasher;
+
+            public EqualityComparer(Func<object, object, bool> comparer, Func<object, int> hasher)
+            {
+                _comparer = comparer;
+                _hasher = hasher;
+            }
+
+            public bool Equals(object x, object y) => _comparer(x, y);
+            public int GetHashCode(object obj) => _hasher(obj);
         }
     }
 }

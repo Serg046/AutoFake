@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
@@ -21,6 +22,7 @@ namespace AutoFake.UnitTests.Setup
             Mock mock)
         {
             field.Name = nameof(TestClass.InvocationExpression);
+            mock.ExpectedCalls = null;
             mock.BeforeInjection(method);
 
             Assert.Null(TestClass.InvocationExpression);
@@ -45,10 +47,63 @@ namespace AutoFake.UnitTests.Setup
         [Theory, AutoMoqData]
         internal void Initialize_NoSetupBodyField_NoEffect(Mock mock)
         {
+            mock.ExpectedCalls = null;
+
             Assert.Null(TestClass.InvocationExpression);
             mock.Initialize(typeof(TestClass));
 
             Assert.Null(TestClass.InvocationExpression);
+        }
+
+        [Theory, AutoMoqData]
+        internal void Initialize_ExpectedCallsField_ExpressionSet(
+            [Frozen]Mock<IPrePostProcessor> proc,
+            FieldDefinition field,
+            MethodDefinition method,
+            Mock mock)
+        {
+            field.Name = nameof(TestClass.CallsCounter);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition)null);
+            mock.ExpectedCalls = b => true;
+            mock.BeforeInjection(method);
+
+            Assert.Null(TestClass.CallsCounter);
+            mock.Initialize(typeof(TestClass));
+
+            Assert.Equal(mock.ExpectedCalls, TestClass.CallsCounter);
+            TestClass.CallsCounter = null;
+        }
+
+        [Theory, AutoMoqData]
+        internal void Initialize_IncorrectExpectedCallsField_Fails(
+            [Frozen]Mock<IPrePostProcessor> proc,
+            FieldDefinition field,
+            MethodDefinition method,
+            Mock mock)
+        {
+            field.Name = nameof(TestClass.CallsCounter) + "salt";
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition)null);
+            mock.ExpectedCalls = b => true;
+            mock.BeforeInjection(method);
+            mock.BeforeInjection(method);
+
+            Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
+        }
+
+        [Theory, AutoMoqData]
+        internal void Initialize_NoExpectedCallsField_NoEffect(
+            [Frozen]Mock<IPrePostProcessor> proc,
+            Mock mock)
+        {
+            mock.ExpectedCalls = null;
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition)null);
+
+            Assert.Null(TestClass.CallsCounter);
+            mock.Initialize(typeof(TestClass));
+
+            Assert.Null(TestClass.CallsCounter);
         }
 
         [Theory]
@@ -60,15 +115,22 @@ namespace AutoFake.UnitTests.Setup
             bool needCheckArguments, bool expectedCallsCount, bool shouldBeInjected,
             [Frozen]Mock<IPrePostProcessor> preProc,
             MethodDefinition method,
-            Mock mock)
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression)
         {
-            mock.CheckArguments = needCheckArguments;
-            if (!expectedCallsCount) mock.ExpectedCalls = null;
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(needCheckArguments
+                    ? new EqualityArgumentChecker(1)
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new VerifyMock(processorFactory, expression.Object);
+            mock.ExpectedCalls = expectedCallsCount ? new Func<byte, bool>(i => true) : null;
 
             mock.BeforeInjection(method);
 
             var times = shouldBeInjected ? Times.AtLeastOnce() : Times.Never();
-            preProc.Verify(m => m.GenerateSetupBodyField(It.IsAny<string>()), times);
+            preProc.Verify(m => m.GenerateField(It.IsAny<string>(), It.IsAny<Type>()), times);
             preProc.Verify(m => m.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>()), times);
         }
 
@@ -93,47 +155,48 @@ namespace AutoFake.UnitTests.Setup
             bool checkArgs, bool expectedCalls, bool injected,
             [Frozen]ModuleDefinition module,
             [Frozen]Mock<IPrePostProcessor> postProc,
+            IProcessorFactory processorFactory,
+            Mock<IInvocationExpression> expression,
             TypeDefinition type,
-            IEmitter emitter,
-            Mock mock)
+            IEmitter emitter)
         {
+            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
+            {
+                new FakeArgument(checkArgs
+                    ? new EqualityArgumentChecker(1)
+                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+            });
+            var mock = new Mock(processorFactory, expression.Object);
             module.Types.Add(type);
-            mock.CheckArguments = checkArgs;
-            mock.ExpectedCalls = expectedCalls ? new MethodDescriptor(type.FullName, string.Empty) : null;
+            mock.ExpectedCalls = expectedCalls ? new Func<byte, bool>(i => true) : null;
 
             mock.AfterInjection(emitter);
 
-            postProc.Verify(m => m.InjectVerification(emitter, checkArgs, mock.ExpectedCalls,
+            postProc.Verify(m => m.InjectVerification(emitter, checkArgs, It.IsAny<FieldDefinition>(),
                     It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()),
                 injected ? Times.Once() : Times.Never());
         }
 
         [Theory, AutoMoqData]
-        internal void AfterInjection_NestedPrivateType_ChangedToAssemblyAccess(
-            [Frozen]ModuleDefinition module,
-            TypeDefinition type,
-            IEmitter emitter,
-            Mock mock)
+        internal void CheckArguments_SuccessfulCheckers_False(
+            [Frozen(Matching.ImplementedInterfaces)]SuccessfulArgumentChecker checker,
+            SourceMemberMock mock)
         {
-            type.Attributes = TypeAttributes.NestedPrivate;
-            module.Types.Add(type);
+            Assert.False(mock.CheckArguments);
+        }
 
-            mock.ExpectedCalls = new MethodDescriptor(type.FullName, string.Empty);
-
-            mock.AfterInjection(emitter);
-
-            Assert.Equal(TypeAttributes.NestedAssembly, type.Attributes);
+        [Theory, AutoMoqData]
+        internal void CheckArguments_EqualityArgumentCheckers_True(
+            [Frozen(Matching.ImplementedInterfaces)]EqualityArgumentChecker checker,
+            SourceMemberMock mock)
+        {
+            Assert.True(mock.CheckArguments);
         }
 
         internal class Mock: SourceMemberMock
         {
             public Mock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression) : base(processorFactory, invocationExpression)
             {
-            }
-
-            public override void ProcessInstruction(Instruction instruction)
-            {
-                throw new NotImplementedException();
             }
 
             public override void Inject(IEmitter emitter, Instruction instruction)
@@ -145,6 +208,7 @@ namespace AutoFake.UnitTests.Setup
         private class TestClass
         {
             internal static IInvocationExpression InvocationExpression;
+            internal static Func<byte, bool> CallsCounter;
         }
     }
 }

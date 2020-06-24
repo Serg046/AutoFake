@@ -14,54 +14,6 @@ namespace AutoFake.UnitTests
     public class PrePostProcessorTests
     {
         [Theory, AutoMoqData]
-        internal void GenerateSetupBodyField_FieldName_Added(
-            [Frozen]Mock<ITypeInfo> typeInfo,
-            string propName,
-            PrePostProcessor proc)
-        {
-            var field = proc.GenerateSetupBodyField(propName);
-
-            Assert.Equal(propName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(typeof(InvocationExpression).FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
-        }
-
-        [Theory, AutoMoqData]
-        internal void GenerateRetValueField_FieldName_Added(
-            [Frozen]Mock<ITypeInfo> typeInfo,
-            string propName, Type propType,
-            PrePostProcessor proc)
-        {
-            var field = proc.GenerateRetValueField(propName, propType);
-
-            Assert.Equal(propName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(propType.FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
-        }
-
-        [Theory, AutoMoqData]
-        internal void GenerateRetValueField_TypeExists_Reused(
-            [Frozen]ModuleDefinition module,
-            [Frozen]Mock<ITypeInfo> typeInfo,
-            string fieldName, Type fieldType,
-            PrePostProcessor proc)
-        {
-            var typeDef = new TypeDefinition(fieldType.Namespace, fieldType.Name, TypeAttributes.Class);
-            module.Types.Add(typeDef);
-            var field = proc.GenerateRetValueField(fieldName, fieldType);
-
-            Assert.Equal(fieldName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
-            Assert.Equal(fieldType.FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
-        }
-
-        [Theory, AutoMoqData]
         internal void GenerateField_FieldName_Added(
             [Frozen]Mock<ITypeInfo> typeInfo,
             string propName, Type propType,
@@ -103,18 +55,13 @@ namespace AutoFake.UnitTests
             bool checkArguments, bool callsCounter,
             [Frozen]ModuleDefinition module,
             [Frozen]Emitter emitter,
-            TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
-            FieldDefinition setupBody, FieldDefinition accumulator,
+            FieldDefinition setupBody, FieldDefinition accumulator, FieldDefinition callsChecker,
             PrePostProcessor proc)
         {
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-            ctor.Name = ".ctor";
-            type.Methods.Add(ctor);
-            type.Methods.Add(method);
-            module.Types.Add(type);
-            var callsCounterDescriptor = callsCounter ? new MethodDescriptor(type.FullName, method.Name) : null;
 
-            proc.InjectVerification(emitter, checkArguments, callsCounterDescriptor, setupBody, accumulator);
+            proc.InjectVerification(emitter, checkArguments, callsCounter ? callsChecker : null,
+                setupBody, accumulator);
 
             var checkArgsCode = checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var instructions = new List<Cil>
@@ -125,10 +72,7 @@ namespace AutoFake.UnitTests
             };
             if (callsCounter)
             {
-                instructions.Add(Cil.Cmd(OpCodes.Newobj, ctor));
-                instructions.Add(Cil.Cmd(OpCodes.Ldftn, method));
-                instructions.Add(Cil.Cmd(OpCodes.Newobj, (MemberReference m) => m.Name == ".ctor"
-                    && m.DeclaringType.FullName == "System.Func`2<System.Byte,System.Boolean>"));
+                instructions.Add(Cil.Cmd(OpCodes.Ldsfld, callsChecker));
             }
             else
             {
@@ -148,20 +92,14 @@ namespace AutoFake.UnitTests
             Type asyncType, string checkerMethodName,
             [Frozen]ModuleDefinition module,
             [Frozen]Emitter emitter,
-            TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
-            FieldDefinition setupBody, FieldDefinition accumulator,
+            FieldDefinition setupBody, FieldDefinition accumulator, FieldDefinition callsChecker,
             PrePostProcessor proc)
         {
             var taskType = module.ImportReference(asyncType);
             emitter.Body.Method.ReturnType = taskType;
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-            ctor.Name = ".ctor";
-            type.Methods.Add(ctor);
-            type.Methods.Add(method);
-            module.Types.Add(type);
-            var callsCounterDescriptor = new MethodDescriptor(type.FullName, method.Name);
 
-            proc.InjectVerification(emitter, true, callsCounterDescriptor, setupBody, accumulator);
+            proc.InjectVerification(emitter, true, callsChecker, setupBody, accumulator);
 
             Assert.True(emitter.Body.Instructions.Ordered(
                 Cil.Cmd(OpCodes.Stloc, (VariableDefinition o) => o.VariableType == taskType),
@@ -169,10 +107,7 @@ namespace AutoFake.UnitTests
                 Cil.Cmd(OpCodes.Ldloc, (VariableDefinition o) => o.VariableType == taskType),
                 Cil.Cmd(OpCodes.Ldsfld, accumulator),
                 Cil.Cmd(OpCodes.Ldc_I4_1),
-                Cil.Cmd(OpCodes.Newobj, ctor),
-                Cil.Cmd(OpCodes.Ldftn, method),
-                Cil.Cmd(OpCodes.Newobj, (MemberReference m) => m.Name == ".ctor"
-                    && m.DeclaringType.FullName == "System.Func`2<System.Byte,System.Boolean>"),
+                Cil.Cmd(OpCodes.Ldsfld, callsChecker),
                 Cil.Cmd(OpCodes.Callvirt, (MethodReference m) =>
                     m.Name == checkerMethodName
                     && m.DeclaringType.Name == nameof(InvocationExpression))

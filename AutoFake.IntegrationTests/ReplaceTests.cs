@@ -7,73 +7,76 @@ namespace AutoFake.IntegrationTests
 {
     public class ReplaceTests
     {
-        [Fact]
-        public void CheckArgumentsTest()
+        [Theory]
+        [InlineData(false, false, true)]
+        [InlineData(true, false, true)]
+        [InlineData(false, true, true)]
+        [InlineData(true, true, false)]
+        public void CheckArgumentsTest(bool correctDate, bool correctZone, bool throws)
         {
             var fake = new Fake<TestClass>();
+            var date = correctDate ? new DateTime(2019, 1, 1) : DateTime.MinValue;
+            var zone = correctZone ? TimeZoneInfo.Utc 
+                : TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
 
-            fake.Rewrite(f => f.GetValueByArguments(Arg.IsAny<DateTime>(), Arg.IsAny<TimeZoneInfo>()))
-                .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
-                .CheckArguments()
-                .Return(() => DateTime.MinValue);
+            var sut = fake.Rewrite(f => f.GetValueByArguments(date, zone));
+            sut.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
+                .Return(DateTime.MinValue);
 
-            fake.Execute(tst =>
+            if (throws)
             {
-                var incorrectZone = TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
-                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(DateTime.MinValue, TimeZoneInfo.Utc));
-                Assert.Throws<VerifyException>(() => tst.GetValueByArguments(new DateTime(2019, 1, 1), incorrectZone));
-                Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
-            });
+                Assert.Throws<VerifyException>(() => sut.Execute());
+            }
+            else
+            {
+                sut.Execute();
+            }
         }
 
-        [Fact]
-        public void ExpectedCallsCountTest()
+        [Theory]
+        [InlineData(true, 2, true)]
+        [InlineData(true, 1, false)]
+        [InlineData(false, 0, false)]
+        public void ExpectedCallsCountTest(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
-            fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null))
-                .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
-                .ExpectedCalls(i => i == 2)
-                .Return(() => DateTime.MinValue);
+            Func<byte, bool> checker;
+            if (equalOp) checker = x => x == arg;
+            else checker = x => x > arg;
 
-            fake.Execute(tst => Assert.Throws<ExpectedCallsException>(() => tst.GetValueByArguments(DateTime.MinValue, null)));
+            var sut = fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null));
+            sut.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default, default))
+                .ExpectedCalls(checker)
+                .Return(DateTime.MinValue);
 
-            fake = new Fake<TestClass>();
-            fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null))
-                .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
-                .ExpectedCalls(i => i == 1)
-                .Return(() => DateTime.MinValue);
-
-            fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
-
-            fake = new Fake<TestClass>();
-            fake.Rewrite(f => f.GetValueByArguments(DateTime.MinValue, null))
-                .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(default(DateTime), default(TimeZoneInfo)))
-                .ExpectedCalls(x => x > 0)
-                .Return(() => DateTime.MinValue);
-
-            fake.Execute(tst => Assert.Equal(DateTime.MinValue, tst.GetValueByArguments(DateTime.MinValue, null)));
+            if (throws)
+            {
+                Assert.Throws<ExpectedCallsException>(() => sut.Execute());
+            }
+            else
+            {
+                Assert.Equal(DateTime.MinValue, sut.Execute());
+            }
         }
 
         [Fact]
         public void BranchesTest()
         {
             var fake = new Fake<TestClass>();
-            fake.Rewrite(f => f.Sum(1, 2))
-                .Replace(t => t.CodeBranch(1, 2))
-                .CheckArguments()
+            var sut = fake.Rewrite(f => f.Sum(1, 2));
+            sut.Replace(t => t.CodeBranch(1, 2))
                 .ExpectedCalls(i => i == 1)
-                .Return(() => 6);
+                .Return(6);
 
-            fake.Execute(tst => Assert.Equal(9, tst.Sum(1, 2)));
+            Assert.Equal(9, sut.Execute());
 
             fake = new Fake<TestClass>();
-            fake.Rewrite(f => f.Sum(0, 1))
-                .Replace(t => t.CodeBranch(0, 0))
-                .CheckArguments()
+            sut = fake.Rewrite(f => f.Sum(0, 1));
+            sut.Replace(t => t.CodeBranch(0, 0))
                 .ExpectedCalls(i => i == 1)
-                .Return(() => 6);
+                .Return(6);
 
-            fake.Execute(tst => Assert.Equal(6, tst.Sum(0, 1)));
+            Assert.Equal(6, sut.Execute());
         }
 
         [Fact]
@@ -82,36 +85,26 @@ namespace AutoFake.IntegrationTests
             var date = new DateTime(2020, 5, 23);
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.GetValueByArguments(Arg.IsAny<DateTime>(), Arg.IsAny<TimeZoneInfo>()))
-                .Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
-                .CheckArguments()
+            var sut = fake.Rewrite(f => f.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
+            sut.Replace(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc))
                 .Return(date);
 
-            fake.Execute(tst =>
-            {
-                Assert.Equal(date, tst.GetValueByArguments(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
-            });
+            Assert.Equal(date, sut.Execute());
         }
 
         [Fact]
         public void Replace_Class_Replaced()
         {
             const int mutator = 4;
-            var cl2 = new TestClass2()
-            {
-                Value = 2
-            };
+            var cl2 = new TestClass2 {Value = 2};
+            var t1 = new TestClass2();
             var fake = new Fake<TestClass>();
 
-            fake.Rewrite(f => f.MutateTestClass2(Arg.IsAny<TestClass2>(), mutator))
-                .Replace(f => f.Mutator(Arg.IsAny<TestClass2>(), mutator))
+            var sut = fake.Rewrite(f => f.MutateTestClass2(t1, mutator));
+            sut.Replace(f => f.Mutator(Arg.IsAny<TestClass2>(), mutator))
                 .Return(cl2);
 
-            fake.Execute(tst =>
-            {
-                var t1 = new TestClass2();
-                Assert.Equal(cl2, tst.MutateTestClass2(t1, mutator));
-            });
+            Assert.Equal(cl2, sut.Execute());
         }
 
         public class TestClass

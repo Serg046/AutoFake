@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.Setup.Mocks
 {
@@ -20,15 +20,17 @@ namespace AutoFake.Setup.Mocks
             SourceMember = invocationExpression.GetSourceMember();
             PrePostProcessor = processorFactory.CreatePrePostProcessor();
             ProcessorFactory = processorFactory;
+            CheckArguments = invocationExpression.GetArguments().Any(arg => !(arg.Checker is SuccessfulArgumentChecker));
         }
 
         protected IProcessorFactory ProcessorFactory { get; }
         protected IPrePostProcessor PrePostProcessor { get; }
         protected FieldDefinition SetupBodyField { get; private set; }
         protected FieldDefinition CallsAccumulator { get; private set; }
+        protected FieldDefinition CallsChecker { get; private set; }
 
-        public bool CheckArguments { get; set; }
-        public MethodDescriptor ExpectedCalls { get; set; }
+        public bool CheckArguments { get; }
+        public Func<byte, bool> ExpectedCalls { get; set; }
 
         public bool CheckSourceMemberCalls => CheckArguments || ExpectedCalls != null;
         public ISourceMember SourceMember { get; }
@@ -37,13 +39,12 @@ namespace AutoFake.Setup.Mocks
         {
             if (CheckSourceMemberCalls)
             {
-                SetupBodyField = PrePostProcessor.GenerateSetupBodyField(GetFieldName(method.Name, "Setup"));
+                SetupBodyField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "Setup"), typeof(IInvocationExpression));
                 CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(
                     GetFieldName(method.Name, "CallsAccumulator"), method.Body);
+                CallsChecker = PrePostProcessor.GenerateField(GetFieldName(method.Name, "CallsChecker"), typeof(Func<byte, bool>));
             }
         }
-
-        public abstract void ProcessInstruction(Instruction instruction);
 
         public abstract void Inject(IEmitter emitter, Instruction instruction);
 
@@ -51,9 +52,15 @@ namespace AutoFake.Setup.Mocks
         {
             if (SetupBodyField != null)
             {
-                var field = GetField(type, SetupBodyField.Name);
-                if (field == null) throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
+                var field = GetField(type, SetupBodyField.Name)
+                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
                 field.SetValue(null, _invocationExpression);
+            }
+            if (ExpectedCalls != null)
+            {
+                var field = GetField(type, CallsChecker.Name)
+                            ?? throw new InitializationException($"'{CallsChecker.Name}' is not found in the generated object");
+                field.SetValue(null, ExpectedCalls);
             }
             return new List<object>();
         }
@@ -82,17 +89,8 @@ namespace AutoFake.Setup.Mocks
         {
             if (CheckSourceMemberCalls)
             {
-                PrePostProcessor.InjectVerification(emitter, CheckArguments, ExpectedCalls,
+                PrePostProcessor.InjectVerification(emitter, CheckArguments, CallsChecker,
                     SetupBodyField, CallsAccumulator);
-            }
-
-            if (ExpectedCalls != null)
-            {
-                var type = ProcessorFactory.TypeInfo.Module.GetType(ExpectedCalls.DeclaringType, true).Resolve();
-                if (type.Attributes.HasFlag(TypeAttributes.NestedPrivate))
-                {
-                    type.Attributes = TypeAttributes.NestedAssembly;
-                }
             }
         }
     }

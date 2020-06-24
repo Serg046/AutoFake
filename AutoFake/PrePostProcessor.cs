@@ -20,23 +20,6 @@ namespace AutoFake
             _typeInfo = typeInfo;
         }
 
-        public FieldDefinition GenerateSetupBodyField(string name)
-        {
-            var type = _typeInfo.Module.ImportReference(typeof(InvocationExpression));
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
-            _typeInfo.AddField(field);
-            return field;
-        }
-
-        public FieldDefinition GenerateRetValueField(string name, Type returnType)
-        {
-            var type = _typeInfo.Module.GetType(returnType.FullName, true)
-                       ?? _typeInfo.Module.ImportReference(returnType);
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
-            _typeInfo.AddField(field);
-            return field;
-        }
-
         public FieldDefinition GenerateField(string name, Type returnType)
         {
             var type = _typeInfo.Module.ImportReference(returnType);
@@ -57,7 +40,7 @@ namespace AutoFake
             return field;
         }
 
-        public void InjectVerification(IEmitter emitter, bool checkArguments, MethodDescriptor expectedCalls,
+        public void InjectVerification(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
             FieldDefinition setupBody, FieldDefinition callsAccumulator)
         {
             var retInstruction = emitter.Body.Instructions.Last();
@@ -77,14 +60,7 @@ namespace AutoFake
             emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
             if (expectedCalls != null)
             {
-                var type = _typeInfo.Module.GetType(expectedCalls.DeclaringType, true).Resolve();
-                var ctor = type.Methods.Single(m => m.Name == ".ctor");
-                var method = type.Methods.Single(m => m.Name == expectedCalls.Name);
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Newobj, ctor));
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldftn, method));
-                var funcCtor = typeof(Func<byte, bool>).GetConstructors().Single();
-                emitter.InsertBefore(retInstruction,
-                    Instruction.Create(OpCodes.Newobj, _typeInfo.Module.ImportReference(funcCtor)));
+                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCalls));
             }
             else
             {
@@ -119,7 +95,5 @@ namespace AutoFake
                 return _typeInfo.Module.ImportReference(methodInfo);
             }
         }
-
-        public TypeReference GetTypeReference(Type type) => _typeInfo.Module.ImportReference(type);
     }
 }

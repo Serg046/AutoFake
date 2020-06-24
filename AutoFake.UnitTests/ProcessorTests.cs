@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Setup.Mocks;
 using AutoFake.UnitTests.TestUtils;
 using AutoFixture;
 using AutoFixture.Xunit2;
 using Mono.Cecil.Cil;
 using Xunit;
 using Mono.Cecil;
+using Mono.Collections.Generic;
 
 namespace AutoFake.UnitTests
 {
@@ -166,42 +169,38 @@ namespace AutoFake.UnitTests
             Assert.Equal(field, replacedCmd.Operand);
         }
 
-        [Theory]
-        [InlineAutoMoqData(true)]
-        [InlineAutoMoqData(false)]
-        internal void InjectClosure_ValidInput_Injected(
-            bool beforeInstruction,
-            [Frozen]ModuleDefinition module,
+        [Theory, AutoMoqData]
+        internal void InjectClosure_Top_Injected(
+            [Frozen]Instruction instruction,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen]Instruction cmd,
-            TypeDefinition type, MethodDefinition ctor, MethodDefinition method,
-            FieldDefinition field1, FieldDefinition field2,
-            Processor proc)
+            FieldDefinition field, Processor proc)
         {
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-            ctor.Name = ".ctor";
-            type.Methods.Add(ctor);
-            type.Methods.Add(method);
-            module.Types.Add(type);
+            emitter.Body.Instructions.Add(instruction);
 
-            emitter.Body.Instructions.Add(cmd);
-            var descriptor = new ClosureDescriptor(type.FullName, method.Name, null);
-            var capturedMembers = new Dictionary<CapturedMember, FieldDefinition>();
-            capturedMembers.Add(new CapturedMember(field1, 5), field2);
+            proc.InjectClosure(field, InsertMock.Location.Top);
 
-            proc.InjectClosure(descriptor, beforeInstruction, capturedMembers);
+            Assert.True(emitter.Body.Instructions.Ordered(
+                Cil.Cmd(OpCodes.Ldsfld, field),
+                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == nameof(Action.Invoke)),
+                Cil.Cmd(instruction.OpCode)
+            ));
+        }
 
-            var sourceCmd = new[] {Cil.Cmd(cmd.OpCode) };
-            var cmds = new[]
-            {
-                Cil.Cmd(OpCodes.Newobj, ctor),
-                Cil.Cmd(OpCodes.Dup),
-                Cil.Cmd(OpCodes.Ldsfld, field2),
-                Cil.Cmd(OpCodes.Stfld, field1),
-                Cil.Cmd(OpCodes.Call, method)
-            };
-            var orderedCmds = beforeInstruction ? cmds.Concat(sourceCmd) : sourceCmd.Concat(cmds);
-            Assert.True(emitter.Body.Instructions.Ordered(orderedCmds.ToArray()));
+        [Theory, AutoMoqData]
+        internal void InjectClosure_Bottom_Injected(
+            [Frozen]Instruction instruction,
+            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
+            FieldDefinition field, Processor proc)
+        {
+            emitter.Body.Instructions.Add(instruction);
+
+            proc.InjectClosure(field, InsertMock.Location.Bottom);
+
+            Assert.True(emitter.Body.Instructions.Ordered(
+                Cil.Cmd(instruction.OpCode),
+                Cil.Cmd(OpCodes.Ldsfld, field),
+                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == nameof(Action.Invoke))
+            ));
         }
     }
 }

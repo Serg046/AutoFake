@@ -1,5 +1,4 @@
-﻿using AutoFake.Expression;
-using AutoFake.Setup.Configurations;
+﻿using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using System;
 using Xunit;
@@ -8,41 +7,36 @@ namespace AutoFake.UnitTests.Setup
 {
     public class ReplaceMockInstallerTests
     {
-        private readonly ReplaceMock _mock;
-        private readonly ReplaceMockConfiguration<int> _replaceMockInstaller;
-
-        public ReplaceMockInstallerTests()
+        [Theory, AutoMoqData]
+        internal void Return_Value_Set(ReplaceMock mock)
         {
-            _mock = new ReplaceMock(new ProcessorFactory(null), Moq.Mock.Of<IInvocationExpression>());
-            _replaceMockInstaller = new ReplaceMockConfiguration<int>(_mock);
+            var sut = new ReplaceMockConfiguration<int>(mock);
+
+            sut.Return(3);
+
+            Assert.Equal(3, mock.ReturnObject);
         }
 
-        [Fact]
-        public void CheckArguments_ReturnsTrue()
+        [Theory, AutoMoqData]
+        internal void ExpectedCalls_Byte_Success(ReplaceMock mock)
         {
-            Assert.False(_mock.CheckArguments);
-            _replaceMockInstaller.CheckArguments();
-            Assert.True(_mock.CheckArguments);
+            var sut = new ReplaceMockConfiguration<int>(mock);
+
+            sut.ExpectedCalls(3);
+
+            Assert.True(mock.ExpectedCalls(3));
+            Assert.False(mock.ExpectedCalls(2));
         }
 
-        //[Fact]
-        //public void ExpectedCalls_Byte_Success()
-        //{
-        //    _replaceMockInstaller.ExpectedCalls(3);
-
-        //    Assert.True(_mock.ExpectedCallsFunc(3));
-        //    Assert.False(_mock.ExpectedCallsFunc(2));
-        //}
-
-        [Fact]
-        public void ExpectedCalls_Func_Success()
+        [Theory, AutoMoqData]
+        internal void ExpectedCalls_Func_Success(ReplaceMock mock)
         {
             Func<byte, bool> func = x => x > 2;
+            var sut = new ReplaceMockConfiguration<int>(mock);
 
-            _replaceMockInstaller.ExpectedCalls(func);
+            sut.ExpectedCalls(func);
 
-            Assert.Equal(func.Method.Name, _mock.ExpectedCalls.Name);
-            Assert.Equal(func.Method.DeclaringType.FullName, _mock.ExpectedCalls.DeclaringType);
+            Assert.Equal(func, mock.ExpectedCalls);
         }
     }
 }

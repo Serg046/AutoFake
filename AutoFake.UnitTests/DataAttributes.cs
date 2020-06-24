@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Mono.Cecil.Cil;
+using Moq;
 using Xunit;
 using Xunit.Sdk;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -31,6 +32,7 @@ namespace AutoFake.UnitTests
                 fixture.Register(() => new TypeDefinition("TestNs", "TestType", TypeAttributes.Class));
                 fixture.Register(() => new MethodDefinition("Method", MethodAttributes.Public, fixture.Create<TypeDefinition>()));
                 fixture.Register(() => Instruction.Create(OpCodes.Nop));
+                fixture.Register(() => new Mock<TypeReference>(fixture.Create<string>(), fixture.Create<TypeReference>()));
                 fixture.Register<ParameterInfo>(() => new Parameter {PrmType = fixture.Create<Type>()});
             }
         }

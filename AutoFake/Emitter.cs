@@ -21,7 +21,11 @@ namespace AutoFake
             => _processor.InsertAfter(target, instruction);
 
         public void Replace(Instruction target, Instruction instruction)
-            => _processor.Replace(target, instruction);
+        {
+            _processor.Replace(target, instruction);
+            target.OpCode = OpCodes.Nop;
+            target.Operand = "The instruction has been detached";
+        }
 
         public void Remove(Instruction instruction)
             => _processor.Remove(instruction);

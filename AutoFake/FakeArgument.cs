@@ -1,16 +1,16 @@
 ﻿namespace AutoFake
 {
-    internal class FakeArgument
+    internal class FakeArgument : IFakeArgument
     {
-        private readonly IFakeArgumentChecker _checker;
-
         public FakeArgument(IFakeArgumentChecker checker)
         {
-            _checker = checker;
+            Checker = checker;
         }
 
-        public bool Check(object argument) => _checker.Check(argument);
+        public IFakeArgumentChecker Checker { get; }
 
-        public override string ToString() => _checker.ToString();
+        public bool Check(object argument) => Checker.Check(argument);
+
+        public override string ToString() => Checker.ToString();
     }
 }
