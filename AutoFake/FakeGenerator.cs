@@ -68,11 +68,13 @@ namespace AutoFake
         {
             private readonly MethodDefinition _originalMethod;
             private readonly IEnumerable<IMock> _mocks;
+            private readonly HashSet<MethodDefinition> _methods;
 
             public TestMethod(MethodDefinition originalMethod, IEnumerable<IMock> mocks)
             {
                 _originalMethod = originalMethod;
                 _mocks = mocks;
+                _methods = new HashSet<MethodDefinition>();
             }
 
             public void Rewrite()
@@ -82,7 +84,7 @@ namespace AutoFake
 
             private void Rewrite(MethodDefinition currentMethod)
             {
-                if (currentMethod.Body == null) return;
+                if (!_methods.Add(currentMethod) || currentMethod.Body == null) return;
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
                     Rewrite(asyncMethod);
