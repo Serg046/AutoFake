@@ -135,6 +135,28 @@ namespace AutoFake.UnitTests
             Assert.Throws<ArgumentNullException>(() => fake.Execute((Expression<Action>)null));
         }
 
+        [Theory]
+        [MemberData(nameof(GetMutateCallbacks))]
+        public void Execute_GenericFake_Throws(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+
+            fake.Execute(callback);
+
+            Assert.Equal(5, fake.Execute(() => TestClass.State));
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMutateCallbacks))]
+        public void Execute_Fake_Throws(dynamic callback)
+        {
+            var fake = new Fake<TestClass>();
+
+            fake.Execute(callback);
+
+            Assert.Equal(5, fake.Execute(() => TestClass.State));
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 
@@ -154,18 +176,54 @@ namespace AutoFake.UnitTests
             yield return new object[] { staticAction };
         }
 
+        public static IEnumerable<object[]> GetMutateCallbacks()
+            => GetMutateFuncs().Concat(GetMutateActions());
+
+        public static IEnumerable<object[]> GetMutateFuncs()
+        {
+            Expression<Func<TestClass, string>> instanceFunc = tst => tst.FuncMutator();
+            yield return new object[] { instanceFunc };
+            Expression<Func<string>> staticFunc = () => TestClass.StaticFuncMutator();
+            yield return new object[] { staticFunc };
+        }
+
+        public static IEnumerable<object[]> GetMutateActions()
+        {
+            Expression<Action<TestClass>> instanceAction = tst => tst.ActionMutator();
+            yield return new object[] { instanceAction };
+            Expression<Action> staticAction = () => TestClass.StaticActionMutator();
+            yield return new object[] { staticAction };
+        }
+
         internal class TestClass
         {
+            public static int State;
             public void SomeMethod() { }
 
             internal static string FailingStaticMethod() => throw new NotImplementedException();
             internal string FailingMethod() => throw new NotImplementedException();
             internal static void FailingVoidStaticMethod() => throw new NotImplementedException();
             internal void FailingVoidMethod() => throw new NotImplementedException();
+
             internal void VoidInstanceMethod() { }
             internal string StringInstanceMethod() => string.Empty;
             internal static void StaticVoidInstanceMethod() { }
             internal static string StaticStringInstanceMethod() => string.Empty;
+
+            internal static string StaticFuncMutator()
+            {
+                State = 5;
+                return "";
+            }
+
+            internal string FuncMutator()
+            {
+                State = 5;
+                return "";
+            }
+
+            internal static void StaticActionMutator() => State = 5;
+            internal void ActionMutator() => State = 5;
 
             internal Task FailingMethodAsync() => FailingStaticMethodAsync();
             internal static async Task FailingStaticMethodAsync()

@@ -36,7 +36,8 @@ namespace AutoFake.Setup.Mocks
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
-            => instruction.OpCode == _opCode && _instructions.ContainsKey(instruction?.Operand?.ToString());
+            => instruction != null && instruction.OpCode == _opCode && instruction.Operand != null &&
+               _instructions.ContainsKey(instruction.Operand.ToString());
 
         [ExcludeFromCodeCoverage]
         public void BeforeInjection(MethodDefinition method)

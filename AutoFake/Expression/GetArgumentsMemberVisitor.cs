@@ -73,11 +73,7 @@ namespace AutoFake.Expression
         {
             if (expression.Method.DeclaringType == typeof(Arg))
             {
-                if (expression.Method.Name == nameof(Arg.IsAny))
-                {
-                    return new FakeArgument(new SuccessfulArgumentChecker());
-                }
-                else if (expression.Method.Name == nameof(Arg.Is))
+                if (expression.Method.Name == nameof(Arg.Is))
                 {
                     if (expression.Arguments.Count == 1)
                     {
@@ -86,11 +82,9 @@ namespace AutoFake.Expression
                         var checker = new LambdaArgumentChecker(lambda);
                         return new FakeArgument(checker);
                     }
-                    else if (expression.Arguments.Count == 2)
-                    {
-                        return CreateEqualityComparerArgument(expression);
-                    }
+                    return CreateEqualityComparerArgument(expression);
                 }
+                return new FakeArgument(new SuccessfulArgumentChecker());
             }
             return CreateFakeArgument(expression);
         }

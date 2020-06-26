@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -137,7 +138,7 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_MethodWithYourselfRef_Success()
+        public void Visit_MethodWithSelfRef_Success()
         {
             var testClass = new MethodTestClass();
             var expression = GetMethodCallExpression(t => t.SomeMethod(testClass));
@@ -348,6 +349,27 @@ namespace AutoFake.UnitTests.Expression
 
             Assert.Equal(1, _visitor.Arguments.Count);
             Assert.True(_visitor.Arguments.Single().Check(5));
+        }
+
+        [Fact]
+        public void GetArgument_IsAny_SuccessfulArgumentChecker()
+        {
+            var expression = GetMethodCallExpression(tst => tst.SomeMethod(Arg.IsAny<int>()));
+
+            _visitor.Visit(expression, expression.Method);
+
+            Assert.IsType<SuccessfulArgumentChecker>(_visitor.Arguments.Single().Checker);
+        }
+
+        [Fact]
+        public void GetArgument_IsWithEqualityComparer_EqualityArgumentChecker()
+        {
+            var expression = GetMethodCallExpression(tst => tst.SomeMethod(
+                Arg.Is(5, Mock.Of<IEqualityComparer<int>>())));
+
+            _visitor.Visit(expression, expression.Method);
+
+            Assert.IsType<EqualityArgumentChecker>(_visitor.Arguments.Single().Checker);
         }
 
         private MethodCallExpression GetMethodCallExpression(Expression<Action<MethodTestClass>> expression)
