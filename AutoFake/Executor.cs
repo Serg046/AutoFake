@@ -6,7 +6,7 @@ namespace AutoFake
     {
         private readonly ExecutorImpl _executor;
 
-        internal Executor(Fake fake, InvocationExpression invocationExpression)
+        internal Executor(Fake fake, IInvocationExpression invocationExpression)
         {
             _executor = new ExecutorImpl(fake, invocationExpression);
         }
