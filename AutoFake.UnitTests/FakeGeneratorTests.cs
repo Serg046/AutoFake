@@ -94,6 +94,16 @@ namespace AutoFake.UnitTests
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
         }
 
+        [Fact]
+        public void Generate_RecursiveMethod_Success()
+        {
+            var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>());
+            var gen = new FakeGenerator(typeInfo);
+            var method = typeof(object).GetMethod(nameof(ToString));
+
+            gen.Generate(new []{Mock.Of<IMock>()}, method);
+        }
+
         private bool Equivalent(object operand, MethodInfo innerMethod) => 
             operand is MethodReference method &&
             method.Name == innerMethod.Name &&
