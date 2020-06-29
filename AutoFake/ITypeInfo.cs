@@ -19,6 +19,7 @@ namespace AutoFake
         void AddMethod(MethodDefinition method);
         void WriteAssembly(Stream stream);
         object CreateInstance(Type type);
-        FakeObjectInfo CreateFakeObject(MockCollection mocks);
+        FakeObjectInfo CreateFakeObject(MockCollection mocks, FakeOptions options);
+        IList<MethodDefinition> GetDerivedVirtualMethods(MethodDefinition method);
     }
 }

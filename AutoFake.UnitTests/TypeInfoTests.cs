@@ -105,7 +105,7 @@ namespace AutoFake.UnitTests
             var mocks = new MockCollection();
             mocks.Add(type.GetMethod("CreateFakeObjectTypeCreated"), new[] {mock.Object});
 
-            var fakeObjectInfo = typeInfo.CreateFakeObject(mocks);
+            var fakeObjectInfo = typeInfo.CreateFakeObject(mocks, new FakeOptions());
 
             mock.Verify(m => m.Initialize(It.IsAny<Type>()));
             Assert.Equal(type.FullName, fakeObjectInfo.Type.FullName);

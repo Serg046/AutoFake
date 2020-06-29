@@ -17,12 +17,14 @@ namespace AutoFake
         private readonly TypeDefinition _typeDefinition;
         private readonly IList<FakeDependency> _dependencies;
         private readonly Dictionary<string, ushort> _addedFields;
+        private readonly Dictionary<MethodDefinition, IList<MethodDefinition>> _virtualMethods;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
         {
             SourceType = sourceType;
             _dependencies = dependencies;
             _addedFields = new Dictionary<string, ushort>();
+            _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
 
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName);
 
@@ -42,7 +44,7 @@ namespace AutoFake
         private MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
         {
             return type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference))
-                   ?? GetMethod(type.BaseType.Resolve(), methodReference);
+                   ?? GetMethod(type.BaseType.ToTypeDefinition(), methodReference);
         }
 
         public void AddField(FieldDefinition field)
@@ -97,11 +99,11 @@ namespace AutoFake
 
         internal static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
 
-        public FakeObjectInfo CreateFakeObject(MockCollection mocks)
+        public FakeObjectInfo CreateFakeObject(MockCollection mocks, FakeOptions options)
         {
             using (var memoryStream = new MemoryStream())
             {
-                var fakeGenerator = new FakeGenerator(this);
+                var fakeGenerator = new FakeGenerator(this, options);
                 foreach (var mock in mocks)
                 {
                     fakeGenerator.Generate(mock.Mocks, mock.Method);
@@ -120,5 +122,41 @@ namespace AutoFake
         }
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
+
+        public IList<MethodDefinition> GetDerivedVirtualMethods(MethodDefinition method)
+        {
+            if (!_virtualMethods.ContainsKey(method))
+            {
+                var list = new List<MethodDefinition>();
+                foreach (var type in GetDerivedTypes(method.DeclaringType))
+                {
+                    var derivedMethod = type.Methods.SingleOrDefault(m => m.EquivalentTo(method));
+                    if (derivedMethod != null)
+                    {
+                        list.Add(derivedMethod);
+                    }
+                }
+                _virtualMethods.Add(method, list);
+            }
+
+            return _virtualMethods[method];
+        }
+
+        private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition currentType)
+        {
+            var nextType = currentType;
+            while (nextType != null)
+            {
+                nextType = null;
+                foreach (var type in Module.GetTypes())
+                {
+                    if (type.BaseType == currentType)
+                    {
+                        currentType = nextType = type.ToTypeDefinition();
+                        yield return nextType;
+                    }
+                }
+            }
+        }
     }
 }
