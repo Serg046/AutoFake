@@ -19,7 +19,7 @@ namespace AutoFake.UnitTests
         public FakeGeneratorTests()
         {
             _typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            _fakeGenerator = new FakeGenerator(_typeInfo);
+            _fakeGenerator = new FakeGenerator(_typeInfo, new FakeOptions());
         }
 
         [Fact]
@@ -98,7 +98,7 @@ namespace AutoFake.UnitTests
         public void Generate_RecursiveMethod_Success()
         {
             var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>());
-            var gen = new FakeGenerator(typeInfo);
+            var gen = new FakeGenerator(typeInfo, new FakeOptions());
             var method = typeof(object).GetMethod(nameof(ToString));
 
             gen.Generate(new []{Mock.Of<IMock>()}, method);

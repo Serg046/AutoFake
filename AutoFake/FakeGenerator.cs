@@ -10,10 +10,12 @@ namespace AutoFake
     internal class FakeGenerator
     {
         private readonly ITypeInfo _typeInfo;
+        private readonly FakeOptions _options;
 
-        public FakeGenerator(ITypeInfo typeInfo)
+        public FakeGenerator(ITypeInfo typeInfo, FakeOptions fakeOptions)
         {
             _typeInfo = typeInfo;
+            _options = fakeOptions;
         }
 
         public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
@@ -25,7 +27,7 @@ namespace AutoFake
             var replaceTypeRefMocks = ProcessOriginalMethodContract(executeFunc, executeFuncDef);
             mocks = mocks.Concat(replaceTypeRefMocks);
             foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
-            var testMethod = new TestMethod(executeFuncDef, mocks);
+            var testMethod = new TestMethod(this, executeFuncDef, mocks);
             testMethod.Rewrite();
             foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
 
@@ -33,7 +35,7 @@ namespace AutoFake
             {
                 foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
                 {
-                    new TestMethod(ctor, replaceTypeRefMocks).Rewrite();
+                    new TestMethod(this, ctor, replaceTypeRefMocks).Rewrite();
                 }
             }
         }
@@ -66,12 +68,14 @@ namespace AutoFake
 
         private class TestMethod
         {
+            private readonly FakeGenerator _gen;
             private readonly MethodDefinition _originalMethod;
             private readonly IEnumerable<IMock> _mocks;
             private readonly HashSet<MethodDefinition> _methods;
 
-            public TestMethod(MethodDefinition originalMethod, IEnumerable<IMock> mocks)
+            public TestMethod(FakeGenerator gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks)
             {
+                _gen = gen;
                 _originalMethod = originalMethod;
                 _mocks = mocks;
                 _methods = new HashSet<MethodDefinition>();
@@ -85,6 +89,16 @@ namespace AutoFake
             private void Rewrite(MethodDefinition currentMethod)
             {
                 if (!_methods.Add(currentMethod) || currentMethod.Body == null) return;
+
+                if (currentMethod.IsVirtual && (_gen._options.IncludeAllVirtualMembers ||
+                    _gen._options.VirtualMembers.Contains(currentMethod.Name)))
+                {
+                    foreach (var virtualMethod in _gen._typeInfo.GetDerivedVirtualMethods(currentMethod))
+                    {
+                        Rewrite(virtualMethod);
+                    }
+                }
+
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
                     Rewrite(asyncMethod);

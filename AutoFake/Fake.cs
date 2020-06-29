@@ -38,7 +38,10 @@ namespace AutoFake
             var dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
             TypeInfo = new TypeInfo(type, dependencies);
             Mocks = new MockCollection();
+            Options = new FakeOptions();
         }
+
+        public FakeOptions Options { get; }
 
         internal ITypeInfo TypeInfo { get; }
 
@@ -114,7 +117,7 @@ namespace AutoFake
 
         internal FakeObjectInfo CreateFakeObject()
         {
-            if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks);
+            if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks, Options);
             return _fakeObjectInfo;
         }
 
