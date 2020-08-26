@@ -115,6 +115,12 @@ namespace AutoFake
             executor.Execute();
         }
 
+        public void Release()
+        {
+            if (_fakeObjectInfo == null) throw new InvalidOperationException("Nothing to release yet");
+            _fakeObjectInfo.Dispose();
+        }
+
         internal FakeObjectInfo CreateFakeObject()
         {
             if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks, Options);
