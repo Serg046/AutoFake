@@ -110,15 +110,18 @@ namespace AutoFake
                 }
 
                 WriteAssembly(memoryStream);
-                var asmContext = new AssemblyLoadContext();
-                var assembly = asmContext.Load(memoryStream);
+#if NETCOREAPP3_0
+                var assembly = CollectibleAssemblyLoadContext.Load(memoryStream);
+#else
+	            var assembly = Assembly.Load(memoryStream.ToArray());
+#endif
                 var type = assembly.GetType(FullTypeName, true);
                 var instance = !IsStatic(SourceType) ? CreateInstance(type) : null;
                 var parameters = mocks
                     .SelectMany(m => m.Mocks)
                     .SelectMany(m => m.Initialize(type))
                     .ToList();
-                return new FakeObjectInfo(asmContext, parameters, type, instance);
+                return new FakeObjectInfo(parameters, type, instance);
             }
         }
 

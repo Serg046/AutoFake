@@ -1,5 +1,4 @@
-﻿using System;
-using AutoFake.Expression;
+﻿using AutoFake.Expression;
 
 namespace AutoFake
 {
@@ -41,15 +40,8 @@ namespace AutoFake
         public object Execute()
         {
             var fakeObject = _fake.CreateFakeObject();
-            if (fakeObject.IsDisposed)
-            {
-	            throw new ObjectDisposedException(
-		            $"The fake assembly has been already unloaded. Use fake.{nameof(Fake.Options)}.{nameof(Fake.Options.AutoDisposal)}/fake.{nameof(Fake.Release)}() to get control.");
-            }
-
             var visitor = new GetValueMemberVisitor(fakeObject.Instance);
             _invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, fakeObject.Type));
-            if (_fake.Options.AutoDisposal) fakeObject.Dispose();
             return visitor.RuntimeValue;
         }
     }

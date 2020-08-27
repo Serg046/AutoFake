@@ -8,42 +8,36 @@ namespace AutoFake.IntegrationTests.StaticTests
         public void MultipleTestMethodsTest()
         {
             var fake = new Fake(typeof(TestClass));
-            fake.Options.AutoDisposal = false;
 
             var sut1 = fake.Rewrite(() => TestClass.FirstMethod()); sut1.Replace(() => TestClass.GetValue()).Return(1);
             var sut2 = fake.Rewrite(() => TestClass.SecondMethod()); sut2.Replace(() => TestClass.GetValue()).Return(1);
 
             Assert.Equal(1, sut1.Execute());
             Assert.Equal(1, sut2.Execute());
-            fake.Release();
         }
 
         [Fact]
         public void ResetTest()
         {
             var fake = new Fake(typeof(TestClass));
-            fake.Options.AutoDisposal = false;
 
             var sut1 = fake.Rewrite(() => TestClass.FirstMethod()); sut1.Replace(() => TestClass.GetValue()).Return(1);
             var sut2 = fake.Rewrite(() => TestClass.SecondMethod()); sut2.Replace(() => TestClass.GetValue()).Return(2);
 
             Assert.Equal(1, sut1.Execute());
             Assert.Equal(2, sut2.Execute());
-            fake.Release();
         }
 
         [Fact]
         public void OverloadedMethodTest()
         {
             var fake = new Fake(typeof(TestClass));
-            fake.Options.AutoDisposal = false;
 
             var sut1 = fake.Rewrite(() => TestClass.FirstMethod()); sut1.Replace(() => TestClass.GetValue()).Return(1);
             var sut2 = fake.Rewrite(() => TestClass.FirstMethod(1)); sut2.Replace(() => TestClass.GetValue()).Return(2);
 
             Assert.Equal(1, sut1.Execute());
             Assert.Equal(3, sut2.Execute());
-            fake.Release();
         }
 
         private static class TestClass
