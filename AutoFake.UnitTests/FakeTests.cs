@@ -140,12 +140,10 @@ namespace AutoFake.UnitTests
         public void Execute_GenericFake_Throws(dynamic callback)
         {
             var fake = new Fake<TestClass>();
-            fake.Options.AutoDisposal = false;
 
             fake.Execute(callback);
 
             Assert.Equal(5, fake.Execute(() => TestClass.State));
-            fake.Release();
         }
 
         [Theory]
@@ -153,12 +151,10 @@ namespace AutoFake.UnitTests
         public void Execute_Fake_Throws(dynamic callback)
         {
             var fake = new Fake<TestClass>();
-            fake.Options.AutoDisposal = false;
 
             fake.Execute(callback);
 
             Assert.Equal(5, fake.Execute(() => TestClass.State));
-            fake.Release();
         }
 
         public static IEnumerable<object[]> GetCallbacks()
