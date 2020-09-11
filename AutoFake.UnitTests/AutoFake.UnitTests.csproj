@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoFixture.AutoMoq" Version="4.13.0" />
+    <PackageReference Include="AutoFixture.AutoMoq" Version="4.14.0" />
     <PackageReference Include="AutoFixture.Xunit2">
       <Version>4.13.0</Version>
     </PackageReference>
