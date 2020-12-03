@@ -147,21 +147,20 @@ namespace AutoFake
             return _virtualMethods[method];
         }
 
-        private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition currentType)
-        {
-            var nextType = currentType;
-            while (nextType != null)
-            {
-                nextType = null;
-                foreach (var type in Module.GetTypes())
-                {
-                    if (type.BaseType == currentType)
-                    {
-                        currentType = nextType = type.ToTypeDefinition();
-                        yield return nextType;
-                    }
-                }
-            }
-        }
-    }
+		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)
+		{
+			return Module.GetTypes().Where(t => IsDerived(t, parentType));
+		}
+
+		private bool IsDerived(TypeDefinition derived, TypeDefinition parent)
+		{
+			if (derived.BaseType != null)
+			{
+				var baseType = derived.BaseType.ToTypeDefinition();
+				return baseType == parent || IsDerived(baseType, parent);
+			}
+
+			return false;
+		}
+	}
 }

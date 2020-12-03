@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -102,6 +103,50 @@ namespace AutoFake.UnitTests
             var method = typeof(object).GetMethod(nameof(ToString));
 
             gen.Generate(new []{Mock.Of<IMock>()}, method);
+        }
+
+        [AutoMoqData, Theory]
+        internal void Generate_VirtualMethodWithSpecification_Success(Mock<ITypeInfo> typeInfo)
+        {
+	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
+	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>());
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
+		        .Returns(typeInfoImp.Methods.Single(m => m.Name == method.Name));
+	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
+		        .Returns((MethodDefinition def) => typeInfoImp.GetDerivedVirtualMethods(def));
+	        var gen = new FakeGenerator(typeInfo.Object, new FakeOptions
+	        {
+		        VirtualMembers = { nameof(Stream.WriteByte) }
+	        });
+
+	        gen.Generate(new[] { Mock.Of<IMock>() }, method);
+
+			typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
+				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
+			typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
+				m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
+		}
+
+        [AutoMoqData, Theory]
+        internal void Generate_VirtualMethodWithAllEnabled_Success(Mock<ITypeInfo> typeInfo)
+        {
+	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
+	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>());
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
+		        .Returns(typeInfoImp.Methods.Single(m => m.Name == method.Name));
+	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
+		        .Returns((MethodDefinition def) => typeInfoImp.GetDerivedVirtualMethods(def));
+	        var gen = new FakeGenerator(typeInfo.Object, new FakeOptions
+	        {
+		        IncludeAllVirtualMembers = true
+	        });
+
+	        gen.Generate(new[] { Mock.Of<IMock>() }, method);
+
+	        typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
+		        m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
+	        typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
+		        m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
         }
 
         private bool Equivalent(object operand, MethodInfo innerMethod) => 

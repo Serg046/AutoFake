@@ -88,7 +88,7 @@ namespace AutoFake
 
             private void Rewrite(MethodDefinition currentMethod)
             {
-                if (!_methods.Add(currentMethod) || currentMethod.Body == null) return;
+                if (currentMethod?.Body == null || !_methods.Add(currentMethod)) return;
 
                 if (currentMethod.IsVirtual && (_gen._options.IncludeAllVirtualMembers ||
                     _gen._options.VirtualMembers.Contains(currentMethod.Name)))
