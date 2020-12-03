@@ -27,6 +27,7 @@ namespace AutoFake
             _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
 
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName);
+            _assemblyDefinition.Name.Name += "Fake";
 
             var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, runtimeName: true);
             _typeDefinition = type.Resolve();
