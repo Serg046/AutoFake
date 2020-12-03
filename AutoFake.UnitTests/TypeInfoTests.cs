@@ -6,6 +6,7 @@ using System.Text;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
+using FluentAssertions;
 using Mono.Cecil;
 using Moq;
 using Xunit;
@@ -126,16 +127,32 @@ namespace AutoFake.UnitTests
             Assert.Equal(method.Name, actualMethod.Name);
         }
 
+        [Fact]
+        public void GetDerivedVirtualMethods()
+        {
+	        var type = new TypeInfo(typeof(BaseTestClass), new List<FakeDependency>());
+	        var method = type.Methods.Single(m => m.Name == nameof(BaseTestClass.VirtualMethod));
+
+	        var overridenMethods = type.GetDerivedVirtualMethods(method);
+
+	        overridenMethods.Should().HaveCount(1);
+	        overridenMethods.Single().DeclaringType.Name.Should().Be(nameof(TestClass));
+        }
+
         private class TestClass : BaseTestClass
         {
             public TestClass(StringBuilder dependency1, StringBuilder dependency2)
             {
             }
+
+            public override void VirtualMethod() => base.VirtualMethod();
         }
 
         private class BaseTestClass
         {
             public void BaseTypeMethod() { }
+
+            public virtual void VirtualMethod() { }
         }
 
         private static class StaticTestClass

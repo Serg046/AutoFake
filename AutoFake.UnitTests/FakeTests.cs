@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Mono.Cecil;
 using Xunit;
 
@@ -157,6 +158,23 @@ namespace AutoFake.UnitTests
             Assert.Equal(5, fake.Execute(() => TestClass.State));
         }
 
+        [Fact]
+        public void Ctor_DirectDependency_Success()
+        {
+	        const string dep = "test";
+	        var fake = new Fake<StringWrapper>(dep);
+
+	        fake.Execute(sb => sb.Value).Should().Be(dep);
+        }
+
+        [Fact]
+        public void Ctor_FakeDependency_Success()
+        {
+            var fake = new Fake<StringWrapper>(Arg.IsNull<string>());
+
+            fake.Execute(sb => sb.Value).Should().BeNull();
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 
@@ -231,6 +249,13 @@ namespace AutoFake.UnitTests
                 await Task.Delay(1);
                 throw new NotImplementedException();
             }
+        }
+
+        private class StringWrapper
+        {
+	        public StringWrapper(string value) => Value = value;
+
+	        public string Value { get; }
         }
     }
 }
