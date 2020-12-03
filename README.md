@@ -2,6 +2,8 @@
 [![codecov](https://codecov.io/gh/Serg046/AutoFake/branch/master/graph/badge.svg)](https://codecov.io/gh/Serg046/AutoFake)
 [![NuGet version](https://badge.fury.io/nu/AutoFake.svg)](https://badge.fury.io/nu/AutoFake)
 
+Join our Telegram chat for more information https://t.me/AutoFakeLib
+
 ```csharp
 public class Calendar
 {
