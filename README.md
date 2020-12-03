@@ -1,6 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/j95lb948sw02nqqd/branch/master?svg=true)](https://ci.appveyor.com/project/Serg046/autofake/branch/master)
-[![codecov](https://codecov.io/gh/Serg046/AutoFake/branch/master/graph/badge.svg)](https://codecov.io/gh/Serg046/AutoFake)
 [![NuGet version](https://badge.fury.io/nu/AutoFake.svg)](https://badge.fury.io/nu/AutoFake)
+[![Codecov](https://img.shields.io/codecov/c/github/Serg046/AutoFake?flag=integration&label=coverage%20by%20integration%20tests&token=j95lb948sw02nqqd)](https://codecov.io/gh/Serg046/AutoFake)
+[![Codecov](https://img.shields.io/codecov/c/github/Serg046/AutoFake?flag=unit&label=coverage%20by%20unit%20tests&token=j95lb948sw02nqqd)](https://codecov.io/gh/Serg046/AutoFake)
 
 Join our Telegram chat for more information https://t.me/AutoFakeLib
 
