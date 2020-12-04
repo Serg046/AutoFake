@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
@@ -93,6 +94,17 @@ namespace AutoFake.UnitTests
         {
             _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
+        }
+
+        [Fact]
+        public void Generate_NullMethod_DoesNotThrow()
+        {
+			var typeInfo = new TypeInfo(typeof(Encoding), new List<FakeDependency>());
+			var fakeGenerator = new FakeGenerator(typeInfo, new FakeOptions { IncludeAllVirtualMembers = true });
+
+			fakeGenerator.Generate(new[] {Mock.Of<IMock>()},
+				typeof(Encoding).GetMethods()
+					.Single(m => m.Name == nameof(Encoding.GetChars) && m.GetParameters().Length == 1));
         }
 
         [Fact]
