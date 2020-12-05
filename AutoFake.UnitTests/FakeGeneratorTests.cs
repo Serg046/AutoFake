@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using AutoFake.Setup.Mocks;
+using AutoFixture.Xunit2;
+using FluentAssertions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
@@ -82,11 +84,22 @@ namespace AutoFake.UnitTests
             Assert.Equal("AutoFake.UnitTests.dll", method.DeclaringType.Module.Name);
         }
 
-        [Fact]
-        public void Generate_MethodWithoutBody_Throws()
+        [Theory, AutoMoqData]
+        internal void Generate_MethodWithoutBody_Throws(
+	        [Frozen] Mock<ITypeInfo> typeInfo,
+	        FakeGenerator generator)
         {
-            Assert.Throws<InvalidOperationException>(() => _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
-                GetMethodInfo(nameof(TestClass.GetType))));
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns((MethodDefinition)null);
+
+            Assert.Throws<InvalidOperationException>(() => 
+	            generator.Generate(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetType))));
+        }
+
+        [Fact]
+        public void Generate_NullMethod_Throws()
+        {
+	        Assert.Throws<InvalidOperationException>(() => _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
+		        GetMethodInfo(nameof(TestClass.GetType))));
         }
 
         [Fact]
@@ -96,15 +109,23 @@ namespace AutoFake.UnitTests
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
         }
 
-        [Fact]
-        public void Generate_NullMethod_DoesNotThrow()
+        [Theory, AutoMoqData]
+        internal void Generate_MethodWhichCallsNullMethod_DoesNotThrow(
+	        [Frozen] Mock<ITypeInfo> typeInfo,
+            [Frozen] FakeOptions options,
+	        FakeGenerator generator)
         {
-			var typeInfo = new TypeInfo(typeof(Encoding), new List<FakeDependency>());
-			var fakeGenerator = new FakeGenerator(typeInfo, new FakeOptions { IncludeAllVirtualMembers = true });
+	        options.IncludeAllVirtualMembers = true;
+	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
+		        .Returns(new MethodDefinition[] {null});
+	        var typeInfoImp = new TypeInfo(typeof(object), new List<FakeDependency>());
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
+		        .Returns(typeInfoImp.Methods.Single(m => m.Name == nameof(ToString)));
 
-			fakeGenerator.Generate(new[] {Mock.Of<IMock>()},
-				typeof(Encoding).GetMethods()
-					.Single(m => m.Name == nameof(Encoding.GetChars) && m.GetParameters().Length == 1));
+            Action act = () => generator.Generate(new[] {Mock.Of<IMock>()},
+		        typeof(object).GetMethod(nameof(ToString)));
+
+            act.Should().NotThrow();
         }
 
         [Fact]

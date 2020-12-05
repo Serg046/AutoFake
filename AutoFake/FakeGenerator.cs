@@ -22,7 +22,7 @@ namespace AutoFake
         {
             var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
             var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
-            if (executeFuncDef.Body == null) throw new InvalidOperationException("Methods without body are not supported");
+            if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
             var replaceTypeRefMocks = ProcessOriginalMethodContract(executeFunc, executeFuncDef);
             mocks = mocks.Concat(replaceTypeRefMocks);
