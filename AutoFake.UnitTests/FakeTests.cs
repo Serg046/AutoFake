@@ -175,6 +175,14 @@ namespace AutoFake.UnitTests
             fake.Execute(sb => sb.Value).Should().BeNull();
         }
 
+        [Fact]
+        public void Ctor_NullDependency_Success()
+        {
+	        var fake = new Fake<StringWrapper>(new object[] {null});
+
+	        fake.Execute(sb => sb.Value).Should().BeNull();
+        }
+
         public static IEnumerable<object[]> GetCallbacks()
             => GetFuncs().Concat(GetActions());
 
