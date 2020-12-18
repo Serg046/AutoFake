@@ -33,7 +33,7 @@ namespace AutoFake
 
             if (replaceTypeRefMocks.Any())
             {
-                foreach (var ctor in _typeInfo.Methods.Where(m => m.Name == ".ctor" || m.Name == ".cctor"))
+                foreach (var ctor in _typeInfo.GetMethods(m => m.Name == ".ctor" || m.Name == ".cctor"))
                 {
                     new TestMethod(this, ctor, replaceTypeRefMocks).Rewrite();
                 }
