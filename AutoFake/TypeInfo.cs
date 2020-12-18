@@ -13,6 +13,7 @@ namespace AutoFake
     {
         private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
+        private readonly Type _sourceType;
         private readonly AssemblyDefinition _assemblyDefinition;
         private readonly TypeDefinition _typeDefinition;
         private readonly IList<FakeDependency> _dependencies;
@@ -21,23 +22,30 @@ namespace AutoFake
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
         {
-            SourceType = sourceType;
+            _sourceType = sourceType;
             _dependencies = dependencies;
             _addedFields = new Dictionary<string, ushort>();
             _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
 
-            _assemblyDefinition = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName);
+            _assemblyDefinition = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName);
             _assemblyDefinition.Name.Name += "Fake";
 
-            var type = _assemblyDefinition.MainModule.GetType(SourceType.FullName, runtimeName: true);
+            var type = _assemblyDefinition.MainModule.GetType(_sourceType.FullName, runtimeName: true);
             _typeDefinition = type.Resolve();
         }
 
-        public Type SourceType { get; }
-        
-        public string FullTypeName => GetClrName(_typeDefinition.FullName);
 
         public ModuleDefinition Module => _assemblyDefinition.MainModule;
+
+        public FieldDefinition GetField(Predicate<FieldDefinition> fieldPredicate)
+        {
+	        return _typeDefinition.Fields.SingleOrDefault(f => fieldPredicate(f));
+        }
+
+        public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate)
+        {
+	        return _typeDefinition.Methods.Where(m => methodPredicate(m));
+        }
 
         public MethodDefinition GetMethod(MethodReference methodReference) =>
             GetMethod(_typeDefinition, methodReference);
@@ -63,17 +71,12 @@ namespace AutoFake
             }
         }
 
-        public void AddMethod(MethodDefinition method) => _typeDefinition.Methods.Add(method);
-
-        public ICollection<FieldDefinition> Fields => _typeDefinition.Fields; 
-        public ICollection<MethodDefinition> Methods => _typeDefinition.Methods;
-
         public void WriteAssembly(Stream stream)
         {
             _assemblyDefinition.Write(stream);
         }
 
-        public object CreateInstance(Type type)
+        private object CreateInstance(Type type)
         {
             if (_dependencies.Any(d => d.Type == null))
             {
@@ -116,8 +119,8 @@ namespace AutoFake
 #else
 	            var assembly = Assembly.Load(memoryStream.ToArray());
 #endif
-                var type = assembly.GetType(FullTypeName, true);
-                var instance = !IsStatic(SourceType) ? CreateInstance(type) : null;
+                var type = assembly.GetType(GetClrName(_typeDefinition.FullName), true);
+                var instance = !IsStatic(_sourceType) ? CreateInstance(type) : null;
                 var parameters = mocks
                     .SelectMany(m => m.Mocks)
                     .SelectMany(m => m.Initialize(type))

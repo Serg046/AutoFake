@@ -35,7 +35,7 @@ namespace AutoFake.UnitTests.Setup
         public void IsSourceInstruction_DifferentTypes_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass2), new List<FakeDependency>());
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass2.TestMethod));
+            var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass2.TestMethod)).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
@@ -46,7 +46,7 @@ namespace AutoFake.UnitTests.Setup
         public void IsSourceInstruction_DifferentOverloads_False()
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0);
+            var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
@@ -58,7 +58,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
-            var method = typeInfo.Methods.Single(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 1);
+            var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 1).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
 
             Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction));

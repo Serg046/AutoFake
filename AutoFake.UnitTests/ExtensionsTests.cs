@@ -19,8 +19,8 @@ namespace AutoFake.UnitTests
         {
             var typeInfo = GetTypeInfo();
 
-            var methodReference = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 0);
-            var method = typeInfo.Methods.Single(m => m.Name == "Other");
+            var methodReference = typeInfo.GetMethods(m => m.Name == "Test" && m.Parameters.Count == 0).Single();
+            var method = typeInfo.GetMethods(m => m.Name == "Other").Single();
 
             Assert.False(methodReference.EquivalentTo(method));
         }
@@ -30,9 +30,9 @@ namespace AutoFake.UnitTests
         {
             var typeInfo = GetTypeInfo();
 
-            var methodReference = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 0);
-            var method = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 1
-                                                                       && m.Parameters[0].ParameterType.FullName == "System.String");
+            var methodReference = typeInfo.GetMethods(m => m.Name == "Test" && m.Parameters.Count == 0).Single();
+            var method = typeInfo.GetMethods(m => m.Name == "Test" && m.Parameters.Count == 1 
+				&& m.Parameters[0].ParameterType.FullName == "System.String").Single();
 
             Assert.False(methodReference.EquivalentTo(method));
         }
@@ -43,16 +43,16 @@ namespace AutoFake.UnitTests
             var typeInfo = GetTypeInfo();
 
             var methodReference = GetStringOverloadMethodReference(typeInfo);
-            var method = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 1
-                                                                       && m.Parameters[0].ParameterType.FullName == "System.Int32");
+            var method = typeInfo.GetMethods(m => m.Name == "Test" && m.Parameters.Count == 1
+				&& m.Parameters[0].ParameterType.FullName == "System.Int32").Single();
 
             Assert.False(methodReference.EquivalentTo(method));
         }
 
         private MethodDefinition GetStringOverloadMethodReference(TypeInfo typeInfo)
         {
-            return typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.SingleOrDefault() != null &&
-                                                m.Parameters.Single().ParameterType.FullName == typeof(string).FullName);
+            return typeInfo.GetMethods(m => m.Name == "Test" && m.Parameters.SingleOrDefault() != null &&
+				m.Parameters.Single().ParameterType.FullName == typeof(string).FullName).Single();
         }
 
         [Fact]
@@ -61,8 +61,8 @@ namespace AutoFake.UnitTests
             var typeInfo = GetTypeInfo();
 
             var methodReference = GetStringOverloadMethodReference(typeInfo);
-            var method = typeInfo.Methods.Single(m => m.Name == "Test" && m.Parameters.Count == 1
-                                                                       && m.Parameters[0].ParameterType.FullName == "System.String");
+            var method = typeInfo.GetMethods(m => m.Name == "Test" && m.Parameters.Count == 1
+				&& m.Parameters[0].ParameterType.FullName == "System.String").Single();
 
 
             Assert.True(methodReference.EquivalentTo(method));

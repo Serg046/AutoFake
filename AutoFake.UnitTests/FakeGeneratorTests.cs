@@ -69,7 +69,7 @@ namespace AutoFake.UnitTests
         {
             _fakeGenerator.Generate(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
 
-            var method = _typeInfo.Methods.Single(m => m.Name == nameof(TestClass.GetTestClass));
+            var method = _typeInfo.GetMethods(m => m.Name == nameof(TestClass.GetTestClass)).Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.ReturnType.Module.Name);
             Assert.All(method.Parameters, p => Assert.Equal("AutoFake.UnitTests.dll", p.ParameterType.Module.Name));
             Assert.Equal("AutoFake.UnitTests.dll", method.Parameters[1].ParameterType.Module.Name);
@@ -80,7 +80,7 @@ namespace AutoFake.UnitTests
         {
             _fakeGenerator.Generate(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
 
-            var method = _typeInfo.Methods.Single(m => m.Name == ".ctor");
+            var method = _typeInfo.GetMethods(m => m.Name == ".ctor").Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.DeclaringType.Module.Name);
         }
 
@@ -120,7 +120,7 @@ namespace AutoFake.UnitTests
 		        .Returns(new MethodDefinition[] {null});
 	        var typeInfoImp = new TypeInfo(typeof(object), new List<FakeDependency>());
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
-		        .Returns(typeInfoImp.Methods.Single(m => m.Name == nameof(ToString)));
+		        .Returns(typeInfoImp.GetMethods(m => m.Name == nameof(ToString)).Single);
 
             Action act = () => generator.Generate(new[] {Mock.Of<IMock>()},
 		        typeof(object).GetMethod(nameof(ToString)));
@@ -144,7 +144,7 @@ namespace AutoFake.UnitTests
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>());
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
-		        .Returns(typeInfoImp.Methods.Single(m => m.Name == method.Name));
+		        .Returns(typeInfoImp.GetMethods(m => m.Name == method.Name).Single);
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
 		        .Returns((MethodDefinition def) => typeInfoImp.GetDerivedVirtualMethods(def));
 	        var gen = new FakeGenerator(typeInfo.Object, new FakeOptions
@@ -166,7 +166,7 @@ namespace AutoFake.UnitTests
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>());
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
-		        .Returns(typeInfoImp.Methods.Single(m => m.Name == method.Name));
+		        .Returns(typeInfoImp.GetMethods(m => m.Name == method.Name).Single);
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
 		        .Returns((MethodDefinition def) => typeInfoImp.GetDerivedVirtualMethods(def));
 	        var gen = new FakeGenerator(typeInfo.Object, new FakeOptions
