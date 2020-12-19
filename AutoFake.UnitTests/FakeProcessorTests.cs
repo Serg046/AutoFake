@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
@@ -15,15 +14,15 @@ using Xunit;
 
 namespace AutoFake.UnitTests
 {
-    public class FakeGeneratorTests
+    public class FakeProcessorTests
     {
-        private readonly FakeGenerator _fakeGenerator;
+        private readonly FakeProcessor _fakeProcessor;
         private readonly TypeInfo _typeInfo;
 
-        public FakeGeneratorTests()
+        public FakeProcessorTests()
         {
             _typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
-            _fakeGenerator = new FakeGenerator(_typeInfo, new FakeOptions());
+            _fakeProcessor = new FakeProcessor(_typeInfo, new FakeOptions());
         }
 
         [Fact]
@@ -32,7 +31,7 @@ namespace AutoFake.UnitTests
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
 
-            _fakeGenerator.Generate(new[] { mock.Object }, testMethod);
+            _fakeProcessor.Generate(new[] { mock.Object }, testMethod);
 
             mock.Verify(m => m.BeforeInjection(It.Is<MethodDefinition>(met => met.Name == testMethod.Name)));
         }
@@ -46,7 +45,7 @@ namespace AutoFake.UnitTests
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)))).Returns(true);
 
-            _fakeGenerator.Generate(new[] { mock.Object }, testMethod);
+            _fakeProcessor.Generate(new[] { mock.Object }, testMethod);
 
             mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
@@ -58,7 +57,7 @@ namespace AutoFake.UnitTests
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
 
-            _fakeGenerator.Generate(new[] { mock.Object }, asyncMethod);
+            _fakeProcessor.Generate(new[] { mock.Object }, asyncMethod);
 
             mock.Verify(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
@@ -67,7 +66,7 @@ namespace AutoFake.UnitTests
         [Fact]
         internal void Generate_MembersFromTheSameModule_Success()
         {
-            _fakeGenerator.Generate(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
+            _fakeProcessor.Generate(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
 
             var method = _typeInfo.GetMethods(m => m.Name == nameof(TestClass.GetTestClass)).Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.ReturnType.Module.Name);
@@ -78,7 +77,7 @@ namespace AutoFake.UnitTests
         [Fact]
         internal void Generate_CtorFromTheSameModule_Success()
         {
-            _fakeGenerator.Generate(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
+            _fakeProcessor.Generate(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
 
             var method = _typeInfo.GetMethods(m => m.Name == ".ctor").Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.DeclaringType.Module.Name);
@@ -87,7 +86,7 @@ namespace AutoFake.UnitTests
         [Theory, AutoMoqData]
         internal void Generate_MethodWithoutBody_Throws(
 	        [Frozen] Mock<ITypeInfo> typeInfo,
-	        FakeGenerator generator)
+	        FakeProcessor generator)
         {
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns((MethodDefinition)null);
 
@@ -98,14 +97,14 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Generate_NullMethod_Throws()
         {
-	        Assert.Throws<InvalidOperationException>(() => _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
+	        Assert.Throws<InvalidOperationException>(() => _fakeProcessor.Generate(new[] { Mock.Of<IMock>() },
 		        GetMethodInfo(nameof(TestClass.GetType))));
         }
 
         [Fact]
         public void Generate_MethodWhichCallsMethodWithoutBody_DoesNotThrow()
         {
-            _fakeGenerator.Generate(new[] { Mock.Of<IMock>() },
+            _fakeProcessor.Generate(new[] { Mock.Of<IMock>() },
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
         }
 
@@ -113,7 +112,7 @@ namespace AutoFake.UnitTests
         internal void Generate_MethodWhichCallsNullMethod_DoesNotThrow(
 	        [Frozen] Mock<ITypeInfo> typeInfo,
             [Frozen] FakeOptions options,
-	        FakeGenerator generator)
+	        FakeProcessor generator)
         {
 	        options.IncludeAllVirtualMembers = true;
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
@@ -132,7 +131,7 @@ namespace AutoFake.UnitTests
         public void Generate_RecursiveMethod_Success()
         {
             var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>());
-            var gen = new FakeGenerator(typeInfo, new FakeOptions());
+            var gen = new FakeProcessor(typeInfo, new FakeOptions());
             var method = typeof(object).GetMethod(nameof(ToString));
 
             gen.Generate(new []{Mock.Of<IMock>()}, method);
@@ -147,7 +146,7 @@ namespace AutoFake.UnitTests
 		        .Returns(typeInfoImp.GetMethods(m => m.Name == method.Name).Single);
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
 		        .Returns((MethodDefinition def) => typeInfoImp.GetDerivedVirtualMethods(def));
-	        var gen = new FakeGenerator(typeInfo.Object, new FakeOptions
+	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
 	        {
 		        VirtualMembers = { nameof(Stream.WriteByte) }
 	        });
@@ -169,7 +168,7 @@ namespace AutoFake.UnitTests
 		        .Returns(typeInfoImp.GetMethods(m => m.Name == method.Name).Single);
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
 		        .Returns((MethodDefinition def) => typeInfoImp.GetDerivedVirtualMethods(def));
-	        var gen = new FakeGenerator(typeInfo.Object, new FakeOptions
+	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
 	        {
 		        IncludeAllVirtualMembers = true
 	        });

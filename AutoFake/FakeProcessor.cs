@@ -7,12 +7,12 @@ using Mono.Cecil;
 
 namespace AutoFake
 {
-    internal class FakeGenerator
+    internal class FakeProcessor
     {
         private readonly ITypeInfo _typeInfo;
         private readonly FakeOptions _options;
 
-        public FakeGenerator(ITypeInfo typeInfo, FakeOptions fakeOptions)
+        public FakeProcessor(ITypeInfo typeInfo, FakeOptions fakeOptions)
         {
             _typeInfo = typeInfo;
             _options = fakeOptions;
@@ -68,12 +68,12 @@ namespace AutoFake
 
         private class TestMethod
         {
-            private readonly FakeGenerator _gen;
+            private readonly FakeProcessor _gen;
             private readonly MethodDefinition _originalMethod;
             private readonly IEnumerable<IMock> _mocks;
             private readonly HashSet<MethodDefinition> _methods;
 
-            public TestMethod(FakeGenerator gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks)
+            public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks)
             {
                 _gen = gen;
                 _originalMethod = originalMethod;
