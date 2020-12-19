@@ -109,10 +109,10 @@ namespace AutoFake
         {
             using (var memoryStream = new MemoryStream())
             {
-                var fakeGenerator = new FakeGenerator(this, options);
+                var fakeProcessor = new FakeProcessor(this, options);
                 foreach (var mock in mocks)
                 {
-                    fakeGenerator.Generate(mock.Mocks, mock.Method);
+                    fakeProcessor.Generate(mock.Mocks, mock.Method);
                 }
 
                 WriteAssembly(memoryStream);
