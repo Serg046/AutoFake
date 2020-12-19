@@ -17,7 +17,7 @@ namespace AutoFake.UnitTests.Setup
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
-            var ctors = type.GetConstructors().Select(typeInfo.Module.ImportReference);
+            var ctors = type.GetConstructors().Select(typeInfo.ImportReference);
 
             Assert.All(ctors, ctor => Assert.True(mock
                 .IsSourceInstruction(null, Instruction.Create(OpCodes.Newobj, ctor))));
@@ -29,8 +29,8 @@ namespace AutoFake.UnitTests.Setup
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
-            var ctor = typeInfo.Module.ImportReference(type.GetConstructors().First());
-            var method = typeInfo.Module.ImportReference(type.GetMethods().First());
+            var ctor = typeInfo.ImportReference(type.GetConstructors().First());
+            var method = typeInfo.ImportReference(type.GetMethods().First());
 
             Assert.False(mock.IsSourceInstruction(null, Instruction.Create(OpCodes.Call, ctor)));
             Assert.False(mock.IsSourceInstruction(null, Instruction.Create(OpCodes.Newobj, method)));
@@ -43,7 +43,7 @@ namespace AutoFake.UnitTests.Setup
             var type = typeof(DateTime);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
-            var typeRef = typeInfo.Module.ImportReference(type);
+            var typeRef = typeInfo.ImportReference(type);
 
             Assert.True(mock.IsSourceInstruction(null, Instruction.Create(OpCodes.Initobj, typeRef)));
         }
@@ -54,8 +54,8 @@ namespace AutoFake.UnitTests.Setup
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
-            var typeRef = typeInfo.Module.ImportReference(typeof(ValueTask));
-            var invalidTypeRef = typeInfo.Module.ImportReference(typeof(ValueTask));
+            var typeRef = typeInfo.ImportReference(typeof(ValueTask));
+            var invalidTypeRef = typeInfo.ImportReference(typeof(ValueTask));
 
             Assert.False(mock.IsSourceInstruction(null, Instruction.Create(OpCodes.Box, typeRef)));
             Assert.False(mock.IsSourceInstruction(null, Instruction.Create(OpCodes.Initobj, invalidTypeRef)));
@@ -68,7 +68,7 @@ namespace AutoFake.UnitTests.Setup
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
-            var ctor = typeInfo.Module.ImportReference(type.GetConstructors().First());
+            var ctor = typeInfo.ImportReference(type.GetConstructors().First());
             var instruction = Instruction.Create(OpCodes.Newobj, ctor);
 
             mock.Inject(emitter.Object, instruction);
@@ -83,7 +83,7 @@ namespace AutoFake.UnitTests.Setup
             var type = typeof(DateTime);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
-            var typeRef = typeInfo.Module.ImportReference(type);
+            var typeRef = typeInfo.ImportReference(type);
             var instruction = Instruction.Create(OpCodes.Initobj, typeRef);
 
             mock.Inject(emitter.Object, instruction);

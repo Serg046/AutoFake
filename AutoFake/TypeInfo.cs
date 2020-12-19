@@ -34,18 +34,20 @@ namespace AutoFake
             _typeDefinition = type.Resolve();
         }
 
+        public TypeReference ImportReference(Type type)
+	        => _assemblyDefinition.MainModule.ImportReference(type);
 
-        public ModuleDefinition Module => _assemblyDefinition.MainModule;
+        public FieldReference ImportReference(FieldInfo field)
+	        => _assemblyDefinition.MainModule.ImportReference(field);
+
+        public MethodReference ImportReference(MethodBase method) 
+	        => _assemblyDefinition.MainModule.ImportReference(method);
 
         public FieldDefinition GetField(Predicate<FieldDefinition> fieldPredicate)
-        {
-	        return _typeDefinition.Fields.SingleOrDefault(f => fieldPredicate(f));
-        }
+	        => _typeDefinition.Fields.SingleOrDefault(f => fieldPredicate(f));
 
-        public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate)
-        {
-	        return _typeDefinition.Methods.Where(m => methodPredicate(m));
-        }
+        public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate) 
+	        => _typeDefinition.Methods.Where(m => methodPredicate(m));
 
         public MethodDefinition GetMethod(MethodReference methodReference) =>
             GetMethod(_typeDefinition, methodReference);
@@ -152,7 +154,7 @@ namespace AutoFake
 
 		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)
 		{
-			return Module.GetTypes().Where(t => IsDerived(t, parentType));
+			return _assemblyDefinition.MainModule.GetTypes().Where(t => IsDerived(t, parentType));
 		}
 
 		private bool IsDerived(TypeDefinition derived, TypeDefinition parent)

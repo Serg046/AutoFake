@@ -18,7 +18,7 @@ namespace AutoFake.Setup.Mocks
             if (type.IsValueType)
             {
                 _opCode = OpCodes.Initobj;
-                var typeRef = typeInfo.Module.ImportReference(type);
+                var typeRef = typeInfo.ImportReference(type);
                 _instructions = new Dictionary<string, Instruction>
                 {
                     {typeRef.ToString(), Instruction.Create(_opCode, typeRef)}
@@ -28,7 +28,7 @@ namespace AutoFake.Setup.Mocks
             {
                 _opCode = OpCodes.Newobj;
                 _instructions = type.GetConstructors()
-                    .Select(ctor => typeInfo.Module.ImportReference(ctor))
+                    .Select(typeInfo.ImportReference)
                     .ToDictionary(ctor => ctor.ToString(), ctor => Instruction.Create(_opCode, ctor));
             }
 
