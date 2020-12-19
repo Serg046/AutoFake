@@ -19,6 +19,7 @@ namespace AutoFake
         private readonly IList<FakeDependency> _dependencies;
         private readonly Dictionary<string, ushort> _addedFields;
         private readonly Dictionary<MethodDefinition, IList<MethodDefinition>> _virtualMethods;
+        private readonly AssemblyHost _assemblyHost;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
         {
@@ -26,6 +27,7 @@ namespace AutoFake
             _dependencies = dependencies;
             _addedFields = new Dictionary<string, ushort>();
             _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
+            _assemblyHost = new AssemblyHost();
 
             _assemblyDefinition = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName);
             _assemblyDefinition.Name.Name += "Fake";
@@ -107,28 +109,22 @@ namespace AutoFake
 
         public FakeObjectInfo CreateFakeObject(MockCollection mocks, FakeOptions options)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                var fakeProcessor = new FakeProcessor(this, options);
-                foreach (var mock in mocks)
-                {
-                    fakeProcessor.Generate(mock.Mocks, mock.Method);
-                }
+	        using var memoryStream = new MemoryStream();
+	        var fakeProcessor = new FakeProcessor(this, options);
+	        foreach (var mock in mocks)
+	        {
+		        fakeProcessor.Generate(mock.Mocks, mock.Method);
+	        }
 
-                WriteAssembly(memoryStream);
-#if NETCOREAPP3_0
-                var assembly = CollectibleAssemblyLoadContext.Load(memoryStream);
-#else
-	            var assembly = Assembly.Load(memoryStream.ToArray());
-#endif
-                var type = assembly.GetType(GetClrName(_typeDefinition.FullName), true);
-                var instance = !IsStatic(_sourceType) ? CreateInstance(type) : null;
-                var parameters = mocks
-                    .SelectMany(m => m.Mocks)
-                    .SelectMany(m => m.Initialize(type))
-                    .ToList();
-                return new FakeObjectInfo(parameters, type, instance);
-            }
+	        WriteAssembly(memoryStream);
+	        var assembly = _assemblyHost.Load(memoryStream);
+	        var type = assembly.GetType(GetClrName(_typeDefinition.FullName), true);
+	        var instance = !IsStatic(_sourceType) ? CreateInstance(type) : null;
+	        var parameters = mocks
+		        .SelectMany(m => m.Mocks)
+		        .SelectMany(m => m.Initialize(type))
+		        .ToList();
+	        return new FakeObjectInfo(parameters, type, instance);
         }
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
