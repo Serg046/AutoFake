@@ -20,7 +20,7 @@ namespace AutoFake
 
         public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
-            var executeFuncRef = _typeInfo.Module.ImportReference(executeFunc);
+            var executeFuncRef = _typeInfo.ImportReference(executeFunc);
             var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
             if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
@@ -47,7 +47,7 @@ namespace AutoFake
             {
                 if (methodInfo.ReturnType.Module == methodInfo.Module)
                 {
-                    var typeRef = _typeInfo.Module.ImportReference(methodInfo.ReturnType);
+                    var typeRef = _typeInfo.ImportReference(methodInfo.ReturnType);
                     executeFuncDef.ReturnType = typeRef;
                     replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType));
                 }
@@ -57,7 +57,7 @@ namespace AutoFake
                 {
                     if (parameters[i].ParameterType.Module == methodInfo.Module)
                     {
-                        var typeRef = _typeInfo.Module.ImportReference(parameters[i].ParameterType);
+                        var typeRef = _typeInfo.ImportReference(parameters[i].ParameterType);
                         executeFuncDef.Parameters[i].ParameterType = typeRef;
                         replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, parameters[i].ParameterType));
                     }

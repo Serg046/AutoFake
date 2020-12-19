@@ -22,7 +22,7 @@ namespace AutoFake
 
         public FieldDefinition GenerateField(string name, Type returnType)
         {
-            var type = _typeInfo.Module.ImportReference(returnType);
+            var type = _typeInfo.ImportReference(returnType);
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
             return field;
@@ -30,12 +30,12 @@ namespace AutoFake
 
         public FieldDefinition GenerateCallsAccumulator(string name, MethodBody method)
         {
-            var type = _typeInfo.Module.ImportReference(typeof(List<object[]>));
+            var type = _typeInfo.ImportReference(typeof(List<object[]>));
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
 
             method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj,
-                _typeInfo.Module.ImportReference(typeof(List<object[]>).GetConstructor(new Type[0]))));
+                _typeInfo.ImportReference(typeof(List<object[]>).GetConstructor(new Type[0]))));
             method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, field));
             return field;
         }
@@ -76,14 +76,14 @@ namespace AutoFake
             {
                 isAsync = true;
                 var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArgumentsAsync));
-                return _typeInfo.Module.ImportReference(methodInfo);
+                return _typeInfo.ImportReference(methodInfo);
             }
             else if (returnType.Namespace == typeof(Task).Namespace && returnType.Name == "Task`1" &&
                      returnType is GenericInstanceType genericReturnType)
             {
                 isAsync = true;
                 var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArgumentsGenericAsync));
-                var open = _typeInfo.Module.ImportReference(methodInfo);
+                var open = _typeInfo.ImportReference(methodInfo);
                 var closed = new GenericInstanceMethod(open);
                 closed.GenericArguments.Add(genericReturnType.GenericArguments.Single());
                 return closed;
@@ -92,7 +92,7 @@ namespace AutoFake
             {
                 isAsync = false;
                 var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArguments));
-                return _typeInfo.Module.ImportReference(methodInfo);
+                return _typeInfo.ImportReference(methodInfo);
             }
         }
     }

@@ -17,74 +17,69 @@ namespace AutoFake.UnitTests
 {
     public class TypeInfoTests
     {
-        //[Fact]
-        //public void CreateInstance_InvalidDependencies_Throws()
-        //{
-        //    var type = typeof(TestClass);
-        //    Assert.Throws<InitializationException>(
-        //        () => new TypeInfo(type, GetDependencies(new StringBuilder())).CreateInstance(type));
-        //    Assert.Throws<InitializationException>(
-        //        () => new TypeInfo(type, GetDependencies(new StringBuilder(), new StringBuilder(), new StringBuilder())).CreateInstance(type));
-        //    Assert.Throws<InitializationException>(
-        //        () => new TypeInfo(type, GetDependencies(1, 1)).CreateInstance(type));
-        //    new TypeInfo(type, GetDependencies(new StringBuilder(), new StringBuilder())).CreateInstance(type);
-        //}
+		[Fact]
+		public void CreateFakeObject_InvalidDependencies_Throws()
+		{
+			var type = typeof(TestClass);
+			Assert.Throws<InitializationException>(() => new TypeInfo(type, 
+				GetDependencies(new StringBuilder())).CreateFakeObject(new MockCollection(), new FakeOptions()));
+			Assert.Throws<InitializationException>(() => new TypeInfo(type, GetDependencies(new StringBuilder(),
+				new StringBuilder(), new StringBuilder())).CreateFakeObject(new MockCollection(), new FakeOptions()));
+			Assert.Throws<InitializationException>(() => new TypeInfo(type, 
+				GetDependencies(1, 1)).CreateFakeObject(new MockCollection(), new FakeOptions()));
+			new TypeInfo(type, GetDependencies(new StringBuilder(), new StringBuilder()))
+				.CreateFakeObject(new MockCollection(), new FakeOptions());
+		}
 
-        //[Theory]
-        //[InlineData(typeof(InternalTestClass))]
-        //[InlineData(typeof(ProtectedTestClass))]
-        //[InlineData(typeof(PrivateTestClass))]
-        //public void CreateInstance_NonPublicConstructor_Success(Type type)
-        //{
-        //    new TypeInfo(type, GetDependencies()).CreateInstance(type);
-        //}
+		[Theory]
+		[InlineData(typeof(InternalTestClass))]
+		[InlineData(typeof(ProtectedTestClass))]
+		[InlineData(typeof(PrivateTestClass))]
+		public void CreateFakeObject_NonPublicConstructor_Success(Type type)
+		{
+			new TypeInfo(type, GetDependencies()).CreateFakeObject(new MockCollection(), new FakeOptions());
+		}
 
-        //[Fact]
-        //public void CreateInstance_AmbiguousCtorAndNullAsDependency_ForcesToUseArgIsNull()
-        //{
-        //    var type = typeof(AmbiguousCtorTestClass);
+		[Fact]
+		public void CreateFakeObject_AmbiguousCtorAndNullAsDependency_ForcesToUseArgIsNull()
+		{
+			var type = typeof(AmbiguousCtorTestClass);
 
-        //    Assert.Throws<InitializationException>(
-        //        () => new TypeInfo(type, GetDependencies(new object[] {null})).CreateInstance(type));
-        //    new TypeInfo(type, new[] {Arg.IsNull<StreamReader>()}).CreateInstance(type);
-        //    new TypeInfo(type, new[] {Arg.IsNull<StreamWriter>()}).CreateInstance(type);
+			Assert.Throws<InitializationException>(() => new TypeInfo(type, 
+				GetDependencies(new object[] { null })).CreateFakeObject(new MockCollection(), new FakeOptions()));
+			new TypeInfo(type, new[] { Arg.IsNull<StreamReader>() })
+				.CreateFakeObject(new MockCollection(), new FakeOptions());
+			new TypeInfo(type, new[] { Arg.IsNull<StreamWriter>() })
+				.CreateFakeObject(new MockCollection(), new FakeOptions());
+			new TypeInfo(typeof(TestClass), GetDependencies(null, null))
+				.CreateFakeObject(new MockCollection(), new FakeOptions());
+		}
 
-        //    new TypeInfo(typeof(TestClass), GetDependencies(null, null)).CreateInstance(typeof(TestClass));
-        //}
+		[Fact]
+		public void AddField_Field_Added()
+		{
+			const string testName = "testName";
+			var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
 
-        [Fact]
-        public void Module_SomeType_TheSameModulePaths()
-        {
-            var sourceType = typeof(TestClass);
-            var typeInfo = new TypeInfo(sourceType, new List<FakeDependency>());
+			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
 
-            Assert.Equal(sourceType.Module.FullyQualifiedName, typeInfo.Module.FileName);
-        }
+			Assert.NotNull(typeInfo.GetField(f => f.Name == testName));
+		}
 
-        //[Fact]
-        //public void AddField_Field_Added()
-        //{
-        //    const string testName = "testName";
-        //    var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
+		[Fact]
+		public void AddField_ExistingField_AddedWithInc()
+		{
+			const string testName = "testName";
+			var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
 
-        //    typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
 
-        //    Assert.NotNull(typeInfo.Fields.Single(f => f.Name == testName));
-        //}
+			typeInfo.GetField(f => f.Name == testName).Should().NotBeNull();
+			typeInfo.GetField(f => f.Name == testName + "1").Should().NotBeNull();
+		}
 
-        //[Fact]
-        //public void AddField_ExistingField_AddedWithInc()
-        //{
-        //    const string testName = "testName";
-        //    var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
-
-        //    typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
-        //    typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
-
-        //    Assert.Equal(new[] { testName, testName + "1" }, typeInfo.Fields.Select(f => f.Name));
-        //}
-
-        [Theory]
+		[Theory]
         [InlineData(typeof(InternalTestClass), false)]
         [InlineData(typeof(StaticTestClass), true)]
         public void CreateFakeObject_Type_Created(Type type, bool isStaticType)
@@ -108,7 +103,7 @@ namespace AutoFake.UnitTests
         {
             var type = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
             var method = new MethodDefinition(nameof(BaseTestClass.BaseTypeMethod),
-                MethodAttributes.Public, type.Module.ImportReference(typeof(void)));
+                MethodAttributes.Public, type.ImportReference(typeof(void)));
 
             var actualMethod = type.GetMethod(method);
 
