@@ -38,19 +38,19 @@ namespace AutoFake.UnitTests.Setup
             mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null;
             var runtimeArgs = new List<VariableDefinition>();
             preProc.Setup(p => p.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>())).Returns(accumulator);
-            proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments)).Returns(runtimeArgs);
+            proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments, It.IsAny<IEnumerable<Type>>())).Returns(runtimeArgs);
             mock.BeforeInjection(method);
 
             mock.Inject(emitter, Instruction.Create(OpCodes.Call, method));
 
             if (mustBeInjected)
             {
-                proc.Verify(m => m.SaveMethodCall(accumulator, needCheckArguments), Times.Once());
+                proc.Verify(m => m.SaveMethodCall(accumulator, needCheckArguments, It.IsAny<IEnumerable<Type>>()), Times.Once());
                 proc.Verify(m => m.PushMethodArguments(runtimeArgs), Times.Once());
             }
             else
             {
-                proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments), Times.Never);
+                proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments, It.IsAny<IEnumerable<Type>>()), Times.Never);
                 proc.Verify(m => m.PushMethodArguments(It.IsAny<IEnumerable<VariableDefinition>>()), Times.Never);
             }
         }

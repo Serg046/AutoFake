@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Setup.Mocks;
 using AutoFake.UnitTests.TestUtils;
@@ -8,7 +7,6 @@ using AutoFixture.Xunit2;
 using Mono.Cecil.Cil;
 using Xunit;
 using Mono.Cecil;
-using Mono.Collections.Generic;
 
 namespace AutoFake.UnitTests
 {
@@ -23,7 +21,8 @@ namespace AutoFake.UnitTests
             method.Parameters.Add(new ParameterDefinition(new FunctionPointerType()));
             fixture.Inject(Instruction.Create(OpCodes.Call, method));
 
-            var variables = fixture.Create<Processor>().SaveMethodCall(accumulator, false);
+            var variables = fixture.Create<Processor>().SaveMethodCall(accumulator, false,
+	            new[] { typeof(object), typeof(object) });
 
             Assert.Equal(2, variables.Count);
         }
@@ -41,7 +40,8 @@ namespace AutoFake.UnitTests
             emitter.Body.Instructions.Add(instruction);
             fixture.Inject(instruction);
 
-            var variables = fixture.Create<Processor>().SaveMethodCall(accumulator, true);
+            var variables = fixture.Create<Processor>().SaveMethodCall(accumulator, true,
+	            new[] { typeof(int), typeof(object) });
 
             var arrVar = emitter.Body.Variables.Single(v => v.VariableType.FullName == "System.Object[]");
             Assert.True(emitter.Body.Instructions.Ordered(

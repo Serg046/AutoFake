@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -13,6 +14,6 @@ namespace AutoFake
         void RemoveMethodArgumentsIfAny();
         void RemoveStackArgument();
         void ReplaceToRetValueField(FieldDefinition retField);
-        IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments);
+        IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments, IEnumerable<Type> argumentTypes);
     }
 }
