@@ -195,6 +195,25 @@ namespace AutoFake.IntegrationTests.InstanceTests
             Assert.Equal(-1, sut.Execute());
         }
         
+        [Fact]
+        public void GenericTest()
+        {
+	        var fake = new Fake<GenericTestClass<int>>();
+
+	        var sut = fake.Rewrite(f => f.GetValue(0, "0"));
+	        sut.Replace(s => s.GetValueImp(Arg.IsAny<int>(), "0")).Return(new KeyValuePair<int, string>(1, "1"));
+
+	        var actual = sut.Execute();
+	        Assert.Equal(1, actual.Key);
+	        Assert.Equal("1", actual.Value);
+        }
+
+        private class GenericTestClass<T>
+        {
+            public KeyValuePair<T, T2> GetValueImp<T2>(T x, T2 y) => new KeyValuePair<T,T2>(x , y);
+	        public KeyValuePair<T, T2> GetValue<T2>(T x, T2 y) => GetValueImp(x, y);
+        }
+        
         private class TestClass
         {
             public int DynamicValue() => 5;

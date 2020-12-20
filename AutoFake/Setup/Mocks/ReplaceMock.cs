@@ -24,7 +24,8 @@ namespace AutoFake.Setup.Mocks
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
             if (CheckSourceMemberCalls)
             {
-                processor.SaveMethodCall(CallsAccumulator, CheckArguments);
+                processor.SaveMethodCall(CallsAccumulator, CheckArguments,
+	                SourceMember.GetParameters().Select(p => p.ParameterType));
             }
             else
             {
