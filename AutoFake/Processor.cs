@@ -62,7 +62,7 @@ namespace AutoFake
             }
         }
 
-        public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments)
+        public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments, IEnumerable<Type> argumentTypes)
         {
             var method = (MethodReference)_instruction.Operand;
             var variables = new Stack<VariableDefinition>();
@@ -80,7 +80,7 @@ namespace AutoFake
             _emitter.Body.Variables.Add(arrVar);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
-            SaveMethodArguments(checkArguments, variables, arrVar);
+            if (checkArguments) SaveMethodArguments(variables, arrVar, argumentTypes);
 
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, accumulator));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
@@ -90,19 +90,17 @@ namespace AutoFake
             return variables.ToList();
         }
 
-        private void SaveMethodArguments(bool checkArguments, IEnumerable<VariableDefinition> variables, VariableDefinition array)
+        private void SaveMethodArguments(IEnumerable<VariableDefinition> variables, VariableDefinition array, IEnumerable<Type> argumentTypes)
         {
-            if (!checkArguments) return;
-
-            var counter = 0;
-            foreach (var variable in variables)
+	        var counter = 0;
+            foreach (var item in variables.Zip(argumentTypes, (var, type) => new {Var = var, Type = type}))
             {
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, array));
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, counter++));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, variable));
-                if (variable.VariableType.IsValueType)
+                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, item.Var));
+                if (item.Type.IsValueType)
                 {
-                    _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Box, variable.VariableType));
+                    _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Box, item.Var.VariableType));
                 }
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stelem_Ref));
             }

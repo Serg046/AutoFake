@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Remoting.Messaging;
 using Xunit;
@@ -99,6 +100,25 @@ namespace AutoFake.IntegrationTests.InstanceTests
             sut.Replace(() => TestClass.StaticStructValue).Return(data);
 
             Assert.Equal(data.Value, sut.Execute());
+        }
+
+        [Fact]
+        public void GenericTest()
+        {
+	        var fake = new Fake<GenericTestClass<int>>();
+
+	        var sut = fake.Rewrite(f => f.GetValue(0, "0"));
+	        sut.Replace(s => s.Pair).Return(new KeyValuePair<int, string>(1, "1"));
+
+	        var actual = sut.Execute();
+	        Assert.Equal(1, actual.Key);
+	        Assert.Equal("1", actual.Value);
+        }
+
+        private class GenericTestClass<T>
+        {
+	        public KeyValuePair<T, string> Pair = new KeyValuePair<T, string>(default, "test");
+	        public KeyValuePair<T, string> GetValue(T x, string y) => Pair;
         }
 
 #pragma warning disable 0649

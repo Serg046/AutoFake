@@ -6,6 +6,7 @@ using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using Mono.Cecil;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake
 {
@@ -14,8 +15,9 @@ namespace AutoFake
         private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private readonly Type _sourceType;
-        private readonly AssemblyDefinition _assemblyDefinition;
-        private readonly TypeDefinition _typeDefinition;
+        private readonly AssemblyDefinition _assemblyDef;
+        private readonly TypeDefinition _sourceTypeDef;
+        private readonly TypeDefinition _fieldsTypeDef;
         private readonly IList<FakeDependency> _dependencies;
         private readonly Dictionary<string, ushort> _addedFields;
         private readonly Dictionary<MethodDefinition, IList<MethodDefinition>> _virtualMethods;
@@ -29,30 +31,33 @@ namespace AutoFake
             _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
             _assemblyHost = new AssemblyHost();
 
-            _assemblyDefinition = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName);
-            _assemblyDefinition.Name.Name += "Fake";
+            _assemblyDef = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName);
+            _assemblyDef.Name.Name += "Fake";
 
-            var type = _assemblyDefinition.MainModule.GetType(_sourceType.FullName, runtimeName: true);
-            _typeDefinition = type.Resolve();
+            var type = _assemblyDef.MainModule.GetType(_sourceType.FullName, runtimeName: true);
+            _sourceTypeDef = type.Resolve();
+            _fieldsTypeDef = new TypeDefinition("AutoFake", "Fields", TypeAttributes.Class,
+	            _assemblyDef.MainModule.TypeSystem.Object);
+            _assemblyDef.MainModule.Types.Add(_fieldsTypeDef);
         }
 
         public TypeReference ImportReference(Type type)
-	        => _assemblyDefinition.MainModule.ImportReference(type);
+	        => _assemblyDef.MainModule.ImportReference(type);
 
         public FieldReference ImportReference(FieldInfo field)
-	        => _assemblyDefinition.MainModule.ImportReference(field);
+	        => _assemblyDef.MainModule.ImportReference(field);
 
         public MethodReference ImportReference(MethodBase method) 
-	        => _assemblyDefinition.MainModule.ImportReference(method);
+	        => _assemblyDef.MainModule.ImportReference(method);
 
         public FieldDefinition GetField(Predicate<FieldDefinition> fieldPredicate)
-	        => _typeDefinition.Fields.SingleOrDefault(f => fieldPredicate(f));
+	        => _sourceTypeDef.Fields.SingleOrDefault(f => fieldPredicate(f));
 
         public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate) 
-	        => _typeDefinition.Methods.Where(m => methodPredicate(m));
+	        => _sourceTypeDef.Methods.Where(m => methodPredicate(m));
 
         public MethodDefinition GetMethod(MethodReference methodReference) =>
-            GetMethod(_typeDefinition, methodReference);
+            GetMethod(_sourceTypeDef, methodReference);
 
         private MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
         {
@@ -64,20 +69,20 @@ namespace AutoFake
         {
             if (!_addedFields.ContainsKey(field.Name))
             {
-                _typeDefinition.Fields.Add(field);
+                _fieldsTypeDef.Fields.Add(field);
                 _addedFields.Add(field.Name, 0);
             }
             else
             {
                 _addedFields[field.Name]++;
                 field.Name += _addedFields[field.Name];
-                _typeDefinition.Fields.Add(field);
+                _fieldsTypeDef.Fields.Add(field);
             }
         }
 
         public void WriteAssembly(Stream stream)
         {
-            _assemblyDefinition.Write(stream);
+            _assemblyDef.Write(stream);
         }
 
         private object CreateInstance(Type type)
@@ -118,13 +123,19 @@ namespace AutoFake
 
 	        WriteAssembly(memoryStream);
 	        var assembly = _assemblyHost.Load(memoryStream);
-	        var type = assembly.GetType(GetClrName(_typeDefinition.FullName), true);
-	        var instance = !IsStatic(_sourceType) ? CreateInstance(type) : null;
+	        var fieldsType = assembly.GetType(_fieldsTypeDef.FullName, true);
+	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
+	        if (_sourceType.IsGenericType)
+	        {
+		        sourceType = sourceType.MakeGenericType(_sourceType.GetGenericArguments());
+	        }
+
+	        var instance = !IsStatic(_sourceType) ? CreateInstance(sourceType) : null;
 	        var parameters = mocks
 		        .SelectMany(m => m.Mocks)
-		        .SelectMany(m => m.Initialize(type))
+		        .SelectMany(m => m.Initialize(fieldsType))
 		        .ToList();
-	        return new FakeObjectInfo(parameters, type, instance);
+	        return new FakeObjectInfo(parameters, sourceType, fieldsType, instance);
         }
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
@@ -150,7 +161,7 @@ namespace AutoFake
 
 		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)
 		{
-			return _assemblyDefinition.MainModule.GetTypes().Where(t => IsDerived(t, parentType));
+			return _assemblyDef.MainModule.GetTypes().Where(t => IsDerived(t, parentType));
 		}
 
 		private bool IsDerived(TypeDefinition derived, TypeDefinition parent)

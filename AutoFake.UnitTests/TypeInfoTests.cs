@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
@@ -35,9 +36,13 @@ namespace AutoFake.UnitTests
 		[InlineData(typeof(InternalTestClass))]
 		[InlineData(typeof(ProtectedTestClass))]
 		[InlineData(typeof(PrivateTestClass))]
+		[InlineData(typeof(GenericTestClass<int>))]
 		public void CreateFakeObject_NonPublicConstructor_Success(Type type)
 		{
-			new TypeInfo(type, GetDependencies()).CreateFakeObject(new MockCollection(), new FakeOptions());
+			var generated = new TypeInfo(type, GetDependencies())
+				.CreateFakeObject(new MockCollection(), new FakeOptions());
+
+			generated.SourceType.FullName.Should().Be(type.FullName);
 		}
 
 		[Fact]
@@ -61,9 +66,13 @@ namespace AutoFake.UnitTests
 			const string testName = "testName";
 			var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
 
-			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
+				typeInfo.ImportReference(typeof(string))));
 
-			Assert.NotNull(typeInfo.GetField(f => f.Name == testName));
+			var generated = typeInfo.CreateFakeObject(new MockCollection(), new FakeOptions());
+			var field = generated.FieldsType.GetField(testName, BindingFlags.NonPublic | BindingFlags.Static);
+			field.Should().NotBeNull();
+			field.FieldType.Should().Be(typeof(string));
 		}
 
 		[Fact]
@@ -72,11 +81,18 @@ namespace AutoFake.UnitTests
 			const string testName = "testName";
 			var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>());
 
-			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
-			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly, new FunctionPointerType()));
+			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
+				typeInfo.ImportReference(typeof(string))));
+			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
+				typeInfo.ImportReference(typeof(string))));
 
-			typeInfo.GetField(f => f.Name == testName).Should().NotBeNull();
-			typeInfo.GetField(f => f.Name == testName + "1").Should().NotBeNull();
+			var generated = typeInfo.CreateFakeObject(new MockCollection(), new FakeOptions());
+			var field1 = generated.FieldsType.GetField(testName, BindingFlags.NonPublic | BindingFlags.Static);
+			field1.Should().NotBeNull();
+			field1.FieldType.Should().Be(typeof(string));
+			var field2 = generated.FieldsType.GetField(testName + "1", BindingFlags.NonPublic | BindingFlags.Static);
+			field2.Should().NotBeNull();
+			field2.FieldType.Should().Be(typeof(string));
 		}
 
 		[Theory]
@@ -93,7 +109,7 @@ namespace AutoFake.UnitTests
             var fakeObjectInfo = typeInfo.CreateFakeObject(mocks, new FakeOptions());
 
             mock.Verify(m => m.Initialize(It.IsAny<Type>()));
-            Assert.Equal(type.FullName, fakeObjectInfo.Type.FullName);
+            Assert.Equal(type.FullName, fakeObjectInfo.SourceType.FullName);
             var instanceAssertion = isStaticType ? (Action<object>)Assert.Null : Assert.NotNull;
             instanceAssertion(fakeObjectInfo.Instance);
         }
@@ -161,6 +177,13 @@ namespace AutoFake.UnitTests
             private PrivateTestClass()
             {
             }
+        }
+
+        private class GenericTestClass<T>
+        {
+	        private GenericTestClass()
+	        {
+	        }
         }
 
         private class AmbiguousCtorTestClass

@@ -1,4 +1,5 @@
-﻿using AutoFake.Expression;
+﻿using System.Linq;
+using AutoFake.Expression;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
@@ -15,7 +16,8 @@ namespace AutoFake.Setup.Mocks
             if (CheckSourceMemberCalls)
             {
                 var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
-                var arguments = processor.SaveMethodCall(CallsAccumulator, CheckArguments);
+                var arguments = processor.SaveMethodCall(CallsAccumulator, CheckArguments,
+	                SourceMember.GetParameters().Select(p => p.ParameterType));
                 processor.PushMethodArguments(arguments);
             }
         }

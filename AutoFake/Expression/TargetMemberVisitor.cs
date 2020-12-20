@@ -26,10 +26,22 @@ namespace AutoFake.Expression
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
         {
-            var paramTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-            var method = _targetType.GetMethod(methodInfo.Name, paramTypes)
-                ?? _targetType.GetMethod(methodInfo.Name, BindingFlags.NonPublic |
-                (methodInfo.IsStatic ? BindingFlags.Static : BindingFlags.Instance), null, paramTypes, null);
+	        var flags = methodInfo.IsStatic ? BindingFlags.Static : BindingFlags.Instance;
+	        flags |= methodInfo.IsPublic ? BindingFlags.Public : BindingFlags.NonPublic;
+            var methodCandidates = _targetType.GetMethods(flags).Where(m => m.Name == methodInfo.Name);
+
+            MethodInfo method;
+            if (methodInfo.IsGenericMethod)
+            {
+	            var contract = methodInfo.GetGenericMethodDefinition().ToString();
+	            method = methodCandidates.Single(m => m.ToString() == contract);
+	            method = method.MakeGenericMethod(methodInfo.GetGenericArguments());
+            }
+            else
+            {
+	            var contract = methodInfo.ToString();
+	            method = methodCandidates.Single(m => m.ToString() == contract);
+            }
 
             _requestedVisitor.Visit(methodExpression, method);
         }
