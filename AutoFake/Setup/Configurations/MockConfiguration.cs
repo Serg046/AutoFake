@@ -53,8 +53,7 @@ namespace AutoFake.Setup.Configurations
         public void Execute() => _executor.Execute();
     }
 
-    // TODO: Make it abstract
-    public class MockConfiguration<T> : MockConfiguration
+    public abstract class MockConfiguration<T> : MockConfiguration
     {
         internal MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory)
             : base(mocks, processorFactory)
@@ -74,7 +73,7 @@ namespace AutoFake.Setup.Configurations
             => VerifyImpl(voidInstanceSetupFunc);
     }
 
-    public class MockConfiguration
+    public abstract class MockConfiguration
     {
         internal MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory)
         {
