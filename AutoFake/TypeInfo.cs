@@ -123,8 +123,13 @@ namespace AutoFake
 
 	        WriteAssembly(memoryStream);
 	        var assembly = _assemblyHost.Load(memoryStream);
-	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
 	        var fieldsType = assembly.GetType(_fieldsTypeDef.FullName, true);
+	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
+	        if (_sourceType.IsGenericType)
+	        {
+		        sourceType = sourceType.MakeGenericType(_sourceType.GetGenericArguments());
+	        }
+
 	        var instance = !IsStatic(_sourceType) ? CreateInstance(sourceType) : null;
 	        var parameters = mocks
 		        .SelectMany(m => m.Mocks)

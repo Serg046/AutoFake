@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using Xunit;
@@ -73,6 +74,25 @@ namespace AutoFake.IntegrationTests.InstanceTests
             sut.Replace(() => DateTime.Now).Return(date);
 
             Assert.Equal(date, sut.Execute());
+        }
+
+        [Fact]
+        public void GenericTest()
+        {
+	        var fake = new Fake<GenericTestClass<int>>();
+
+	        var sut = fake.Rewrite(f => f.GetValue(0, "0"));
+	        sut.Replace(s => s.Pair).Return(new KeyValuePair<int, string>(1, "1"));
+
+	        var actual = sut.Execute();
+	        Assert.Equal(1, actual.Key);
+	        Assert.Equal("1", actual.Value);
+        }
+
+        private class GenericTestClass<T>
+        {
+	        public KeyValuePair<T, string> Pair => new KeyValuePair<T, string>(default, "test");
+	        public KeyValuePair<T, string> GetValue(T x, string y) => Pair;
         }
 
         private class TestClass
