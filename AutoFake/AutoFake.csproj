@@ -5,7 +5,7 @@
     <LangVersion>8.0</LangVersion>
     <PackageId>AutoFake</PackageId>
     <Title>AutoFake</Title>
-    <Version>0.4.0.0</Version>
+    <Version>0.4.1.0</Version>
     <Authors>Sergey Aseev (Serg046)</Authors>
     <PackageProjectUrl>https://github.com/Serg046/AutoFake</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Serg046/AutoFake</RepositoryUrl>
