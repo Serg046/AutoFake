@@ -36,9 +36,13 @@ namespace AutoFake.UnitTests
 		[InlineData(typeof(InternalTestClass))]
 		[InlineData(typeof(ProtectedTestClass))]
 		[InlineData(typeof(PrivateTestClass))]
+		[InlineData(typeof(GenericTestClass<int>))]
 		public void CreateFakeObject_NonPublicConstructor_Success(Type type)
 		{
-			new TypeInfo(type, GetDependencies()).CreateFakeObject(new MockCollection(), new FakeOptions());
+			var generated = new TypeInfo(type, GetDependencies())
+				.CreateFakeObject(new MockCollection(), new FakeOptions());
+
+			generated.SourceType.FullName.Should().Be(type.FullName);
 		}
 
 		[Fact]
@@ -173,6 +177,13 @@ namespace AutoFake.UnitTests
             private PrivateTestClass()
             {
             }
+        }
+
+        private class GenericTestClass<T>
+        {
+	        private GenericTestClass()
+	        {
+	        }
         }
 
         private class AmbiguousCtorTestClass
