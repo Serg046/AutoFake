@@ -41,7 +41,7 @@ namespace AutoFake
         {
             var fakeObject = _fake.CreateFakeObject();
             var visitor = new GetValueMemberVisitor(fakeObject.Instance);
-            _invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, fakeObject.Type));
+            _invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, fakeObject.SourceType));
             return visitor.RuntimeValue;
         }
     }

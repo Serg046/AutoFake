@@ -5,14 +5,16 @@ namespace AutoFake
 {
     internal class FakeObjectInfo
     {
-	    public FakeObjectInfo(IList<object> parameters, Type type, object instance = null)
+	    public FakeObjectInfo(IList<object> parameters, Type sourceType, Type fieldsType, object instance)
         {
 	        Parameters = parameters ?? new object[0];
-            Type = type;
+            SourceType = sourceType;
+            FieldsType = fieldsType;
             Instance = instance;
         }
 
-        public Type Type { get; }
+        public Type SourceType { get; }
+        public Type FieldsType { get; }
         public object Instance { get; }
         public IList<object> Parameters { get; }
     }
