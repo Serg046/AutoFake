@@ -4,10 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using AutoFake.Expression;
-using AutoFixture;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -29,7 +26,7 @@ namespace AutoFake.UnitTests.Setup
         public void Replace_GenericCfgInvalidInput_Throws()
         {
             var genericCfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            MockConfiguration cfg = genericCfg;
+            AutoFake.Setup.Configurations.MockConfiguration cfg = genericCfg;
             Assert.Throws<ArgumentNullException>(() => cfg.Replace((Expression<Func<TestClass, object>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Replace((Expression<Func<object>>)null));
             Assert.Throws<ArgumentNullException>(() => genericCfg.Replace((Expression<Func<TestClass, object>>)null));
@@ -47,7 +44,7 @@ namespace AutoFake.UnitTests.Setup
         public void Remove_GenericFakeInvalidInput_Throws()
         {
             var genericCfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            MockConfiguration cfg = genericCfg;
+            AutoFake.Setup.Configurations.MockConfiguration cfg = genericCfg;
             Assert.Throws<ArgumentNullException>(() => cfg.Remove((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Remove((Expression<Action>)null));
             Assert.Throws<ArgumentNullException>(() => genericCfg.Remove((Expression<Action<TestClass>>)null));
@@ -111,7 +108,7 @@ namespace AutoFake.UnitTests.Setup
         public void Verify_GenericFakeInvalidInput_Throws()
         {
             var genericCfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            MockConfiguration cfg = genericCfg;
+            AutoFake.Setup.Configurations.MockConfiguration cfg = genericCfg;
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Func<TestClass, object>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Func<object>>)null));
@@ -263,6 +260,20 @@ namespace AutoFake.UnitTests.Setup
                 await Task.Delay(1);
                 throw new NotImplementedException();
             }
+        }
+
+        private class MockConfiguration : AutoFake.Setup.Configurations.MockConfiguration
+        {
+	        public MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory) : base(mocks, processorFactory)
+	        {
+	        }
+        }
+
+        private class MockConfiguration<T> : AutoFake.Setup.Configurations.MockConfiguration<T>
+        {
+	        public MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory) : base(mocks, processorFactory)
+	        {
+	        }
         }
     }
 }
