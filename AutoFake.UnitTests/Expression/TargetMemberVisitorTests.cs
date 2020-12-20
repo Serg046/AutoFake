@@ -30,6 +30,18 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
+        public void Visit_GenericMethod_Success()
+        {
+	        var expression = (MethodCallExpression)((Expression<Action<TestClass>>)(t => t.GenericMethod(0))).Body;
+
+	        _visitor.Visit(expression, expression.Method);
+
+	        var expectedMethod = typeof(TargetClass).GetMethod(nameof(TargetClass.GenericMethod))
+		        .MakeGenericMethod(typeof(int));
+            _requestedVisitor.Verify(v => v.Visit(expression, expectedMethod));
+        }
+
+        [Fact]
         public void Visit_Property_Success()
         {
             var property = typeof(TestClass).GetProperty(nameof(TestClass.Property));
@@ -68,6 +80,10 @@ namespace AutoFake.UnitTests.Expression
             {
             }
 
+            public void GenericMethod<T>(T arg)
+            {
+            }
+
             public int Property { get; }
 
             public int Field;
@@ -78,6 +94,10 @@ namespace AutoFake.UnitTests.Expression
             public TargetClass(int arg) { }
 
             public void Method(int arg)
+            {
+            }
+
+            public void GenericMethod<T>(T arg)
             {
             }
 
