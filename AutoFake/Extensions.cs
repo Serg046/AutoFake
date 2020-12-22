@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Mono.Cecil;
 using System.Linq;
-using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -15,8 +14,6 @@ namespace AutoFake
          .SequenceEqual(method.Parameters.Select(p => p.ParameterType.FullName)) &&
                methodReference.ReturnType.FullName == method.ReturnType.FullName;
         
-        public static IEmitter GetEmitter(this MethodBody method) => new Emitter(method);
-
         public static bool IsAsync(this MethodDefinition method, out MethodDefinition asyncMethod)
         {
             var asyncAttribute = method.CustomAttributes
