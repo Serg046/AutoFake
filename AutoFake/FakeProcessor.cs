@@ -20,6 +20,7 @@ namespace AutoFake
 
         public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
+	        using var emitterPool = new EmitterPool();
             var executeFuncRef = _typeInfo.ImportReference(executeFunc);
             var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
             if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
@@ -27,15 +28,15 @@ namespace AutoFake
             var replaceTypeRefMocks = ProcessOriginalMethodContract(executeFunc, executeFuncDef);
             mocks = mocks.Concat(replaceTypeRefMocks);
             foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
-            var testMethod = new TestMethod(this, executeFuncDef, mocks);
+            var testMethod = new TestMethod(this, executeFuncDef, mocks, emitterPool);
             testMethod.Rewrite();
-            foreach (var mock in mocks) mock.AfterInjection(executeFuncDef.Body.GetEmitter());
+            foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
 
             if (replaceTypeRefMocks.Any())
             {
                 foreach (var ctor in _typeInfo.GetMethods(m => m.Name == ".ctor" || m.Name == ".cctor"))
                 {
-                    new TestMethod(this, ctor, replaceTypeRefMocks).Rewrite();
+                    new TestMethod(this, ctor, replaceTypeRefMocks, emitterPool).Rewrite();
                 }
             }
         }
@@ -71,13 +72,15 @@ namespace AutoFake
             private readonly FakeProcessor _gen;
             private readonly MethodDefinition _originalMethod;
             private readonly IEnumerable<IMock> _mocks;
+            private readonly IEmitterPool _emitterPool;
             private readonly HashSet<MethodDefinition> _methods;
 
-            public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks)
+            public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks, IEmitterPool emitterPool)
             {
                 _gen = gen;
                 _originalMethod = originalMethod;
                 _mocks = mocks;
+                _emitterPool = emitterPool;
                 _methods = new HashSet<MethodDefinition>();
             }
 
@@ -109,7 +112,7 @@ namespace AutoFake
                 {
                     if (mock.IsSourceInstruction(_originalMethod, instruction))
                     {
-                        mock.Inject(currentMethod.Body.GetEmitter(), instruction);
+                        mock.Inject(_emitterPool.GetEmitter(currentMethod.Body), instruction);
                     }
                     else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
                     {
