@@ -65,15 +65,15 @@ namespace AutoFake.IntegrationTests
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.Sum(1, 2));
             sut.Replace(t => t.CodeBranch(1, 2))
-                .ExpectedCalls(i => i == 1)
+                .ExpectedCalls(2)
                 .Return(6);
 
-            Assert.Equal(9, sut.Execute());
+            Assert.Equal(12, sut.Execute());
 
             fake = new Fake<TestClass>();
             sut = fake.Rewrite(f => f.Sum(0, 1));
             sut.Replace(t => t.CodeBranch(0, 0))
-                .ExpectedCalls(i => i == 1)
+                .ExpectedCalls(1)
                 .Return(6);
 
             Assert.Equal(6, sut.Execute());
@@ -119,26 +119,17 @@ namespace AutoFake.IntegrationTests
 
             public int CodeBranch(int a, int b) => a + b;
 
-            //public int Sum(int a, int b)
-            //{
-            //    if (a > 0)
-            //    {
-            //        return CodeBranch(a, b) + CodeBranch(a, b);
-            //    }
-            //    else
-            //    {
-            //        return CodeBranch(0, 0);
-            //    }
-            //}
-
-            public int Sum(int a, int b)
-            {
-                if (a > 0)
-                {
-                    return CodeBranch(a, b) + 3;
-                }
-                return CodeBranch(0, 0);
-            }
+			public int Sum(int a, int b)
+			{
+				if (a > 0)
+				{
+					return CodeBranch(a, b) + CodeBranch(a, b);
+				}
+				else
+				{
+					return CodeBranch(0, 0);
+				}
+			}
 
             public TestClass2 MutateTestClass2(TestClass2 cl, int value)
             {
