@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using AutoFake.Expression;
+using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
@@ -53,6 +56,28 @@ namespace AutoFake.UnitTests.Setup
                 proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments, It.IsAny<IEnumerable<Type>>()), Times.Never);
                 proc.Verify(m => m.PushMethodArguments(It.IsAny<IEnumerable<VariableDefinition>>()), Times.Never);
             }
+        }
+
+        [Theory, AutoMoqData]
+        internal void Inject_ParametrizedSourceMember_ArgsPassed(
+	        [Frozen] Mock<ISourceMember> sourceMember,
+	        [Frozen] Mock<IProcessor> processor,
+            Instruction instruction,
+	        VerifyMock sut)
+        {
+	        var parameters = GetType()
+		        .GetMethod(nameof(Inject_ParametrizedSourceMember_ArgsPassed),
+			        BindingFlags.NonPublic | BindingFlags.Instance)
+		        .GetParameters();
+	        sourceMember.Setup(s => s.GetParameters()).Returns(parameters);
+
+	        sut.Inject(Mock.Of<IEmitter>(), instruction);
+
+	        processor.Verify(p => p.SaveMethodCall(
+		        It.IsAny<FieldDefinition>(),
+		        It.IsAny<bool>(),
+		        It.Is<IEnumerable<Type>>(prms => prms
+			        .SequenceEqual(parameters.Select(prm => prm.ParameterType)))));
         }
     }
 }

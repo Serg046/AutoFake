@@ -143,11 +143,12 @@ namespace AutoFake.UnitTests.Setup
         public void Append_GenericFake_MockAdded()
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            Action callback = () => { };
+            Expression<Action> expression = () => Append_GenericFake_MockAdded();
+            var callback = expression.Compile();
 
-            cfg.Append(callback);
+            cfg.Append(callback).After(expression);
 
-            var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
+            var mock = Assert.IsType<SourceMemberInsertMock>(cfg.Mocks.Single());
             Assert.Equal(callback, mock.Closure);
         }
 
@@ -155,11 +156,12 @@ namespace AutoFake.UnitTests.Setup
         public void Append_Fake_MockAdded()
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
-            Action callback = () => { };
+            Expression<Action> expression = () => Append_Fake_MockAdded();
+            var callback = expression.Compile();
 
-            cfg.Append(callback);
+            cfg.Append(callback).After(expression);
 
-            var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
+            var mock = Assert.IsType<SourceMemberInsertMock>(cfg.Mocks.Single());
             Assert.Equal(callback, mock.Closure);
         }
 
@@ -167,11 +169,12 @@ namespace AutoFake.UnitTests.Setup
         public void Prepend_GenericFake_MockAdded()
         {
             var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
-            Action callback = () => { };
+            Expression<Action> expression = () => Prepend_GenericFake_MockAdded();
+            var callback = expression.Compile();
 
-            cfg.Prepend(callback);
+            cfg.Prepend(callback).Before(expression);
 
-            var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
+            var mock = Assert.IsType<SourceMemberInsertMock>(cfg.Mocks.Single());
             Assert.Equal(callback, mock.Closure);
         }
 
@@ -179,11 +182,12 @@ namespace AutoFake.UnitTests.Setup
         public void Prepend_Fake_MockAdded()
         {
             var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
-            Action callback = () => { };
+            Expression<Action> expression = () => Prepend_Fake_MockAdded();
+            var callback = expression.Compile();
 
-            cfg.Prepend(callback);
+            cfg.Prepend(callback).Before(expression);
 
-            var mock = Assert.IsType<InsertMock>(cfg.Mocks.Single());
+            var mock = Assert.IsType<SourceMemberInsertMock>(cfg.Mocks.Single());
             Assert.Equal(callback, mock.Closure);
         }
 
