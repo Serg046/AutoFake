@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
+using FluentAssertions;
 using Moq;
 using Xunit;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
@@ -28,6 +29,20 @@ namespace AutoFake.UnitTests.Expression
             var invocationExpression = new InvocationExpression(expression);
 
             Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
+        }
+
+        [Theory, AutoMoqData]
+        public void AcceptMemberVisitor_UnsupportedMemberExpression_Throws(MemberInfo member)
+        {
+	        Expression<Func<DateTime>> expression = () => DateTime.Now;
+	        var memberExpression = expression.Body as MemberExpression;
+	        var fake = new Fake<InvocationExpression>(memberExpression);
+
+	        var sut = fake.Rewrite(s => s.AcceptMemberVisitor(_memberVisitor.Object));
+	        sut.Replace((MemberExpression e) => e.Member).Return(member);
+	        Action act = () => sut.Execute();
+
+	        act.Should().Throw<NotSupportedException>("*is not supported*");
         }
 
         [Theory]
@@ -137,7 +152,7 @@ namespace AutoFake.UnitTests.Expression
             Assert.True(args.Single().Check(5));
         }
 
-        public static IEnumerable<object[]> GetAcceptMemberVisitorTestData()
+		public static IEnumerable<object[]> GetAcceptMemberVisitorTestData()
         {
             var method = typeof(TestClass).GetMethod(nameof(TestClass.Method));
             Expression<Action<TestClass>> methodExpr = e => e.Method();

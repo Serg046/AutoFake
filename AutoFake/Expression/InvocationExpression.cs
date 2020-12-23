@@ -44,7 +44,6 @@ namespace AutoFake.Expression
 
         private void Analyze(NewExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Constructor);
         
-        [ExcludeFromCodeCoverage]
         private void Analyze(MemberExpression expression, IMemberVisitor visitor)
         {
             switch (expression.Member)
@@ -70,7 +69,6 @@ namespace AutoFake.Expression
         }
 
         IList<IFakeArgument> IInvocationExpression.GetArguments() => GetArguments();
-        [ExcludeFromCodeCoverage]
         internal IList<IFakeArgument> GetArguments()
         {
             if (_arguments == null)
