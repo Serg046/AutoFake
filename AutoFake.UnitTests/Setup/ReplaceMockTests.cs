@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using AutoFake.Setup;
@@ -113,6 +115,27 @@ namespace AutoFake.UnitTests.Setup
             mock.Inject(Mock.Of<IEmitter>(), instruction);
 
             proc.Verify(m => m.RemoveInstruction(instruction), noReturnObject ? Times.Once(): Times.Never());
+        }
+
+        [Theory, AutoMoqData]
+        internal void Inject_ParametrizedSourceMember_ArgsPassed(
+            [Frozen] Mock<ISourceMember> sourceMember,
+            [Frozen] Mock<IProcessor> processor,
+	        ReplaceMock sut)
+        {
+	        var parameters = GetType()
+		        .GetMethod(nameof(Inject_ParametrizedSourceMember_ArgsPassed),
+			        BindingFlags.NonPublic | BindingFlags.Instance)
+		        .GetParameters();
+	        sourceMember.Setup(s => s.GetParameters()).Returns(parameters);
+
+	        sut.Inject(Mock.Of<IEmitter>(), Nop());
+
+            processor.Verify(p => p.SaveMethodCall(
+	            It.IsAny<FieldDefinition>(),
+	            It.IsAny<bool>(),
+	            It.Is<IEnumerable<Type>>(prms => prms
+		            .SequenceEqual(parameters.Select(prm => prm.ParameterType)))));
         }
 
         [Theory, AutoMoqData]

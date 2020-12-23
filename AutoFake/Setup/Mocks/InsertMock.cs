@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
@@ -30,7 +31,6 @@ namespace AutoFake.Setup.Mocks
         {
         }
 
-        [ExcludeFromCodeCoverage]
         public void BeforeInjection(MethodDefinition method)
         {
             _closureField = _prePostProcessor.GenerateField(

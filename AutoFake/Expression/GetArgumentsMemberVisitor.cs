@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -42,15 +43,14 @@ namespace AutoFake.Expression
         [ExcludeFromCodeCoverage]
         private IFakeArgument TryGetArgument(LinqExpression expression)
         {
-            switch (expression)
-            {
-                case ConstantExpression ce: return GetArgument(ce);
-                case UnaryExpression ue: return GetArgument(ue);
-                case MethodCallExpression mce: return GetArgument(mce);
-                case LinqExpression le: return CreateFakeArgument(le);
-                default: throw new NotSupportedExpressionException($"Invalid expression format. Type '{expression.GetType().FullName}'. Source: {expression}.");
-            }
-        }
+			return expression switch
+			{
+				ConstantExpression ce => GetArgument(ce),
+				UnaryExpression ue => GetArgument(ue),
+				MethodCallExpression mce => GetArgument(mce),
+				var le => CreateFakeArgument(le),
+			};
+		}
 
         private IFakeArgument GetArgument(ConstantExpression expression) => CreateFakeArgument(expression.Value);
 
