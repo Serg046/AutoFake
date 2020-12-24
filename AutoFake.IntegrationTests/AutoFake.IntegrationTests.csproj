@@ -10,6 +10,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
     <PackageReference Include="xunit" Version="2.4.1" />
@@ -22,6 +23,12 @@
   <ItemGroup>
     <ProjectReference Include="..\AutoFake.IntegrationTests.Sut\AutoFake.IntegrationTests.Sut.csproj" />
     <ProjectReference Include="..\AutoFake\AutoFake.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MultipleReturnTest">
+      <HintPath>MultipleReturnTest.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

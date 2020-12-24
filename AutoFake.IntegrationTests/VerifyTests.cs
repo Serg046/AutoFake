@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
+using FluentAssertions;
+using MultipleReturnTest;
 using Xunit;
 
 namespace AutoFake.IntegrationTests
@@ -94,6 +96,35 @@ namespace AutoFake.IntegrationTests
                 .ExpectedCalls(i => i == 1);
 
             await sut.Execute();
+        }
+
+        [Theory]
+        [InlineData(-10, -1)]
+        [InlineData(0, 0)]
+        [InlineData(10, 1)]
+        public void MultipleReturnTest_Success(int arg, int expected)
+        {
+	        var fake = new Fake<SystemUnderTest>();
+
+	        var sut = fake.Rewrite(f => f.ConditionalReturn(arg));
+	        sut.Verify(s => s.PrintAndReturn(arg, expected));
+
+	        sut.Execute().Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData(-10, 1)]
+        [InlineData(0, 123)]
+        [InlineData(10, -1)]
+        public void MultipleReturnTest_Throws(int arg, int expected)
+        {
+	        var fake = new Fake<SystemUnderTest>();
+
+	        var sut = fake.Rewrite(f => f.ConditionalReturn(arg));
+	        sut.Verify(s => s.PrintAndReturn(arg, expected));
+	        Action act = () => sut.Execute();
+
+	        act.Should().Throw<VerifyException>();
         }
 
         private class TestClass
