@@ -43,30 +43,38 @@ namespace AutoFake
         public void InjectVerification(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
             FieldDefinition setupBody, FieldDefinition callsAccumulator)
         {
-            var retInstruction = emitter.Body.Instructions.Last();
+	        foreach (var instruction in emitter.Body.Instructions.Where(cmd => cmd.OpCode == OpCodes.Ret).ToList())
+	        {
+				InjectVerifications(emitter, checkArguments, expectedCalls, setupBody, callsAccumulator, instruction);
+            }
+        }
 
-            var argMatcher = GetArgumentsMatcher(emitter.Body.Method, out var isAsync);
-            VariableDefinition retValue = null;
-            if (isAsync)
-            {
-                retValue = new VariableDefinition(emitter.Body.Method.ReturnType);
-                emitter.Body.Variables.Add(retValue);
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stloc, retValue));
-            }
+        private void InjectVerifications(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
+	        FieldDefinition setupBody, FieldDefinition callsAccumulator, Instruction retInstruction)
+        {
+	        var argMatcher = GetArgumentsMatcher(emitter.Body.Method, out var isAsync);
+	        VariableDefinition retValue = null;
+	        if (isAsync)
+	        {
+		        retValue = new VariableDefinition(emitter.Body.Method.ReturnType);
+		        emitter.Body.Variables.Add(retValue);
+		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stloc, retValue));
+	        }
 
-            emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBody));
-            if (retValue != null) emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, retValue));
-            emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, callsAccumulator));
-            emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
-            if (expectedCalls != null)
-            {
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCalls));
-            }
-            else
-            {
-                emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldnull));
-            }
-            emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Call, argMatcher));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBody));
+	        if (retValue != null) emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, retValue));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, callsAccumulator));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
+	        if (expectedCalls != null)
+	        {
+		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCalls));
+	        }
+	        else
+	        {
+		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldnull));
+	        }
+
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Call, argMatcher));
         }
 
         private MethodReference GetArgumentsMatcher(MethodReference method, out bool isAsync)
