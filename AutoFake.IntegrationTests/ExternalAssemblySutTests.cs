@@ -13,7 +13,7 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<SystemUnderTest>();
 
-            fake.Execute(f => f.SimpleMethod());
+            fake.Rewrite(f => f.SimpleMethod()).Execute();
         }
 
         [Fact]
@@ -21,7 +21,7 @@ namespace AutoFake.IntegrationTests
         {
             var fake = new Fake<SystemUnderTest>();
 
-            fake.Execute(f => f.InternalMethod());
+            fake.Rewrite(f => f.InternalMethod()).Execute();
         }
 
         [Theory]

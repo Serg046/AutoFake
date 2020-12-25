@@ -97,29 +97,6 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void Visit_MethodWithExceptionInside_ThrowsInnerException()
-        {
-            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), null, new SomeInstanceTypeFake());
-            Expression<Action<SomeInstanceTypeFake>> expr = s => s.FailMethod();
-            var method = fakeObjectInfo.SourceType.GetMethod(nameof(SomeInstanceTypeFake.FailMethod));
-
-            var visitor = new GetValueMemberVisitor(fakeObjectInfo.Instance);
-
-            Assert.Throws<InvalidOperationException>(() => visitor.Visit((MethodCallExpression)expr.Body, method));
-        }
-
-        [Fact]
-        public void Visit_PropertyWithExceptionInside_ThrowsInnerException()
-        {
-            var fakeObjectInfo = new FakeObjectInfo(null, typeof(SomeInstanceTypeFake), null, new SomeInstanceTypeFake());
-            var property = fakeObjectInfo.SourceType.GetProperty(nameof(SomeInstanceTypeFake.FailProperty));
-
-            var visitor = new GetValueMemberVisitor(fakeObjectInfo.Instance);
-
-            Assert.Throws<InvalidOperationException>(() => visitor.Visit(property));
-        }
-
-        [Fact]
         public void Visit_PropertyWithException_ThrowsOriginalException()
         {
             var type = typeof(SomeInstanceTypeFake);

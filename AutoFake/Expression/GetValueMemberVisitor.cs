@@ -32,9 +32,11 @@ namespace AutoFake.Expression
             }
         }
 
+        public Type Type { get; private set; }
+
         public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
         {
-            throw new NotSupportedExpressionException("Cannot execute constructor because the instance is already built.");
+            throw new NotSupportedExpressionException("Cannot execute constructor because the instance has been already built.");
         }
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
@@ -42,23 +44,20 @@ namespace AutoFake.Expression
             var instanceExpr = _instance == null || methodInfo.IsStatic ? null : LinqExpression.Constant(_instance);
             var callExpression = LinqExpression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
             var lambda = LinqExpression.Lambda(callExpression).Compile();
-            RuntimeValue = GetValue(() => lambda.DynamicInvoke());
+            Type = methodInfo.ReturnType;
+            RuntimeValue = lambda.DynamicInvoke();
         }
 
-        public void Visit(PropertyInfo propertyInfo) => RuntimeValue = GetValue(() => propertyInfo.GetValue(_instance, null));
-
-        private object GetValue(Func<object> func)
+        public void Visit(PropertyInfo propertyInfo)
         {
-            try
-            {
-                return func();
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException != null)
-            {
-                throw ex.InnerException;
-            }
+	        Type = propertyInfo.PropertyType;
+	        RuntimeValue = propertyInfo.GetValue(_instance, null);
         }
 
-        public void Visit(FieldInfo fieldInfo) => RuntimeValue = fieldInfo.GetValue(_instance);
+        public void Visit(FieldInfo fieldInfo)
+        {
+	        Type = fieldInfo.FieldType;
+	        RuntimeValue = fieldInfo.GetValue(_instance);
+        }
     }
 }

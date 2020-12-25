@@ -18,12 +18,14 @@ namespace AutoFake.UnitTests.Setup
         {
             sut.Add(method.Object, mocks);
 
+            Assert.Equal(1, sut.Count);
             var item = sut.Single();
             Assert.Equal(method.Object, item.Method);
             Assert.Equal(mocks, item.Mocks);
+
             var enumerator = (sut as IEnumerable).GetEnumerator();
             enumerator.MoveNext();
-            item = enumerator.Current as MockCollection.Item;
+            item = Assert.IsType<MockCollection.Item>(enumerator.Current);
             Assert.Equal(method.Object, item.Method);
             Assert.Equal(mocks, item.Mocks);
         }
