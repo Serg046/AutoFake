@@ -115,7 +115,7 @@ namespace AutoFake
             executor.Execute();
         }
 
-        internal FakeObjectInfo CreateFakeObject()
+        internal FakeObjectInfo GetFakeObject()
         {
             if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks, Options);
             return _fakeObjectInfo;

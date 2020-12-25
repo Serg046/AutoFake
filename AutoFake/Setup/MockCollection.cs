@@ -9,6 +9,8 @@ namespace AutoFake.Setup
     {
         private readonly List<Item> _mocks = new List<Item>();
 
+        public int Count => _mocks.Count;
+
         public void Add(MethodBase method, ICollection<IMock> mocks) => _mocks.Add(new Item(method, mocks));
 
         public IEnumerator<Item> GetEnumerator() => _mocks.GetEnumerator();

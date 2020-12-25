@@ -42,7 +42,7 @@ namespace AutoFake.UnitTests.Expression
 	        sut.Replace((MemberExpression e) => e.Member).Return(member);
 	        Action act = () => sut.Execute();
 
-	        act.Should().Throw<NotSupportedException>("*is not supported*");
+	        act.Should().Throw<NotSupportedException>().WithMessage("*is not supported*");
         }
 
         [Theory]

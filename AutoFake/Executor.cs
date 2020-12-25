@@ -1,17 +1,37 @@
-﻿using AutoFake.Expression;
+﻿using System;
+using System.Reflection;
+using AutoFake.Expression;
 
 namespace AutoFake
 {
     internal class Executor<T>
     {
-        private readonly ExecutorImpl _executor;
+	    private readonly ExecutorImpl _executor;
 
         internal Executor(Fake fake, IInvocationExpression invocationExpression)
         {
-            _executor = new ExecutorImpl(fake, invocationExpression);
+	        _executor = new ExecutorImpl(fake, invocationExpression);
         }
 
-        public T Execute() => (T)_executor.Execute();
+        public T Execute()
+        {
+	        var visitor = _executor.Execute();
+            try
+            {
+	            return (T)visitor.RuntimeValue;
+            }
+            catch (InvalidCastException)
+            {
+	            var type = typeof(T);
+	            if (type.Module.Assembly != visitor.Type.Module.Assembly)
+	            {
+		            throw new InvalidCastException("The executable member must be processed by Rewrite() method");
+                }
+
+	            var typeName = type.FullName;
+	            throw new InvalidCastException($"Cannot cast \"this\" reference to {typeName}. Consider executing some member of {typeName}.");
+            }
+        }
     }
 
     internal class Executor
@@ -37,12 +57,19 @@ namespace AutoFake
             _invocationExpression = invocationExpression;
         }
 
-        public object Execute()
+        public GetValueMemberVisitor Execute()
         {
-            var fakeObject = _fake.CreateFakeObject();
+            var fakeObject = _fake.GetFakeObject();
             var visitor = new GetValueMemberVisitor(fakeObject.Instance);
-            _invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, fakeObject.SourceType));
-            return visitor.RuntimeValue;
+            try
+            {
+	            _invocationExpression.AcceptMemberVisitor(new TargetMemberVisitor(visitor, fakeObject.SourceType));
+	            return visitor;
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+	            throw ex.InnerException;
+            }
         }
     }
 }
