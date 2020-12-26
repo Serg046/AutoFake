@@ -31,7 +31,7 @@ namespace AutoFake.UnitTests.Expression
             Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
         }
 
-        [Theory, AutoMoqData]
+        [Theory(Skip = "Issue #36 needed"), AutoMoqData]
         public void AcceptMemberVisitor_UnsupportedMemberExpression_Throws(MemberInfo member)
         {
 	        Expression<Func<DateTime>> expression = () => DateTime.Now;
