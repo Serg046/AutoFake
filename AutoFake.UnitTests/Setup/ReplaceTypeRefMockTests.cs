@@ -15,7 +15,7 @@ namespace AutoFake.UnitTests.Setup
         public void IsSourceInstruction_ValidClassInput_True()
         {
             var type = typeof(ReplaceTypeRefMockTests);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
             var ctors = type.GetConstructors().Select(typeInfo.ImportReference);
 
@@ -27,7 +27,7 @@ namespace AutoFake.UnitTests.Setup
         public void IsSourceInstruction_InvalidClassInput_False()
         {
             var type = typeof(ReplaceTypeRefMockTests);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
             var ctor = typeInfo.ImportReference(type.GetConstructors().First());
             var method = typeInfo.ImportReference(type.GetMethods().First());
@@ -41,7 +41,7 @@ namespace AutoFake.UnitTests.Setup
         public void IsSourceInstruction_ValidStructInput_True()
         {
             var type = typeof(DateTime);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
             var typeRef = typeInfo.ImportReference(type);
 
@@ -52,7 +52,7 @@ namespace AutoFake.UnitTests.Setup
         public void IsSourceInstruction_InvalidStructInput_False()
         {
             var type = typeof(ReplaceTypeRefMockTests);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
             var typeRef = typeInfo.ImportReference(typeof(ValueTask));
             var invalidTypeRef = typeInfo.ImportReference(typeof(ValueTask));
@@ -66,7 +66,7 @@ namespace AutoFake.UnitTests.Setup
         internal void Inject_Class_Injected(Mock<IEmitter> emitter)
         {
             var type = typeof(ReplaceTypeRefMockTests);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
             var ctor = typeInfo.ImportReference(type.GetConstructors().First());
             var instruction = Instruction.Create(OpCodes.Newobj, ctor);
@@ -81,7 +81,7 @@ namespace AutoFake.UnitTests.Setup
         internal void Inject_Struct_Injected(Mock<IEmitter> emitter)
         {
             var type = typeof(DateTime);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
             var typeRef = typeInfo.ImportReference(type);
             var instruction = Instruction.Create(OpCodes.Initobj, typeRef);
@@ -102,7 +102,7 @@ namespace AutoFake.UnitTests.Setup
         public void GetHashCode_Type_TheSameCache()
         {
             var type = typeof(ReplaceTypeRefMockTests);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock = new ReplaceTypeRefMock(typeInfo, type);
 
             Assert.Equal(type.GetHashCode(), mock.GetHashCode());
@@ -112,7 +112,7 @@ namespace AutoFake.UnitTests.Setup
         public void GetHashCode_Equals_Success()
         {
             var type = typeof(ReplaceTypeRefMockTests);
-            var typeInfo = new TypeInfo(type, new List<FakeDependency>());
+            var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
             var mock1 = new ReplaceTypeRefMock(typeInfo, type);
             var mock2 = new ReplaceTypeRefMock(typeInfo, type);
             var mock3 = new ReplaceTypeRefMock(typeInfo, typeof(ReplaceTypeRefMock));

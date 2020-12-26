@@ -66,39 +66,6 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void SaveFakeAssembly_Null_Throws()
-        {
-            Assert.Throws<ArgumentNullException>(() => new Fake<FakeTests>().SaveFakeAssembly(null));
-        }
-
-        [Fact]
-        public void SaveFakeAssembly_FileName_Saved()
-        {
-            var fileName = $"Unit-testing-{Guid.NewGuid()}.dll";
-            Test();
-            UnlockFile();
-            File.Delete(fileName);
-
-            void Test()
-            {
-				var type = typeof(TestClass);
-	            var fake = new Fake(type);
-
-	            fake.SaveFakeAssembly(fileName);
-
-	            var assembly = AssemblyDefinition.ReadAssembly(fileName);
-	            var savedType = assembly.MainModule.GetType(type.FullName, true).Resolve();
-	            Assert.Contains(savedType.Methods, m => m.Name == nameof(TestClass.VoidInstanceMethod));
-            }
-
-            void UnlockFile()
-            {
-	            GC.Collect();
-	            GC.WaitForPendingFinalizers();
-            }
-        }
-
-        [Fact]
         public void Execute_TargetInvocationException_InnerExceptionThrown()
         {
             var fake = new Fake<TestClass>();

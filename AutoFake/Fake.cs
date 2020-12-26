@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using AutoFake.Expression;
@@ -29,6 +28,7 @@ namespace AutoFake
     public class Fake
     {
         private FakeObjectInfo _fakeObjectInfo;
+        private readonly Lazy<ITypeInfo> _typeInfoHelper;
 
         public Fake(Type type, params object[] constructorArgs)
         {
@@ -36,25 +36,17 @@ namespace AutoFake
             if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));
 
             var dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
-            TypeInfo = new TypeInfo(type, dependencies);
             Mocks = new MockCollection();
             Options = new FakeOptions();
+            _typeInfoHelper = new Lazy<ITypeInfo>(() => new TypeInfo(type, dependencies, Options));
         }
 
         public FakeOptions Options { get; }
 
-        internal ITypeInfo TypeInfo { get; }
+        internal ITypeInfo TypeInfo => _typeInfoHelper.Value;
 
         internal MockCollection Mocks { get; }
-
-        public void SaveFakeAssembly(string fileName)
-        {
-            using (var fileStream = File.Create(fileName))
-            {
-                TypeInfo.WriteAssembly(fileStream);
-            }
-        }
-
+        
         public FuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
@@ -117,7 +109,7 @@ namespace AutoFake
 
         internal FakeObjectInfo GetFakeObject()
         {
-            if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks, Options);
+            if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks);
             return _fakeObjectInfo;
         }
 

@@ -21,7 +21,7 @@ namespace AutoFake.UnitTests
 
         public FakeProcessorTests()
         {
-            _typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
+            _typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
             _fakeProcessor = new FakeProcessor(_typeInfo, new FakeOptions());
         }
 
@@ -117,7 +117,7 @@ namespace AutoFake.UnitTests
 	        options.IncludeAllVirtualMembers = true;
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
 		        .Returns(new MethodDefinition[] {null});
-	        var typeInfoImp = new TypeInfo(typeof(object), new List<FakeDependency>());
+	        var typeInfoImp = new TypeInfo(typeof(object), new List<FakeDependency>(), new FakeOptions());
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
 		        .Returns(typeInfoImp.GetMethods(m => m.Name == nameof(ToString)).Single);
 
@@ -130,7 +130,7 @@ namespace AutoFake.UnitTests
         [Fact]
         public void Generate_RecursiveMethod_Success()
         {
-            var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>());
+            var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>(), new FakeOptions());
             var gen = new FakeProcessor(typeInfo, new FakeOptions());
             var method = typeof(object).GetMethod(nameof(ToString));
 
@@ -141,7 +141,7 @@ namespace AutoFake.UnitTests
         internal void Generate_VirtualMethodWithSpecification_Success(Mock<ITypeInfo> typeInfo)
         {
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
-	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>());
+	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
 		        .Returns(typeInfoImp.GetMethods(m => m.Name == method.Name).Single);
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
@@ -163,7 +163,7 @@ namespace AutoFake.UnitTests
         internal void Generate_VirtualMethodWithAllEnabled_Success(Mock<ITypeInfo> typeInfo)
         {
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
-	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>());
+	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
 		        .Returns(typeInfoImp.GetMethods(m => m.Name == method.Name).Single);
 	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))

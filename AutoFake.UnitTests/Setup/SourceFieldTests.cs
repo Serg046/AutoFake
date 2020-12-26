@@ -31,7 +31,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(FieldAccessInstructions))]
         public void IsSourceInstruction_TheSameField_True(OpCode fldInstruction)
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
+            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(fldInstruction, field);
@@ -51,7 +51,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void IsSourceInstruction_IncorrectOpCode_False()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
+            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Stfld, field);
@@ -62,7 +62,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void IsSourceInstruction_DifferentTypes_False()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>());
+            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Ldfld, field);
             var sourceMember = new SourceField(typeof(TestClass2).GetField(nameof(TestClass2.Field)));
