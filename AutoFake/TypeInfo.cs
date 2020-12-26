@@ -19,19 +19,22 @@ namespace AutoFake
         private readonly TypeDefinition _sourceTypeDef;
         private readonly TypeDefinition _fieldsTypeDef;
         private readonly IList<FakeDependency> _dependencies;
+        private readonly FakeOptions _fakeOptions;
         private readonly Dictionary<string, ushort> _addedFields;
         private readonly Dictionary<MethodDefinition, IList<MethodDefinition>> _virtualMethods;
         private readonly AssemblyHost _assemblyHost;
 
-        public TypeInfo(Type sourceType, IList<FakeDependency> dependencies)
+        public TypeInfo(Type sourceType, IList<FakeDependency> dependencies, FakeOptions fakeOptions)
         {
             _sourceType = sourceType;
             _dependencies = dependencies;
+            _fakeOptions = fakeOptions;
             _addedFields = new Dictionary<string, ushort>();
             _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
             _assemblyHost = new AssemblyHost();
 
-            _assemblyDef = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName);
+            _assemblyDef = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName,
+	            new ReaderParameters {ReadSymbols = fakeOptions.Debug});
             _assemblyDef.Name.Name += "Fake";
 
             var type = _assemblyDef.MainModule.GetType(_sourceType.FullName, runtimeName: true);
@@ -80,11 +83,6 @@ namespace AutoFake
             }
         }
 
-        public void WriteAssembly(Stream stream)
-        {
-            _assemblyDef.Write(stream);
-        }
-
         private object CreateInstance(Type type)
         {
             if (_dependencies.Any(d => d.Type == null))
@@ -112,17 +110,19 @@ namespace AutoFake
 
         internal static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
 
-        public FakeObjectInfo CreateFakeObject(MockCollection mocks, FakeOptions options)
+        public FakeObjectInfo CreateFakeObject(MockCollection mocks)
         {
-	        using var memoryStream = new MemoryStream();
-	        var fakeProcessor = new FakeProcessor(this, options);
+	        using var stream = _fakeOptions.Debug 
+		        ? File.Create(Path.GetFullPath($"{_assemblyDef.Name.Name}-{Guid.NewGuid()}.dll")) 
+		        : (Stream)new MemoryStream();
+	        var fakeProcessor = new FakeProcessor(this, _fakeOptions);
 	        foreach (var mock in mocks)
 	        {
 		        fakeProcessor.Generate(mock.Mocks, mock.Method);
 	        }
 
-	        WriteAssembly(memoryStream);
-	        var assembly = _assemblyHost.Load(memoryStream);
+	        _assemblyDef.Write(stream, new WriterParameters { WriteSymbols = _fakeOptions.Debug });
+            var assembly = _assemblyHost.Load(stream);
 	        var fieldsType = assembly.GetType(_fieldsTypeDef.FullName, true);
 	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
 	        if (_sourceType.IsGenericType)

@@ -5,13 +5,16 @@ namespace AutoFake
 {
 	internal class AssemblyHost
 	{
-		public Assembly Load(MemoryStream stream)
+		public Assembly Load(Stream stream)
 		{
-#if NETCOREAPP3_0
 			stream.Position = 0;
+#if NETCOREAPP3_0
 			return _host.LoadFromStream(stream);
 #else
-	        return Assembly.Load(stream.ToArray());
+			var length = (int)stream.Length;
+			var bytes = new byte[length];
+			stream.Read(bytes, 0, length);
+			return Assembly.Load(bytes);
 #endif
 		}
 

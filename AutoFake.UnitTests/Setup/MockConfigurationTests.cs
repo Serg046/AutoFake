@@ -12,7 +12,7 @@ namespace AutoFake.UnitTests.Setup
     public class MockConfigurationTests
     {
         private readonly IProcessorFactory _procFactory = new ProcessorFactory(
-            new TypeInfo(typeof(TestClass), new FakeDependency[0]));
+            new TypeInfo(typeof(TestClass), new FakeDependency[0], new FakeOptions()));
 
         [Fact]
         public void Replace_CfgInvalidInput_Throws()
