@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -21,42 +20,61 @@ namespace AutoFake.Expression
         }
 
         void IInvocationExpression.AcceptMemberVisitor(IMemberVisitor visitor) => AcceptMemberVisitor(visitor);
-        internal void AcceptMemberVisitor(IMemberVisitor visitor) => AnalyzeExpression(_expression, visitor);
-
-        private void AnalyzeExpression(LinqExpression expression, IMemberVisitor visitor)
+        internal void AcceptMemberVisitor(IMemberVisitor visitor)
         {
-            switch (expression)
-            {
-                case LambdaExpression le: Analyze(le, visitor); break;
-                case UnaryExpression ue: Analyze(ue, visitor); break;
-                case MethodCallExpression mce: Analyze(mce, visitor); break;
-                case NewExpression ne: Analyze(ne, visitor); break;
-                case MemberExpression me: Analyze(me, visitor); break;
-                default: throw new NotSupportedExpressionException($"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
-            }
+	        var expressionVisitor = new ExpressionVisitor(visitor);
+		    expressionVisitor.Visit(_expression);
+		    if (!expressionVisitor.Visited)
+		    {
+			    throw new NotSupportedExpressionException(
+				    $"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
+		    }
         }
 
-        private void Analyze(LambdaExpression expression, IMemberVisitor visitor) => AnalyzeExpression(expression.Body, visitor);
-
-        private void Analyze(UnaryExpression expression, IMemberVisitor visitor) => AnalyzeExpression(expression.Operand, visitor);
-
-        private void Analyze(MethodCallExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Method);
-
-        private void Analyze(NewExpression expression, IMemberVisitor visitor) => visitor.Visit(expression, expression.Constructor);
-        
-        private void Analyze(MemberExpression expression, IMemberVisitor visitor)
+        private class ExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
         {
-            switch (expression.Member)
-            {
-                case FieldInfo fi: Analyze(fi, visitor); break;
-                case PropertyInfo pi: Analyze(pi, visitor); break;
-                default: throw new NotSupportedException($"'{expression.Member.GetType().FullName}' is not supported.");
-            }
+	        private readonly IMemberVisitor _memberVisitorHelper;
+
+	        public ExpressionVisitor(IMemberVisitor memberVisitor)
+	        {
+		        _memberVisitorHelper = memberVisitor;
+	        }
+
+	        private IMemberVisitor MemberVisitor
+	        {
+		        get
+		        {
+			        Visited = true;
+			        return _memberVisitorHelper;
+		        }
+	        }
+
+	        public bool Visited { get; private set; }
+
+	        protected override LinqExpression VisitNew(NewExpression node)
+	        {
+		        MemberVisitor.Visit(node, node.Constructor);
+		        return node;
+	        }
+
+	        protected override LinqExpression VisitMethodCall(MethodCallExpression node)
+	        {
+		        MemberVisitor.Visit(node, node.Method);
+                return node;
+	        }
+
+	        protected override LinqExpression VisitMember(MemberExpression node)
+	        {
+		        switch (node.Member)
+		        {
+			        case FieldInfo field: MemberVisitor.Visit(field); break;
+			        case PropertyInfo property: MemberVisitor.Visit(property); break;
+			        default: throw new NotSupportedException($"'{node.Member.GetType().FullName}' is not supported.");
+		        }
+
+		        return node;
+	        }
         }
-
-        private void Analyze(PropertyInfo propertyInfo, IMemberVisitor visitor) => visitor.Visit(propertyInfo);
-
-        private void Analyze(FieldInfo fieldInfo, IMemberVisitor visitor) => visitor.Visit(fieldInfo);
 
         //-----------------------------------------------------------------------------------------------------------
 
