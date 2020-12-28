@@ -7,6 +7,7 @@ using AutoFixture.Xunit2;
 using Mono.Cecil.Cil;
 using Xunit;
 using Mono.Cecil;
+using Moq;
 
 namespace AutoFake.UnitTests
 {
@@ -29,6 +30,7 @@ namespace AutoFake.UnitTests
 
         [Theory, AutoMoqData]
         internal void SaveMethodCall_CheckArgs_ArgsSaved(
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             TypeDefinition refType,
             MethodDefinition method, FieldDefinition accumulator,
@@ -171,7 +173,8 @@ namespace AutoFake.UnitTests
 
         [Theory, AutoMoqData]
         internal void InjectClosure_Top_Injected(
-            [Frozen]Instruction instruction,
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
+            [Frozen] Instruction instruction,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             FieldDefinition field, Processor proc)
         {
@@ -188,7 +191,8 @@ namespace AutoFake.UnitTests
 
         [Theory, AutoMoqData]
         internal void InjectClosure_Bottom_Injected(
-            [Frozen]Instruction instruction,
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
+            [Frozen] Instruction instruction,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             FieldDefinition field, Processor proc)
         {

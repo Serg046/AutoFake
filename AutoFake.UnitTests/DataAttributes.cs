@@ -10,7 +10,6 @@ using AutoFixture.Kernel;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -19,10 +18,22 @@ namespace AutoFake.UnitTests
 {
     public class AutoMoqDataAttribute : AutoDataAttribute
     {
-        public AutoMoqDataAttribute() : base(() =>
-            new Fixture().Customize(new AutoMoqCustomization())
-                         .Customize(new Customization()))
+        public AutoMoqDataAttribute() : base(() => new CustomFixture())
         {
+        }
+
+        public override IEnumerable<object[]> GetData(MethodInfo testMethod)
+        {
+	        foreach (var parameter in testMethod.GetParameters())
+	        {
+                if (parameter.IsDefined(typeof(InjectModuleAttribute), false))
+                {
+					var injectModuleTypes = ((CustomFixture)Fixture).InjectModuleTypes;
+                    injectModuleTypes.Add(parameter.ParameterType);
+                }
+	        }
+
+            return base.GetData(testMethod);
         }
 
         private class Customization : ICustomization
@@ -61,7 +72,7 @@ namespace AutoFake.UnitTests
 				        new StubPropertiesCommand(),
 				        new MockVirtualMethodsCommand(),
 				        new AutoMockPropertiesCommand(),
-				        new CustomSpecimenCommand()));
+				        new CustomSpecimenCommand(((CustomFixture)fixture).InjectModuleTypes)));
 
 		        fixture.Customizations.Add(mockBuilder);
 		        fixture.ResidueCollectors.Add(new MockRelay());
@@ -69,7 +80,14 @@ namespace AutoFake.UnitTests
 
 	        private class CustomSpecimenCommand : ISpecimenCommand
 	        {
-		        public void Execute(object specimen, ISpecimenContext context)
+		        private readonly HashSet<Type> _injectModuleTypes;
+
+		        public CustomSpecimenCommand(HashSet<Type> injectModuleTypes)
+		        {
+			        _injectModuleTypes = injectModuleTypes;
+		        }
+
+                public void Execute(object specimen, ISpecimenContext context)
 		        {
 			        Handle((dynamic)specimen, context);
 		        }
@@ -80,15 +98,29 @@ namespace AutoFake.UnitTests
 
 		        private void Handle(Mock<ITypeInfo> mock, ISpecimenContext context)
 		        {
-			        var module = context.Create<ModuleDefinition>();
-			        mock.Setup(m => m.ImportReference(It.IsAny<Type>()))
-				        .Returns<Type>(t => module.ImportReference(t));
-			        mock.Setup(m => m.ImportReference(It.IsAny<FieldInfo>()))
-				        .Returns<FieldInfo>(f => module.ImportReference(f));
-			        mock.Setup(m => m.ImportReference(It.IsAny<MethodBase>()))
-				        .Returns<MethodBase>(m => module.ImportReference(m));
-                }
+			        if (_injectModuleTypes.Contains(mock.GetType()))
+			        {
+				        var module = context.Create<ModuleDefinition>();
+				        mock.Setup(m => m.ImportReference(It.IsAny<Type>()))
+					        .Returns<Type>(t => module.ImportReference(t));
+				        mock.Setup(m => m.ImportReference(It.IsAny<FieldInfo>()))
+					        .Returns<FieldInfo>(f => module.ImportReference(f));
+				        mock.Setup(m => m.ImportReference(It.IsAny<MethodBase>()))
+					        .Returns<MethodBase>(m => module.ImportReference(m));
+			        }
+		        }
 	        }
+        }
+
+        private class CustomFixture : Fixture
+        {
+	        public CustomFixture()
+	        {
+		        Customize(new AutoMoqCustomization());
+		        Customize(new Customization());
+	        }
+
+	        public HashSet<Type> InjectModuleTypes { get; } = new HashSet<Type>();
         }
     }
 
@@ -157,4 +189,8 @@ namespace AutoFake.UnitTests
             }
         }
     }
+
+    public class InjectModuleAttribute : Attribute
+	{
+	}
 }

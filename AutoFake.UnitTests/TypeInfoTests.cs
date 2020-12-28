@@ -131,7 +131,7 @@ namespace AutoFake.UnitTests
         }
 
         [Fact]
-        public void GetDerivedVirtualMethods()
+        public void GetDerivedVirtualMethods_Method_Success()
         {
 	        var type = new TypeInfo(typeof(BaseTestClass), new List<FakeDependency>(), new FakeOptions());
 	        var method = type.GetMethods(m => m.Name == nameof(BaseTestClass.VirtualMethod)).Single();
@@ -142,6 +142,29 @@ namespace AutoFake.UnitTests
 	        overridenMethods.Single().DeclaringType.Name.Should().Be(nameof(TestClass));
         }
 
+        [Theory]
+		[InlineData(AnalysisLevels.Type, 0)]
+		[InlineData(AnalysisLevels.Assembly, 1)]
+		[InlineData(AnalysisLevels.AllAssemblies, 2)]
+        public void GetDerivedVirtualMethods_DifferentLevels_Success(AnalysisLevels level, int expectedNumber)
+        {
+	        var fakeOptions = new FakeOptions {AnalysisLevel = level};
+	        var typeInfo = new TypeInfo(typeof(BaseTestClass), new List<FakeDependency>(), fakeOptions);
+            var method = typeInfo.GetMethods(m => m.Name == nameof(ToString)).Single();
+            if (level == AnalysisLevels.AllAssemblies)
+            {
+	            var asmDef = AssemblyDefinition.ReadAssembly(GetType().Module.FullyQualifiedName);
+	            var filePath = Path.GetFullPath("test.dll");
+                asmDef.Write(filePath);
+                var assembly = Assembly.LoadFile(filePath);
+	            fakeOptions.Assemblies.Add(assembly);
+            }
+
+            var methods = typeInfo.GetDerivedVirtualMethods(method);
+
+            methods.Count.Should().Be(expectedNumber);
+        }
+
         private class TestClass : BaseTestClass
         {
             public TestClass(StringBuilder dependency1, StringBuilder dependency2)
@@ -149,6 +172,8 @@ namespace AutoFake.UnitTests
             }
 
             public override void VirtualMethod() => base.VirtualMethod();
+
+            public override string ToString() => "overriden";
         }
 
         private class BaseTestClass
@@ -156,6 +181,8 @@ namespace AutoFake.UnitTests
             public void BaseTypeMethod() { }
 
             public virtual void VirtualMethod() { }
+
+            public override string ToString() => "base";
         }
 
         private static class StaticTestClass
