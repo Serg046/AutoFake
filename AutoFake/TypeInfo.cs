@@ -161,15 +161,57 @@ namespace AutoFake
 
 		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)
 		{
-			return _assemblyDef.MainModule.GetTypes().Where(t => IsDerived(t, parentType));
+            return _fakeOptions.AnalysisLevel == AnalysisLevels.Type 
+	            ? Enumerable.Empty<TypeDefinition>()
+	            : GetReferencedAssemblies().SelectMany(a => a.Modules).SelectMany(m => m.GetTypes()
+		            .Where(t => IsDerived(t, parentType)));
 		}
+        
+        private ICollection<AssemblyDefinition> GetReferencedAssemblies()
+        {
+	        var referencedAssemblies = new Dictionary<AssemblyName, AssemblyDefinition>
+	        {
+				{_sourceType.Assembly.GetName(), _assemblyDef}
+			};
 
-		private bool IsDerived(TypeDefinition derived, TypeDefinition parent)
+	        if (_fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies)
+	        {
+		        foreach (var assemblyName in _sourceType.Assembly.GetReferencedAssemblies())
+		        {
+			        if (!referencedAssemblies.ContainsKey(assemblyName))
+			        {
+				        var referencedAssembly = Assembly.Load(assemblyName);
+				        foreach (var module in referencedAssembly.GetModules())
+				        {
+							referencedAssemblies.Add(assemblyName,
+								AssemblyDefinition.ReadAssembly(module.FullyQualifiedName));
+						}
+			        }
+		        }
+	        }
+
+	        foreach (var assembly in _fakeOptions.Assemblies)
+	        {
+		        var assemblyName = assembly.GetName();
+                if (!referencedAssemblies.ContainsKey(assemblyName))
+		        {
+			        foreach (var module in assembly.GetModules())
+			        {
+				        referencedAssemblies.Add(assemblyName,
+					        AssemblyDefinition.ReadAssembly(module.FullyQualifiedName));
+			        }
+		        }
+	        }
+
+            return referencedAssemblies.Values;
+        }
+
+        private bool IsDerived(TypeDefinition derived, TypeDefinition parent)
 		{
 			if (derived.BaseType != null)
 			{
 				var baseType = derived.BaseType.ToTypeDefinition();
-				return baseType == parent || IsDerived(baseType, parent);
+				return baseType.FullName == parent.FullName || IsDerived(baseType, parent);
 			}
 
 			return false;

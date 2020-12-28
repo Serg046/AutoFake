@@ -114,15 +114,42 @@ namespace AutoFake
                     {
                         mock.Inject(_emitterPool.GetEmitter(currentMethod.Body), instruction);
                     }
-                    else if (instruction.Operand is MethodReference method && IsFakeAssemblyMethod(method))
+                    else if (instruction.Operand is MethodReference method && ShouldBeAnalyzed(method))
                     {
                         Rewrite(method.ToMethodDefinition());
                     }
                 }
             }
 
-            private bool IsFakeAssemblyMethod(MethodReference methodReference)
-                => methodReference.Module == _originalMethod.Module;
+            private bool ShouldBeAnalyzed(MethodReference methodReference)
+            {
+	            switch (_gen._options.AnalysisLevel)
+	            {
+		            case AnalysisLevels.Type:
+		            {
+			            if (methodReference.DeclaringType.FullName == _originalMethod.DeclaringType.FullName &&
+			                methodReference.Module.Assembly == _originalMethod.Module.Assembly) return true;
+			            break;
+		            }
+		            case AnalysisLevels.Assembly:
+		            {
+			            if (methodReference.Module.Assembly == _originalMethod.Module.Assembly) return true;
+			            break;
+		            }
+		            case AnalysisLevels.AllAssemblies: return true;
+                    default: throw new NotSupportedException($"{_gen._options.AnalysisLevel.ToString()} is not supported");
+	            }
+
+	            foreach (var assembly in _gen._options.Assemblies)
+	            {
+		            if (methodReference.DeclaringType.Module.Assembly.FullName == assembly.FullName)
+		            {
+			            return true;
+		            }
+	            }
+
+	            return false;
+            }
         }
     }
 }

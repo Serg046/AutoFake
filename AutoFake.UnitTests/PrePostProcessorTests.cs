@@ -15,6 +15,7 @@ namespace AutoFake.UnitTests
     {
         [Theory, AutoMoqData]
         internal void GenerateField_FieldName_Added(
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen]Mock<ITypeInfo> typeInfo,
             string propName, Type propType,
             PrePostProcessor proc)
@@ -31,6 +32,7 @@ namespace AutoFake.UnitTests
         [Theory, AutoMoqData]
         internal void GenerateCallsCounterFuncField_FieldName_CounterFieldAdded(
             [Frozen]ModuleDefinition module,
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
             MethodBody method,
             string fieldName,
             PrePostProcessor proc)
@@ -53,7 +55,8 @@ namespace AutoFake.UnitTests
         [InlineAutoMoqData(true, true)]
         internal void InjectVerification_CheckCalls_Injected(
             bool checkArguments, bool callsCounter,
-            [Frozen]ModuleDefinition module,
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
+            [Frozen] ModuleDefinition module,
             [Frozen]Emitter emitter,
             FieldDefinition setupBody, FieldDefinition accumulator, FieldDefinition callsChecker,
             PrePostProcessor proc)
@@ -90,7 +93,8 @@ namespace AutoFake.UnitTests
         [InlineAutoMoqData(typeof(Task<int>), nameof(InvocationExpression.MatchArgumentsGenericAsync))]
         internal void InjectVerification_AsyncMethod_Injected(
             Type asyncType, string checkerMethodName,
-            [Frozen]ModuleDefinition module,
+            [Frozen, InjectModule] Mock<ITypeInfo> _,
+            [Frozen] ModuleDefinition module,
             [Frozen]Emitter emitter,
             FieldDefinition setupBody, FieldDefinition accumulator, FieldDefinition callsChecker,
             PrePostProcessor proc)

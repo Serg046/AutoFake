@@ -11,6 +11,9 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
+using MethodAttributes = Mono.Cecil.MethodAttributes;
+using OpCodes = Mono.Cecil.Cil.OpCodes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake.UnitTests
 {
@@ -110,7 +113,7 @@ namespace AutoFake.UnitTests
 
         [Theory, AutoMoqData]
         internal void Generate_MethodWhichCallsNullMethod_DoesNotThrow(
-	        [Frozen] Mock<ITypeInfo> typeInfo,
+	        [Frozen, InjectModule] Mock<ITypeInfo> typeInfo,
             [Frozen] FakeOptions options,
 	        FakeProcessor generator)
         {
@@ -138,7 +141,7 @@ namespace AutoFake.UnitTests
         }
 
         [AutoMoqData, Theory]
-        internal void Generate_VirtualMethodWithSpecification_Success(Mock<ITypeInfo> typeInfo)
+        internal void Generate_VirtualMethodWithSpecification_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
@@ -160,7 +163,7 @@ namespace AutoFake.UnitTests
 		}
 
         [AutoMoqData, Theory]
-        internal void Generate_VirtualMethodWithAllEnabled_Success(Mock<ITypeInfo> typeInfo)
+        internal void Generate_VirtualMethodWithAllEnabled_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
@@ -181,6 +184,106 @@ namespace AutoFake.UnitTests
 		        m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
         }
 
+        [Theory]
+		[InlineAutoMoqData(AnalysisLevels.Type, "Type1", "Type1", "Asm1", "Asm1", true)]
+		[InlineAutoMoqData(AnalysisLevels.Type, "Type1", "Type2", "Asm1", "Asm1", false)]
+		[InlineAutoMoqData(AnalysisLevels.Assembly, "Type1", "Type1", "Asm1", "Asm1", true)]
+		[InlineAutoMoqData(AnalysisLevels.Assembly, "Type1", "Type1", "Asm1", "Asm2", false)]
+		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type1", "Asm1", "Asm1", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type2", "Asm1", "Asm1", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type1", "Asm1", "Asm2", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type2", "Asm1", "Asm2", true)]
+		internal void Generate_DifferentAnalysisLevels_Success(
+	        AnalysisLevels analysisLevel,
+            string type1, string type2,
+            string asm1, string asm2,
+            bool injected,
+            [Frozen] FakeOptions options,
+	        [Frozen] MethodDefinition executeMethod,
+            Mock<IMock> mock,
+	        FakeProcessor fakeProcessor)
+        {
+            // Arrange
+	        ModuleDefinition module1, module2 = null;
+	        if (asm1 == asm2)
+	        {
+		        module1 = module2 = ModuleDefinition.CreateModule(asm1, ModuleKind.Dll);
+	        }
+	        else
+	        {
+		        module1 = ModuleDefinition.CreateModule(asm1, ModuleKind.Dll);
+		        module2 = ModuleDefinition.CreateModule(asm2, ModuleKind.Dll);
+            }
+
+            options.AnalysisLevel = analysisLevel;
+            var method = new MethodDefinition("WrapperMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
+            var innerMethod = new MethodDefinition("MockedMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
+            SetType(executeMethod, type1, module1);
+            SetType(method, type2, module2);
+            executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, method));
+            var instruction = Instruction.Create(OpCodes.Call, innerMethod);
+            method.Body.Instructions.Add(instruction);
+            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
+            mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
+
+            // Act
+            fakeProcessor.Generate(new[] { mock.Object }, null);
+
+            // Assert
+            mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), instruction), injected ? Times.Once() : Times.Never());
+        }
+
+        [Theory, AutoMoqData]
+        internal void Generate_UnsupportedAnalysisLevel_Success(
+            [Frozen] FakeOptions options,
+            [Frozen] MethodDefinition executeMethod,
+            FakeProcessor fakeProcessor)
+        {
+            options.AnalysisLevel = (AnalysisLevels)100;
+            executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, executeMethod));
+
+            Action act = () => fakeProcessor.Generate(new[] { Mock.Of<IMock>()}, null);
+
+            act.Should().Throw<NotSupportedException>().WithMessage("100 is not supported");
+        }
+
+        [Theory]
+		[InlineAutoMoqData(1, true)]
+		[InlineAutoMoqData(2, false)]
+        internal void Generate_CustomAssembly_Success(
+            int asmVersion, bool injected,
+            [Frozen] FakeOptions options,
+            [Frozen] MethodDefinition executeMethod,
+            Mock<IMock> mock,
+            FakeProcessor fakeProcessor)
+        {
+            // Arrange
+            var assembly = Assembly.GetExecutingAssembly();
+            var type1 = "Type1";
+            var type2 = "Type2";
+            var module1 = ModuleDefinition.CreateModule("asm1", ModuleKind.Dll);
+            var module2 = ModuleDefinition.CreateModule(assembly.GetName().Name, ModuleKind.Dll);
+            module2.Assembly.Name.Version = new Version(asmVersion, 0);
+
+            options.AnalysisLevel = AnalysisLevels.Type;
+            options.Assemblies.Add(assembly);
+            SetType(executeMethod, type1, module1);
+            var method = new MethodDefinition("WrapperMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
+            SetType(method, type2, module2);
+            executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, method));
+            var innerMethod = new MethodDefinition("MockedMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
+            var instruction = Instruction.Create(OpCodes.Call, innerMethod);
+            method.Body.Instructions.Add(instruction);
+            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
+            mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
+
+            // Act
+            fakeProcessor.Generate(new[] { mock.Object }, null);
+
+            // Assert
+            mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), instruction), injected ? Times.Once() : Times.Never());
+        }
+
         private bool Equivalent(object operand, MethodInfo innerMethod) => 
             operand is MethodReference method &&
             method.Name == innerMethod.Name &&
@@ -193,6 +296,35 @@ namespace AutoFake.UnitTests
         }
 
         private MethodInfo GetMethodInfo(string name) => typeof(TestClass).GetMethod(name);
+
+        private void SetType(MethodDefinition methodToUpdate, string typeName, ModuleDefinition moduleToSet)
+        {
+	        var typeDef = new TypeDefinition("Ns", typeName, TypeAttributes.Class);
+	        var field = typeDef.GetType().GetField("module", BindingFlags.Instance | BindingFlags.NonPublic);
+	        field.SetValue(typeDef, moduleToSet);
+	        methodToUpdate.DeclaringType = typeDef;
+        }
+
+        private class TypeDefHelper
+        {
+	        public CustomTypeDefinition GeTypeDefinition(string ns, string name)
+		        => new CustomTypeDefinition(ns, name, null, null);
+        }
+
+        public class CustomTypeDefinition : TypeReference
+        {
+	        protected CustomTypeDefinition(string @namespace, string name) : base(@namespace, name)
+	        {
+	        }
+
+	        public CustomTypeDefinition(string @namespace, string name, ModuleDefinition module, IMetadataScope scope) : base(@namespace, name, module, scope)
+	        {
+	        }
+
+	        public CustomTypeDefinition(string @namespace, string name, ModuleDefinition module, IMetadataScope scope, bool valueType) : base(@namespace, name, module, scope, valueType)
+	        {
+	        }
+        }
 
         private class TestClass
         {
