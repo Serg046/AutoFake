@@ -73,7 +73,7 @@ namespace AutoFake
             private readonly MethodDefinition _originalMethod;
             private readonly IEnumerable<IMock> _mocks;
             private readonly IEmitterPool _emitterPool;
-            private readonly HashSet<MethodDefinition> _methods;
+            private readonly HashSet<string> _methods;
 
             public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks, IEmitterPool emitterPool)
             {
@@ -81,7 +81,7 @@ namespace AutoFake
                 _originalMethod = originalMethod;
                 _mocks = mocks;
                 _emitterPool = emitterPool;
-                _methods = new HashSet<MethodDefinition>();
+                _methods = new HashSet<string>();
             }
 
             public void Rewrite()
@@ -91,7 +91,7 @@ namespace AutoFake
 
             private void Rewrite(MethodDefinition currentMethod)
             {
-                if (currentMethod?.Body == null || !_methods.Add(currentMethod)) return;
+                if (currentMethod?.Body == null || !_methods.Add(currentMethod.ToString())) return;
 
                 if (currentMethod.IsVirtual && (_gen._options.IncludeAllVirtualMembers ||
                     _gen._options.VirtualMembers.Contains(currentMethod.Name)))
