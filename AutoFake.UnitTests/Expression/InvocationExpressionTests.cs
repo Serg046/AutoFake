@@ -31,7 +31,7 @@ namespace AutoFake.UnitTests.Expression
             Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
         }
 
-        [Theory(Skip = "Issue #36 needed"), AutoMoqData]
+        [Theory, AutoMoqData]
         public void AcceptMemberVisitor_UnsupportedMemberExpression_Throws(MemberInfo member)
         {
 	        Expression<Func<DateTime>> expression = () => DateTime.Now;
@@ -39,7 +39,8 @@ namespace AutoFake.UnitTests.Expression
 	        var fake = new Fake<InvocationExpression>(memberExpression);
             fake.Options.Assemblies.Add(typeof(ExpressionVisitor).Assembly);
             fake.Options.VirtualMembers.Add("Accept");
-	        var sut = fake.Rewrite(s => s.AcceptMemberVisitor(_memberVisitor.Object));
+            fake.Options.VirtualMembers.Add("VisitMember");
+            var sut = fake.Rewrite(s => s.AcceptMemberVisitor(_memberVisitor.Object));
 	        sut.Replace((MemberExpression e) => e.Member).Return(member);
 	        Action act = () => sut.Execute();
 

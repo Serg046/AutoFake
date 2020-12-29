@@ -21,7 +21,7 @@ namespace AutoFake
         private readonly IList<FakeDependency> _dependencies;
         private readonly FakeOptions _fakeOptions;
         private readonly Dictionary<string, ushort> _addedFields;
-        private readonly Dictionary<MethodDefinition, IList<MethodDefinition>> _virtualMethods;
+        private readonly Dictionary<string, IList<MethodDefinition>> _virtualMethods;
         private readonly AssemblyHost _assemblyHost;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies, FakeOptions fakeOptions)
@@ -30,7 +30,7 @@ namespace AutoFake
             _dependencies = dependencies;
             _fakeOptions = fakeOptions;
             _addedFields = new Dictionary<string, ushort>();
-            _virtualMethods = new Dictionary<MethodDefinition, IList<MethodDefinition>>();
+            _virtualMethods = new Dictionary<string, IList<MethodDefinition>>();
             _assemblyHost = new AssemblyHost();
 
             _assemblyDef = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName,
@@ -142,7 +142,8 @@ namespace AutoFake
 
         public IList<MethodDefinition> GetDerivedVirtualMethods(MethodDefinition method)
         {
-            if (!_virtualMethods.ContainsKey(method))
+	        var methodContract = method.ToString();
+            if (!_virtualMethods.ContainsKey(methodContract))
             {
                 var list = new List<MethodDefinition>();
                 foreach (var type in GetDerivedTypes(method.DeclaringType))
@@ -153,10 +154,10 @@ namespace AutoFake
                         list.Add(derivedMethod);
                     }
                 }
-                _virtualMethods.Add(method, list);
+                _virtualMethods.Add(methodContract, list);
             }
 
-            return _virtualMethods[method];
+            return _virtualMethods[methodContract];
         }
 
 		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)
