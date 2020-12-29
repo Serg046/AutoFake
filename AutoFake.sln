@@ -5,11 +5,13 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFake", "AutoFake\AutoFake.csproj", "{8A751994-4AE2-40B9-8ED0-2B4875F3CAFC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFake.IntegrationTests", "AutoFake.IntegrationTests\AutoFake.IntegrationTests.csproj", "{DE4906FF-906E-447E-A915-A6DEE7DC9607}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFake.FunctionalTests", "Tests\AutoFake.FunctionalTests\AutoFake.FunctionalTests.csproj", "{DE4906FF-906E-447E-A915-A6DEE7DC9607}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFake.UnitTests", "AutoFake.UnitTests\AutoFake.UnitTests.csproj", "{C0452B69-74FE-4789-92C1-60ACAA26479E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoFake.UnitTests", "Tests\AutoFake.UnitTests\AutoFake.UnitTests.csproj", "{C0452B69-74FE-4789-92C1-60ACAA26479E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoFake.IntegrationTests.Sut", "AutoFake.IntegrationTests.Sut\AutoFake.IntegrationTests.Sut.csproj", "{777A53F2-7597-47FC-9138-635978526B6B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sut", "Tests\Sut\Sut.csproj", "{777A53F2-7597-47FC-9138-635978526B6B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{97C271BC-B647-4141-952C-6680CE796CF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +38,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DE4906FF-906E-447E-A915-A6DEE7DC9607} = {97C271BC-B647-4141-952C-6680CE796CF3}
+		{C0452B69-74FE-4789-92C1-60ACAA26479E} = {97C271BC-B647-4141-952C-6680CE796CF3}
+		{777A53F2-7597-47FC-9138-635978526B6B} = {97C271BC-B647-4141-952C-6680CE796CF3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1B822FCF-ED26-4493-8154-373E8632F23F}
