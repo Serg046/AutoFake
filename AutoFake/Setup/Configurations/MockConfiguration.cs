@@ -71,6 +71,22 @@ namespace AutoFake.Setup.Configurations
 
         public VerifyMockConfiguration Verify(Expression<Action<T>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
+
+        public new PrependMockConfiguration<T> Prepend(Action action)
+        {
+	        var position = (ushort)Mocks.Count;
+	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Top));
+	        return new PrependMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
+		        position, action);
+        }
+
+        public new AppendMockConfiguration<T> Append(Action action)
+        {
+	        var position = (ushort)Mocks.Count;
+	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Bottom));
+	        return new AppendMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
+		        position, action);
+        }
     }
 
     public abstract class MockConfiguration
@@ -143,7 +159,7 @@ namespace AutoFake.Setup.Configurations
             return new AppendMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, action);
         }
-        
+
         public PrependMockConfiguration Prepend(Action action)
         {
             var position = (ushort)Mocks.Count;
