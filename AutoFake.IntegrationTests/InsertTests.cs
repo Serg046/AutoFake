@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FluentAssertions;
 using Xunit;
 
 namespace AutoFake.IntegrationTests
@@ -86,14 +87,31 @@ namespace AutoFake.IntegrationTests
             Assert.Equal(new[] { -1 }, numbers);
         }
 
+        [Fact]
+        public void Should_add_numbers_to_the_appropriate_places_When_generic_insert_mocks()
+        {
+            var numbers = new List<int>();
+            var fake = new Fake<TestClass>();
+            var sut = fake.Rewrite(t => t.SomeMethod(numbers));
+            sut.Prepend(() => numbers.Add(-6)).Before(t => t.AnotherMethod());
+            sut.Append(() => numbers.Add(6)).After(t => t.AnotherMethod());
+
+            sut.Execute();
+
+            numbers.Should().ContainInOrder(3, 5, -6, 6, 7);
+        }
+
         private class TestClass
         {
             public void SomeMethod(List<int> numbers)
             {
                 numbers.Add(3);
                 numbers.AddRange(new [] {5});
+                AnotherMethod();
                 numbers.Add(7);
             }
+
+            public void AnotherMethod() { }
         }
     }
 }
