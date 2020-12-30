@@ -36,8 +36,7 @@ namespace AutoFake.Setup
         {
             if (instruction.OpCode.OperandType == OperandType.InlineMethod &&
                 instruction.Operand is MethodReference method &&
-                method.Name == _method.Name &&
-                method.DeclaringType.Name == _method.DeclaringType.Name)
+                method.Name == _method.Name)
             {
                 if (_monoCecilMethod == null) _monoCecilMethod = typeInfo.ImportReference(_method).Resolve();
                 return method.ToMethodDefinition().ToString() == _monoCecilMethod.ToString();
