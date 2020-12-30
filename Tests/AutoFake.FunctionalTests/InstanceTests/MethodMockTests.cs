@@ -111,7 +111,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
         {
             var fake = new Fake<TestClass>();
 
-            var sut = fake.Rewrite(f => f.GetDynValueByOveloadedMethodCalls());
+            var sut = fake.Rewrite(f => f.GetDynValueByOverloadedMethodCalls());
             sut.Replace(t => t.DynamicValue()).Return(7);
             sut.Replace(t => t.DynamicValue(5)).Return(7);
 
@@ -290,7 +290,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 Debug.WriteLine("Finished");
             }
 
-            public int GetDynValueByOveloadedMethodCalls()
+            public int GetDynValueByOverloadedMethodCalls()
             {
                 Debug.WriteLine("Started");
                 var value = DynamicValue() + DynamicValue(5);

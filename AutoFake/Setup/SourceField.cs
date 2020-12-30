@@ -30,8 +30,7 @@ namespace AutoFake.Setup
         {
             if (_fieldOpCodes.Contains(instruction.OpCode) &&
                 instruction.Operand is FieldReference field &&
-                field.Name == _field.Name &&
-                field.FieldType.Name == _field.FieldType.Name)
+                field.Name == _field.Name)
             {
                 if (_monoCecilField == null) _monoCecilField = typeInfo.ImportReference(_field).Resolve();
                 return field.ToFieldDefinition().ToString() == _monoCecilField.ToString();

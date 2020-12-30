@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
+using FluentAssertions;
 using Xunit;
 
 namespace AutoFake.IntegrationTests.InstanceTests
@@ -116,6 +117,20 @@ namespace AutoFake.IntegrationTests.InstanceTests
 			Assert.Equal("1", actual.Value);
 		}
 
+		[Fact(Skip = "Issue #27 needed")]
+		public void AnotherGenericTest()
+		{
+			var fake = new Fake<TestClass>();
+			const string stringValue = "testValue";
+			const int intValue = 7;
+
+			var sut = fake.Rewrite(f => f.GetGenericValue());
+			sut.Replace((ValueTuple<string> tuple) => tuple.Item1).Return(stringValue);
+			sut.Replace((ValueTuple<object> tuple) => tuple.Item1).Return(intValue);
+
+			sut.Execute().Should().Be(stringValue + intValue);
+		}
+
 		private class GenericTestClass<T>
 		{
 			public KeyValuePair<T, string> Pair = new KeyValuePair<T, string>(default, "test");
@@ -191,6 +206,16 @@ namespace AutoFake.IntegrationTests.InstanceTests
 			{
 				Debug.WriteLine("Started");
 				var value = StaticStructValue.Value;
+				Debug.WriteLine("Finished");
+				return value;
+			}
+
+			public string GetGenericValue()
+			{
+				Debug.WriteLine("Started");
+				var tuple1 = new ValueTuple<string>();
+				var tuple2 = new ValueTuple<object>();
+				var value = tuple1.Item1 + tuple2.Item1;
 				Debug.WriteLine("Finished");
 				return value;
 			}
