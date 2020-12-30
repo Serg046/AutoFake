@@ -1,7 +1,7 @@
 [![Build](https://img.shields.io/appveyor/build/Serg046/AutoFake)](https://ci.appveyor.com/project/Serg046/autofake/branch/master)
 [![NuGet](https://img.shields.io/nuget/v/AutoFake)](https://www.nuget.org/packages/AutoFake)
 [![Telegram](https://img.shields.io/badge/telegram-AutoFakeLib-brightgreen)](https://t.me/AutoFakeLib)
-[![Codecov](https://img.shields.io/codecov/c/github/Serg046/AutoFake?flag=integration_tests&label=coverage%20by%20integration%20tests&token=j95lb948sw02nqqd)](https://codecov.io/gh/Serg046/AutoFake)
+[![Codecov](https://img.shields.io/codecov/c/github/Serg046/AutoFake?flag=functional_tests&label=coverage%20by%20functional%20tests&token=j95lb948sw02nqqd)](https://codecov.io/gh/Serg046/AutoFake)
 [![Codecov](https://img.shields.io/codecov/c/github/Serg046/AutoFake?flag=unit_tests&label=coverage%20by%20unit%20tests&token=j95lb948sw02nqqd)](https://codecov.io/gh/Serg046/AutoFake)
 
 ```csharp
