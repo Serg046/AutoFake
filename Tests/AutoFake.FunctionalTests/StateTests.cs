@@ -16,7 +16,7 @@ namespace AutoFake.IntegrationTests
 			_testOutputHelper = testOutputHelper;
 		}
 
-		[Fact]
+		[Fact(Skip = "Should be rewritten without any files")]
 		public void DebugSymbolsTest()
 		{
 			try

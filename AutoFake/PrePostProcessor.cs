@@ -2,11 +2,9 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake
 {
@@ -28,31 +26,18 @@ namespace AutoFake
             return field;
         }
 
-        public FieldDefinition GenerateCallsAccumulator(string name, MethodBody method)
-        {
-            var type = _typeInfo.ImportReference(typeof(List<object[]>));
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
-            _typeInfo.AddField(field);
-
-            method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj,
-                _typeInfo.ImportReference(typeof(List<object[]>).GetConstructor(new Type[0]))));
-            method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, field));
-            return field;
-        }
-
-        public void InjectVerification(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
-            FieldDefinition setupBody, FieldDefinition callsAccumulator)
+        public void InjectVerification(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext)
         {
 	        foreach (var instruction in emitter.Body.Instructions.Where(cmd => cmd.OpCode == OpCodes.Ret).ToList())
 	        {
-				InjectVerifications(emitter, checkArguments, expectedCalls, setupBody, callsAccumulator, instruction);
+				InjectVerifications(emitter, instruction, setupBody, executionContext);
             }
         }
 
-        private void InjectVerifications(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
-	        FieldDefinition setupBody, FieldDefinition callsAccumulator, Instruction retInstruction)
+        private void InjectVerifications(IEmitter emitter, Instruction retInstruction,
+	        FieldDefinition setupBody, FieldDefinition executionContext)
         {
-	        var argMatcher = GetArgumentsMatcher(emitter.Body.Method, out var isAsync);
+	        var verificator = GetVerificator(emitter.Body.Method, out var isAsync);
 	        VariableDefinition retValue = null;
 	        if (isAsync)
 	        {
@@ -61,36 +46,26 @@ namespace AutoFake
 		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stloc, retValue));
 	        }
 
-	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBody));
+            emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBody));
 	        if (retValue != null) emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, retValue));
-	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, callsAccumulator));
-	        emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
-	        if (expectedCalls != null)
-	        {
-		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCalls));
-	        }
-	        else
-	        {
-		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldnull));
-	        }
-
-	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Call, argMatcher));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, executionContext));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Call, verificator));
         }
 
-        private MethodReference GetArgumentsMatcher(MethodReference method, out bool isAsync)
+        private MethodReference GetVerificator(MethodReference method, out bool isAsync)
         {
             var returnType = method.ReturnType;
             if (returnType.FullName == typeof(Task).FullName)
             {
                 isAsync = true;
-                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArgumentsAsync));
+                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsAsync));
                 return _typeInfo.ImportReference(methodInfo);
             }
             else if (returnType.Namespace == typeof(Task).Namespace && returnType.Name == "Task`1" &&
                      returnType is GenericInstanceType genericReturnType)
             {
                 isAsync = true;
-                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArgumentsGenericAsync));
+                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsTypedAsync));
                 var open = _typeInfo.ImportReference(methodInfo);
                 var closed = new GenericInstanceMethod(open);
                 closed.GenericArguments.Add(genericReturnType.GenericArguments.Single());
@@ -99,7 +74,7 @@ namespace AutoFake
             else
             {
                 isAsync = false;
-                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.MatchArguments));
+                var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCalls));
                 return _typeInfo.ImportReference(methodInfo);
             }
         }

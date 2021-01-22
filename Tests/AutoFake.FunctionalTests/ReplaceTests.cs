@@ -40,7 +40,7 @@ namespace AutoFake.IntegrationTests
         public void ExpectedCallsCountTest(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
-            Func<byte, bool> checker;
+            Func<uint, bool> checker;
             if (equalOp) checker = x => x == arg;
             else checker = x => x > arg;
 
