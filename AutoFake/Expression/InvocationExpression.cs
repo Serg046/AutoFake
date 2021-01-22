@@ -99,41 +99,40 @@ namespace AutoFake.Expression
             return _arguments;
         }
 
-        public Task MatchArgumentsAsync(Task task, ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
-        {
-            return task.ContinueWith(t => MatchArguments(arguments, checkArguments, expectedCalls));
-        }
-
-        public Task<T> MatchArgumentsGenericAsync<T>(Task<T> task, ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
-        {
-            return task.ContinueWith(t =>
-            {
-                MatchArguments(arguments, checkArguments, expectedCalls);
-                return t.Result;
-            });
-        }
-
-        public void MatchArguments(ICollection<object[]> arguments, bool checkArguments, Func<byte, bool> expectedCalls)
-        {
-            if (arguments.Count > byte.MaxValue) throw new InvalidOperationException($"Too many calls occurred - {arguments.Count}");
-            if (expectedCalls != null && !expectedCalls((byte)arguments.Count))
-            {
-                throw new ExpectedCallsException($"Setup and actual calls are not matched. Actual value - {arguments.Count}.");
-            }
+        public void VerifyArguments(object[] currentArguments)
+		{
             var fakeArguments = GetArguments();
-            if (checkArguments)
-            {
-                foreach (var args in arguments)
-                    for (var i = 0; i < args.Length; i++)
-                    {
-                        var fakeArgument = fakeArguments[i];
-                        if (!fakeArgument.Check(args[i]))
-                        {
-                            throw new VerifyException(
-                                $"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(args[i])}.");
-                        }
-                    }
-            }
+			for (var i = 0; i < currentArguments.Length; i++)
+			{
+				var fakeArgument = fakeArguments[i];
+				if (!fakeArgument.Check(currentArguments[i]))
+				{
+					throw new VerifyException(
+						$"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(currentArguments[i])}.");
+				}
+			}
         }
+
+        public Task VerifyExpectedCallsAsync(Task task, ExecutionContext executionContext)
+		{
+            return task.ContinueWith(t => VerifyExpectedCalls(executionContext));
+		}
+
+        public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, ExecutionContext executionContext)
+        {
+	        return task.ContinueWith(t =>
+	        {
+		        VerifyExpectedCalls(executionContext);
+                return t.Result;
+	        });
+        }
+
+        public void VerifyExpectedCalls(ExecutionContext executionContext)
+        {
+			if (executionContext.CallsChecker != null && !executionContext.CallsChecker(executionContext.ActualCallsNumber))
+			{
+				throw new ExpectedCallsException($"Setup and actual calls are not matched. Actual value - {executionContext.ActualCallsNumber}.");
+			}
+		}
     }
 }

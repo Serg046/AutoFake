@@ -21,7 +21,7 @@ namespace AutoFake.UnitTests.Setup
         [Theory, AutoMoqData]
         internal void ExpectedCalls_Func_Success(VerifyMock mock)
         {
-            Func<byte, bool> func = x => x > 2;
+            Func<uint, bool> func = x => x > 2;
             var sut = new VerifyMockConfiguration(mock);
 
             sut.ExpectedCalls(func);
