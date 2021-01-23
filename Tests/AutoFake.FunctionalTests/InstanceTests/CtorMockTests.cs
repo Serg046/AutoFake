@@ -68,7 +68,7 @@ namespace AutoFake.IntegrationTests.InstanceTests
             Assert.Equal(7, sut.Execute().Value);
         }
 
-        [Fact(Skip = "Temporary broken")]
+        [Fact]
         public void GenericTest()
         {
 	        var fake = new Fake<GenericTestClass<int>>();
