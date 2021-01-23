@@ -55,19 +55,16 @@ namespace AutoFake
         public IList<VariableDefinition> SaveMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IEnumerable<Type> argumentTypes)
         {
             var variables = new List<VariableDefinition>();
-            if (_instruction.Operand is MethodReference method)
+            foreach (var argType in argumentTypes)
             {
-	            foreach (var parameter in method.Parameters)
-	            {
-		            var variable = new VariableDefinition(parameter.ParameterType);
-		            variables.Add(variable);
-		            _emitter.Body.Variables.Add(variable);
-	            }
+	            var variable = new VariableDefinition(_typeInfo.ImportReference(argType));
+	            variables.Add(variable);
+	            _emitter.Body.Variables.Add(variable);
+            }
 
-	            foreach (var variable in variables.Select(v => v).Reverse())
-	            {
-		            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
-	            }
+            foreach (var variable in variables.Select(v => v).Reverse())
+            {
+	            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
             }
 
             var objRef = _typeInfo.ImportReference(typeof(object));
@@ -77,7 +74,7 @@ namespace AutoFake
 			_emitter.Body.Variables.Add(arrVar);
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
-			SaveMethodArguments(variables, arrVar, argumentTypes);
+			SaveMethodArguments(variables, arrVar);
 
 			var verifyMethodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyArguments));
 			var verifyMethodRef = _typeInfo.ImportReference(verifyMethodInfo);
@@ -93,20 +90,21 @@ namespace AutoFake
 			return variables;
         }
 
-        private void SaveMethodArguments(IEnumerable<VariableDefinition> variables, VariableDefinition array, IEnumerable<Type> argumentTypes)
+        private void SaveMethodArguments(IList<VariableDefinition> variables, VariableDefinition array)
         {
-	        var counter = 0;
-            foreach (var item in variables.Zip(argumentTypes, (var, type) => new {Var = var, Type = type}))
-            {
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, array));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, counter++));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, item.Var));
-                if (item.Type.IsValueType)
-                {
-                    _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Box, item.Var.VariableType));
-                }
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stelem_Ref));
-            }
+	        for (var i = 0; i < variables.Count; i++)
+	        {
+		        var variable = variables[i];
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, array));
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, i));
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, variable));
+		        if (variable.VariableType.IsValueType)
+		        {
+			        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Box, variable.VariableType));
+		        }
+
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stelem_Ref));
+	        }
         }
     }
 }
