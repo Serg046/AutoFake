@@ -66,7 +66,7 @@ namespace AutoFake
 
         private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
         {
-            if (executeFunc is MethodInfo methodInfo)
+	        if (executeFunc is MethodInfo methodInfo)
             {
                 if (methodInfo.ReturnType.Module == methodInfo.Module)
                 {
