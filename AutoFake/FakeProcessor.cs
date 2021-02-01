@@ -25,46 +25,76 @@ namespace AutoFake
             var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
             if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
-            var replaceTypeRefMocks = ProcessOriginalMethodContract(executeFunc, executeFuncDef);
-            mocks = mocks.Concat(replaceTypeRefMocks);
+            var replaceTypeMocks = ProcessOriginalContracts(mocks, executeFunc, executeFuncDef);
+            mocks = mocks.Concat(replaceTypeMocks);
+
             foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
             var testMethod = new TestMethod(this, executeFuncDef, mocks, emitterPool);
             testMethod.Rewrite();
             foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
 
-            if (replaceTypeRefMocks.Any())
+            if (replaceTypeMocks.Any())
             {
                 foreach (var ctor in _typeInfo.GetMethods(m => m.Name == ".ctor" || m.Name == ".cctor"))
                 {
-                    new TestMethod(this, ctor, replaceTypeRefMocks, emitterPool).Rewrite();
+                    new TestMethod(this, ctor, replaceTypeMocks, emitterPool).Rewrite();
                 }
             }
         }
 
-        private ICollection<ReplaceTypeRefMock> ProcessOriginalMethodContract(MethodBase executeFunc, MethodDefinition executeFuncDef)
+        private HashSet<IMock> ProcessOriginalContracts(IEnumerable<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
         {
-            var replaceTypeRefMocks = new HashSet<ReplaceTypeRefMock>();
-            if (executeFunc is MethodInfo methodInfo)
+	        var replaceTypeMocks = new HashSet<IMock>();
+	        ProcessOriginalMethodContract(replaceTypeMocks, executeFunc, executeFuncDef);
+	        if (executeFunc.ReflectedType != null)
+	        {
+		        foreach (var ctor in executeFunc.ReflectedType.GetConstructors())
+		        {
+			        var ctorRef = _typeInfo.ImportReference(ctor);
+			        var ctorDef = _typeInfo.GetMethod(ctorRef);
+			        ProcessOriginalMethodContract(replaceTypeMocks, ctor, ctorDef);
+		        }
+	        }
+
+	        foreach (var replaceMock in mocks.OfType<ReplaceMock>().Where(m => m.ReturnType != null))
+	        {
+		        AddReplaceTypeMocks(replaceTypeMocks, replaceMock.ReturnType);
+	        }
+
+	        return replaceTypeMocks;
+        }
+
+        private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
+        {
+	        if (executeFunc is MethodInfo methodInfo)
             {
                 if (methodInfo.ReturnType.Module == methodInfo.Module)
                 {
                     var typeRef = _typeInfo.ImportReference(methodInfo.ReturnType);
                     executeFuncDef.ReturnType = typeRef;
-                    replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, methodInfo.ReturnType));
-                }
-
-                var parameters = methodInfo.GetParameters();
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    if (parameters[i].ParameterType.Module == methodInfo.Module)
-                    {
-                        var typeRef = _typeInfo.ImportReference(parameters[i].ParameterType);
-                        executeFuncDef.Parameters[i].ParameterType = typeRef;
-                        replaceTypeRefMocks.Add(new ReplaceTypeRefMock(_typeInfo, parameters[i].ParameterType));
-                    }
+                    AddReplaceTypeMocks(mocks, methodInfo.ReturnType);
                 }
             }
-            return replaceTypeRefMocks;
+
+            var parameters = executeFunc.GetParameters();
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].ParameterType.Module == executeFunc.Module)
+                {
+                    var typeRef = _typeInfo.ImportReference(parameters[i].ParameterType);
+                    executeFuncDef.Parameters[i].ParameterType = typeRef;
+                    AddReplaceTypeMocks(mocks, parameters[i].ParameterType);
+                }
+            }
+        }
+
+        private void AddReplaceTypeMocks(HashSet<IMock> mocks, Type type)
+        {
+	        mocks.Add(new ReplaceTypeCtorMock(_typeInfo, type));
+	        foreach (var mock in ReplaceInterfaceCallMock.Create(_typeInfo, type))
+	        {
+		        mocks.Add(mock);
+	        }
         }
 
         private class TestMethod

@@ -201,6 +201,7 @@ namespace AutoFake.UnitTests
             [Frozen] FakeOptions options,
 	        [Frozen] MethodDefinition executeMethod,
             Mock<IMock> mock,
+            MethodInfo methodInfo,
 	        FakeProcessor fakeProcessor)
         {
             // Arrange
@@ -227,7 +228,7 @@ namespace AutoFake.UnitTests
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
 
             // Act
-            fakeProcessor.Generate(new[] { mock.Object }, null);
+            fakeProcessor.Generate(new[] { mock.Object }, methodInfo);
 
             // Assert
             mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), instruction), injected ? Times.Once() : Times.Never());
@@ -237,12 +238,13 @@ namespace AutoFake.UnitTests
         internal void Generate_UnsupportedAnalysisLevel_Success(
             [Frozen] FakeOptions options,
             [Frozen] MethodDefinition executeMethod,
+            MethodInfo methodInfo,
             FakeProcessor fakeProcessor)
         {
             options.AnalysisLevel = (AnalysisLevels)100;
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, executeMethod));
 
-            Action act = () => fakeProcessor.Generate(new[] { Mock.Of<IMock>()}, null);
+            Action act = () => fakeProcessor.Generate(new[] { Mock.Of<IMock>()}, methodInfo);
 
             act.Should().Throw<NotSupportedException>().WithMessage("100 is not supported");
         }
@@ -255,6 +257,7 @@ namespace AutoFake.UnitTests
             [Frozen] FakeOptions options,
             [Frozen] MethodDefinition executeMethod,
             Mock<IMock> mock,
+            MethodInfo methodInfo,
             FakeProcessor fakeProcessor)
         {
             // Arrange
@@ -278,7 +281,7 @@ namespace AutoFake.UnitTests
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
 
             // Act
-            fakeProcessor.Generate(new[] { mock.Object }, null);
+            fakeProcessor.Generate(new[] { mock.Object }, methodInfo);
 
             // Assert
             mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), instruction), injected ? Times.Once() : Times.Never());
