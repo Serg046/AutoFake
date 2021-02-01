@@ -124,6 +124,28 @@ namespace AutoFake.IntegrationTests.InstanceTests
             sut.Execute().Should().Be(5);
         }
 
+        [Theory]
+        [InlineData(typeof(HelperClass))]
+        [InlineData(typeof(HelperStruct))]
+        public void InterfaceContractTest(Type type)
+        {
+	        var helper = Activator.CreateInstance(type) as IHelper;
+
+	        var fake = new Fake<InheritedTestClassWithInterface>();
+	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface(helper));
+
+	        sut.Execute().Should().Be(5);
+        }
+
+        [Fact]
+        public void BaseClassContractTest()
+        {
+	        var fake = new Fake<InheritedTestClass>();
+	        var sut = fake.Rewrite(f => f.CallMethodThroughBaseClass(new HelperClass()));
+
+	        sut.Execute().Should().Be(5);
+        }
+
         public interface IHelper : IHelper2 { }
         public interface IHelper2 : IHelper3 { }
         public interface IHelper3
@@ -172,12 +194,12 @@ namespace AutoFake.IntegrationTests.InstanceTests
                 return _helperStructField;
             }
 
-            public int CallMethodThroughInterface(IHelper helper)
+            public virtual int CallMethodThroughInterface(IHelper helper)
             {
 	            return helper.GetFive();
             }
 
-            public int CallMethodThroughBaseClass(HelperClassBase helper)
+            public virtual int CallMethodThroughBaseClass(HelperClassBase helper)
             {
 	            return helper.GetFive();
             }
@@ -229,6 +251,31 @@ namespace AutoFake.IntegrationTests.InstanceTests
 	        {
 		        return HelperBaseClass.GetFive();
 	        }
+        }
+
+        private interface IInheritedTestClassWithInterface
+        {
+	        int CallMethodThroughInterface(IHelper helper);
+	        int CallMethodThroughBaseClass(HelperClassBase helper);
+        }
+
+        private class InheritedTestClass : TestClass
+        {
+	        public override int CallMethodThroughInterface(IHelper helper)
+	        {
+                Console.WriteLine("Some action");
+		        return base.CallMethodThroughInterface(helper);
+	        }
+
+	        public override int CallMethodThroughBaseClass(HelperClassBase helper)
+	        {
+                Console.WriteLine("Some action");
+		        return base.CallMethodThroughBaseClass(helper);
+	        }
+        }
+
+        private class InheritedTestClassWithInterface : TestClass, IInheritedTestClassWithInterface
+        {
         }
     }
 }

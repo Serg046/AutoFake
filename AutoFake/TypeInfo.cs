@@ -39,10 +39,24 @@ namespace AutoFake
 
             var type = _assemblyDef.MainModule.GetType(_sourceType.FullName, runtimeName: true);
             _sourceTypeDef = type.Resolve();
+            RemoveInheritedInterfaces();
+
             _fieldsTypeDef = new TypeDefinition("AutoFake", "Fields", TypeAttributes.Class,
 	            _assemblyDef.MainModule.TypeSystem.Object);
             _assemblyDef.MainModule.Types.Add(_fieldsTypeDef);
         }
+
+        private void RemoveInheritedInterfaces()
+        {
+	        _sourceTypeDef.Interfaces.Clear();
+	        foreach (var method in GetMethods(IsExplicitImplementedMethod).ToList())
+	        {
+		        _sourceTypeDef.Methods.Remove(method);
+	        }
+        }
+
+        private static bool IsExplicitImplementedMethod(MethodDefinition method)
+	        => !method.IsConstructor && method.Name.Contains('.');
 
         public TypeReference ImportReference(Type type)
 	        => _assemblyDef.MainModule.ImportReference(type);
@@ -64,8 +78,13 @@ namespace AutoFake
 
         private MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
         {
-            return type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference))
-                   ?? GetMethod(type.BaseType.ToTypeDefinition(), methodReference);
+	        var method = type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference));
+	        if (method == null && type.BaseType != null)
+	        {
+		        return GetMethod(type.BaseType.ToTypeDefinition(), methodReference);
+	        }
+
+	        return method;
         }
 
         public void AddField(FieldDefinition field)

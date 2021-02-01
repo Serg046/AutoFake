@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -34,16 +35,24 @@ namespace AutoFake.Expression
             if (methodInfo.IsGenericMethod)
             {
 	            var contract = methodInfo.GetGenericMethodDefinition().ToString();
-	            method = methodCandidates.Single(m => m.ToString() == contract);
+	            method = GetMethod(methodCandidates, contract);
 	            method = method.MakeGenericMethod(methodInfo.GetGenericArguments());
             }
             else
             {
 	            var contract = methodInfo.ToString();
-	            method = methodCandidates.Single(m => m.ToString() == contract);
+	            method = GetMethod(methodCandidates, contract);
             }
 
             _requestedVisitor.Visit(methodExpression, method);
+        }
+
+        private MethodInfo GetMethod(IEnumerable<MethodInfo> methodCandidates, string contract)
+        {
+	        var methods = methodCandidates.Where(m => m.ToString() == contract).ToList();
+	        return methods.Count == 1
+                ? methods[0]
+				: methods.Single(m => m.DeclaringType == _targetType);
         }
 
         public void Visit(PropertyInfo propertyInfo)
