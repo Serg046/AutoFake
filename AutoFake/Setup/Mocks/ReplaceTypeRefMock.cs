@@ -7,13 +7,13 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-    internal class ReplaceTypeRefMock : IMock
+    internal class ReplaceTypeCtorMock : IMock
     {
         private readonly Type _type;
         private readonly OpCode _opCode;
         private readonly Dictionary<string, Instruction> _instructions;
 
-        public ReplaceTypeRefMock(ITypeInfo typeInfo, Type type)
+        public ReplaceTypeCtorMock(ITypeInfo typeInfo, Type type)
         {
             _type = type;
             if (type.IsValueType)
@@ -60,6 +60,6 @@ namespace AutoFake.Setup.Mocks
 
         public override int GetHashCode() => _type.GetHashCode();
 
-        public override bool Equals(object obj) => obj is ReplaceTypeRefMock mock && mock._type == _type;
+        public override bool Equals(object obj) => obj is ReplaceTypeCtorMock mock && mock._type == _type;
     }
 }

@@ -15,6 +15,7 @@ namespace AutoFake.Setup.Configurations
         public ReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
         {
             _mock.ReturnObject = returnObject;
+            _mock.ReturnType = typeof(TReturn);
             return this;
         }
 

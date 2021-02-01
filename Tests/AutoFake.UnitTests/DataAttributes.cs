@@ -109,7 +109,12 @@ namespace AutoFake.UnitTests
 					        .Returns<MethodBase>(m => module.ImportReference(m));
 			        }
 		        }
-	        }
+
+		        private void Handle(Mock<MethodInfo> mock, ISpecimenContext context)
+		        {
+			        mock.Setup(m => m.Module).Returns((Module)null);
+		        }
+            }
         }
 
         private class CustomFixture : Fixture
