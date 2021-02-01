@@ -16,7 +16,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
             var ctors = type.GetConstructors().Select(typeInfo.ImportReference);
 
             Assert.All(ctors, ctor => Assert.True(mock
@@ -28,7 +28,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
             var ctor = typeInfo.ImportReference(type.GetConstructors().First());
             var method = typeInfo.ImportReference(type.GetMethods().First());
 
@@ -42,7 +42,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(DateTime);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
             var typeRef = typeInfo.ImportReference(type);
 
             Assert.True(mock.IsSourceInstruction(null, Instruction.Create(OpCodes.Initobj, typeRef)));
@@ -53,7 +53,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
             var typeRef = typeInfo.ImportReference(typeof(ValueTask));
             var invalidTypeRef = typeInfo.ImportReference(typeof(ValueTask));
 
@@ -67,7 +67,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
             var ctor = typeInfo.ImportReference(type.GetConstructors().First());
             var instruction = Instruction.Create(OpCodes.Newobj, ctor);
 
@@ -82,7 +82,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(DateTime);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
             var typeRef = typeInfo.ImportReference(type);
             var instruction = Instruction.Create(OpCodes.Initobj, typeRef);
 
@@ -93,7 +93,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory, AutoMoqData]
-        internal void Initialize_AnyType_Empty(ReplaceTypeRefMock sut)
+        internal void Initialize_AnyType_Empty(ReplaceTypeCtorMock sut)
         {
             Assert.Empty(sut.Initialize(GetType()));
         }
@@ -103,7 +103,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock = new ReplaceTypeRefMock(typeInfo, type);
+            var mock = new ReplaceTypeCtorMock(typeInfo, type);
 
             Assert.Equal(type.GetHashCode(), mock.GetHashCode());
         }
@@ -113,9 +113,9 @@ namespace AutoFake.UnitTests.Setup
         {
             var type = typeof(ReplaceTypeRefMockTests);
             var typeInfo = new TypeInfo(type, new List<FakeDependency>(), new FakeOptions());
-            var mock1 = new ReplaceTypeRefMock(typeInfo, type);
-            var mock2 = new ReplaceTypeRefMock(typeInfo, type);
-            var mock3 = new ReplaceTypeRefMock(typeInfo, typeof(ReplaceTypeRefMock));
+            var mock1 = new ReplaceTypeCtorMock(typeInfo, type);
+            var mock2 = new ReplaceTypeCtorMock(typeInfo, type);
+            var mock3 = new ReplaceTypeCtorMock(typeInfo, typeof(ReplaceTypeCtorMock));
 
             Assert.NotSame(mock1, mock2);
             Assert.True(mock1.Equals(mock2));
