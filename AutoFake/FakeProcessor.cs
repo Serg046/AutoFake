@@ -18,28 +18,41 @@ namespace AutoFake
             _options = fakeOptions;
         }
 
-        public void Generate(IEnumerable<IMock> mocks, MethodBase executeFunc)
+        public void ProcessMethod(MethodBase method)
+		{
+			var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
+			var methodRef = _typeInfo.ImportReference(method);
+			var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
+			ProcessSourceMethod(new IMock[0], method, methodDef);
+        }
+
+        public void ProcessSourceMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
-	        using var emitterPool = new EmitterPool();
             var executeFuncRef = _typeInfo.ImportReference(executeFunc);
             var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
-            if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
+            ProcessSourceMethod(mocks, executeFunc, executeFuncDef);
+        }
 
-            var replaceTypeMocks = ProcessOriginalContracts(mocks, executeFunc, executeFuncDef);
-            mocks = mocks.Concat(replaceTypeMocks);
+        private void ProcessSourceMethod(IEnumerable<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
+        {
+	        if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
-            foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
-            var testMethod = new TestMethod(this, executeFuncDef, mocks, emitterPool);
-            testMethod.Rewrite();
-            foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
+	        var replaceTypeMocks = ProcessOriginalContracts(mocks, executeFunc, executeFuncDef);
+	        mocks = mocks.Concat(replaceTypeMocks);
 
-            if (replaceTypeMocks.Any())
-            {
-                foreach (var ctor in _typeInfo.GetMethods(m => m.Name == ".ctor" || m.Name == ".cctor"))
-                {
-                    new TestMethod(this, ctor, replaceTypeMocks, emitterPool).Rewrite();
-                }
-            }
+	        using var emitterPool = new EmitterPool();
+	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
+	        var testMethod = new TestMethod(this, executeFuncDef, mocks, emitterPool);
+	        testMethod.Rewrite();
+	        foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
+
+	        if (replaceTypeMocks.Any())
+	        {
+		        foreach (var ctor in _typeInfo.GetMethods(m => m.Name == ".ctor" || m.Name == ".cctor"))
+		        {
+			        new TestMethod(this, ctor, replaceTypeMocks, emitterPool).Rewrite();
+		        }
+	        }
         }
 
         private HashSet<IMock> ProcessOriginalContracts(IEnumerable<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)

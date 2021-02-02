@@ -126,7 +126,7 @@ namespace AutoFake
 	        var fakeProcessor = new FakeProcessor(this, _fakeOptions);
 	        foreach (var mock in mocks)
 	        {
-		        fakeProcessor.Generate(mock.Mocks, mock.Method);
+		        fakeProcessor.ProcessSourceMethod(mock.Mocks, mock.Method);
 	        }
 
 	        _assemblyDef.Write(stream, new WriterParameters { WriteSymbols = _fakeOptions.Debug });
