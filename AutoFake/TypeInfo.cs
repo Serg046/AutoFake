@@ -14,7 +14,6 @@ namespace AutoFake
     {
         private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-        private readonly Type _sourceType;
         private readonly AssemblyDefinition _assemblyDef;
         private readonly TypeDefinition _sourceTypeDef;
         private readonly TypeDefinition _fieldsTypeDef;
@@ -26,37 +25,27 @@ namespace AutoFake
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies, FakeOptions fakeOptions)
         {
-            _sourceType = sourceType;
+            SourceType = sourceType;
             _dependencies = dependencies;
             _fakeOptions = fakeOptions;
             _addedFields = new Dictionary<string, ushort>();
             _virtualMethods = new Dictionary<string, IList<MethodDefinition>>();
             _assemblyHost = new AssemblyHost();
 
-            _assemblyDef = AssemblyDefinition.ReadAssembly(_sourceType.Module.FullyQualifiedName,
+            _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName,
 	            new ReaderParameters {ReadSymbols = fakeOptions.Debug});
             _assemblyDef.Name.Name += "Fake";
 
-            var type = _assemblyDef.MainModule.GetType(_sourceType.FullName, runtimeName: true);
-            _sourceTypeDef = type.Resolve();
-            RemoveInheritedInterfaces();
-
+            _sourceTypeDef = GetTypeDefinition(SourceType);
             _fieldsTypeDef = new TypeDefinition("AutoFake", "Fields", TypeAttributes.Class,
 	            _assemblyDef.MainModule.TypeSystem.Object);
             _assemblyDef.MainModule.Types.Add(_fieldsTypeDef);
         }
 
-        private void RemoveInheritedInterfaces()
-        {
-	        _sourceTypeDef.Interfaces.Clear();
-	        foreach (var method in GetMethods(IsExplicitImplementedMethod).ToList())
-	        {
-		        _sourceTypeDef.Methods.Remove(method);
-	        }
-        }
+        public Type SourceType { get; }
 
-        private static bool IsExplicitImplementedMethod(MethodDefinition method)
-	        => !method.IsConstructor && method.Name.Contains('.');
+        public TypeDefinition GetTypeDefinition(Type type) =>
+	        _assemblyDef.MainModule.GetType(type.FullName, runtimeName: true).ToTypeDefinition();
 
         public TypeReference ImportReference(Type type)
 	        => _assemblyDef.MainModule.ImportReference(type);
@@ -76,7 +65,7 @@ namespace AutoFake
         public MethodDefinition GetMethod(MethodReference methodReference) =>
             GetMethod(_sourceTypeDef, methodReference);
 
-        private MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
+        public MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
         {
 	        var method = type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference));
 	        if (method == null && type.BaseType != null)
@@ -144,12 +133,12 @@ namespace AutoFake
             var assembly = _assemblyHost.Load(stream);
 	        var fieldsType = assembly.GetType(_fieldsTypeDef.FullName, true);
 	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
-	        if (_sourceType.IsGenericType)
+	        if (SourceType.IsGenericType)
 	        {
-		        sourceType = sourceType.MakeGenericType(_sourceType.GetGenericArguments());
+		        sourceType = sourceType.MakeGenericType(SourceType.GetGenericArguments());
 	        }
 
-	        var instance = !IsStatic(_sourceType) ? CreateInstance(sourceType) : null;
+	        var instance = !IsStatic(SourceType) ? CreateInstance(sourceType) : null;
 	        var parameters = mocks
 		        .SelectMany(m => m.Mocks)
 		        .SelectMany(m => m.Initialize(fieldsType))
@@ -191,12 +180,12 @@ namespace AutoFake
         {
 	        var referencedAssemblies = new Dictionary<AssemblyName, AssemblyDefinition>
 	        {
-				{_sourceType.Assembly.GetName(), _assemblyDef}
+				{SourceType.Assembly.GetName(), _assemblyDef}
 			};
 
 	        if (_fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies)
 	        {
-		        foreach (var assemblyName in _sourceType.Assembly.GetReferencedAssemblies())
+		        foreach (var assemblyName in SourceType.Assembly.GetReferencedAssemblies())
 		        {
 			        if (!referencedAssemblies.ContainsKey(assemblyName))
 			        {
