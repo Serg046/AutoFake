@@ -23,12 +23,12 @@ namespace AutoFake.Setup.Mocks
 
         public static IEnumerable<ReplaceInterfaceCallMock> Create(ITypeInfo typeInfo, Type type)
         {
-	        if (type.IsInterface) yield return new ReplaceInterfaceCallMock(typeInfo, type);
-	        foreach (var @interface in type.GetInterfaces())
-	        {
-		        yield return new ReplaceInterfaceCallMock(typeInfo, @interface);
-	        }
-        }
+			if (type.IsInterface) yield return new ReplaceInterfaceCallMock(typeInfo, type);
+			foreach (var @interface in type.GetInterfaces())
+			{
+				yield return new ReplaceInterfaceCallMock(typeInfo, @interface);
+			}
+		}
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
 	        => instruction != null && instruction.OpCode.OperandType == OperandType.InlineMethod

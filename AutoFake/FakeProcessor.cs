@@ -46,6 +46,26 @@ namespace AutoFake
         {
 	        var replaceTypeMocks = new HashSet<IMock>();
 	        ProcessOriginalMethodContract(replaceTypeMocks, executeFunc, executeFuncDef);
+            if (replaceTypeMocks.Any())
+			{
+				foreach (var @interface in _typeInfo.SourceType.GetInterfaces())
+				foreach (var method in @interface.GetMethods().Where(m => m.Name == executeFunc.Name))
+				{
+					var methodRef = _typeInfo.ImportReference(method);
+					var typeDef = _typeInfo.GetTypeDefinition(@interface);
+					var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
+                        ProcessOriginalMethodContract(replaceTypeMocks, method, methodDef);
+				}
+
+				foreach (var method in _typeInfo.SourceType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+					.Where(m => m.Name.EndsWith($".{executeFunc.Name}")))
+				{
+					var methodRef = _typeInfo.ImportReference(method);
+					var methodDef = _typeInfo.GetMethod(methodRef);
+					ProcessOriginalMethodContract(replaceTypeMocks, method, methodDef);
+                }
+			}
+
 	        if (executeFunc.ReflectedType != null)
 	        {
 		        foreach (var ctor in executeFunc.ReflectedType.GetConstructors())
@@ -64,25 +84,25 @@ namespace AutoFake
 	        return replaceTypeMocks;
         }
 
-        private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
+        private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodBase method, MethodDefinition methodDef)
         {
-	        if (executeFunc is MethodInfo methodInfo)
+	        if (method is MethodInfo methodInfo)
             {
                 if (methodInfo.ReturnType.Module == methodInfo.Module)
                 {
                     var typeRef = _typeInfo.ImportReference(methodInfo.ReturnType);
-                    executeFuncDef.ReturnType = typeRef;
+                    methodDef.ReturnType = typeRef;
                     AddReplaceTypeMocks(mocks, methodInfo.ReturnType);
                 }
             }
 
-            var parameters = executeFunc.GetParameters();
+            var parameters = method.GetParameters();
             for (var i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i].ParameterType.Module == executeFunc.Module)
+                if (parameters[i].ParameterType.Module == method.Module)
                 {
                     var typeRef = _typeInfo.ImportReference(parameters[i].ParameterType);
-                    executeFuncDef.Parameters[i].ParameterType = typeRef;
+                    methodDef.Parameters[i].ParameterType = typeRef;
                     AddReplaceTypeMocks(mocks, parameters[i].ParameterType);
                 }
             }

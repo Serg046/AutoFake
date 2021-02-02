@@ -146,6 +146,15 @@ namespace AutoFake.IntegrationTests.InstanceTests
 	        sut.Execute().Should().Be(5);
         }
 
+        [Fact(Skip = "TODO")]
+        public void InterfaceContractThroughAnotherTypeTest()
+        {
+	        var fake = new Fake<InheritedTestClassWithInterface>();
+
+	        fake.Rewrite(f => f.CallMethodUsingAnotherType(new HelperClass()))
+		        .Execute().Should().Be(10);
+        }
+
         public interface IHelper : IHelper2 { }
         public interface IHelper2 : IHelper3 { }
         public interface IHelper3
@@ -276,6 +285,29 @@ namespace AutoFake.IntegrationTests.InstanceTests
 
         private class InheritedTestClassWithInterface : TestClass, IInheritedTestClassWithInterface
         {
+	        public int CallMethodUsingAnotherType(IHelper helper)
+	        {
+                return CallMethodUsingAnotherType(this, helper);
+	        }
+            
+            private int CallMethodUsingAnotherType(IInheritedTestClassWithInterface testClass, IHelper helper)
+            {
+	            return testClass.CallMethodThroughInterface(helper);// +
+			        //new AnotherInheritedTestClassWithInterface().CallMethodThroughInterface(helper);
+            }
+        }
+
+        private class AnotherInheritedTestClassWithInterface : IInheritedTestClassWithInterface
+        {
+	        public int CallMethodThroughInterface(IHelper helper)
+	        {
+		        return helper.GetFive();
+	        }
+
+	        public int CallMethodThroughBaseClass(HelperClassBase helper)
+	        {
+		        return helper.GetFive();
+	        }
         }
     }
 }
