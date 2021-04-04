@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoFake.IntegrationTests.Sut;
+using Sut;
 using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.FunctionalTests
 {
     public class DemoTests
     {

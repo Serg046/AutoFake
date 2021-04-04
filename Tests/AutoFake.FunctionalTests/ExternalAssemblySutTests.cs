@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using AutoFake.Exceptions;
-using AutoFake.IntegrationTests.Sut;
+using Sut;
 using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.FunctionalTests
 {
     public class ExternalAssemblySutTests
     {

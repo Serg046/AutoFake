@@ -1,6 +1,6 @@
 ﻿using Xunit;
 
-namespace AutoFake.IntegrationTests.InstanceTests
+namespace AutoFake.FunctionalTests.InstanceTests
 {
     public class RewriteTests
     {

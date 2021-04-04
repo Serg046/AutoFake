@@ -3,7 +3,7 @@ using System.Diagnostics;
 using AutoFake.Exceptions;
 using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.FunctionalTests
 {
     public class ReplaceTests
     {

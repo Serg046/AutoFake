@@ -5,7 +5,7 @@ using Mono.Cecil.Cil;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.FunctionalTests
 {
 	public class StateTests
 	{

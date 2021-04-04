@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using Xunit;
 
-namespace AutoFake.IntegrationTests.StaticTests
+namespace AutoFake.FunctionalTests.StaticTests
 {
     public class PropertyMockTests
     {
