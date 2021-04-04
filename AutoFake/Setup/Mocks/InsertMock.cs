@@ -37,11 +37,14 @@ namespace AutoFake.Setup.Mocks
                 $"{method.Name}InsertCallback{Guid.NewGuid()}", Closure.GetType());
         }
 
-        public IList<object> Initialize(Type type)
+        public IList<object> Initialize(Type? type)
         {
-            var field = type.GetField(_closureField.Name, BindingFlags.NonPublic | BindingFlags.Static)
-                ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
-            field.SetValue(null, Closure);
+            if (type != null)
+            {
+	            var field = type.GetField(_closureField.Name, BindingFlags.Public | BindingFlags.Static)
+	                ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
+	            field.SetValue(null, Closure);
+            }
             return new List<object>();
         }
 

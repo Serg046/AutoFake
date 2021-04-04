@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using AutoFake.Exceptions;
 using FluentAssertions;
+using Sut;
 using Xunit;
 
 namespace AutoFake.FunctionalTests.InstanceTests
@@ -54,6 +57,59 @@ namespace AutoFake.FunctionalTests.InstanceTests
             sut.Replace(() => DateTime.Now).Return(DateTime.Now);
 
             Assert.Equal(7, sut.Execute().Prop);
+        }
+
+        [Fact]
+        public void ReplaceMockInsideAnotherAssembly()
+        {
+	        var fake = new Fake<TestClass>();
+            fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
+
+	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
+	        sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+
+	        sut.Execute().Should().Be(DateTime.MaxValue);
+        }
+
+        [Theory]
+        [InlineData(0, false)]
+        [InlineData(1, true)]
+        [InlineData(2, false)]
+        public void VerifyMockInsideAnotherAssembly(byte expectedCalls, bool success)
+        {
+	        var fake = new Fake<TestClass>();
+	        fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
+
+	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
+	        sut.Verify(() => DateTime.Now).ExpectedCalls(expectedCalls);
+
+	        Action act = () => sut.Execute();
+
+	        if (success)
+	        {
+		        act.Should().NotThrow();
+	        }
+	        else
+	        {
+		        act.Should().Throw<ExpectedCallsException>();
+	        }
+        }
+
+        [Fact]
+        public void InsertMockInsideAnotherAssembly()
+        {
+            var list = new List<int>();
+	        var fake = new Fake<TestClass>();
+	        fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
+	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
+	        sut.Prepend(() => list.Add(0));
+	        sut.Prepend(() => list.Add(1)).Before(() => DateTime.Now);
+	        sut.Append(() => list.Add(2)).After(() => DateTime.Now);
+	        sut.Append(() => list.Add(3));
+
+	        sut.Execute();
+
+	        list.Should().ContainInOrder(0, 1, 2, 3);
         }
 
         [Theory]
@@ -215,6 +271,12 @@ namespace AutoFake.FunctionalTests.InstanceTests
             public virtual int CallMethodThroughBaseClass(HelperClassBase helper)
             {
 	            return helper.GetFive();
+            }
+
+            public DateTime GetDateFromAnotherAssembly()
+            {
+	            var sut = new SystemUnderTest();
+	            return sut.GetCurrentDate();
             }
         }
 

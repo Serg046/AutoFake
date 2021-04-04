@@ -238,7 +238,7 @@ namespace AutoFake.UnitTests.Setup
 
         private class TestClass
         {
-            internal static object RetValueField;
+            public static object RetValueField;
 
             public void TestMethod(int argument)
             {

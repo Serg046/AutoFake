@@ -46,16 +46,20 @@ namespace AutoFake.Setup.Mocks
                 processor.RemoveInstruction(instruction);
         }
 
-        public override IList<object> Initialize(Type type)
+        public override IList<object> Initialize(Type? type)
         {
-            var parameters = base.Initialize(type).ToList();
-            if (ReturnObject != null)
+            if (type != null)
             {
-                var field = GetField(type, _retValueField.Name)
-                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
-                field.SetValue(null, ReturnObject);
+	            var parameters = base.Initialize(type).ToList();
+	            if (ReturnObject != null)
+	            {
+	                var field = GetField(type, _retValueField.Name)
+	                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
+	                field.SetValue(null, ReturnObject);
+	            }
+				return parameters;
             }
-            return parameters;
+            return new List<object>();
         }
 
         public override void BeforeInjection(MethodDefinition method)

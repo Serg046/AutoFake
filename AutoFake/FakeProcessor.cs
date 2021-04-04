@@ -176,6 +176,10 @@ namespace AutoFake
                     if (mock.IsSourceInstruction(_originalMethod, instruction))
                     {
                         mock.Inject(_emitterPool.GetEmitter(currentMethod.Body), instruction);
+                        if (currentMethod.Module.Assembly != _originalMethod.Module.Assembly)
+                        {
+	                        _gen._typeInfo.TryAddAffectedAssembly(currentMethod.Module.Assembly);
+                        }
                     }
                     else if (instruction.Operand is MethodReference method && ShouldBeAnalyzed(method))
                     {

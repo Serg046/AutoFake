@@ -15,9 +15,11 @@ namespace AutoFake.UnitTests
     {
         [Theory, AutoMoqData]
         internal void SaveMethodCall_MethodWithTwoArgs_ReturnsTwoVariables(
+            [Frozen] ModuleDefinition module,
             MethodDefinition method, FieldDefinition accumulator,
             IFixture fixture)
         {
+	        method.DeclaringType = module.Types.First();
             method.Parameters.Add(new ParameterDefinition(new FunctionPointerType()));
             method.Parameters.Add(new ParameterDefinition(new FunctionPointerType()));
             fixture.Inject(Instruction.Create(OpCodes.Call, method));
@@ -32,10 +34,12 @@ namespace AutoFake.UnitTests
         internal void SaveMethodCall_CheckArgs_ArgsSaved(
             [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
+            [Frozen] ModuleDefinition module,
             TypeDefinition refType,
             MethodDefinition method, FieldDefinition accumulator,
             IFixture fixture)
         {
+	        method.DeclaringType = module.Types.First();
             method.Parameters.Add(new ParameterDefinition(TypeExtensions.ValueTypeDef()));
             method.Parameters.Add(new ParameterDefinition(refType));
             var instruction = Instruction.Create(OpCodes.Call, method);
@@ -155,9 +159,11 @@ namespace AutoFake.UnitTests
         internal void ReplaceToRetValueField_ValidInput_InstructionReplaced(
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             [Frozen]Instruction cmd,
+            [Frozen] ModuleDefinition module,
             FieldDefinition field,
             Processor proc)
         {
+	        emitter.Body.Method.DeclaringType = module.Types.First();
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ldc_I4_0));
             emitter.Body.Instructions.Add(cmd);
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Pop));
@@ -176,8 +182,10 @@ namespace AutoFake.UnitTests
             [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen] Instruction instruction,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
+            [Frozen] ModuleDefinition module,
             FieldDefinition field, Processor proc)
         {
+	        emitter.Body.Method.DeclaringType = module.Types.First();
             emitter.Body.Instructions.Add(instruction);
 
             proc.InjectClosure(field, InsertMock.Location.Top);
@@ -194,8 +202,10 @@ namespace AutoFake.UnitTests
             [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen] Instruction instruction,
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
+            [Frozen] ModuleDefinition module,
             FieldDefinition field, Processor proc)
         {
+	        emitter.Body.Method.DeclaringType = module.Types.First();
             emitter.Body.Instructions.Add(instruction);
 
             proc.InjectClosure(field, InsertMock.Location.Bottom);

@@ -12,7 +12,7 @@ namespace AutoFake
 {
     internal class PrePostProcessor : IPrePostProcessor
     {
-        private const FieldAttributes ACCESS_LEVEL = FieldAttributes.Assembly | FieldAttributes.Static;
+        private const FieldAttributes ACCESS_LEVEL = FieldAttributes.Public | FieldAttributes.Static;
         private readonly ITypeInfo _typeInfo;
 
         public PrePostProcessor(ITypeInfo typeInfo)
@@ -22,7 +22,7 @@ namespace AutoFake
 
         public FieldDefinition GenerateField(string name, Type returnType)
         {
-            var type = _typeInfo.ImportReference(returnType);
+            var type = _typeInfo.ImportToFieldsAsm(returnType);
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
             return field;
@@ -30,13 +30,18 @@ namespace AutoFake
 
         public FieldDefinition GenerateCallsAccumulator(string name, MethodBody method)
         {
-            var type = _typeInfo.ImportReference(typeof(List<object[]>));
+            var type = _typeInfo.ImportToFieldsAsm(typeof(List<object[]>));
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
 
-            method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj,
-                _typeInfo.ImportReference(typeof(List<object[]>).GetConstructor(new Type[0]))));
-            method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, field));
+            var fieldRef = _typeInfo.IsMultipleAssembliesMode
+	            ? method.Method.Module.ImportReference(field)
+	            : field;
+            var ctor = typeof(List<object[]>).GetConstructor(new Type[0]);
+            var ctorRef = method.Method.Module.ImportReference(ctor);
+
+            method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj, ctorRef));
+            method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, fieldRef));
             return field;
         }
 
@@ -52,7 +57,20 @@ namespace AutoFake
         private void InjectVerifications(IEmitter emitter, bool checkArguments, FieldDefinition expectedCalls,
 	        FieldDefinition setupBody, FieldDefinition callsAccumulator, Instruction retInstruction)
         {
-	        var argMatcher = GetArgumentsMatcher(emitter.Body.Method, out var isAsync);
+            FieldReference callsAccumulatorRef = callsAccumulator;
+            FieldReference setupBodyRef = setupBody;
+            FieldReference expectedCallsRef = expectedCalls;
+            if (_typeInfo.IsMultipleAssembliesMode)
+            {
+	            callsAccumulatorRef = emitter.Body.Method.Module.ImportReference(callsAccumulator);
+	            setupBodyRef = emitter.Body.Method.Module.ImportReference(setupBody);
+	            if (expectedCalls != null)
+	            {
+		            expectedCallsRef = emitter.Body.Method.Module.ImportReference(expectedCalls);
+	            }
+            }
+
+            var argMatcher = GetArgumentsMatcher(emitter.Body.Method, out var isAsync);
 	        VariableDefinition retValue = null;
 	        if (isAsync)
 	        {
@@ -61,13 +79,13 @@ namespace AutoFake
 		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stloc, retValue));
 	        }
 
-	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBody));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBodyRef));
 	        if (retValue != null) emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, retValue));
-	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, callsAccumulator));
+	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, callsAccumulatorRef));
 	        emitter.InsertBefore(retInstruction, Instruction.Create(checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
-	        if (expectedCalls != null)
+	        if (expectedCallsRef != null)
 	        {
-		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCalls));
+		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, expectedCallsRef));
 	        }
 	        else
 	        {
