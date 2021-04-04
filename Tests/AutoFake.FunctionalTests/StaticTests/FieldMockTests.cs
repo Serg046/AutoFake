@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Xunit;
 
-namespace AutoFake.IntegrationTests.StaticTests
+namespace AutoFake.FunctionalTests.StaticTests
 {
     public class FieldMockTests
     {

@@ -1,6 +1,6 @@
 ﻿using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.FunctionalTests
 {
     public class VirtualTests
     {

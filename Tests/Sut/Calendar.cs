@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace AutoFake.IntegrationTests.Sut
+namespace Sut
 {
     public class Calendar
     {

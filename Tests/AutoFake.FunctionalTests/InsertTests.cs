@@ -2,7 +2,7 @@
 using FluentAssertions;
 using Xunit;
 
-namespace AutoFake.IntegrationTests
+namespace AutoFake.FunctionalTests
 {
     public class InsertTests
     {

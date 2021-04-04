@@ -6,7 +6,7 @@ using System.Numerics;
 using FluentAssertions;
 using Xunit;
 
-namespace AutoFake.IntegrationTests.InstanceTests
+namespace AutoFake.FunctionalTests.InstanceTests
 {
 	public class FieldMockTests
 	{

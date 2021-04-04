@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using Xunit;
 
-namespace AutoFake.IntegrationTests.InstanceTests
+namespace AutoFake.FunctionalTests.InstanceTests
 {
     public class MethodMockTests
     {
