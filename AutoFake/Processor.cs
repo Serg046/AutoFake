@@ -42,29 +42,39 @@ namespace AutoFake
         }
 
         public void ReplaceToRetValueField(FieldDefinition retField)
-            => _emitter.Replace(_instruction, Instruction.Create(OpCodes.Ldsfld, retField));
+        {
+	        var field = _typeInfo.IsMultipleAssembliesMode
+		        ? _emitter.Body.Method.Module.ImportReference(retField)
+		        : retField;
+	        _emitter.Replace(_instruction, Instruction.Create(OpCodes.Ldsfld, field));
+        }
 
         public void RemoveInstruction(Instruction instruction) => _emitter.Remove(instruction);
 
         public void InjectClosure(FieldDefinition closure, InsertMock.Location location)
         {
+	        var module = _emitter.Body.Method.Module;
+	        var closureRef = _typeInfo.IsMultipleAssembliesMode
+		        ? module.ImportReference(closure)
+		        : closure;
             if (location == InsertMock.Location.Top)
             {
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, closure));
+                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, closureRef));
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call,
-                    _typeInfo.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
+	                module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
             }
             else
             {
                 _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Call,
-                    _typeInfo.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
-                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Ldsfld, closure));
+	                module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
+                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Ldsfld, closureRef));
             }
         }
 
         public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments, IEnumerable<Type> argumentTypes)
         {
             var method = (MethodReference)_instruction.Operand;
+            var module = method.Module;
             var variables = new Stack<VariableDefinition>();
             foreach (var parameter in method.Parameters.Reverse())
             {
@@ -73,18 +83,18 @@ namespace AutoFake
                 _emitter.Body.Variables.Add(variable);
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
             }
-            var objRef = _typeInfo.ImportReference(typeof(object));
+            var objRef = module.ImportReference(typeof(object));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, variables.Count));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newarr, objRef));
-            var arrVar = new VariableDefinition(_typeInfo.ImportReference(typeof(object[])));
+            var arrVar = new VariableDefinition(module.ImportReference(typeof(object[])));
             _emitter.Body.Variables.Add(arrVar);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
             if (checkArguments) SaveMethodArguments(variables, arrVar, argumentTypes);
 
-            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, accumulator));
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(accumulator)));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
-            var addMethod = _typeInfo.ImportReference(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
+            var addMethod = module.ImportReference(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, addMethod));
 
             return variables.ToList();

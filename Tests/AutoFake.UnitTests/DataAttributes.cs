@@ -107,6 +107,15 @@ namespace AutoFake.UnitTests
 					        .Returns<FieldInfo>(f => module.ImportReference(f));
 				        mock.Setup(m => m.ImportReference(It.IsAny<MethodBase>()))
 					        .Returns<MethodBase>(m => module.ImportReference(m));
+
+				        mock.Setup(m => m.ImportToFieldsAsm(It.IsAny<Type>()))
+					        .Returns<Type>(t => module.ImportReference(t));
+				        mock.Setup(m => m.ImportToFieldsAsm(It.IsAny<FieldInfo>()))
+					        .Returns<FieldInfo>(f => module.ImportReference(f));
+				        mock.Setup(m => m.ImportToFieldsAsm(It.IsAny<MethodBase>()))
+					        .Returns<MethodBase>(m => module.ImportReference(m));
+
+                        mock.Setup(m => m.IsMultipleAssembliesMode).Returns(false);
 			        }
 		        }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Expression;
 using AutoFake.UnitTests.TestUtils;
@@ -23,7 +24,7 @@ namespace AutoFake.UnitTests
             var field = proc.GenerateField(propName, propType);
 
             Assert.Equal(propName, field.Name);
-            Assert.True(field.Attributes.HasFlag(FieldAttributes.Assembly));
+            Assert.True(field.Attributes.HasFlag(FieldAttributes.Public));
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
             Assert.Equal(propType.FullName, field.FieldType.FullName);
             typeInfo.Verify(t => t.AddField(field));
@@ -37,6 +38,7 @@ namespace AutoFake.UnitTests
             string fieldName,
             PrePostProcessor proc)
         {
+	        method.Method.DeclaringType = module.Types.First();
             var accumulator = proc.GenerateCallsAccumulator(fieldName, method);
 
             var type = module.ImportReference(typeof(List<object[]>));

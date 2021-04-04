@@ -35,12 +35,15 @@ namespace AutoFake.Setup.Mocks
             processor.InjectClosure(_closureField, _location);
         }
 
-        public override IList<object> Initialize(Type type)
+        public override IList<object> Initialize(Type? type)
         {
-            var field = type.GetField(_closureField.Name, BindingFlags.NonPublic | BindingFlags.Static)
-                        ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
-            field.SetValue(null, Closure);
-            return base.Initialize(type);
+            if (type != null)
+            {
+	            var field = type.GetField(_closureField.Name, BindingFlags.Public | BindingFlags.Static)
+	                        ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
+	            field.SetValue(null, Closure);
+            }
+			return base.Initialize(type);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace AutoFake.FunctionalTests
 			_testOutputHelper = testOutputHelper;
 		}
 
-		[Fact]
+		[Fact(Skip = "Code base will be refactored")]
 		public void DebugSymbolsTest()
 		{
 			try

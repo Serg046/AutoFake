@@ -207,8 +207,8 @@ namespace AutoFake.UnitTests.Setup
 
         private class TestClass
         {
-            internal static IInvocationExpression InvocationExpression;
-            internal static Func<byte, bool> CallsCounter;
+            public static IInvocationExpression InvocationExpression;
+            public static Func<byte, bool> CallsCounter;
         }
     }
 }

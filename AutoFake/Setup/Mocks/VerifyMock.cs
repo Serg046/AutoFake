@@ -16,10 +16,10 @@ namespace AutoFake.Setup.Mocks
             if (CheckSourceMemberCalls)
             {
                 var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
-                var arguments = processor.SaveMethodCall(CallsAccumulator, CheckArguments,
-	                SourceMember.GetParameters().Select(p => p.ParameterType));
-                processor.PushMethodArguments(arguments);
-            }
+				var arguments = processor.SaveMethodCall(CallsAccumulator, CheckArguments,
+					SourceMember.GetParameters().Select(p => p.ParameterType));
+				processor.PushMethodArguments(arguments);
+			}
         }
     }
 }

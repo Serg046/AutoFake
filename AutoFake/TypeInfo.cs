@@ -16,12 +16,14 @@ namespace AutoFake
 
         private readonly AssemblyDefinition _assemblyDef;
         private readonly TypeDefinition _sourceTypeDef;
-        private readonly TypeDefinition _fieldsTypeDef;
+        private readonly Lazy<TypeDefinition> _fieldsTypeDef;
+        private readonly Lazy<AssemblyDefinition> _fieldsAssemblyDef;
         private readonly IList<FakeDependency> _dependencies;
         private readonly FakeOptions _fakeOptions;
         private readonly Dictionary<string, ushort> _addedFields;
         private readonly Dictionary<string, IList<MethodDefinition>> _virtualMethods;
         private readonly AssemblyHost _assemblyHost;
+        private readonly HashSet<AssemblyDefinition> _affectedAssemblies;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies, FakeOptions fakeOptions)
         {
@@ -31,16 +33,36 @@ namespace AutoFake
             _addedFields = new Dictionary<string, ushort>();
             _virtualMethods = new Dictionary<string, IList<MethodDefinition>>();
             _assemblyHost = new AssemblyHost();
+            _affectedAssemblies = new HashSet<AssemblyDefinition>(new AssemblyDefinitionComparer());
 
             _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName,
 	            new ReaderParameters {ReadSymbols = fakeOptions.Debug});
             _assemblyDef.Name.Name += "Fake";
-
             _sourceTypeDef = GetTypeDefinition(SourceType);
-            _fieldsTypeDef = new TypeDefinition("AutoFake", "Fields", TypeAttributes.Class,
-	            _assemblyDef.MainModule.TypeSystem.Object);
-            _assemblyDef.MainModule.Types.Add(_fieldsTypeDef);
+
+            _fieldsAssemblyDef = new Lazy<AssemblyDefinition>(() =>
+            {
+	            if (IsMultipleAssembliesMode)
+	            {
+		            var name = $"AutoFakeFields{Guid.NewGuid()}";
+                    return AssemblyDefinition.CreateAssembly(
+	                    new AssemblyNameDefinition(name, new Version(1, 0)), name, ModuleKind.Dll);
+                }
+                return _assemblyDef;
+            });
+            _fieldsTypeDef = new Lazy<TypeDefinition>(() =>
+            {
+	            var module = _fieldsAssemblyDef.Value.MainModule;
+	            var typeDef = new TypeDefinition("AutoFake", "Fields", 
+		            TypeAttributes.Class | TypeAttributes.Public, module.TypeSystem.Object);
+	            module.Types.Add(typeDef);
+	            return typeDef;
+            });
+
         }
+
+        public bool IsMultipleAssembliesMode
+	        => _fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies || _fakeOptions.Assemblies.Count > 0;
 
         public Type SourceType { get; }
 
@@ -55,6 +77,15 @@ namespace AutoFake
 
         public MethodReference ImportReference(MethodBase method) 
 	        => _assemblyDef.MainModule.ImportReference(method);
+
+        public TypeReference ImportToFieldsAsm(Type type)
+	        => _fieldsAssemblyDef.Value.MainModule.ImportReference(type);
+
+        public FieldReference ImportToFieldsAsm(FieldInfo field)
+	        => _fieldsAssemblyDef.Value.MainModule.ImportReference(field);
+
+        public MethodReference ImportToFieldsAsm(MethodBase method)
+	        => _fieldsAssemblyDef.Value.MainModule.ImportReference(method);
 
         public FieldDefinition GetField(Predicate<FieldDefinition> fieldPredicate)
 	        => _sourceTypeDef.Fields.SingleOrDefault(f => fieldPredicate(f));
@@ -80,14 +111,14 @@ namespace AutoFake
         {
             if (!_addedFields.ContainsKey(field.Name))
             {
-                _fieldsTypeDef.Fields.Add(field);
+                _fieldsTypeDef.Value.Fields.Add(field);
                 _addedFields.Add(field.Name, 0);
             }
             else
             {
                 _addedFields[field.Name]++;
                 field.Name += _addedFields[field.Name];
-                _fieldsTypeDef.Fields.Add(field);
+                _fieldsTypeDef.Value.Fields.Add(field);
             }
         }
 
@@ -120,7 +151,8 @@ namespace AutoFake
 
         public FakeObjectInfo CreateFakeObject(MockCollection mocks)
         {
-	        using var stream = _fakeOptions.Debug 
+            //TODO: Apply the fix of https://github.com/jbevain/cecil/issues/710 when released
+            using var stream = _fakeOptions.Debug 
 		        ? File.Create(Path.GetFullPath($"{_assemblyDef.Name.Name}-{Guid.NewGuid()}.dll")) 
 		        : (Stream)new MemoryStream();
 	        var fakeProcessor = new FakeProcessor(this, _fakeOptions);
@@ -129,9 +161,13 @@ namespace AutoFake
 		        fakeProcessor.ProcessSourceMethod(mock.Mocks, mock.Method);
 	        }
 
-	        _assemblyDef.Write(stream, new WriterParameters { WriteSymbols = _fakeOptions.Debug });
+	        LoadAffectedAssemblies();
+            _assemblyDef.Write(stream, new WriterParameters { WriteSymbols = _fakeOptions.Debug });
             var assembly = _assemblyHost.Load(stream);
-	        var fieldsType = assembly.GetType(_fieldsTypeDef.FullName, true);
+            var fieldsType = _fieldsTypeDef.IsValueCreated
+	            ? GetFieldsAssembly(assembly).GetType(_fieldsTypeDef.Value.FullName, true)
+	            : null;
+
 	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
 	        if (SourceType.IsGenericType)
 	        {
@@ -144,6 +180,44 @@ namespace AutoFake
 		        .SelectMany(m => m.Initialize(fieldsType))
 		        .ToList();
 	        return new FakeObjectInfo(parameters, sourceType, fieldsType, instance);
+        }
+
+        private Assembly GetFieldsAssembly(Assembly executingAsm)
+        {
+	        if (_fieldsAssemblyDef.Value != _assemblyDef)
+	        {
+                using var stream = new MemoryStream();
+                _fieldsAssemblyDef.Value.Write(stream);
+                return LoadRenamedAssembly(stream, _fieldsAssemblyDef.Value);
+	        }
+
+	        return executingAsm;
+        }
+
+        private void LoadAffectedAssemblies()
+		{
+			foreach (var affectedAssembly in _affectedAssemblies)
+			{
+				var asmRef = _assemblyDef.MainModule.AssemblyReferences.Single(a => a.FullName == affectedAssembly.FullName);
+				asmRef.Name = affectedAssembly.Name.Name = asmRef.Name + Guid.NewGuid();
+
+				//TODO: support debug symbols
+				using var stream = new MemoryStream();
+				affectedAssembly.Write(stream);
+				LoadRenamedAssembly(stream, affectedAssembly);
+			}
+        }
+
+        private Assembly LoadRenamedAssembly(MemoryStream stream, AssemblyDefinition affectedAssembly)
+        {
+#if NETCOREAPP3_0
+			return _assemblyHost.Load(stream);
+#else
+	        var assembly = _assemblyHost.Load(stream);
+	        AppDomain.CurrentDomain.AssemblyResolve += (sender, args)
+		        => args.Name == affectedAssembly.FullName ? assembly : null;
+	        return assembly;
+#endif
         }
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
@@ -166,6 +240,11 @@ namespace AutoFake
             }
 
             return _virtualMethods[methodContract];
+        }
+
+        public bool TryAddAffectedAssembly(AssemblyDefinition assembly)
+        {
+	        return _affectedAssemblies.Add(assembly);
         }
 
 		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)

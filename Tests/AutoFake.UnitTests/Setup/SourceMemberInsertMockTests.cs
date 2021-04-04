@@ -67,7 +67,7 @@ namespace AutoFake.UnitTests.Setup
 
         private class TestClass
         {
-            internal static Action Action;
+            public static Action Action;
         }
     }
 }

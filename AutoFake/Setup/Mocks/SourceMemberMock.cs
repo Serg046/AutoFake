@@ -48,19 +48,22 @@ namespace AutoFake.Setup.Mocks
 
         public abstract void Inject(IEmitter emitter, Instruction instruction);
 
-        public virtual IList<object> Initialize(Type type)
+        public virtual IList<object> Initialize(Type? type)
         {
-            if (SetupBodyField != null)
+            if (type != null)
             {
-                var field = GetField(type, SetupBodyField.Name)
-                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
-                field.SetValue(null, _invocationExpression);
-            }
-            if (ExpectedCalls != null)
-            {
-                var field = GetField(type, CallsChecker.Name)
-                            ?? throw new InitializationException($"'{CallsChecker.Name}' is not found in the generated object");
-                field.SetValue(null, ExpectedCalls);
+	            if (SetupBodyField != null)
+	            {
+	                var field = GetField(type, SetupBodyField.Name)
+	                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
+	                field.SetValue(null, _invocationExpression);
+	            }
+	            if (ExpectedCalls != null)
+	            {
+	                var field = GetField(type, CallsChecker.Name)
+	                            ?? throw new InitializationException($"'{CallsChecker.Name}' is not found in the generated object");
+	                field.SetValue(null, ExpectedCalls);
+	            }
             }
             return new List<object>();
         }
@@ -71,7 +74,7 @@ namespace AutoFake.Setup.Mocks
         }
 
         protected FieldInfo GetField(Type type, string fieldName)
-            => type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
+            => type.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
 
         protected string GetFieldName(string prefix, string suffix)
         {

@@ -8,6 +8,7 @@ namespace AutoFake
 {
     internal interface ITypeInfo
     {
+	    bool IsMultipleAssembliesMode { get; }
         Type SourceType { get; }
         IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate);
         MethodDefinition GetMethod(MethodReference methodReference);
@@ -18,6 +19,10 @@ namespace AutoFake
         TypeReference ImportReference(Type type);
         FieldReference ImportReference(FieldInfo field);
         MethodReference ImportReference(MethodBase method);
+        TypeReference ImportToFieldsAsm(Type type);
+        FieldReference ImportToFieldsAsm(FieldInfo field);
+        MethodReference ImportToFieldsAsm(MethodBase method);
         TypeDefinition GetTypeDefinition(Type type);
+        bool TryAddAffectedAssembly(AssemblyDefinition assembly);
     }
 }

@@ -43,8 +43,7 @@ namespace AutoFake.UnitTests.Setup
             MethodDefinition method, FieldDefinition field1,
             InsertMock mock)
         {
-            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
-                .Returns(field1);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field1);
             field1.Name = nameof(TestClass.Action);
             mock.BeforeInjection(method);
 
@@ -87,7 +86,7 @@ namespace AutoFake.UnitTests.Setup
 
         private class TestClass
         {
-            internal static Action Action;
+            public static Action Action;
         }
     }
 }
