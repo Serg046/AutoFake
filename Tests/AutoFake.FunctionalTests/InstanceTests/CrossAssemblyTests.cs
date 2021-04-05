@@ -276,7 +276,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
             public DateTime GetDateFromAnotherAssembly()
             {
 	            var sut = new SystemUnderTest();
-	            return sut.GetCurrentDate();
+	            return sut.GetCurrentDateFromAnotherSut();
             }
         }
 

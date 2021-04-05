@@ -1,4 +1,5 @@
 ﻿using System;
+using AnotherSut;
 
 namespace Sut
 {
@@ -13,5 +14,7 @@ namespace Sut
         }
 
         public DateTime GetCurrentDate() => DateTime.Now;
+
+        public DateTime GetCurrentDateFromAnotherSut() => new AnotherSystemUnderTest().GetCurrentDate();
     }
 }

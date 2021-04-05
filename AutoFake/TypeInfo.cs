@@ -195,16 +195,39 @@ namespace AutoFake
         }
 
         private void LoadAffectedAssemblies()
-		{
+        {
+            var asmNames = new Dictionary<string, string>();
+	        LoadAffectedAssembly(asmNames, _assemblyDef);
 			foreach (var affectedAssembly in _affectedAssemblies)
 			{
-				var asmRef = _assemblyDef.MainModule.AssemblyReferences.Single(a => a.FullName == affectedAssembly.FullName);
-				asmRef.Name = affectedAssembly.Name.Name = asmRef.Name + Guid.NewGuid();
+				LoadAffectedAssembly(asmNames, affectedAssembly);
+			}
 
-				//TODO: support debug symbols
+			//TODO: support debug symbols
+            foreach (var affectedAssembly in _affectedAssemblies)
+			{
+				affectedAssembly.Name.Name = asmNames[affectedAssembly.Name.Name];
 				using var stream = new MemoryStream();
 				affectedAssembly.Write(stream);
 				LoadRenamedAssembly(stream, affectedAssembly);
+			}
+		}
+
+		private void LoadAffectedAssembly(Dictionary<string, string> asmNames, AssemblyDefinition assembly)
+        {
+	        foreach (var affectedAssembly in _affectedAssemblies)
+			{
+		        var asmRef = assembly.MainModule.AssemblyReferences.SingleOrDefault(a => a.FullName == affectedAssembly.FullName);
+		        if (asmRef != null)
+		        {
+			        if (!asmNames.TryGetValue(asmRef.Name, out var newAsmName))
+			        {
+				        var oldAsmName = asmRef.Name;
+				        newAsmName = oldAsmName + Guid.NewGuid();
+						asmNames.Add(oldAsmName, newAsmName);
+					}
+			        asmRef.Name = newAsmName;
+		        }
 			}
         }
 

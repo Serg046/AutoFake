@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>AutoFake</PackageId>
     <Title>AutoFake</Title>
-    <Version>0.4.3.2</Version>
+    <Version>0.4.3.3</Version>
     <Authors>Sergey Aseev (Serg046)</Authors>
     <PackageProjectUrl>https://github.com/Serg046/AutoFake</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Serg046/AutoFake</RepositoryUrl>
