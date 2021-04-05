@@ -149,10 +149,10 @@ namespace AutoFake
 
             public void Rewrite()
             {
-                Rewrite(_originalMethod);
+                Rewrite(_originalMethod, Enumerable.Empty<MethodDefinition>());
             }
 
-            private void Rewrite(MethodDefinition currentMethod)
+            private void Rewrite(MethodDefinition currentMethod, IEnumerable<MethodDefinition> parents)
             {
                 if (currentMethod?.Body == null || !_methods.Add(currentMethod.ToString())) return;
 
@@ -161,13 +161,13 @@ namespace AutoFake
                 {
                     foreach (var virtualMethod in _gen._typeInfo.GetDerivedVirtualMethods(currentMethod))
                     {
-                        Rewrite(virtualMethod);
+                        Rewrite(virtualMethod, GetParents());
                     }
                 }
 
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
-                    Rewrite(asyncMethod);
+                    Rewrite(asyncMethod, GetParents());
                 }
 
                 foreach (var instruction in currentMethod.Body.Instructions.ToList())
@@ -175,17 +175,28 @@ namespace AutoFake
                 {
                     if (mock.IsSourceInstruction(_originalMethod, instruction))
                     {
-                        mock.Inject(_emitterPool.GetEmitter(currentMethod.Body), instruction);
-                        if (currentMethod.Module.Assembly != _originalMethod.Module.Assembly)
-                        {
-	                        _gen._typeInfo.TryAddAffectedAssembly(currentMethod.Module.Assembly);
-                        }
+	                    mock.Inject(_emitterPool.GetEmitter(currentMethod.Body), instruction);
+	                    TryAddAffectedAssembly(currentMethod);
+	                    foreach (var parent in parents)
+	                    {
+		                    TryAddAffectedAssembly(parent);
+	                    }
                     }
                     else if (instruction.Operand is MethodReference method && ShouldBeAnalyzed(method))
                     {
-                        Rewrite(method.ToMethodDefinition());
+                        Rewrite(method.ToMethodDefinition(), GetParents());
                     }
                 }
+
+                IEnumerable<MethodDefinition> GetParents() => parents.Concat(new[] { currentMethod });
+            }
+
+            private void TryAddAffectedAssembly(MethodDefinition currentMethod)
+            {
+	            if (currentMethod.Module.Assembly != _originalMethod.Module.Assembly)
+	            {
+		            _gen._typeInfo.TryAddAffectedAssembly(currentMethod.Module.Assembly);
+	            }
             }
 
             private bool ShouldBeAnalyzed(MethodReference methodReference)
