@@ -11,5 +11,6 @@ namespace AutoFake
         public bool Debug { get; set; } = Debugger.IsAttached;
         public AnalysisLevels AnalysisLevel { get; set; } = AnalysisLevels.Assembly;
         public IList<Assembly> Assemblies { get; } = new List<Assembly>();
+        public bool RewriteInterfaceCalls { get; set; } = false;
     }
 }

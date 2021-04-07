@@ -120,6 +120,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<TestClass>();
+	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface(helper));
 
 	        sut.Execute().Should().Be(5);
@@ -142,6 +143,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<TestClassWithInterfaceCtor>(helper);
+	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
 
 	        sut.Execute().Should().Be(5);
@@ -164,6 +166,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<TestClassWithFields>();
+	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
 	        sut.Replace(f => f.HelperInterface).Return(helper);
 
@@ -188,6 +191,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<InheritedTestClassWithInterface>();
+	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface(helper));
 
 	        sut.Execute().Should().Be(5);
@@ -206,8 +210,9 @@ namespace AutoFake.FunctionalTests.InstanceTests
         public void InterfaceContractThroughAnotherTypeTest()
         {
 	        var fake = new Fake<InheritedTestClassWithInterface>();
+	        fake.Options.RewriteInterfaceCalls = true;
 
-	        fake.RewriteContract(f => f.CallMethodThroughInterface(new HelperClass()));
+            fake.RewriteContract(f => f.CallMethodThroughInterface(new HelperClass()));
 	        fake.RewriteContract((AnotherInheritedTestClassWithInterface f)
 		        => f.CallMethodThroughInterface(new HelperClass()));
             var sut = fake.Rewrite(f => f.CallMethodUsingAnotherType(new HelperClass()));
