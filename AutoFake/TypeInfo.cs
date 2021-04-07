@@ -216,18 +216,15 @@ namespace AutoFake
 		private void LoadAffectedAssembly(Dictionary<string, string> asmNames, AssemblyDefinition assembly)
         {
 	        foreach (var affectedAssembly in _affectedAssemblies)
-			{
-		        var asmRef = assembly.MainModule.AssemblyReferences.SingleOrDefault(a => a.FullName == affectedAssembly.FullName);
-		        if (asmRef != null)
+	        foreach (var asmRef in assembly.MainModule.AssemblyReferences.Where(a => a.FullName == affectedAssembly.FullName))
+	        {
+		        if (!asmNames.TryGetValue(asmRef.Name, out var newAsmName))
 		        {
-			        if (!asmNames.TryGetValue(asmRef.Name, out var newAsmName))
-			        {
-				        var oldAsmName = asmRef.Name;
-				        newAsmName = oldAsmName + Guid.NewGuid();
-						asmNames.Add(oldAsmName, newAsmName);
-					}
-			        asmRef.Name = newAsmName;
-		        }
+			        var oldAsmName = asmRef.Name;
+			        newAsmName = oldAsmName + Guid.NewGuid();
+					asmNames.Add(oldAsmName, newAsmName);
+				}
+		        asmRef.Name = newAsmName;
 			}
         }
 

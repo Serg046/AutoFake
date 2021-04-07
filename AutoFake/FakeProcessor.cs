@@ -124,9 +124,12 @@ namespace AutoFake
         private void AddReplaceTypeMocks(HashSet<IMock> mocks, Type type)
         {
 	        mocks.Add(new ReplaceTypeCtorMock(_typeInfo, type));
-	        foreach (var mock in ReplaceInterfaceCallMock.Create(_typeInfo, type))
+	        if (_options.RewriteInterfaceCalls)
 	        {
-		        mocks.Add(mock);
+		        foreach (var mock in ReplaceInterfaceCallMock.Create(_typeInfo, type))
+		        {
+			        mocks.Add(mock);
+		        }
 	        }
         }
 
