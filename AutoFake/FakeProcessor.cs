@@ -101,7 +101,7 @@ namespace AutoFake
         {
 	        if (method is MethodInfo methodInfo)
             {
-                if (methodInfo.ReturnType.Module == methodInfo.Module)
+                if (IsInModule(methodInfo.ReturnType, methodInfo.Module))
                 {
                     var typeRef = _typeInfo.ImportReference(methodInfo.ReturnType);
                     methodDef.ReturnType = typeRef;
@@ -112,13 +112,18 @@ namespace AutoFake
             var parameters = method.GetParameters();
             for (var i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i].ParameterType.Module == method.Module)
+                if (IsInModule(parameters[i].ParameterType, method.Module))
                 {
                     var typeRef = _typeInfo.ImportReference(parameters[i].ParameterType);
                     methodDef.Parameters[i].ParameterType = typeRef;
                     AddReplaceTypeMocks(mocks, parameters[i].ParameterType);
                 }
             }
+        }
+
+        private bool IsInModule(Type type, Module module)
+        {
+	        return type.Module == module || type.GetGenericArguments().Any(t => t.Module == module);
         }
 
         private void AddReplaceTypeMocks(HashSet<IMock> mocks, Type type)
