@@ -58,87 +58,74 @@ namespace AutoFake
         private HashSet<IMock> ProcessOriginalContracts(IEnumerable<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
         {
 	        var replaceTypeMocks = new HashSet<IMock>();
-	        ProcessOriginalMethodContract(replaceTypeMocks, executeFunc, executeFuncDef);
-            if (replaceTypeMocks.Any())
-			{
-				foreach (var @interface in _typeInfo.SourceType.GetInterfaces())
-				foreach (var method in @interface.GetMethods().Where(m => m.Name == executeFunc.Name))
-				{
-					var methodRef = _typeInfo.ImportReference(method);
-					var typeDef = _typeInfo.GetTypeDefinition(@interface);
-					var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
-                        ProcessOriginalMethodContract(replaceTypeMocks, method, methodDef);
-				}
+	        ProcessAllOriginalMethodContracts(replaceTypeMocks, executeFuncDef);
 
-				foreach (var method in _typeInfo.SourceType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-					.Where(m => m.Name.EndsWith($".{executeFunc.Name}")))
-				{
-					var methodRef = _typeInfo.ImportReference(method);
-					var methodDef = _typeInfo.GetMethod(methodRef);
-					ProcessOriginalMethodContract(replaceTypeMocks, method, methodDef);
-                }
+			foreach (var ctor in _typeInfo.SourceType.GetConstructors())
+			{
+				var ctorRef = _typeInfo.ImportReference(ctor);
+				var ctorDef = _typeInfo.GetMethod(ctorRef);
+				ProcessOriginalMethodContract(replaceTypeMocks, ctorDef);
 			}
 
-	        if (executeFunc.ReflectedType != null)
+			foreach (var replaceMock in mocks.OfType<ReplaceMock>().Where(m => m.ReturnType != null))
+			{
+				if (replaceMock.ReturnType.Module == executeFunc.Module)
+				{
+					AddReplaceInterfaceCallMocks(replaceTypeMocks, _typeInfo.GetTypeDefinition(replaceMock.ReturnType));
+				}
+			}
+
+			return replaceTypeMocks;
+        }
+
+        private void ProcessAllOriginalMethodContracts(HashSet<IMock> mocks, MethodDefinition methodDef)
+        {
+	        foreach (var typeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
 	        {
-		        foreach (var ctor in executeFunc.ReflectedType.GetConstructors())
+				var method = _typeInfo.GetMethod(typeDef, methodDef);
+				if (method != null) ProcessOriginalMethodContract(mocks, method);
+			}
+        }
+
+        private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodDefinition methodDef)
+        {
+	        if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
+	        {
+		        AddReplaceTypeMocks(mocks, methodDef.ReturnType.ToTypeDefinition());
+		        methodDef.ReturnType = _typeInfo.CreateImportedTypeReference(methodDef.ReturnType);
+	        }
+
+	        foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _typeInfo.IsInFakeModule(parameterDef.ParameterType)))
+	        {
+		        AddReplaceInterfaceCallMocks(mocks, parameterDef.ParameterType.ToTypeDefinition());
+		        parameterDef.ParameterType = _typeInfo.CreateImportedTypeReference(parameterDef.ParameterType);
+	        }
+        }
+
+        private void AddReplaceTypeMocks(HashSet<IMock> mocks, TypeDefinition typeDef)
+        {
+	        foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
+	        {
+				var importedTypeRef = _typeInfo.CreateImportedTypeReference(mockTypeDef);
+		        if (!mockTypeDef.IsInterface)
 		        {
-			        var ctorRef = _typeInfo.ImportReference(ctor);
-			        var ctorDef = _typeInfo.GetMethod(ctorRef);
-			        ProcessOriginalMethodContract(replaceTypeMocks, ctor, ctorDef);
+			        mocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
 		        }
-	        }
+		        mocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+			}
+		}
 
-	        foreach (var replaceMock in mocks.OfType<ReplaceMock>().Where(m => m.ReturnType != null))
-	        {
-		        AddReplaceTypeMocks(replaceTypeMocks, replaceMock.ReturnType);
-	        }
-
-	        return replaceTypeMocks;
-        }
-
-        private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodBase method, MethodDefinition methodDef)
-        {
-	        if (method is MethodInfo methodInfo)
-            {
-                if (IsInModule(methodInfo.ReturnType, methodInfo.Module))
-                {
-                    var typeRef = _typeInfo.ImportReference(methodInfo.ReturnType);
-                    methodDef.ReturnType = typeRef;
-                    AddReplaceTypeMocks(mocks, methodInfo.ReturnType);
-                }
-            }
-
-            var parameters = method.GetParameters();
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                if (IsInModule(parameters[i].ParameterType, method.Module))
-                {
-                    var typeRef = _typeInfo.ImportReference(parameters[i].ParameterType);
-                    methodDef.Parameters[i].ParameterType = typeRef;
-                    AddReplaceTypeMocks(mocks, parameters[i].ParameterType);
-                }
-            }
-        }
-
-        private bool IsInModule(Type type, Module module)
-        {
-	        return type.Module == module || type.GetGenericArguments().Any(t => t.Module == module);
-        }
-
-        private void AddReplaceTypeMocks(HashSet<IMock> mocks, Type type)
-        {
-	        mocks.Add(new ReplaceTypeCtorMock(_typeInfo, type));
-	        if (_options.RewriteInterfaceCalls)
-	        {
-		        foreach (var mock in ReplaceInterfaceCallMock.Create(_typeInfo, type))
-		        {
-			        mocks.Add(mock);
-		        }
-	        }
-        }
-
-        private class TestMethod
+		private void AddReplaceInterfaceCallMocks(HashSet<IMock> mocks, TypeDefinition typeDef)
+		{
+			foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
+			{
+				var importedTypeRef = _typeInfo.CreateImportedTypeReference(mockTypeDef);
+				if (mockTypeDef.IsInterface) mocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
+				mocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+			}
+		}
+		
+		private class TestMethod
         {
             private readonly FakeProcessor _gen;
             private readonly MethodDefinition _originalMethod;

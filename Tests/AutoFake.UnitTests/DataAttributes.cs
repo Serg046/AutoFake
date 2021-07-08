@@ -43,7 +43,11 @@ namespace AutoFake.UnitTests
                 fixture.Behaviors.Add(new OmitOnRecursionBehavior());
                 fixture.Register(() => ModuleDefinition.CreateModule("TestModule", ModuleKind.Dll));
                 fixture.Register(() => new TypeDefinition("TestNs", "TestType", TypeAttributes.Class));
-                fixture.Register(() => new MethodDefinition("Method", MethodAttributes.Public, fixture.Create<TypeDefinition>()));
+                fixture.Register(() =>
+                {
+	                var module = fixture.Create<ModuleDefinition>();
+                    return new MethodDefinition("Method", MethodAttributes.Public, new TypeReference("System", "Void", module, module));
+                });
                 fixture.Register(() => Instruction.Create(OpCodes.Nop));
                 fixture.Register(() => new Mock<TypeReference>(fixture.Create<string>(), fixture.Create<TypeReference>()));
                 fixture.Register<ParameterInfo>(() => new Parameter {PrmType = fixture.Create<Type>()});

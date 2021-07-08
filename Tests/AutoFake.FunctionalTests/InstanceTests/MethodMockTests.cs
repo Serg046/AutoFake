@@ -198,13 +198,16 @@ namespace AutoFake.FunctionalTests.InstanceTests
         [Fact]
         public void GenericTest()
         {
-	        var fake = new Fake<GenericTestClass<int>>();
+	        var fake = new Fake<GenericTestClass<TestClass>>();
+	        var testClass = new TestClass();
 
-	        var sut = fake.Rewrite(f => f.GetValue(0, "0"));
-	        sut.Replace(s => s.GetValueImp(Arg.IsAny<int>(), "0")).Return(new KeyValuePair<int, string>(1, "1"));
+	        var sut = fake.Rewrite(f => f.GetValue(Arg.IsAny<TestClass>(), "0"));
+	        sut.Replace(s => s.GetValueImp(Arg.IsAny<TestClass>(), "0"))
+		        .Return(new KeyValuePair<TestClass, string>(testClass, "1"));
 
 	        var actual = sut.Execute();
-	        Assert.Equal(1, actual.Key);
+	        Assert.Equal(testClass, actual.Key);
+	        Assert.NotEqual(new TestClass(), actual.Key);
 	        Assert.Equal("1", actual.Value);
         }
 
@@ -214,7 +217,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        public KeyValuePair<T, T2> GetValue<T2>(T x, T2 y) => GetValueImp(x, y);
         }
         
-        private class TestClass
+        public class TestClass
         {
             public int DynamicValue() => 5;
             public int DynamicValue(int value) => value;
