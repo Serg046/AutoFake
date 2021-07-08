@@ -24,6 +24,7 @@ namespace AutoFake
         private readonly Dictionary<string, IList<MethodDefinition>> _virtualMethods;
         private readonly AssemblyHost _assemblyHost;
         private readonly HashSet<AssemblyDefinition> _affectedAssemblies;
+        private readonly AssemblyNameReference _assemblyNameReference;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies, FakeOptions fakeOptions)
         {
@@ -38,7 +39,10 @@ namespace AutoFake
             _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName,
 	            new ReaderParameters {ReadSymbols = fakeOptions.Debug});
             _assemblyDef.Name.Name += "Fake";
+            _assemblyDef.MainModule.ImportReference(SourceType);
+            _assemblyNameReference = _assemblyDef.MainModule.AssemblyReferences.Single(a => a.FullName == SourceType.Assembly.FullName);
             _sourceTypeDef = GetTypeDefinition(SourceType);
+            TypeMap = new TypeMap(_assemblyDef.MainModule);
 
             _fieldsAssemblyDef = new Lazy<AssemblyDefinition>(() =>
             {
@@ -58,13 +62,36 @@ namespace AutoFake
 	            module.Types.Add(typeDef);
 	            return typeDef;
             });
-
         }
-
+        
         public bool IsMultipleAssembliesMode
 	        => _fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies || _fakeOptions.Assemblies.Count > 0;
 
         public Type SourceType { get; }
+
+        public ITypeMap TypeMap { get; }
+
+        public TypeReference CreateImportedTypeReference(TypeReference type)
+        {
+	        if (type.IsGenericParameter) return type;
+
+            var result = NewTypeReference(type);
+            var newType = result;
+            while (type.DeclaringType != null)
+            {
+	            type = type.DeclaringType;
+	            newType.DeclaringType = NewTypeReference(type);
+	            newType = newType.DeclaringType;
+            }
+
+            TypeReference NewTypeReference(TypeReference typeRef)
+	            => new (typeRef.Namespace, typeRef.Name, _assemblyDef.MainModule, _assemblyNameReference, typeRef.IsValueType);
+            
+            return result;
+        }
+
+        public bool IsInFakeModule(TypeReference type)
+	        => !type.IsGenericParameter && type.Scope == _assemblyDef.MainModule || type.GenericParameters.Any(t => t.Scope == _assemblyDef.MainModule);
 
         public TypeDefinition GetTypeDefinition(Type type) =>
 	        _assemblyDef.MainModule.GetType(type.FullName, runtimeName: true).ToTypeDefinition();

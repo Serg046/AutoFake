@@ -120,7 +120,6 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<TestClass>();
-	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface(helper));
 
 	        sut.Execute().Should().Be(5);
@@ -143,7 +142,6 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<TestClassWithInterfaceCtor>(helper);
-	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
 
 	        sut.Execute().Should().Be(5);
@@ -166,7 +164,6 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<TestClassWithFields>();
-	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
 	        sut.Replace(f => f.HelperInterface).Return(helper);
 
@@ -191,10 +188,31 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var helper = Activator.CreateInstance(type) as IHelper;
 
 	        var fake = new Fake<InheritedTestClassWithInterface>();
-	        fake.Options.RewriteInterfaceCalls = true;
 	        var sut = fake.Rewrite(f => f.CallMethodThroughInterface(helper));
 
 	        sut.Execute().Should().Be(5);
+        }
+
+        [Fact]
+        public void InterfaceContractThroughImplClassTest()
+        {
+	        var helper = new HelperClass();
+
+	        var fake = new Fake<InheritedTestClassWithInterface>();
+	        var sut = fake.Rewrite(f => f.CallMethodThroughImplClass(helper));
+
+	        sut.Execute().Should().Be(7);
+        }
+
+        [Fact]
+        public void InterfaceContractThroughImplClassInterfaceTest()
+        {
+	        var helper = new HelperClass();
+
+	        var fake = new Fake<InheritedTestClassWithInterface>();
+	        var sut = fake.Rewrite(f => f.CallMethodThroughImplClassInterface(helper));
+
+	        sut.Execute().Should().Be(7);
         }
 
         [Fact]
@@ -210,14 +228,67 @@ namespace AutoFake.FunctionalTests.InstanceTests
         public void InterfaceContractThroughAnotherTypeTest()
         {
 	        var fake = new Fake<InheritedTestClassWithInterface>();
-	        fake.Options.RewriteInterfaceCalls = true;
 
-            fake.RewriteContract(f => f.CallMethodThroughInterface(new HelperClass()));
-	        fake.RewriteContract((AnotherInheritedTestClassWithInterface f)
-		        => f.CallMethodThroughInterface(new HelperClass()));
+			fake.RewriteContract(f => f.CallMethodThroughInterface(new HelperClass()));
+			fake.RewriteContract((AnotherInheritedTestClassWithInterface f) => f.CallMethodThroughInterface(new HelperClass()));
             var sut = fake.Rewrite(f => f.CallMethodUsingAnotherType(new HelperClass()));
 
 	        sut.Execute().Should().Be(10);
+        }
+
+        [Fact]
+        public void ClassCastTest()
+        {
+	        var fake = new Fake<TestClass>();
+	        var helper = new HelperClass();
+
+	        var sut = fake.Rewrite(f => f.CastToHelperClass(helper));
+
+	        sut.Execute().Should().Be(helper);
+        }
+
+        [Fact]
+        public void StructCastTest()
+        {
+	        var fake = new Fake<TestClass>();
+	        var helper = new HelperStruct();
+
+	        var sut = fake.Rewrite(f => f.CastToHelperStruct(helper));
+
+	        sut.Execute().Should().Be(helper);
+        }
+
+        [Theory]
+        [InlineData(typeof(HelperClass))]
+        [InlineData(typeof(HelperStruct))]
+        public void InterfaceCastTest(Type type)
+        {
+	        var fake = new Fake<TestClass>();
+	        var helper = Activator.CreateInstance(type) as IHelper;
+
+	        var sut = fake.Rewrite(f => f.CastToHelperInterface(helper));
+
+	        sut.Execute().Should().Be(helper);
+        }
+
+        [Fact]
+        public void ClassCreationTest()
+        {
+	        var fake = new Fake<TestClass>();
+
+	        var sut = fake.Rewrite(f => f.CreateHelperClass());
+
+	        sut.Execute().Should().BeOfType<HelperClass>();
+        }
+
+        [Fact(Skip = "Some specifics regarding type casts")]
+        public void StructCreationTest()
+        {
+	        var fake = new Fake<TestClass>();
+
+	        var sut = fake.Rewrite(f => f.CreateHelperStruct());
+
+	        sut.Execute().Should().BeOfType<HelperStruct>();
         }
 
         public interface IHelper : IHelper2 { }
@@ -227,19 +298,26 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        int GetFive();
         }
 
+        public interface IHelperSeven
+        {
+	        int GetSeven();
+        }
+
         public class HelperClassBase : IHelper
         {
             public int GetFive() => 5;
         }
 
-        public class HelperClass : HelperClassBase
+        public class HelperClass : HelperClassBase, IHelperSeven
         {
             public HelperClass() { }
             public HelperClass(int arg1, string arg2) { }
 
             public int Prop { get; set; }
+
+            public int GetSeven() => 7;
         }
-        
+
         public struct HelperStruct : IHelper
         {
             public int Prop { get; set; }
@@ -273,6 +351,16 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	            return helper.GetFive();
             }
 
+            public int CallMethodThroughImplClass(HelperClassBase helper)
+            {
+	            return ((HelperClass)helper).GetSeven();
+            }
+
+            public int CallMethodThroughImplClassInterface(HelperClassBase helper)
+            {
+	            return ((IHelperSeven)helper).GetSeven();
+            }
+
             public virtual int CallMethodThroughBaseClass(HelperClassBase helper)
             {
 	            return helper.GetFive();
@@ -282,6 +370,31 @@ namespace AutoFake.FunctionalTests.InstanceTests
             {
 	            var sut = new SystemUnderTest();
 	            return sut.GetCurrentDateFromAnotherSut();
+            }
+
+            public HelperClass CastToHelperClass(object helper)
+            {
+	            return (HelperClass)helper;
+            }
+
+            public HelperStruct CastToHelperStruct(object helper)
+            {
+	            return (HelperStruct)helper;
+            }
+
+            public IHelper CastToHelperInterface(object helper)
+            {
+	            return (IHelper)helper;
+            }
+            
+            public IHelper CreateHelperClass()
+            {
+	            return new HelperClass();
+            }
+
+            public IHelper CreateHelperStruct()
+            {
+	            return new HelperStruct();
             }
         }
 
@@ -364,7 +477,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
             private int CallMethodUsingAnotherType(IInheritedTestClassWithInterface testClass, IHelper helper)
             {
 	            return testClass.CallMethodThroughInterface(helper) +
-			        new AnotherInheritedTestClassWithInterface().CallMethodThroughInterface(helper);
+	                   new AnotherInheritedTestClassWithInterface().CallMethodThroughInterface(helper);
             }
         }
 

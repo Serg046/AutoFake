@@ -40,6 +40,33 @@ namespace AutoFake
         public static IEqualityComparer ToNonGeneric<T>(this IEqualityComparer<T> comparer)
             => new EqualityComparer((x, y) => comparer.Equals((T)x, (T)y), x => comparer.GetHashCode((T)x));
 
+        public static MethodReference ReplaceDeclaringType(this MethodReference methodDef, TypeReference declaringTypeRef)
+        {
+	        //if (!declaringTypeRef.IsGenericInstance || methodDef == null)
+	        //{
+	        //	return methodDef;
+	        //}
+
+	        var methodRef = new MethodReference(methodDef.Name, methodDef.ReturnType, declaringTypeRef)
+	        {
+		        CallingConvention = methodDef.CallingConvention,
+		        HasThis = methodDef.HasThis,
+		        ExplicitThis = methodDef.ExplicitThis
+	        };
+
+	        foreach (var paramDef in methodDef.Parameters)
+	        {
+		        methodRef.Parameters.Add(new ParameterDefinition(paramDef.Name, paramDef.Attributes, paramDef.ParameterType));
+	        }
+
+	        foreach (var genParamDef in methodDef.GenericParameters)
+	        {
+		        methodRef.GenericParameters.Add(new GenericParameter(genParamDef.Name, methodRef));
+	        }
+
+	        return methodRef;
+        }
+
         private class EqualityComparer : IEqualityComparer
         {
             private readonly Func<object, object, bool> _comparer;

@@ -8,8 +8,11 @@ namespace AutoFake
 {
     internal interface ITypeInfo
     {
-	    bool IsMultipleAssembliesMode { get; }
+        bool IsMultipleAssembliesMode { get; }
         Type SourceType { get; }
+        ITypeMap TypeMap { get; }
+        TypeReference CreateImportedTypeReference(TypeReference type);
+        bool IsInFakeModule(TypeReference type);
         IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate);
         MethodDefinition GetMethod(MethodReference methodReference);
         MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference);
