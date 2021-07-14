@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
@@ -16,55 +15,14 @@ namespace AutoFake.UnitTests.Setup
 {
     public class ReplaceMockTests
     {
-        [Theory]
-        [InlineAutoMoqData(false, false, false)]
-        [InlineAutoMoqData(false, true, true)]
-        [InlineAutoMoqData(true, false, true)]
-        [InlineAutoMoqData(true, true, true)]
-        internal void Inject_NeedCheckArgumentsOrExpectedCallsCountFunc_SaveMethodCall(
-            bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
+        [Theory, AutoMoqData]
+        internal void Inject_SourceMethod_SaveMethodCall(
             [Frozen]Mock<IProcessor> proc,
-            IProcessorFactory processorFactory,
-            Mock<IInvocationExpression> expression)
+            ReplaceMock mock)
         {
-            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
-            {
-                new FakeArgument(needCheckArguments
-                    ? new EqualityArgumentChecker(1)
-                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
-            });
-            var mock = new ReplaceMock(processorFactory, expression.Object);
-            mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null;
-
             mock.Inject(Mock.Of<IEmitter>(), Nop());
 
-            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments, It.IsAny<IEnumerable<Type>>()),
-                mustBeInjected ? Times.Once() : Times.Never());
-        }
-
-        [Theory]
-        [InlineAutoMoqData(false, false, true)]
-        [InlineAutoMoqData(false, true, false)]
-        [InlineAutoMoqData(true, false, false)]
-        [InlineAutoMoqData(true, true, false)]
-        internal void Inject_ArgsAndNotNeedCheckArguments_ArgumentsRemoved(
-            bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
-            [Frozen]Mock<IProcessor> proc,
-            IProcessorFactory processorFactory,
-            Mock<IInvocationExpression> expression)
-        {
-            expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
-            {
-                new FakeArgument(needCheckArguments
-                    ? new EqualityArgumentChecker(1)
-                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
-            });
-            var mock = new ReplaceMock(processorFactory, expression.Object);
-            mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null; 
-
-            mock.Inject(Mock.Of<IEmitter>(), Nop());
-
-            proc.Verify(m => m.RemoveMethodArgumentsIfAny(), mustBeInjected ? Times.Once() : Times.Never());
+            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()));
         }
 
         [Theory]
@@ -133,21 +91,26 @@ namespace AutoFake.UnitTests.Setup
 
             processor.Verify(p => p.SaveMethodCall(
 	            It.IsAny<FieldDefinition>(),
-	            It.IsAny<bool>(),
-	            It.Is<IEnumerable<Type>>(prms => prms
+	            It.IsAny<FieldDefinition>(),
+	            It.Is<IList<Type>>(prms => prms
 		            .SequenceEqual(parameters.Select(prm => prm.ParameterType)))));
         }
 
         [Theory, AutoMoqData]
         internal void Initialize_NoRetValueField_NoEffect(
             [Frozen]Mock<IPrePostProcessor> preProc,
+            MethodDefinition method,
+            FieldDefinition ctx,
             ReplaceMock mock)
         {
+	        ctx.Name = nameof(TestClass.ExecutionContext);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(ExecutionContext))).Returns(ctx);
             mock.ReturnObject = null;
             mock.ExpectedCalls = null;
 
             Assert.Null(TestClass.RetValueField);
+            mock.BeforeInjection(method);
             mock.Initialize(typeof(TestClass));
 
             Assert.Null(TestClass.RetValueField);
@@ -157,15 +120,19 @@ namespace AutoFake.UnitTests.Setup
         internal void Initialize_IncorrectRetValueField_Fails(
             [Frozen]Mock<IPrePostProcessor> preProc,
             [Frozen]FieldDefinition field,
+            FieldDefinition ctx,
             MethodDefinition method,
             ReplaceMock mock)
         {
+	        ctx.Name = nameof(TestClass.ExecutionContext);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), mock.SourceMember.ReturnType)).Returns(field);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(ExecutionContext))).Returns(ctx);
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
             mock.ReturnObject = TestClass.VALUE;
             mock.ExpectedCalls = null;
+
             mock.BeforeInjection(method);
 
             Assert.Throws<InitializationException>(() => mock.Initialize(type));
@@ -205,12 +172,11 @@ namespace AutoFake.UnitTests.Setup
             if (noReturnObject)
             {
                 mock.ReturnObject = null;
-                mock.ExpectedCalls = null;
             }
 
             mock.BeforeInjection(method);
 
-            proc.Verify(m => m.GenerateField(It.IsAny<string>(),It.IsAny<Type>()),
+            proc.Verify(m => m.GenerateField(It.Is<string>(name => name.EndsWith("RetValue")), It.IsAny<Type>()),
                 shouldBeInjected ? Times.AtLeastOnce() : Times.Never());
         }
 
@@ -239,6 +205,7 @@ namespace AutoFake.UnitTests.Setup
         private class TestClass
         {
             public static object RetValueField;
+            public static ExecutionContext ExecutionContext;
 
             public void TestMethod(int argument)
             {

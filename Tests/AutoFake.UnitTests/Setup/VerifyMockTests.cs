@@ -10,52 +10,33 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.UnitTests.Setup
 {
     public class VerifyMockTests
     {
-        [Theory]
-        [InlineAutoMoqData(false, false, false)]
-        [InlineAutoMoqData(false, true, true)]
-        [InlineAutoMoqData(true, false, true)]
-        [InlineAutoMoqData(true, true, true)]
+        [Theory, AutoMoqData]
         internal void InjectNeedCheckArgumentsOrExpectedCallsCount_ArgumentsSaved(
-            bool needCheckArguments, bool expectedCallsCountFunc, bool mustBeInjected,
-            [Frozen]Mock<IPrePostProcessor> preProc,
             [Frozen]Mock<IProcessor> proc,
             IProcessorFactory processorFactory,
             Mock<IInvocationExpression> expression,
             MethodDefinition method,
-            FieldDefinition accumulator,
+            List<VariableDefinition> args,
             IEmitter emitter)
         {
             expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
             {
-                new FakeArgument(needCheckArguments 
-                    ? new EqualityArgumentChecker(1) 
-                    : (IFakeArgumentChecker)new SuccessfulArgumentChecker())
+                new FakeArgument(new EqualityArgumentChecker(1))
             });
             var mock = new VerifyMock(processorFactory, expression.Object);
-            mock.ExpectedCalls = expectedCallsCountFunc ? new Func<byte, bool>(i => true) : null;
-            var runtimeArgs = new List<VariableDefinition>();
-            preProc.Setup(p => p.GenerateCallsAccumulator(It.IsAny<string>(), It.IsAny<MethodBody>())).Returns(accumulator);
-            proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments, It.IsAny<IEnumerable<Type>>())).Returns(runtimeArgs);
+            proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()))
+	            .Returns(args);
             mock.BeforeInjection(method);
 
             mock.Inject(emitter, Instruction.Create(OpCodes.Call, method));
 
-            if (mustBeInjected)
-            {
-                proc.Verify(m => m.SaveMethodCall(accumulator, needCheckArguments, It.IsAny<IEnumerable<Type>>()), Times.Once());
-                proc.Verify(m => m.PushMethodArguments(runtimeArgs), Times.Once());
-            }
-            else
-            {
-                proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), needCheckArguments, It.IsAny<IEnumerable<Type>>()), Times.Never);
-                proc.Verify(m => m.PushMethodArguments(It.IsAny<IEnumerable<VariableDefinition>>()), Times.Never);
-            }
+            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()), Times.Once());
+            proc.Verify(m => m.PushMethodArguments(args), Times.Once());
         }
 
         [Theory, AutoMoqData]
@@ -75,8 +56,8 @@ namespace AutoFake.UnitTests.Setup
 
 	        processor.Verify(p => p.SaveMethodCall(
 		        It.IsAny<FieldDefinition>(),
-		        It.IsAny<bool>(),
-		        It.Is<IEnumerable<Type>>(prms => prms
+		        It.IsAny<FieldDefinition>(),
+		        It.Is<IList<Type>>(prms => prms
 			        .SequenceEqual(parameters.Select(prm => prm.ParameterType)))));
         }
     }

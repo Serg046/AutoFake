@@ -16,7 +16,8 @@ namespace AutoFake.UnitTests
         [Theory, AutoMoqData]
         internal void SaveMethodCall_MethodWithTwoArgs_ReturnsTwoVariables(
             [Frozen] ModuleDefinition module,
-            MethodDefinition method, FieldDefinition accumulator,
+            MethodDefinition method,
+            FieldDefinition setupBody, FieldDefinition executionContext,
             IFixture fixture)
         {
 	        method.DeclaringType = module.Types.First();
@@ -24,7 +25,7 @@ namespace AutoFake.UnitTests
             method.Parameters.Add(new ParameterDefinition(new FunctionPointerType()));
             fixture.Inject(Instruction.Create(OpCodes.Call, method));
 
-            var variables = fixture.Create<Processor>().SaveMethodCall(accumulator, false,
+            var variables = fixture.Create<Processor>().SaveMethodCall(setupBody, executionContext,
 	            new[] { typeof(object), typeof(object) });
 
             Assert.Equal(2, variables.Count);
@@ -36,7 +37,8 @@ namespace AutoFake.UnitTests
             [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
             [Frozen] ModuleDefinition module,
             TypeDefinition refType,
-            MethodDefinition method, FieldDefinition accumulator,
+            MethodDefinition method,
+            FieldDefinition setupBody, FieldDefinition executionContext,
             IFixture fixture)
         {
 	        method.DeclaringType = module.Types.First();
@@ -46,7 +48,7 @@ namespace AutoFake.UnitTests
             emitter.Body.Instructions.Add(instruction);
             fixture.Inject(instruction);
 
-            var variables = fixture.Create<Processor>().SaveMethodCall(accumulator, true,
+            var variables = fixture.Create<Processor>().SaveMethodCall(setupBody, executionContext,
 	            new[] { typeof(int), typeof(object) });
 
             var arrVar = emitter.Body.Variables.Single(v => v.VariableType.FullName == "System.Object[]");
@@ -63,44 +65,10 @@ namespace AutoFake.UnitTests
                 Cil.AnyCmd(),
                 Cil.AnyCmd(),
                 Cil.AnyCmd(),
+                Cil.AnyCmd(),
+                Cil.AnyCmd(),
                 Cil.Cmd(instruction.OpCode, instruction.Operand)
             ));
-        }
-
-        [Theory, AutoMoqData]
-        internal void RemoveMethodArgumentsIfAny_ValidInput_InjectedArgumentsRemoving(
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen]MethodDefinition method,
-            ParameterDefinition param1, ParameterDefinition param2,
-            IFixture fixture)
-        {
-            method.Parameters.Add(param1);
-            method.Parameters.Add(param2);
-            var cmd = Instruction.Create(OpCodes.Call, method);
-            emitter.Body.Instructions.Add(cmd);
-            fixture.Inject(cmd);
-
-            fixture.Create<Processor>().RemoveMethodArgumentsIfAny();
-
-            Assert.True(emitter.Body.Instructions.Ordered(
-                Cil.Cmd(OpCodes.Pop),
-                Cil.Cmd(OpCodes.Pop),
-                Cil.Cmd(cmd.OpCode, cmd.Operand)
-                ));
-        }
-
-        [Theory, AutoMoqData]
-        internal void RemoveMethodArgumentsIfAny_Field_NothingInjected(
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            FieldDefinition field,
-            IFixture fixture)
-        {
-            var cmd = Instruction.Create(OpCodes.Ldfld, field);
-            emitter.Body.Instructions.Add(cmd);
-
-            fixture.Create<Processor>().RemoveMethodArgumentsIfAny();
-
-            Assert.Equal(cmd, emitter.Body.Instructions.Single());
         }
 
         [Theory, AutoMoqData]

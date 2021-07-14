@@ -19,12 +19,12 @@ namespace AutoFake.Setup.Configurations
             return this;
         }
 
-        public ReplaceMockConfiguration<TReturn> ExpectedCalls(byte expectedCallsCount)
+        public ReplaceMockConfiguration<TReturn> ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public ReplaceMockConfiguration<TReturn> ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
+        public ReplaceMockConfiguration<TReturn> ExpectedCalls(Func<uint, bool> expectedCallsCountFunc)
         {
             _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;

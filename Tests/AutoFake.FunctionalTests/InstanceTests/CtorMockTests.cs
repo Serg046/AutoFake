@@ -74,10 +74,10 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var fake = new Fake<GenericTestClass<int>>();
 
 	        var sut = fake.Rewrite(f => f.GetValue(0, "0"));
-	        sut.Replace(s => new KeyValuePair<int, string>(Arg.IsAny<int>(), Arg.IsAny<string>()))
-		        .Return(new KeyValuePair<int, string>(1, "1"));
+			sut.Replace(s => new KeyValuePair<int, string>(Arg.IsAny<int>(), Arg.IsAny<string>()))
+				.Return(new KeyValuePair<int, string>(1, "1"));
 
-	        var actual = sut.Execute();
+			var actual = sut.Execute();
 	        Assert.Equal(1, actual.Key);
 	        Assert.Equal("1", actual.Value);
         }

@@ -43,7 +43,7 @@ namespace AutoFake.FunctionalTests
         public void ExpectedCallsCountTest(string op, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
-            Func<byte, bool> checker;
+            Func<uint, bool> checker;
             switch (op)
             {
                 case "==": checker = x => x == arg; break;
