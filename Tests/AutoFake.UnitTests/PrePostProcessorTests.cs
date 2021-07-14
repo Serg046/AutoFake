@@ -51,70 +51,28 @@ namespace AutoFake.UnitTests
         }
 
         [Theory]
-        [InlineAutoMoqData(false, false)]
-        [InlineAutoMoqData(true, false)]
-        [InlineAutoMoqData(false, true)]
-        [InlineAutoMoqData(true, true)]
-        internal void InjectVerification_CheckCalls_Injected(
-            bool checkArguments, bool callsCounter,
-            [Frozen, InjectModule] Mock<ITypeInfo> _,
-            [Frozen] ModuleDefinition module,
-            [Frozen]Emitter emitter,
-            FieldDefinition setupBody, FieldDefinition accumulator, FieldDefinition callsChecker,
-            PrePostProcessor proc)
-        {
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-
-            proc.InjectVerification(emitter, checkArguments, callsCounter ? callsChecker : null,
-                setupBody, accumulator);
-
-            var checkArgsCode = checkArguments ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
-            var instructions = new List<Cil>
-            {
-                Cil.Cmd(OpCodes.Ldsfld, setupBody),
-                Cil.Cmd(OpCodes.Ldsfld, accumulator),
-                Cil.Cmd(checkArgsCode)
-            };
-            if (callsCounter)
-            {
-                instructions.Add(Cil.Cmd(OpCodes.Ldsfld, callsChecker));
-            }
-            else
-            {
-                instructions.Add(Cil.Cmd(OpCodes.Ldnull));
-            }
-            instructions.Add(Cil.Cmd(OpCodes.Callvirt, (MethodReference m) =>
-                m.Name == nameof(InvocationExpression.MatchArguments)
-                && m.DeclaringType.Name == nameof(InvocationExpression)));
-            instructions.Add(Cil.Cmd(OpCodes.Ret));
-            Assert.True(emitter.Body.Instructions.Ordered(instructions));
-        }
-
-        [Theory]
-        [InlineAutoMoqData(typeof(Task), nameof(InvocationExpression.MatchArgumentsAsync))]
-        [InlineAutoMoqData(typeof(Task<int>), nameof(InvocationExpression.MatchArgumentsGenericAsync))]
+        [InlineAutoMoqData(typeof(Task), nameof(InvocationExpression.VerifyExpectedCallsAsync))]
+        [InlineAutoMoqData(typeof(Task<int>), nameof(InvocationExpression.VerifyExpectedCallsTypedAsync))]
         internal void InjectVerification_AsyncMethod_Injected(
             Type asyncType, string checkerMethodName,
             [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen] ModuleDefinition module,
             [Frozen]Emitter emitter,
-            FieldDefinition setupBody, FieldDefinition accumulator, FieldDefinition callsChecker,
+            FieldDefinition setupBody, FieldDefinition executionCtx,
             PrePostProcessor proc)
         {
             var taskType = module.ImportReference(asyncType);
             emitter.Body.Method.ReturnType = taskType;
             emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
 
-            proc.InjectVerification(emitter, true, callsChecker, setupBody, accumulator);
+            proc.InjectVerification(emitter, setupBody, executionCtx);
 
             Assert.True(emitter.Body.Instructions.Ordered(
-                Cil.Cmd(OpCodes.Stloc, (VariableDefinition o) => o.VariableType == taskType),
-                Cil.Cmd(OpCodes.Ldsfld, setupBody),
-                Cil.Cmd(OpCodes.Ldloc, (VariableDefinition o) => o.VariableType == taskType),
-                Cil.Cmd(OpCodes.Ldsfld, accumulator),
-                Cil.Cmd(OpCodes.Ldc_I4_1),
-                Cil.Cmd(OpCodes.Ldsfld, callsChecker),
-                Cil.Cmd(OpCodes.Callvirt, (MethodReference m) =>
+				Cil.Cmd(OpCodes.Stloc, (VariableDefinition o) => o.VariableType == taskType),
+				Cil.Cmd(OpCodes.Ldsfld, setupBody),
+				Cil.Cmd(OpCodes.Ldloc, (VariableDefinition o) => o.VariableType == taskType),
+                Cil.Cmd(OpCodes.Ldsfld, executionCtx),
+                Cil.Cmd(OpCodes.Call, (MethodReference m) =>
                     m.Name == checkerMethodName
                     && m.DeclaringType.Name == nameof(InvocationExpression))
             ));

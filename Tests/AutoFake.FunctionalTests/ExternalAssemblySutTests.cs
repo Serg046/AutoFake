@@ -30,10 +30,9 @@ namespace AutoFake.FunctionalTests
         public void When_ExpectedCallsFunc_Should_Pass(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<SystemUnderTest>();
-            Func<byte, bool> checker;
+            Func<uint, bool> checker;
             if (equalOp) checker = x => x == arg;
             else checker = x => x > arg;
-
 
             var sut = fake.Rewrite(f => f.GetCurrentDate());
             sut.Replace(() => DateTime.Now)

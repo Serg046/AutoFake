@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
@@ -20,30 +19,25 @@ namespace AutoFake.Setup.Mocks
             SourceMember = invocationExpression.GetSourceMember();
             PrePostProcessor = processorFactory.CreatePrePostProcessor();
             ProcessorFactory = processorFactory;
-            CheckArguments = invocationExpression.GetArguments().Any(arg => !(arg.Checker is SuccessfulArgumentChecker));
         }
 
         protected IProcessorFactory ProcessorFactory { get; }
         protected IPrePostProcessor PrePostProcessor { get; }
         protected FieldDefinition SetupBodyField { get; private set; }
-        protected FieldDefinition CallsAccumulator { get; private set; }
+        protected FieldDefinition ExecutionContext { get; private set; }
         protected FieldDefinition CallsChecker { get; private set; }
 
-        public bool CheckArguments { get; }
-        public Func<byte, bool> ExpectedCalls { get; set; }
-
-        public bool CheckSourceMemberCalls => CheckArguments || ExpectedCalls != null;
+        public Func<uint, bool> ExpectedCalls { get; set; }
         public ISourceMember SourceMember { get; }
 
         public virtual void BeforeInjection(MethodDefinition method)
         {
-            if (CheckSourceMemberCalls)
-            {
-                SetupBodyField = PrePostProcessor.GenerateField(GetFieldName(method.Name, "Setup"), typeof(IInvocationExpression));
-                CallsAccumulator = PrePostProcessor.GenerateCallsAccumulator(
-                    GetFieldName(method.Name, "CallsAccumulator"), method.Body);
-                CallsChecker = PrePostProcessor.GenerateField(GetFieldName(method.Name, "CallsChecker"), typeof(Func<byte, bool>));
-            }
+            SetupBodyField = PrePostProcessor.GenerateField(
+                GetFieldName(method.Name, nameof(SetupBodyField)), typeof(IInvocationExpression));
+            CallsChecker = PrePostProcessor.GenerateField(
+                GetFieldName(method.Name, nameof(CallsChecker)), typeof(Func<uint, bool>));
+            ExecutionContext = PrePostProcessor.GenerateField(
+                GetFieldName(method.Name, nameof(ExecutionContext)), typeof(ExecutionContext));
         }
 
         public abstract void Inject(IEmitter emitter, Instruction instruction);
@@ -65,6 +59,11 @@ namespace AutoFake.Setup.Mocks
 	                field.SetValue(null, ExpectedCalls);
 	            }
             }
+
+            var ctxField = GetField(type, ExecutionContext.Name)
+                           ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
+            ctxField.SetValue(null, new ExecutionContext(ExpectedCalls));
+
             return new List<object>();
         }
 
@@ -90,11 +89,7 @@ namespace AutoFake.Setup.Mocks
 
         public virtual void AfterInjection(IEmitter emitter)
         {
-            if (CheckSourceMemberCalls)
-            {
-                PrePostProcessor.InjectVerification(emitter, CheckArguments, CallsChecker,
-                    SetupBodyField, CallsAccumulator);
-            }
+	        PrePostProcessor.InjectVerification(emitter, SetupBodyField, ExecutionContext);
         }
     }
 }
