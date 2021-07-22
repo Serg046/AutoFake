@@ -89,6 +89,15 @@ namespace AutoFake
             };
         }
 
+        public static Instruction ShiftDown(this IEmitter emitter, Instruction instruction)
+        {
+	        var copy = instruction.Copy();
+	        instruction.OpCode = OpCodes.Nop;
+	        instruction.Operand = null;
+	        emitter.InsertAfter(instruction, copy);
+	        return copy;
+        }
+
         private class EqualityComparer : IEqualityComparer
         {
             private readonly Func<object, object, bool> _comparer;

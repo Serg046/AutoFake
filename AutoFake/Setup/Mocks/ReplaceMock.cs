@@ -39,7 +39,10 @@ namespace AutoFake.Setup.Mocks
 		        var opCode = instruction.OpCode == OpCodes.Ldsflda || instruction.OpCode == OpCodes.Ldflda
 			        ? OpCodes.Ldsflda
 			        : OpCodes.Ldsfld;
-		        emitter.InsertBefore(instruction, Instruction.Create(opCode, _retValueField));
+		        var retValueFieldRef = ProcessorFactory.TypeInfo.IsMultipleAssembliesMode
+			        ? emitter.Body.Method.Module.ImportReference(_retValueField)
+			        : _retValueField;
+		        emitter.InsertBefore(instruction, Instruction.Create(opCode, retValueFieldRef));
 	        }
 
 	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Br, instruction.Next));
