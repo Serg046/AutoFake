@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Mono.Cecil;
 using System.Linq;
+using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -42,11 +43,6 @@ namespace AutoFake
 
         public static MethodReference ReplaceDeclaringType(this MethodReference methodDef, TypeReference declaringTypeRef)
         {
-	        //if (!declaringTypeRef.IsGenericInstance || methodDef == null)
-	        //{
-	        //	return methodDef;
-	        //}
-
 	        var methodRef = new MethodReference(methodDef.Name, methodDef.ReturnType, declaringTypeRef)
 	        {
 		        CallingConvention = methodDef.CallingConvention,
@@ -65,6 +61,32 @@ namespace AutoFake
 	        }
 
 	        return methodRef;
+        }
+
+        public static Instruction Copy(this Instruction instruction)
+        {
+	        if (instruction is null) throw new ArgumentNullException(nameof(instruction));
+            if (instruction.Operand is null) return Instruction.Create(instruction.OpCode);
+
+            return instruction.Operand switch
+            {
+	            TypeReference operand => Instruction.Create(instruction.OpCode, operand),
+	            CallSite operand => Instruction.Create(instruction.OpCode, operand),
+	            MethodReference operand => Instruction.Create(instruction.OpCode, operand),
+	            FieldReference operand => Instruction.Create(instruction.OpCode, operand),
+	            string operand => Instruction.Create(instruction.OpCode, operand),
+	            sbyte operand => Instruction.Create(instruction.OpCode, operand),
+	            byte operand => Instruction.Create(instruction.OpCode, operand),
+	            int operand => Instruction.Create(instruction.OpCode, operand),
+	            long operand => Instruction.Create(instruction.OpCode, operand),
+	            float operand => Instruction.Create(instruction.OpCode, operand),
+	            double operand => Instruction.Create(instruction.OpCode, operand),
+	            Instruction operand => Instruction.Create(instruction.OpCode, operand),
+	            Instruction[] operand => Instruction.Create(instruction.OpCode, operand),
+	            VariableDefinition operand => Instruction.Create(instruction.OpCode, operand),
+	            ParameterDefinition operand => Instruction.Create(instruction.OpCode, operand),
+	            _ => throw new NotSupportedException("The operand is not supported")
+            };
         }
 
         private class EqualityComparer : IEqualityComparer

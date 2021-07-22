@@ -99,7 +99,7 @@ namespace AutoFake.Expression
             return _arguments;
         }
 
-        public void VerifyArguments(object[] currentArguments)
+        public bool VerifyArguments(object[] currentArguments)
 		{
             var fakeArguments = GetArguments();
 			for (var i = 0; i < currentArguments.Length; i++)
@@ -111,7 +111,9 @@ namespace AutoFake.Expression
 						$"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(currentArguments[i])}.");
 				}
 			}
-        }
+
+			return true;
+		}
 
         public Task VerifyExpectedCallsAsync(Task task, ExecutionContext executionContext)
 		{
