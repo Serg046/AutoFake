@@ -2,11 +2,9 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake
 {
@@ -25,23 +23,6 @@ namespace AutoFake
             var type = _typeInfo.ImportToFieldsAsm(returnType);
             var field = new FieldDefinition(name, ACCESS_LEVEL, type);
             _typeInfo.AddField(field);
-            return field;
-        }
-
-        public FieldDefinition GenerateCallsAccumulator(string name, MethodBody method)
-        {
-            var type = _typeInfo.ImportToFieldsAsm(typeof(List<object[]>));
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
-            _typeInfo.AddField(field);
-
-            var fieldRef = _typeInfo.IsMultipleAssembliesMode
-	            ? method.Method.Module.ImportReference(field)
-	            : field;
-            var ctor = typeof(List<object[]>).GetConstructor(new Type[0]);
-            var ctorRef = method.Method.Module.ImportReference(ctor);
-
-            method.Instructions.Insert(0, Instruction.Create(OpCodes.Newobj, ctorRef));
-            method.Instructions.Insert(1, Instruction.Create(OpCodes.Stsfld, fieldRef));
             return field;
         }
 

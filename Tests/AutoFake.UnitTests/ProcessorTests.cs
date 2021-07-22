@@ -108,44 +108,6 @@ namespace AutoFake.UnitTests
         }
 
         [Theory, AutoMoqData]
-        internal void RemoveInstruction_ValidInput_InstructionRemoved(
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen]Instruction cmd,
-            Processor proc)
-        {
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ldc_I4_0));
-            emitter.Body.Instructions.Add(cmd);
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Pop));
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-
-            proc.RemoveInstruction(cmd);
-
-            Assert.DoesNotContain(emitter.Body.Instructions, i => i.Equals(cmd));
-        }
-
-        [Theory, AutoMoqData]
-        internal void ReplaceToRetValueField_ValidInput_InstructionReplaced(
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen]Instruction cmd,
-            [Frozen] ModuleDefinition module,
-            FieldDefinition field,
-            Processor proc)
-        {
-	        emitter.Body.Method.DeclaringType = module.Types.First();
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ldc_I4_0));
-            emitter.Body.Instructions.Add(cmd);
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Pop));
-            emitter.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-
-            proc.ReplaceToRetValueField(field);
-
-            var replacedCmd = emitter.Body.Instructions[1];
-            Assert.DoesNotContain(emitter.Body.Instructions, i => i.Equals(cmd));
-            Assert.Equal(OpCodes.Ldsfld, replacedCmd.OpCode);
-            Assert.Equal(field, replacedCmd.Operand);
-        }
-
-        [Theory, AutoMoqData]
         internal void InjectClosure_Top_Injected(
             [Frozen, InjectModule] Mock<ITypeInfo> _,
             [Frozen] Instruction instruction,

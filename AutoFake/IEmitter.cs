@@ -7,7 +7,6 @@ namespace AutoFake
         MethodBody Body { get; }
         void InsertBefore(Instruction target, Instruction instruction);
         void InsertAfter(Instruction target, Instruction instruction);
-        void Replace(Instruction target, Instruction instruction);
         void Remove(Instruction instruction);
     }
 }
