@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -166,21 +167,36 @@ namespace AutoFake
                 }
 
                 foreach (var instruction in currentMethod.Body.Instructions.ToList())
-                foreach (var mock in _mocks)
                 {
-                    if (mock.IsSourceInstruction(_originalMethod, instruction))
-                    {
-	                    mock.Inject(_emitterPool.GetEmitter(currentMethod.Body), instruction);
-	                    TryAddAffectedAssembly(currentMethod);
-	                    foreach (var parent in parents)
-	                    {
-		                    TryAddAffectedAssembly(parent);
-	                    }
-                    }
-                    else if (instruction.Operand is MethodReference method && ShouldBeAnalyzed(method))
-                    {
-                        Rewrite(method.ToMethodDefinition(), GetParents());
-                    }
+	                var originalInstruction = true;
+	                var instructionRef = instruction;
+					foreach (var mock in _mocks)
+	                {
+		                if (mock.IsSourceInstruction(_originalMethod, instructionRef))
+		                {
+			                var emitter = _emitterPool.GetEmitter(currentMethod.Body);
+			                if (originalInstruction)
+			                {
+				                var copy = instructionRef.Copy();
+								instructionRef.OpCode = OpCodes.Nop;
+								instructionRef.Operand = null;
+								emitter.InsertAfter(instructionRef, copy);
+								instructionRef = copy;
+								originalInstruction = false;
+			                }
+
+			                mock.Inject(emitter, instructionRef);
+			                TryAddAffectedAssembly(currentMethod);
+			                foreach (var parent in parents)
+			                {
+				                TryAddAffectedAssembly(parent);
+			                }
+		                }
+		                else if (instructionRef.Operand is MethodReference method && ShouldBeAnalyzed(method))
+		                {
+			                Rewrite(method.ToMethodDefinition(), GetParents());
+		                }
+	                }
                 }
 
                 IEnumerable<MethodDefinition> GetParents() => parents.Concat(new[] { currentMethod });
