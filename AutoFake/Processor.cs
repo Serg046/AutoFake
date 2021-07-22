@@ -31,16 +31,6 @@ namespace AutoFake
             }
         }
 
-        public void ReplaceToRetValueField(FieldDefinition retField)
-        {
-	        var field = _typeInfo.IsMultipleAssembliesMode
-		        ? _emitter.Body.Method.Module.ImportReference(retField)
-		        : retField;
-	        _emitter.Replace(_instruction, Instruction.Create(OpCodes.Ldsfld, field));
-        }
-
-        public void RemoveInstruction(Instruction instruction) => _emitter.Remove(instruction);
-
         public void InjectClosure(FieldDefinition closure, InsertMock.Location location)
         {
 	        var module = _emitter.Body.Method.Module;

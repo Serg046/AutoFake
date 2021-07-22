@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
@@ -15,87 +11,6 @@ namespace AutoFake.UnitTests.Setup
 {
     public class ReplaceMockTests
     {
-        [Theory, AutoMoqData]
-        internal void Inject_SourceMethod_SaveMethodCall(
-            [Frozen]Mock<IProcessor> proc,
-            ReplaceMock mock)
-        {
-            mock.Inject(Mock.Of<IEmitter>(), Nop());
-
-            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()));
-        }
-
-        [Theory]
-        [InlineAutoMoqData(true)]
-        [InlineAutoMoqData(false)]
-        internal void Inject_NonStaticMethod_OneStackArgumentMustBeRemoved(
-            bool isNonStaticMethod,
-            [Frozen]Mock<ISourceMember> sourceMember,
-            [Frozen]Mock<IProcessor> proc,
-            ReplaceMock mock)
-        {
-            sourceMember.Setup(m => m.HasStackInstance).Returns(isNonStaticMethod);
-
-            mock.Inject(Mock.Of<IEmitter>(), Nop());
-
-            proc.Verify(m => m.RemoveStackArgument(), isNonStaticMethod ? Times.Once() : Times.Never());
-        }
-
-        [Theory]
-        [InlineAutoMoqData(true)]
-        [InlineAutoMoqData(false)]
-        internal void Inject_IsReturnObjectSet_ReplaceToRetValueFieldInjected(
-            bool noReturnObject,
-            [Frozen]Mock<IProcessor> proc,
-            [Frozen]FieldDefinition field,
-            MethodDefinition method,
-            ReplaceMock mock)
-        {
-            if (noReturnObject) mock.ReturnObject = null;
-            mock.BeforeInjection(method);
-
-            mock.Inject(Mock.Of<IEmitter>(), Nop());
-
-            proc.Verify(m => m.ReplaceToRetValueField(field), noReturnObject ? Times.Never() : Times.Once());
-        }
-
-        [Theory]
-        [InlineAutoMoqData(true)]
-        [InlineAutoMoqData(false)]
-        internal void Inject_ReturnObjectIsNotSet_InstructionRemoved(
-            bool noReturnObject,
-            [Frozen]Mock<IProcessor> proc,
-            ReplaceMock mock)
-        {
-            if (noReturnObject) mock.ReturnObject = null;
-            var instruction = Nop();
-
-            mock.Inject(Mock.Of<IEmitter>(), instruction);
-
-            proc.Verify(m => m.RemoveInstruction(instruction), noReturnObject ? Times.Once(): Times.Never());
-        }
-
-        [Theory, AutoMoqData]
-        internal void Inject_ParametrizedSourceMember_ArgsPassed(
-            [Frozen] Mock<ISourceMember> sourceMember,
-            [Frozen] Mock<IProcessor> processor,
-	        ReplaceMock sut)
-        {
-	        var parameters = GetType()
-		        .GetMethod(nameof(Inject_ParametrizedSourceMember_ArgsPassed),
-			        BindingFlags.NonPublic | BindingFlags.Instance)
-		        .GetParameters();
-	        sourceMember.Setup(s => s.GetParameters()).Returns(parameters);
-
-	        sut.Inject(Mock.Of<IEmitter>(), Nop());
-
-            processor.Verify(p => p.SaveMethodCall(
-	            It.IsAny<FieldDefinition>(),
-	            It.IsAny<FieldDefinition>(),
-	            It.Is<IList<Type>>(prms => prms
-		            .SequenceEqual(parameters.Select(prm => prm.ParameterType)))));
-        }
-
         [Theory, AutoMoqData]
         internal void Initialize_NoRetValueField_NoEffect(
             [Frozen]Mock<IPrePostProcessor> preProc,

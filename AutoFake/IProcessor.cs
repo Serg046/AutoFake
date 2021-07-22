@@ -10,9 +10,7 @@ namespace AutoFake
     {
         void InjectClosure(FieldDefinition closure, InsertMock.Location location);
         void PushMethodArguments(IEnumerable<VariableDefinition> variables);
-        void RemoveInstruction(Instruction instruction);
         void RemoveStackArgument();
-        void ReplaceToRetValueField(FieldDefinition retField);
         IList<VariableDefinition> SaveMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes);
     }
 }
