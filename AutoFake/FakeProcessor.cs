@@ -177,11 +177,7 @@ namespace AutoFake
 			                var emitter = _emitterPool.GetEmitter(currentMethod.Body);
 			                if (originalInstruction)
 			                {
-				                var copy = instructionRef.Copy();
-								instructionRef.OpCode = OpCodes.Nop;
-								instructionRef.Operand = null;
-								emitter.InsertAfter(instructionRef, copy);
-								instructionRef = copy;
+				                instructionRef = emitter.ShiftDown(instructionRef);
 								originalInstruction = false;
 			                }
 

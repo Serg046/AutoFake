@@ -49,7 +49,7 @@ namespace AutoFake
         {
 	        foreach (var instruction in emitter.Body.Instructions.Where(cmd => cmd.OpCode == OpCodes.Ret).ToList())
 	        {
-		        InjectVerifications(emitter, instruction, setupBody, executionContext);
+		        InjectVerifications(emitter, emitter.ShiftDown(instruction), setupBody, executionContext);
 	        }
         }
 
@@ -85,14 +85,14 @@ namespace AutoFake
 	        {
 		        isAsync = true;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsAsync));
-		        return _typeInfo.ImportReference(methodInfo);
+		        return method.Module.ImportReference(methodInfo);
 	        }
 	        else if (returnType.Namespace == typeof(Task).Namespace && returnType.Name == "Task`1" &&
 	                 returnType is GenericInstanceType genericReturnType)
 	        {
 		        isAsync = true;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsTypedAsync));
-		        var open = _typeInfo.ImportReference(methodInfo);
+		        var open = method.Module.ImportReference(methodInfo);
 		        var closed = new GenericInstanceMethod(open);
 		        closed.GenericArguments.Add(genericReturnType.GenericArguments.Single());
 		        return closed;
@@ -101,7 +101,7 @@ namespace AutoFake
 	        {
 		        isAsync = false;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCalls));
-		        return _typeInfo.ImportReference(methodInfo);
+		        return method.Module.ImportReference(methodInfo);
 	        }
         }
     }
