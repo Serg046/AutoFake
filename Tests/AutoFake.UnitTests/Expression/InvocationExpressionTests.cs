@@ -74,69 +74,45 @@ namespace AutoFake.UnitTests.Expression
         }
 
         [Fact]
-        public void MatchArguments_TooManyArguments_Throws()
+        public void VerifyExpectedCalls_ExpectedCallsMismatch_Throws()
         {
             Expression<Action<TestClass>> methodExpr = e => e.Method();
             var expr = new InvocationExpression(methodExpr);
-            var arguments = Enumerable.Range(0, byte.MaxValue + 1).Select(i => new object[] {i}).ToList();
 
-            Assert.Throws<InvalidOperationException>(() => expr.MatchArguments(arguments, false, null));
+            Assert.Throws<ExpectedCallsException>(() => expr.VerifyExpectedCalls(new ExecutionContext(count => count > 2)));
         }
 
         [Fact]
-        public void MatchArguments_ExpectedCallsMismatch_Throws()
+        public void VerifyExpectedCalls_ValidInput_Passes()
         {
-            Expression<Action<TestClass>> methodExpr = e => e.Method();
+            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
             var expr = new InvocationExpression(methodExpr);
-            var arguments = Enumerable.Range(0, 2).Select(i => new object[] { i }).ToList();
+            var executionContext = new ExecutionContext(count => count == 1);
+            executionContext.IncActualCalls();
 
-            Assert.Throws<ExpectedCallsException>(() => expr.MatchArguments(arguments, false, count => count > 2));
+            expr.VerifyExpectedCalls(executionContext);
         }
 
         [Fact]
-        public void MatchArguments_ArgumentsMismatch_Throws()
+        public void VerifyExpectedCallsAsync_ValidInput_Passes()
         {
             Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
             var expr = new InvocationExpression(methodExpr);
-            var arguments = new[] { new object[] { 4, "4" }};
+            var executionContext = new ExecutionContext(count => count == 1);
+            executionContext.IncActualCalls();
 
-            Assert.Throws<VerifyException>(() => expr.MatchArguments(arguments, true, null));
+            expr.VerifyExpectedCallsAsync(Task.CompletedTask, executionContext);
         }
 
-        [Theory]
-        [InlineData(4, false)]
-        [InlineData(5, true)]
-        public void MatchArguments_ValidInput_Passes(int arg, bool checkArguments)
+        [Fact]
+        public void VerifyExpectedCallsTypedAsync_ValidInput_Passes()
         {
             Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
             var expr = new InvocationExpression(methodExpr);
-            var arguments = new[] { new object[] { arg, arg.ToString() }};
+            var executionContext = new ExecutionContext(count => count == 1);
+            executionContext.IncActualCalls();
 
-            expr.MatchArguments(arguments, checkArguments, null);
-        }
-
-        [Theory]
-        [InlineData(4, false)]
-        [InlineData(5, true)]
-        public void MatchArgumentsAsync_ValidInput_Passes(int arg, bool checkArguments)
-        {
-            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
-            var expr = new InvocationExpression(methodExpr);
-            var arguments = new[] { new object[] { arg, arg.ToString() } };
-
-            expr.MatchArgumentsAsync(Task.CompletedTask, arguments, checkArguments, null);
-        }
-
-        [Theory]
-        [InlineData(4, false)]
-        [InlineData(5, true)]
-        public void MatchArgumentsGenericAsync_ValidInput_Passes(int arg, bool checkArguments)
-        {
-            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
-            var expr = new InvocationExpression(methodExpr);
-            var arguments = new[] { new object[] { arg, arg.ToString() } };
-
-            expr.MatchArgumentsGenericAsync(Task.FromResult(1), arguments, checkArguments, null);
+            expr.VerifyExpectedCallsTypedAsync(Task.FromResult(1), executionContext);
         }
 
         [Fact]

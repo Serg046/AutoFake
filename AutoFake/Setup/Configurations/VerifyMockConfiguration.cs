@@ -12,12 +12,12 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public VerifyMockConfiguration ExpectedCalls(byte expectedCallsCount)
+        public VerifyMockConfiguration ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public VerifyMockConfiguration ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
+        public VerifyMockConfiguration ExpectedCalls(Func<uint, bool> expectedCallsCountFunc)
         {
             _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;

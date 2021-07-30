@@ -28,16 +28,5 @@ namespace AutoFake.UnitTests
 
             type.Verify(t => t.AddField(It.Is<FieldDefinition>(f => f.Name == name)));
         }
-
-        [Theory, AutoMoqData]
-        internal void CreateProcessor_TypeInfo_Injected(
-            Mock<IEmitter> emitter, Instruction instruction,
-            ProcessorFactory factory)
-        {
-            var proc = factory.CreateProcessor(emitter.Object, instruction);
-            proc.RemoveInstruction(instruction);
-            
-            emitter.Verify(e => e.Remove(instruction));
-        }
     }
 }

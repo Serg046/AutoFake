@@ -12,15 +12,21 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public RemoveMockConfiguration ExpectedCalls(byte expectedCallsCount)
+        public RemoveMockConfiguration ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public RemoveMockConfiguration ExpectedCalls(Func<byte, bool> expectedCallsCountFunc)
+        public RemoveMockConfiguration ExpectedCalls(Func<uint, bool> expectedCallsCountFunc)
         {
             _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;
+        }
+
+        public RemoveMockConfiguration WhenArgumentsAreMatched()
+        {
+	        _mock.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
+	        return this;
         }
     }
 }

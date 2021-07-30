@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AutoFake
+﻿namespace AutoFake
 {
     internal class SuccessfulArgumentChecker : IFakeArgumentChecker
     {
