@@ -223,6 +223,7 @@ namespace AutoFake.UnitTests
             SetType(method, type2, module2);
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, method));
             var instruction = Instruction.Create(OpCodes.Call, innerMethod);
+            var copy = instruction.Copy();
             method.Body.Instructions.Add(instruction);
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
@@ -231,7 +232,10 @@ namespace AutoFake.UnitTests
             fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, methodInfo);
 
             // Assert
-            mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), instruction), injected ? Times.Once() : Times.Never());
+            mock.Verify(m => m.Inject(
+		            It.IsAny<IEmitter>(),
+		            It.Is<Instruction>(cmd => cmd.OpCode == copy.OpCode && cmd.Operand == copy.Operand)),
+	            injected ? Times.Once() : Times.Never());
         }
 
         [Theory, AutoMoqData]
@@ -276,6 +280,7 @@ namespace AutoFake.UnitTests
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, method));
             var innerMethod = new MethodDefinition("MockedMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
             var instruction = Instruction.Create(OpCodes.Call, innerMethod);
+            var copy = instruction.Copy();
             method.Body.Instructions.Add(instruction);
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
@@ -284,7 +289,10 @@ namespace AutoFake.UnitTests
             fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, methodInfo);
 
             // Assert
-            mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), instruction), injected ? Times.Once() : Times.Never());
+            mock.Verify(m => m.Inject(
+		            It.IsAny<IEmitter>(),
+		            It.Is<Instruction>(cmd => cmd.OpCode == copy.OpCode && cmd.Operand == copy.Operand)),
+	            injected ? Times.Once() : Times.Never());
         }
 
         private bool Equivalent(object operand, MethodInfo innerMethod) => 
