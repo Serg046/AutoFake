@@ -17,7 +17,10 @@ namespace AutoFake.Expression
         internal InvocationExpression(LinqExpression expression)
         {
             _expression = expression;
+            ThrowWhenArgumentsAreNotMatched = true;
         }
+
+        public bool ThrowWhenArgumentsAreNotMatched { get; set; }
 
         void IInvocationExpression.AcceptMemberVisitor(IMemberVisitor visitor) => AcceptMemberVisitor(visitor);
         internal void AcceptMemberVisitor(IMemberVisitor visitor)
@@ -107,8 +110,10 @@ namespace AutoFake.Expression
 				var fakeArgument = fakeArguments[i];
 				if (!fakeArgument.Check(currentArguments[i]))
 				{
-					throw new VerifyException(
-						$"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(currentArguments[i])}.");
+					return ThrowWhenArgumentsAreNotMatched
+						? throw new VerifyException(
+							$"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(currentArguments[i])}.")
+						: false;
 				}
 			}
 

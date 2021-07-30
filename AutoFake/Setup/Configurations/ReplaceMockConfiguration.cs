@@ -29,5 +29,11 @@ namespace AutoFake.Setup.Configurations
             _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
+
+        public ReplaceMockConfiguration<TReturn> WhenArgumentsAreMatched()
+        {
+	        _mock.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
+	        return this;
+        }
     }
 }

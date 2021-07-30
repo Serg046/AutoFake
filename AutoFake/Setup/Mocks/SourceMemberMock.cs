@@ -11,21 +11,20 @@ namespace AutoFake.Setup.Mocks
 {
     internal abstract class SourceMemberMock : IMock
     {
-        private readonly IInvocationExpression _invocationExpression;
-
         protected SourceMemberMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
         {
-            _invocationExpression = invocationExpression;
+            InvocationExpression = invocationExpression;
             SourceMember = invocationExpression.GetSourceMember();
             PrePostProcessor = processorFactory.CreatePrePostProcessor();
             ProcessorFactory = processorFactory;
         }
-
+        
         protected IProcessorFactory ProcessorFactory { get; }
         protected IPrePostProcessor PrePostProcessor { get; }
         protected FieldDefinition SetupBodyField { get; private set; }
         protected FieldDefinition ExecutionContext { get; private set; }
 
+        public IInvocationExpression InvocationExpression { get; set; }
         public Func<uint, bool> ExpectedCalls { get; set; }
         public ISourceMember SourceMember { get; }
 
@@ -47,7 +46,7 @@ namespace AutoFake.Setup.Mocks
 	            {
 	                var field = GetField(type, SetupBodyField.Name)
 	                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
-	                field.SetValue(null, _invocationExpression);
+	                field.SetValue(null, InvocationExpression);
 	            }
             }
 
