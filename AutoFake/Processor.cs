@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 
 namespace AutoFake
@@ -20,17 +21,6 @@ namespace AutoFake
             _instruction = instruction;
         }
 
-        public void RemoveMethodArgumentsIfAny()
-        {
-            if (_instruction.Operand is MethodReference method)
-            {
-                for (var i = 0; i < method.Parameters.Count; i++)
-                {
-                    RemoveStackArgument();
-                }
-            }
-        }
-
         public void RemoveStackArgument() => _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Pop));
 
         public void PushMethodArguments(IEnumerable<VariableDefinition> variables)
@@ -40,16 +30,6 @@ namespace AutoFake
                 _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, variable));
             }
         }
-
-        public void ReplaceToRetValueField(FieldDefinition retField)
-        {
-	        var field = _typeInfo.IsMultipleAssembliesMode
-		        ? _emitter.Body.Method.Module.ImportReference(retField)
-		        : retField;
-	        _emitter.Replace(_instruction, Instruction.Create(OpCodes.Ldsfld, field));
-        }
-
-        public void RemoveInstruction(Instruction instruction) => _emitter.Remove(instruction);
 
         public void InjectClosure(FieldDefinition closure, InsertMock.Location location)
         {
@@ -71,18 +51,22 @@ namespace AutoFake
             }
         }
 
-        public IList<VariableDefinition> SaveMethodCall(FieldDefinition accumulator, bool checkArguments, IEnumerable<Type> argumentTypes)
+        public IList<VariableDefinition> SaveMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes)
         {
-            var method = (MethodReference)_instruction.Operand;
-            var module = method.Module;
-            var variables = new Stack<VariableDefinition>();
-            foreach (var parameter in method.Parameters.Reverse())
-            {
-                var variable = new VariableDefinition(parameter.ParameterType);
-                variables.Push(variable);
-                _emitter.Body.Variables.Add(variable);
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
-            }
+	        var module = ((MemberReference)_instruction.Operand).Module;
+	        var variables = new List<VariableDefinition>();
+	        foreach (var argType in argumentTypes)
+	        {
+		        var variable = new VariableDefinition(module.ImportReference(argType));
+		        variables.Add(variable);
+		        _emitter.Body.Variables.Add(variable);
+	        }
+
+	        foreach (var variable in variables.Select(v => v).Reverse())
+	        {
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
+	        }
+
             var objRef = module.ImportReference(typeof(object));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, variables.Count));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newarr, objRef));
@@ -90,30 +74,37 @@ namespace AutoFake
             _emitter.Body.Variables.Add(arrVar);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
-            if (checkArguments) SaveMethodArguments(variables, arrVar, argumentTypes);
+            SaveMethodArguments(variables, arrVar, argumentTypes);
 
-            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(accumulator)));
+            var verifyMethodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyArguments));
+            var verifyMethodRef = module.ImportReference(verifyMethodInfo);
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(setupBody)));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
-            var addMethod = module.ImportReference(typeof(List<object[]>).GetMethod(nameof(List<object[]>.Add)));
-            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, addMethod));
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, verifyMethodRef));
 
-            return variables.ToList();
+            var incMethodInfo = typeof(ExecutionContext).GetMethod(nameof(ExecutionContext.IncActualCalls));
+            var incMethodRef = module.ImportReference(incMethodInfo);
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(executionContext)));
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, incMethodRef));
+
+            return variables;
         }
 
-        private void SaveMethodArguments(IEnumerable<VariableDefinition> variables, VariableDefinition array, IEnumerable<Type> argumentTypes)
+        private void SaveMethodArguments(IList<VariableDefinition> variables, VariableDefinition array, IList<Type> argumentTypes)
         {
-	        var counter = 0;
-            foreach (var item in variables.Zip(argumentTypes, (var, type) => new {Var = var, Type = type}))
-            {
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, array));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, counter++));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, item.Var));
-                if (item.Type.IsValueType)
-                {
-                    _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Box, item.Var.VariableType));
-                }
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stelem_Ref));
-            }
+	        for (var i = 0; i < variables.Count; i++)
+	        {
+		        var variable = variables[i];
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, array));
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, i));
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, variable));
+		        if (argumentTypes[i].IsValueType)
+		        {
+			        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Box, variable.VariableType));
+		        }
+
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stelem_Ref));
+	        }
         }
     }
 }

@@ -34,12 +34,13 @@ namespace AutoFake.UnitTests.Setup
         internal void Initialize_CapturedField_Success(
             [Frozen]Mock<IPrePostProcessor> proc,
             [Frozen]Action action,
-            [Frozen(Matching.ImplementedInterfaces)]SuccessfulArgumentChecker checker,
-            MethodDefinition method, FieldDefinition field1,
+            MethodDefinition method, FieldDefinition field1, FieldDefinition ctxField,
             SourceMemberInsertMock mock)
         {
-            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>()))
-                .Returns(field1);
+	        ctxField.Name = nameof(TestClass.ExecutionContext);
+            proc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns(field1);
+	        proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns((FieldDefinition) null);
+	        proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(ExecutionContext))).Returns(ctxField);
             field1.Name = nameof(TestClass.Action);
             mock.ExpectedCalls = null;
             mock.BeforeInjection(method);
@@ -67,6 +68,7 @@ namespace AutoFake.UnitTests.Setup
 
         private class TestClass
         {
+            public static ExecutionContext ExecutionContext;
             public static Action Action;
         }
     }
