@@ -28,8 +28,7 @@ namespace AutoFake.Setup.Mocks
         public void Inject(IEmitter emitter, Instruction instruction)
         {
 	        var method = (MethodReference)instruction.Operand;
-			var newInstruction = Instruction.Create(instruction.OpCode, method.ReplaceDeclaringType(_typeReference));
-	        emitter.Replace(instruction, newInstruction);
+	        instruction.Operand = method.ReplaceDeclaringType(_typeReference);
         }
 
         [ExcludeFromCodeCoverage]

@@ -23,30 +23,34 @@ namespace AutoFake.Setup.Mocks
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
-            if (CheckSourceMemberCalls)
-            {
-                processor.SaveMethodCall(CallsAccumulator, CheckArguments,
-	                SourceMember.GetParameters().Select(p => p.ParameterType));
-            }
-            else
-            {
-                processor.RemoveMethodArgumentsIfAny();
-            }
-
-            ReplaceInstruction(processor, instruction);
+            var variables = processor.SaveMethodCall(SetupBodyField, ExecutionContext,
+	            SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
+			ReplaceInstruction(emitter, processor, instruction, variables);
         }
 
-        private void ReplaceInstruction(IProcessor processor, Instruction instruction)
+        private void ReplaceInstruction(IEmitter emitter, IProcessor processor, Instruction instruction,
+	        IList<VariableDefinition> variables)
         {
-            if (SourceMember.HasStackInstance) processor.RemoveStackArgument();
+	        var nop = Instruction.Create(OpCodes.Nop);
+	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Brfalse, nop));
+	        if (SourceMember.HasStackInstance) processor.RemoveStackArgument();
+	        if (ReturnObject != null)
+	        {
+		        var opCode = instruction.OpCode == OpCodes.Ldsflda || instruction.OpCode == OpCodes.Ldflda
+			        ? OpCodes.Ldsflda
+			        : OpCodes.Ldsfld;
+		        var retValueFieldRef = ProcessorFactory.TypeInfo.IsMultipleAssembliesMode
+			        ? emitter.Body.Method.Module.ImportReference(_retValueField)
+			        : _retValueField;
+		        emitter.InsertBefore(instruction, Instruction.Create(opCode, retValueFieldRef));
+	        }
 
-            if (ReturnObject != null)
-                processor.ReplaceToRetValueField(_retValueField);
-            else
-                processor.RemoveInstruction(instruction);
+	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Br, instruction.Next));
+	        emitter.InsertBefore(instruction, nop);
+	        processor.PushMethodArguments(variables);
         }
 
-        public override IList<object> Initialize(Type? type)
+		public override IList<object> Initialize(Type? type)
         {
             if (type != null)
             {

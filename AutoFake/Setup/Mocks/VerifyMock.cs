@@ -13,13 +13,11 @@ namespace AutoFake.Setup.Mocks
 
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
-            if (CheckSourceMemberCalls)
-            {
-                var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
-				var arguments = processor.SaveMethodCall(CallsAccumulator, CheckArguments,
-					SourceMember.GetParameters().Select(p => p.ParameterType));
-				processor.PushMethodArguments(arguments);
-			}
+            var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
+			var arguments = processor.SaveMethodCall(SetupBodyField, ExecutionContext,
+				SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
+            emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Pop));
+			processor.PushMethodArguments(arguments);
         }
     }
 }
