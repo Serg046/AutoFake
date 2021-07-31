@@ -40,7 +40,7 @@ namespace AutoFake.FunctionalTests
 
             var sut = fake.Rewrite(t => t.SomeMethod(numbers));
             sut.Append(() => numbers.Add(-1))
-                .After((List<int> list) => list.AddRange(new int[0]));
+                .After((List<int> list) => list.AddRange(Arg.IsAny<int[]>()));
 
             sut.Execute();
             Assert.Equal(new[] { 3, 5, -1, 7 }, numbers);
@@ -68,7 +68,7 @@ namespace AutoFake.FunctionalTests
 
             var sut = fake.Rewrite(t => t.SomeMethod(numbers));
             sut.Prepend(() => numbers.Add(-1))
-                .Before((List<int> list) => list.AddRange(new int[0]));
+                .Before((List<int> list) => list.AddRange(Arg.IsAny<int[]>()));
 
             sut.Execute();
             Assert.Equal(new[] { 3, -1, 5, 7 }, numbers);

@@ -25,7 +25,7 @@ namespace AutoFake.UnitTests
             method.Parameters.Add(new ParameterDefinition(new FunctionPointerType()));
             fixture.Inject(Instruction.Create(OpCodes.Call, method));
 
-            var variables = fixture.Create<Processor>().SaveMethodCall(setupBody, executionContext,
+            var variables = fixture.Create<Processor>().RecordMethodCall(setupBody, executionContext,
 	            new[] { typeof(object), typeof(object) });
 
             Assert.Equal(2, variables.Count);
@@ -48,7 +48,7 @@ namespace AutoFake.UnitTests
             emitter.Body.Instructions.Add(instruction);
             fixture.Inject(instruction);
 
-            var variables = fixture.Create<Processor>().SaveMethodCall(setupBody, executionContext,
+            var variables = fixture.Create<Processor>().RecordMethodCall(setupBody, executionContext,
 	            new[] { typeof(int), typeof(object) });
 
             var arrVar = emitter.Body.Variables.Single(v => v.VariableType.FullName == "System.Object[]");
@@ -105,46 +105,6 @@ namespace AutoFake.UnitTests
                 Cil.Cmd(OpCodes.Ldloc, var2),
                 Cil.Cmd(cmd.OpCode, cmd.Operand)
                 ));
-        }
-
-        [Theory, AutoMoqData]
-        internal void InjectClosure_Top_Injected(
-            [Frozen, InjectModule] Mock<ITypeInfo> _,
-            [Frozen] Instruction instruction,
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen] ModuleDefinition module,
-            FieldDefinition field, Processor proc)
-        {
-	        emitter.Body.Method.DeclaringType = module.Types.First();
-            emitter.Body.Instructions.Add(instruction);
-
-            proc.InjectClosure(field, InsertMock.Location.Top);
-
-            Assert.True(emitter.Body.Instructions.Ordered(
-                Cil.Cmd(OpCodes.Ldsfld, field),
-                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == nameof(Action.Invoke)),
-                Cil.Cmd(instruction.OpCode)
-            ));
-        }
-
-        [Theory, AutoMoqData]
-        internal void InjectClosure_Bottom_Injected(
-            [Frozen, InjectModule] Mock<ITypeInfo> _,
-            [Frozen] Instruction instruction,
-            [Frozen(Matching.ImplementedInterfaces)]Emitter emitter,
-            [Frozen] ModuleDefinition module,
-            FieldDefinition field, Processor proc)
-        {
-	        emitter.Body.Method.DeclaringType = module.Types.First();
-            emitter.Body.Instructions.Add(instruction);
-
-            proc.InjectClosure(field, InsertMock.Location.Bottom);
-
-            Assert.True(emitter.Body.Instructions.Ordered(
-                Cil.Cmd(instruction.OpCode),
-                Cil.Cmd(OpCodes.Ldsfld, field),
-                Cil.Cmd(OpCodes.Call, (MethodReference m) => m.Name == nameof(Action.Invoke))
-            ));
         }
     }
 }
