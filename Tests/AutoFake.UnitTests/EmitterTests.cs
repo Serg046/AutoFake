@@ -45,32 +45,5 @@ namespace AutoFake.UnitTests
             Assert.Equal<IEnumerable<Instruction>>(new[] { cmd1, cmd2 },
                 method.Instructions.ToArray());
         }
-
-        [Theory, AutoMoqData]
-        internal void Replace_ValidData_Injected(
-            [Frozen]MethodBody method,
-            Instruction cmd1, Instruction cmd2,
-            Emitter sut)
-        {
-            method.Instructions.Add(cmd1);
-
-            sut.Replace(cmd1, cmd2);
-
-            Assert.NotEqual(cmd1, cmd2);
-            Assert.Equal(cmd2, method.Instructions.Single());
-        }
-
-        [Theory, AutoMoqData]
-        internal void Remove_ValidData_Removed(
-            [Frozen]MethodBody method,
-            Instruction cmd,
-            Emitter sut)
-        {
-            method.Instructions.Add(cmd);
-
-            sut.Remove(cmd);
-
-            Assert.Empty(method.Instructions);
-        }
     }
 }

@@ -4,19 +4,16 @@ using Mono.Cecil.Cil;
 using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Expression;
-using AutoFake.Setup.Mocks;
 
 namespace AutoFake
 {
     internal class Processor : IProcessor
     {
-        private readonly ITypeInfo _typeInfo;
         private readonly IEmitter _emitter;
         private readonly Instruction _instruction;
 
-        public Processor(ITypeInfo typeInfo, IEmitter emitter, Instruction instruction)
+        public Processor(IEmitter emitter, Instruction instruction)
         {
-            _typeInfo = typeInfo;
             _emitter = emitter;
             _instruction = instruction;
         }
@@ -31,27 +28,7 @@ namespace AutoFake
             }
         }
 
-        public void InjectClosure(FieldDefinition closure, InsertMock.Location location)
-        {
-	        var module = _emitter.Body.Method.Module;
-	        var closureRef = _typeInfo.IsMultipleAssembliesMode
-		        ? module.ImportReference(closure)
-		        : closure;
-            if (location == InsertMock.Location.Top)
-            {
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, closureRef));
-                _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call,
-	                module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
-            }
-            else
-            {
-                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Call,
-	                module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
-                _emitter.InsertAfter(_instruction, Instruction.Create(OpCodes.Ldsfld, closureRef));
-            }
-        }
-
-        public IList<VariableDefinition> SaveMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes)
+        public IList<VariableDefinition> RecordMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes)
         {
 	        var module = ((MemberReference)_instruction.Operand).Module;
 	        var variables = new List<VariableDefinition>();
@@ -74,7 +51,7 @@ namespace AutoFake
             _emitter.Body.Variables.Add(arrVar);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
-            SaveMethodArguments(variables, arrVar, argumentTypes);
+            RecordMethodCall(variables, arrVar, argumentTypes);
 
             var verifyMethodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyArguments));
             var verifyMethodRef = module.ImportReference(verifyMethodInfo);
@@ -90,7 +67,7 @@ namespace AutoFake
             return variables;
         }
 
-        private void SaveMethodArguments(IList<VariableDefinition> variables, VariableDefinition array, IList<Type> argumentTypes)
+        private void RecordMethodCall(IList<VariableDefinition> variables, VariableDefinition array, IList<Type> argumentTypes)
         {
 	        for (var i = 0; i < variables.Count; i++)
 	        {

@@ -75,7 +75,7 @@ namespace AutoFake.Setup.Configurations
         public new PrependMockConfiguration<T> Prepend(Action action)
         {
 	        var position = (ushort)Mocks.Count;
-	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Top));
+	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Before));
 	        return new PrependMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
 		        position, action);
         }
@@ -83,7 +83,7 @@ namespace AutoFake.Setup.Configurations
         public new AppendMockConfiguration<T> Append(Action action)
         {
 	        var position = (ushort)Mocks.Count;
-	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Bottom));
+	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.After));
 	        return new AppendMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
 		        position, action);
         }
@@ -155,7 +155,7 @@ namespace AutoFake.Setup.Configurations
         public AppendMockConfiguration Append(Action action)
         {
             var position = (ushort)Mocks.Count;
-            Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Bottom));
+            Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.After));
             return new AppendMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, action);
         }
@@ -163,7 +163,7 @@ namespace AutoFake.Setup.Configurations
         public PrependMockConfiguration Prepend(Action action)
         {
             var position = (ushort)Mocks.Count;
-            Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Top));
+            Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Before));
             return new PrependMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
                 position, action);
         }

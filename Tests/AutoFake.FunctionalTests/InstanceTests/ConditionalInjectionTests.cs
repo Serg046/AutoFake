@@ -28,6 +28,32 @@ namespace AutoFake.FunctionalTests.InstanceTests
 			fake.Execute(f => f.Number).Should().Be(7);
 		}
 
+		[Fact]
+		public void When_condition_in_prepend_mock_Should_succeed()
+		{
+			var fake = new Fake<TestClass>();
+			var counter = 0;
+
+			var sut = fake.Rewrite(f => f.IncNumber());
+			sut.Prepend(() => counter++).Before(f => f.IncNumber(5)).WhenArgumentsAreMatched();
+			sut.Execute();
+
+			counter.Should().Be(1);
+		}
+
+		[Fact]
+		public void When_condition_in_append_mock_Should_succeed()
+		{
+			var fake = new Fake<TestClass>();
+			var counter = 0;
+
+			var sut = fake.Rewrite(f => f.IncNumber());
+			sut.Append(() => counter++).After(f => f.IncNumber(5)).WhenArgumentsAreMatched();
+			sut.Execute();
+
+			counter.Should().Be(1);
+		}
+
 		private class TestClass
 		{
 			public int Number { get; private set; }

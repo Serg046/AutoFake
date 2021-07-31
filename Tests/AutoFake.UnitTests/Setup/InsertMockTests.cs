@@ -12,8 +12,8 @@ namespace AutoFake.UnitTests.Setup
     public class InsertMockTests
     {
         [Theory]
-        [InlineData(InsertMock.Location.Top, 1, 2, true)]
-        [InlineData(InsertMock.Location.Bottom, 1, 2, false)]
+        [InlineData(InsertMock.Location.Before, 1, 2, true)]
+        [InlineData(InsertMock.Location.After, 1, 2, false)]
         internal void IsSourceInstruction_Instruction_Success(InsertMock.Location location, int first, int last, bool shouldBeFirst)
         {
             var method = new MethodDefinition(null, MethodAttributes.Assembly, new FunctionPointerType());
@@ -65,23 +65,6 @@ namespace AutoFake.UnitTests.Setup
             mock.BeforeInjection(method);
 
             Assert.Throws<InitializationException>(() => mock.Initialize(typeof(TestClass)));
-        }
-
-        [Theory, AutoMoqData]
-        internal void Inject_ValidInput_Success(
-            [Frozen]Mock<IProcessorFactory> factory,
-            [Frozen]Mock<IPrePostProcessor> preProc, [Frozen]Mock<IProcessor> proc,
-            MethodDefinition method, FieldDefinition field,
-            IEmitter emitter, Instruction instruction,
-            InsertMock mock)
-        {
-            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(Action))).Returns(field);
-            mock.BeforeInjection(method);
-
-            mock.Inject(emitter, instruction);
-
-            factory.Verify(f => f.CreateProcessor(emitter, instruction));
-            proc.Verify(p => p.InjectClosure(field, InsertMock.Location.Top));
         }
 
         private class TestClass

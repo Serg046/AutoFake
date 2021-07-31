@@ -23,7 +23,7 @@ namespace AutoFake.Setup.Mocks
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
-            var variables = processor.SaveMethodCall(SetupBodyField, ExecutionContext,
+            var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
 	            SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
 			ReplaceInstruction(emitter, processor, instruction, variables);
         }

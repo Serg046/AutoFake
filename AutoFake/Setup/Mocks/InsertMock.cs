@@ -50,24 +50,29 @@ namespace AutoFake.Setup.Mocks
 
         public void Inject(IEmitter emitter, Instruction instruction)
         {
-            var processor = _processorFactory.CreateProcessor(emitter, instruction);
-            processor.InjectClosure(_closureField, Location.Top);
+	        var module = emitter.Body.Method.Module;
+	        var closure = _processorFactory.TypeInfo.IsMultipleAssembliesMode
+		        ? module.ImportReference(_closureField)
+		        : _closureField;
+	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, closure));
+	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Call,
+		        module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
         {
             switch (_location)
             {
-                case Location.Top: return instruction == method.Body.Instructions.First();
-                case Location.Bottom: return instruction == method.Body.Instructions.Last();
+                case Location.Before: return instruction == method.Body.Instructions.First();
+                case Location.After: return instruction == method.Body.Instructions.Last();
                 default: return false;
             }
         }
 
         public enum Location
         {
-            Top,
-            Bottom
+            Before,
+            After
         }
     }
 }

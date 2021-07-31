@@ -44,7 +44,7 @@ namespace AutoFake.Setup.Configurations
         protected SourceMemberInsertMockConfiguration BeforeImpl(LambdaExpression expression)
         {
             var mock = new SourceMemberInsertMock(_processorFactory, new Expression.InvocationExpression(expression),
-                _closure, InsertMock.Location.Top);
+                _closure, InsertMock.Location.Before);
             _setMock(mock, _position);
             return new SourceMemberInsertMockConfiguration(mock);
         }

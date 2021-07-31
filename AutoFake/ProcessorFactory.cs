@@ -11,6 +11,6 @@ namespace AutoFake
         public IPrePostProcessor CreatePrePostProcessor() => new PrePostProcessor(TypeInfo);
 
         public IProcessor CreateProcessor(IEmitter emitter, Instruction instruction)
-            => new Processor(TypeInfo, emitter, instruction);
+            => new Processor(emitter, instruction);
     }
 }

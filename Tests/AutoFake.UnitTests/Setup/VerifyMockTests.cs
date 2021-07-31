@@ -29,13 +29,13 @@ namespace AutoFake.UnitTests.Setup
                 new FakeArgument(new EqualityArgumentChecker(1))
             });
             var mock = new VerifyMock(processorFactory, expression.Object);
-            proc.Setup(p => p.SaveMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()))
+            proc.Setup(p => p.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()))
 	            .Returns(args);
             mock.BeforeInjection(method);
 
             mock.Inject(emitter, Instruction.Create(OpCodes.Call, method));
 
-            proc.Verify(m => m.SaveMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()), Times.Once());
+            proc.Verify(m => m.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()), Times.Once());
             proc.Verify(m => m.PushMethodArguments(args), Times.Once());
         }
 
@@ -54,7 +54,7 @@ namespace AutoFake.UnitTests.Setup
 
 	        sut.Inject(Mock.Of<IEmitter>(), instruction);
 
-	        processor.Verify(p => p.SaveMethodCall(
+	        processor.Verify(p => p.RecordMethodCall(
 		        It.IsAny<FieldDefinition>(),
 		        It.IsAny<FieldDefinition>(),
 		        It.Is<IList<Type>>(prms => prms
