@@ -185,7 +185,23 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().BeOfType<HelperStruct>();
         }
 
-        public interface IHelper : IHelper2 { }
+		[Fact]
+		public void ReplaceMockArgsTest()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
+			sut.Replace(f => f.CallMethodThroughInterface(
+				Arg.Is<IHelper>(a => a.GetType() == typeof(HelperClass)))).Return(88);
+			//sut.Replace(f => f.CallMethodThroughInterface(
+			// Arg.Is<IHelper>(IsHelperClass))).Return(88);
+
+			sut.Execute().Should().Be(88);
+		}
+
+		private bool IsHelperClass(IHelper helper) => helper is HelperClass { Prop: 4 };
+
+		public interface IHelper : IHelper2 { }
         public interface IHelper2 : IHelper3 { }
         public interface IHelper3
         {
@@ -221,6 +237,11 @@ namespace AutoFake.FunctionalTests
 
         private class TestClass
         {
+	        public int CallMethodThroughInterface()
+	        {
+		        return CallMethodThroughInterface(new HelperClass {Prop = 4});
+	        }
+
             public virtual int CallMethodThroughInterface(IHelper helper)
             {
                 return helper.GetFive();

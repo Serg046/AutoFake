@@ -8,6 +8,7 @@ namespace AutoFake.Setup
     {
         string Name { get; }
         Type ReturnType { get; }
+        MemberInfo OriginalMember { get; }
         bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction);
         ParameterInfo[] GetParameters();
         bool HasStackInstance { get; }

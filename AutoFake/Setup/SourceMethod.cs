@@ -32,6 +32,8 @@ namespace AutoFake.Setup
 
         public bool HasStackInstance { get; }
 
+        public MemberInfo OriginalMember => _method;
+
         public bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction)
         {
             if (instruction.OpCode.OperandType == OperandType.InlineMethod &&

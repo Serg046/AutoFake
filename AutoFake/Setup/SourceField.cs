@@ -26,6 +26,8 @@ namespace AutoFake.Setup
 
         public bool HasStackInstance { get; }
 
+        public MemberInfo OriginalMember => _field;
+
         public bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction)
         {
             if (_fieldOpCodes.Contains(instruction.OpCode) &&
