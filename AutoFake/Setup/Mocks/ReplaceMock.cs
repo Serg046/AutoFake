@@ -17,7 +17,7 @@ namespace AutoFake.Setup.Mocks
         {
         }
 
-        public Type ReturnType { get; set; }
+        public Type? ReturnType { get; set; }
         public object ReturnObject { get; set; }
 
         public override void Inject(IEmitter emitter, Instruction instruction)
