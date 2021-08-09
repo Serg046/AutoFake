@@ -19,23 +19,11 @@ namespace AutoFake
             _options = fakeOptions;
         }
 
-        public void ProcessMethod(MethodBase method)
-		{
-			var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
-			var methodRef = _typeInfo.ImportReference(method);
-			var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
-			ProcessSourceMethod(new IMock[0], method, methodDef);
-        }
-
-        public void ProcessSourceMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
+        public void ProcessMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
 	        var executeFuncRef = _typeInfo.ImportReference(executeFunc);
-	        ProcessSourceMethod(mocks, executeFunc, _typeInfo.GetMethod(executeFuncRef));
-        }
-
-        private void ProcessSourceMethod(IEnumerable<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
-        {
-	        if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
+	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
+			if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
 	        var replaceTypeMocks = ProcessOriginalContracts(mocks, executeFunc, executeFuncDef);
 	        mocks = mocks.Concat(replaceTypeMocks);

@@ -20,10 +20,6 @@ namespace AutoFake
         
         public ActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression) => base.Rewrite(expression);
 
-        public void RewriteContract<TReturn>(Expression<Func<T, TReturn>> expression) => RewriteContractImpl(expression);
-
-        public void RewriteContract(Expression<Action<T>> expression) => RewriteContractImpl(expression);
-
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> expression) => base.Execute(expression);
 
         public void Execute(Expression<Action<T>> expression) => base.Execute(expression);
@@ -81,23 +77,6 @@ namespace AutoFake
             var mocks = GetMocksContainer(invocationExpression);
             return new ActionMockConfiguration(mocks, new ProcessorFactory(TypeInfo),
                 new Executor(this, invocationExpression));
-        }
-
-        public void RewriteContract<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression) => RewriteContractImpl(expression);
-
-        public void RewriteContract<TInput>(Expression<Action<TInput>> expression) => RewriteContractImpl(expression);
-
-        public void RewriteContract<TReturn>(Expression<Func<TReturn>> expression) => RewriteContractImpl(expression);
-
-        public void RewriteContract(Expression<Action> expression) => RewriteContractImpl(expression);
-
-        protected void RewriteContractImpl(System.Linq.Expressions.Expression expression)
-        {
-	        var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
-	        var visitor = new GetTestMethodVisitor();
-	        invocationExpression.AcceptMemberVisitor(visitor);
-	        var fakeProcessor = new FakeProcessor(TypeInfo, Options);
-            fakeProcessor.ProcessMethod(visitor.Method);
         }
 
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
