@@ -120,10 +120,10 @@ namespace AutoFake
         public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate) 
 	        => _sourceTypeDef.Methods.Where(m => methodPredicate(m));
 
-        public MethodDefinition GetMethod(MethodReference methodReference) =>
+        public MethodDefinition? GetMethod(MethodReference methodReference) =>
             GetMethod(_sourceTypeDef, methodReference);
 
-        public MethodDefinition GetMethod(TypeDefinition type, MethodReference methodReference)
+        public MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference)
         {
 	        var method = type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference));
 	        if (method == null && type.BaseType != null)
@@ -185,7 +185,7 @@ namespace AutoFake
 	        var fakeProcessor = new FakeProcessor(this, _fakeOptions);
 	        foreach (var mock in mocks)
 	        {
-		        fakeProcessor.ProcessSourceMethod(mock.Mocks, mock.Method);
+		        fakeProcessor.ProcessMethod(mock.Mocks, mock.Method);
 	        }
 
 	        LoadAffectedAssemblies();

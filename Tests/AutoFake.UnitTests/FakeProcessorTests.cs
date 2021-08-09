@@ -34,7 +34,7 @@ namespace AutoFake.UnitTests
             var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
 
-            _fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, testMethod);
+            _fakeProcessor.ProcessMethod(new[] { mock.Object }, testMethod);
 
             mock.Verify(m => m.BeforeInjection(It.Is<MethodDefinition>(met => met.Name == testMethod.Name)));
         }
@@ -48,7 +48,7 @@ namespace AutoFake.UnitTests
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)))).Returns(true);
 
-            _fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, testMethod);
+            _fakeProcessor.ProcessMethod(new[] { mock.Object }, testMethod);
 
             mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
@@ -60,7 +60,7 @@ namespace AutoFake.UnitTests
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
 
-            _fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, asyncMethod);
+            _fakeProcessor.ProcessMethod(new[] { mock.Object }, asyncMethod);
 
             mock.Verify(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
                 It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
@@ -69,7 +69,7 @@ namespace AutoFake.UnitTests
         [Fact]
         internal void ProcessSourceMethod_MembersFromTheSameModule_Success()
         {
-            _fakeProcessor.ProcessSourceMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
+            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
 
             var method = _typeInfo.GetMethods(m => m.Name == nameof(TestClass.GetTestClass)).Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.ReturnType.Module.Name);
@@ -80,7 +80,7 @@ namespace AutoFake.UnitTests
         [Fact]
         internal void ProcessSourceMethod_CtorFromTheSameModule_Success()
         {
-            _fakeProcessor.ProcessSourceMethod(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
+            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
 
             var method = _typeInfo.GetMethods(m => m.Name == ".ctor").Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.DeclaringType.Module.Name);
@@ -94,20 +94,20 @@ namespace AutoFake.UnitTests
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns((MethodDefinition)null);
 
             Assert.Throws<InvalidOperationException>(() => 
-	            generator.ProcessSourceMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetType))));
+	            generator.ProcessMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetType))));
         }
 
         [Fact]
         public void ProcessSourceMethod_NullMethod_Throws()
         {
-	        Assert.Throws<InvalidOperationException>(() => _fakeProcessor.ProcessSourceMethod(new[] { Mock.Of<IMock>() },
+	        Assert.Throws<InvalidOperationException>(() => _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() },
 		        GetMethodInfo(nameof(TestClass.GetType))));
         }
 
         [Fact]
         public void ProcessSourceMethod_MethodWhichCallsMethodWithoutBody_DoesNotThrow()
         {
-            _fakeProcessor.ProcessSourceMethod(new[] { Mock.Of<IMock>() },
+            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() },
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
         }
 
@@ -124,7 +124,7 @@ namespace AutoFake.UnitTests
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
 		        .Returns(typeInfoImp.GetMethods(m => m.Name == nameof(ToString)).Single);
 
-            Action act = () => generator.ProcessSourceMethod(new[] {Mock.Of<IMock>()},
+            Action act = () => generator.ProcessMethod(new[] {Mock.Of<IMock>()},
 		        typeof(object).GetMethod(nameof(ToString)));
 
             act.Should().NotThrow();
@@ -137,7 +137,7 @@ namespace AutoFake.UnitTests
             var gen = new FakeProcessor(typeInfo, new FakeOptions());
             var method = typeof(object).GetMethod(nameof(ToString));
 
-            gen.ProcessSourceMethod(new []{Mock.Of<IMock>()}, method);
+            gen.ProcessMethod(new []{Mock.Of<IMock>()}, method);
         }
 
         [AutoMoqData, Theory]
@@ -154,7 +154,7 @@ namespace AutoFake.UnitTests
 		        VirtualMembers = { nameof(Stream.WriteByte) }
 	        });
 
-	        gen.ProcessSourceMethod(new[] { Mock.Of<IMock>() }, method);
+	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
 			typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
 				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
@@ -176,7 +176,7 @@ namespace AutoFake.UnitTests
 		        IncludeAllVirtualMembers = true
 	        });
 
-	        gen.ProcessSourceMethod(new[] { Mock.Of<IMock>() }, method);
+	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
 	        typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
 		        m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
@@ -229,7 +229,7 @@ namespace AutoFake.UnitTests
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
 
             // Act
-            fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, methodInfo);
+            fakeProcessor.ProcessMethod(new[] { mock.Object }, methodInfo);
 
             // Assert
             mock.Verify(m => m.Inject(
@@ -248,7 +248,7 @@ namespace AutoFake.UnitTests
             options.AnalysisLevel = (AnalysisLevels)100;
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, executeMethod));
 
-            Action act = () => fakeProcessor.ProcessSourceMethod(new[] { Mock.Of<IMock>()}, methodInfo);
+            Action act = () => fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>()}, methodInfo);
 
             act.Should().Throw<NotSupportedException>().WithMessage("100 is not supported");
         }
@@ -286,7 +286,7 @@ namespace AutoFake.UnitTests
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
 
             // Act
-            fakeProcessor.ProcessSourceMethod(new[] { mock.Object }, methodInfo);
+            fakeProcessor.ProcessMethod(new[] { mock.Object }, methodInfo);
 
             // Assert
             mock.Verify(m => m.Inject(
