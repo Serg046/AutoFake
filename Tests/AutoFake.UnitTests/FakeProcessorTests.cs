@@ -221,6 +221,7 @@ namespace AutoFake.UnitTests
             var innerMethod = new MethodDefinition("MockedMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
             SetType(executeMethod, type1, module1);
             SetType(method, type2, module2);
+            SetType(innerMethod, type2, module2);
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, method));
             var instruction = Instruction.Create(OpCodes.Call, innerMethod);
             var copy = instruction.Copy();
@@ -279,6 +280,7 @@ namespace AutoFake.UnitTests
             SetType(method, type2, module2);
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, method));
             var innerMethod = new MethodDefinition("MockedMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
+            SetType(innerMethod, type2, module2);
             var instruction = Instruction.Create(OpCodes.Call, innerMethod);
             var copy = instruction.Copy();
             method.Body.Instructions.Add(instruction);

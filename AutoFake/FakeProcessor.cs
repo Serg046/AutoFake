@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -12,11 +11,13 @@ namespace AutoFake
     {
         private readonly ITypeInfo _typeInfo;
         private readonly FakeOptions _options;
+        private readonly HashSet<IMock> _replaceContractMocks;
 
         public FakeProcessor(ITypeInfo typeInfo, FakeOptions fakeOptions)
         {
             _typeInfo = typeInfo;
             _options = fakeOptions;
+            _replaceContractMocks = new HashSet<IMock>();
         }
 
         public void ProcessMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
@@ -25,98 +26,25 @@ namespace AutoFake
 	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
 			if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
-	        var replaceTypeMocks = ProcessOriginalContracts(mocks, executeFunc, executeFuncDef);
-	        mocks = mocks.Concat(replaceTypeMocks);
-
+			var testMethods = new List<TestMethod>();
 	        using var emitterPool = new EmitterPool();
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
-	        var testMethod = new TestMethod(this, executeFuncDef, mocks, emitterPool);
-	        testMethod.Rewrite();
+	        var testMethod = new TestMethod(this, executeFuncDef, emitterPool);
+			testMethod.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>());
+	        testMethod.RewriteAndProcessContracts(mocks);
 	        foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
+	        testMethods.Add(testMethod);
 
-	        if (replaceTypeMocks.Any())
-	        {
-		        foreach (var ctor in _typeInfo.GetMethods(m => m.Name == ".ctor" || m.Name == ".cctor"))
-		        {
-			        new TestMethod(this, ctor, replaceTypeMocks, emitterPool).Rewrite();
-		        }
-	        }
-        }
-
-        private HashSet<IMock> ProcessOriginalContracts(IEnumerable<IMock> mocks, MethodBase executeFunc, MethodDefinition executeFuncDef)
-        {
-	        var replaceTypeMocks = new HashSet<IMock>();
-	        ProcessAllOriginalMethodContracts(replaceTypeMocks, executeFuncDef, false);
-	        foreach (var mock in mocks.OfType<SourceMemberMock>())
-	        {
-		        if (mock is ReplaceMock replaceMock && replaceMock.ReturnType?.Module == executeFunc.Module)
-		        {
-			        AddReplaceInterfaceCallMocks(replaceTypeMocks, _typeInfo.GetTypeDefinition(replaceMock.ReturnType));
-		        }
-
-		        if (mock.SourceMember.OriginalMember is MethodBase method && method.Module == executeFunc.Module && method.DeclaringType != null)
-		        {
-			        var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
-					var methodRef = _typeInfo.ImportReference(method);
-			        var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
-					ProcessAllOriginalMethodContracts(replaceTypeMocks, methodDef, true);
-		        }
-			}
-
-			foreach (var ctorDef in _typeInfo.GetMethods(m => m.Name == ".ctor"))
+			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{
-				ProcessOriginalMethodContract(replaceTypeMocks, ctorDef, false);
+				var testCtor = new TestMethod(this, ctor, emitterPool);
+				testCtor.RewriteAndProcessContracts(Enumerable.Empty<IMock>());
+				testMethods.Add(testCtor);
 			}
 
-			return replaceTypeMocks;
-        }
-
-        private void ProcessAllOriginalMethodContracts(HashSet<IMock> mocks, MethodDefinition methodDef, bool replaceCtors)
-        {
-	        foreach (var typeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
-	        {
-				var method = _typeInfo.GetMethod(typeDef, methodDef);
-				if (method != null) ProcessOriginalMethodContract(mocks, method, replaceCtors);
-			}
-        }
-		
-        private void ProcessOriginalMethodContract(HashSet<IMock> mocks, MethodDefinition methodDef, bool replaceCtors)
-        {
-	        if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
-	        {
-		        AddReplaceTypeMocks(mocks, methodDef.ReturnType.ToTypeDefinition());
-		        methodDef.ReturnType = _typeInfo.CreateImportedTypeReference(methodDef.ReturnType);
-	        }
-
-	        foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _typeInfo.IsInFakeModule(parameterDef.ParameterType)))
-	        {
-		        var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
-				AddReplaceInterfaceCallMocks(mocks, typeDefinition);
-		        if (replaceCtors) AddReplaceTypeMocks(mocks, typeDefinition);
-				parameterDef.ParameterType = _typeInfo.CreateImportedTypeReference(parameterDef.ParameterType);
-	        }
-        }
-
-		private void AddReplaceTypeMocks(HashSet<IMock> mocks, TypeDefinition typeDef)
-        {
-	        foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
-	        {
-				var importedTypeRef = _typeInfo.CreateImportedTypeReference(mockTypeDef);
-		        if (!mockTypeDef.IsInterface)
-		        {
-			        mocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
-		        }
-		        mocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
-			}
-		}
-
-		private void AddReplaceInterfaceCallMocks(HashSet<IMock> mocks, TypeDefinition typeDef)
-		{
-			foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
+			foreach (var method in testMethods)
 			{
-				var importedTypeRef = _typeInfo.CreateImportedTypeReference(mockTypeDef);
-				if (mockTypeDef.IsInterface) mocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
-				mocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+				method.Rewrite(_replaceContractMocks);
 			}
 		}
 		
@@ -124,47 +52,70 @@ namespace AutoFake
         {
             private readonly FakeProcessor _gen;
             private readonly MethodDefinition _originalMethod;
-            private readonly IEnumerable<IMock> _mocks;
             private readonly IEmitterPool _emitterPool;
-            private readonly HashSet<string> _methods;
+            private readonly HashSet<string> _methodContracts;
+            private readonly List<MethodDefinition> _methods;
 
-            public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEnumerable<IMock> mocks, IEmitterPool emitterPool)
+            public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEmitterPool emitterPool)
             {
                 _gen = gen;
                 _originalMethod = originalMethod;
-                _mocks = mocks;
                 _emitterPool = emitterPool;
-                _methods = new HashSet<string>();
+                _methodContracts = new HashSet<string>();
+                _methods = new List<MethodDefinition>();
             }
 
-            public void Rewrite()
+            public void RewriteAndProcessContracts(IEnumerable<IMock> mocks)
             {
-                Rewrite(_originalMethod, Enumerable.Empty<MethodDefinition>());
+                Rewrite(mocks);
+				//foreach (var methodDef in _methods)
+				{
+					ProcessAllOriginalMethodContracts(_originalMethod, replaceCtors: false);
+				}
+			}
+
+            public void Rewrite(IEnumerable<IMock> mocks)
+            {
+	            Rewrite(mocks, _originalMethod);
             }
 
-            private void Rewrite(MethodDefinition currentMethod, IEnumerable<MethodDefinition> parents)
+			private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition methodDef)
             {
-                if (currentMethod?.Body == null || !_methods.Add(currentMethod.ToString())) return;
+	            _methodContracts.Clear();
+				Rewrite(mocks, methodDef, Enumerable.Empty<MethodDefinition>());
+			}
+
+            private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, IEnumerable<MethodDefinition> parents)
+            {
+				if (currentMethod == null || !_methodContracts.Add(currentMethod.ToString())) return;
+				_methods.Add(currentMethod);
+                if (currentMethod.Body == null) return;
 
                 if (currentMethod.IsVirtual && (_gen._options.IncludeAllVirtualMembers ||
                     _gen._options.VirtualMembers.Contains(currentMethod.Name)))
                 {
                     foreach (var virtualMethod in _gen._typeInfo.GetDerivedVirtualMethods(currentMethod))
                     {
-                        Rewrite(virtualMethod, GetParents());
+                        Rewrite(mocks, virtualMethod, GetParents());
                     }
                 }
 
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
-                    Rewrite(asyncMethod, GetParents());
+                    Rewrite(mocks, asyncMethod, GetParents());
                 }
 
                 foreach (var instruction in currentMethod.Body.Instructions.ToList())
                 {
 	                var originalInstruction = true;
 	                var instructionRef = instruction;
-					foreach (var mock in _mocks)
+
+	                if (instructionRef.Operand is MethodReference method && ShouldBeAnalyzed(method))
+	                {
+		                Rewrite(mocks, method.ToMethodDefinition(), GetParents());
+	                }
+
+					foreach (var mock in mocks)
 	                {
 		                if (mock.IsSourceInstruction(_originalMethod, instructionRef))
 		                {
@@ -182,12 +133,8 @@ namespace AutoFake
 				                TryAddAffectedAssembly(parent);
 			                }
 		                }
-		                else if (instructionRef.Operand is MethodReference method && ShouldBeAnalyzed(method))
-		                {
-			                Rewrite(method.ToMethodDefinition(), GetParents());
-		                }
 	                }
-                }
+				}
 
                 IEnumerable<MethodDefinition> GetParents() => parents.Concat(new[] { currentMethod });
             }
@@ -216,7 +163,7 @@ namespace AutoFake
 			            break;
 		            }
 		            case AnalysisLevels.AllAssemblies: return true;
-                    default: throw new NotSupportedException($"{_gen._options.AnalysisLevel.ToString()} is not supported");
+                    default: throw new NotSupportedException($"{_gen._options.AnalysisLevel} is not supported");
 	            }
 
 	            foreach (var assembly in _gen._options.Assemblies)
@@ -229,6 +176,74 @@ namespace AutoFake
 
 	            return false;
             }
-        }
+
+			public void ProcessCommonOriginalContracts(IEnumerable<SourceMemberMock> sourceMemberMocks)
+			{
+				foreach (var mock in sourceMemberMocks)
+				{
+					if (mock is ReplaceMock replaceMock && replaceMock.ReturnType?.Module == _gen._typeInfo.SourceType.Module)
+					{
+						AddReplaceInterfaceCallMocks(_gen._typeInfo.GetTypeDefinition(replaceMock.ReturnType));
+					}
+
+					if (mock.SourceMember.OriginalMember is MethodBase method &&
+					    method.Module == _gen._typeInfo.SourceType.Module && method.DeclaringType != null)
+					{
+						var typeDef = _gen._typeInfo.GetTypeDefinition(method.DeclaringType);
+						var methodRef = _gen._typeInfo.ImportReference(method);
+						ProcessAllOriginalMethodContracts(_gen._typeInfo.GetMethod(typeDef, methodRef), replaceCtors: true);
+					}
+				}
+			}
+
+			private void ProcessAllOriginalMethodContracts(MethodDefinition methodDef, bool replaceCtors)
+			{
+				foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
+				{
+					var method = _gen._typeInfo.GetMethod(typeDef, methodDef);
+					if (method != null) ProcessOriginalMethodContract(method, replaceCtors);
+				}
+			}
+
+			private void ProcessOriginalMethodContract(MethodDefinition methodDef, bool replaceCtors)
+			{
+				if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _gen._typeInfo.IsInFakeModule(methodDef.ReturnType))
+				{
+					AddReplaceTypeMocks(methodDef.ReturnType.ToTypeDefinition());
+					methodDef.ReturnType = _gen._typeInfo.CreateImportedTypeReference(methodDef.ReturnType);
+				}
+
+				foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _gen._typeInfo.IsInFakeModule(parameterDef.ParameterType)))
+				{
+					var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
+					AddReplaceInterfaceCallMocks(typeDefinition);
+					if (replaceCtors) AddReplaceTypeMocks(typeDefinition);
+					parameterDef.ParameterType = _gen._typeInfo.CreateImportedTypeReference(parameterDef.ParameterType);
+				}
+			}
+
+			private void AddReplaceTypeMocks(TypeDefinition typeDef)
+			{
+				foreach (var mockTypeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
+				{
+					var importedTypeRef = _gen._typeInfo.CreateImportedTypeReference(mockTypeDef);
+					if (!mockTypeDef.IsInterface)
+					{
+						_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
+					}
+					_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+				}
+			}
+
+			private void AddReplaceInterfaceCallMocks(TypeDefinition typeDef)
+			{
+				foreach (var mockTypeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
+				{
+					var importedTypeRef = _gen._typeInfo.CreateImportedTypeReference(mockTypeDef);
+					if (mockTypeDef.IsInterface) _gen._replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
+					_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+				}
+			}
+		}
     }
 }
