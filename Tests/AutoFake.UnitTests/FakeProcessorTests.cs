@@ -111,7 +111,7 @@ namespace AutoFake.UnitTests
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
         }
 
-        [Theory, AutoMoqData]
+        [Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145"), AutoMoqData]
         internal void ProcessSourceMethod_MethodWhichCallsNullMethod_DoesNotThrow(
 	        [Frozen, InjectModule] Mock<ITypeInfo> typeInfo,
             [Frozen] FakeOptions options,
@@ -140,7 +140,7 @@ namespace AutoFake.UnitTests
             gen.ProcessMethod(new []{Mock.Of<IMock>()}, method);
         }
 
-        [AutoMoqData, Theory]
+        [AutoMoqData, Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145")]
         internal void ProcessSourceMethod_VirtualMethodWithSpecification_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
@@ -162,7 +162,7 @@ namespace AutoFake.UnitTests
 				m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
 		}
 
-        [AutoMoqData, Theory]
+        [AutoMoqData, Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145")]
         internal void ProcessSourceMethod_VirtualMethodWithAllEnabled_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions(){Debug = false});
@@ -239,7 +239,7 @@ namespace AutoFake.UnitTests
 	            injected ? Times.Once() : Times.Never());
         }
 
-        [Theory, AutoMoqData]
+        [Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145"), AutoMoqData]
         internal void ProcessSourceMethod_UnsupportedAnalysisLevel_Success(
             [Frozen] FakeOptions options,
             [Frozen] MethodDefinition executeMethod,

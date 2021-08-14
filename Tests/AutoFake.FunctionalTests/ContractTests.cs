@@ -118,13 +118,11 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().Be(5);
         }
 
-        [Fact(Skip = "Issue #144")]
+        [Fact]
         public void InterfaceContractThroughAnotherTypeTest()
         {
             var fake = new Fake<InheritedTestClassWithInterface>();
 
-            //fake.RewriteContract(f => f.CallMethodThroughInterface(new HelperClass()));
-            //fake.RewriteContract((AnotherInheritedTestClassWithInterface f) => f.CallMethodThroughInterface(new HelperClass()));
             var sut = fake.Rewrite(f => f.CallMethodUsingAnotherType(new HelperClass()));
 
             sut.Execute().Should().Be(10);
@@ -366,8 +364,8 @@ namespace AutoFake.FunctionalTests
 
             private int CallMethodUsingAnotherType(IInheritedTestClassWithInterface testClass, IHelper helper)
             {
-	            return testClass.CallMethodThroughInterface(helper);// +
-                       //new AnotherInheritedTestClassWithInterface().CallMethodThroughInterface(helper);
+	            return testClass.CallMethodThroughInterface(helper) +
+                       new AnotherInheritedTestClassWithInterface().CallMethodThroughInterface(helper);
             }
         }
 
