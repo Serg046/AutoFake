@@ -12,12 +12,14 @@ namespace AutoFake
         private readonly ITypeInfo _typeInfo;
         private readonly FakeOptions _options;
         private readonly HashSet<IMock> _replaceContractMocks;
+        private readonly Dictionary<string, TypeReference> _importedTypes;
 
         public FakeProcessor(ITypeInfo typeInfo, FakeOptions fakeOptions)
         {
             _typeInfo = typeInfo;
             _options = fakeOptions;
             _replaceContractMocks = new HashSet<IMock>();
+            _importedTypes = new Dictionary<string, TypeReference>();
         }
 
         public void ProcessMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
@@ -68,13 +70,14 @@ namespace AutoFake
             public void RewriteAndProcessContracts(IEnumerable<IMock> mocks)
             {
                 Rewrite(mocks);
-				//foreach (var methodDef in _methods)
+				ProcessAllOriginalMethodContractsWithMocks(_originalMethod, replaceCtors: false);
+				foreach (var methodDef in _methods.Where(m => m != _originalMethod))
 				{
-					ProcessAllOriginalMethodContracts(_originalMethod, replaceCtors: false);
+					ProcessAllOriginalMethodContracts(methodDef);
 				}
-			}
+            }
 
-            public void Rewrite(IEnumerable<IMock> mocks)
+			public void Rewrite(IEnumerable<IMock> mocks)
             {
 	            Rewrite(mocks, _originalMethod);
             }
@@ -89,55 +92,71 @@ namespace AutoFake
             {
 				if (currentMethod == null || !_methodContracts.Add(currentMethod.ToString())) return;
 				_methods.Add(currentMethod);
-                if (currentMethod.Body == null) return;
+
+				if (currentMethod.DeclaringType.IsInterface)
+				{
+					foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(currentMethod.DeclaringType))
+					{
+						var method = _gen._typeInfo.GetMethod(typeDef, currentMethod);
+						if (method != null) Rewrite(mocks, method, GetParents(parents, currentMethod));
+					}
+				}
 
                 if (currentMethod.IsVirtual && (_gen._options.IncludeAllVirtualMembers ||
                     _gen._options.VirtualMembers.Contains(currentMethod.Name)))
                 {
                     foreach (var virtualMethod in _gen._typeInfo.GetDerivedVirtualMethods(currentMethod))
                     {
-                        Rewrite(mocks, virtualMethod, GetParents());
+                        Rewrite(mocks, virtualMethod, GetParents(parents, currentMethod));
                     }
                 }
 
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
-                    Rewrite(mocks, asyncMethod, GetParents());
+                    Rewrite(mocks, asyncMethod, GetParents(parents, currentMethod));
                 }
 
-                foreach (var instruction in currentMethod.Body.Instructions.ToList())
+                if (currentMethod.Body != null)
                 {
-	                var originalInstruction = true;
-	                var instructionRef = instruction;
-
-	                if (instructionRef.Operand is MethodReference method && ShouldBeAnalyzed(method))
-	                {
-		                Rewrite(mocks, method.ToMethodDefinition(), GetParents());
-	                }
-
-					foreach (var mock in mocks)
-	                {
-		                if (mock.IsSourceInstruction(_originalMethod, instructionRef))
-		                {
-			                var emitter = _emitterPool.GetEmitter(currentMethod.Body);
-			                if (originalInstruction)
-			                {
-				                instructionRef = emitter.ShiftDown(instructionRef);
-								originalInstruction = false;
-			                }
-
-			                mock.Inject(emitter, instructionRef);
-			                TryAddAffectedAssembly(currentMethod);
-			                foreach (var parent in parents)
-			                {
-				                TryAddAffectedAssembly(parent);
-			                }
-		                }
-	                }
-				}
-
-                IEnumerable<MethodDefinition> GetParents() => parents.Concat(new[] { currentMethod });
+	                ProcessInstructions(mocks, currentMethod, parents);
+                }
             }
+
+            private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, IEnumerable<MethodDefinition> parents)
+            {
+	            foreach (var instruction in currentMethod.Body.Instructions.ToList())
+	            {
+		            var originalInstruction = true;
+		            var instructionRef = instruction;
+
+		            if (instructionRef.Operand is MethodReference method && ShouldBeAnalyzed(method))
+		            {
+			            Rewrite(mocks, method.ToMethodDefinition(), GetParents(parents, currentMethod));
+		            }
+
+		            foreach (var mock in mocks)
+		            {
+			            if (mock.IsSourceInstruction(_originalMethod, instructionRef))
+			            {
+				            var emitter = _emitterPool.GetEmitter(currentMethod.Body);
+				            if (originalInstruction)
+				            {
+					            instructionRef = emitter.ShiftDown(instructionRef);
+					            originalInstruction = false;
+				            }
+
+				            mock.Inject(emitter, instructionRef);
+				            TryAddAffectedAssembly(currentMethod);
+				            foreach (var parent in parents)
+				            {
+					            TryAddAffectedAssembly(parent);
+				            }
+			            }
+		            }
+	            }
+            }
+
+            private IEnumerable<MethodDefinition> GetParents(IEnumerable<MethodDefinition> parents, MethodDefinition currentMethod) => parents.Concat(new[] {currentMethod});
 
             private void TryAddAffectedAssembly(MethodDefinition currentMethod)
             {
@@ -191,21 +210,21 @@ namespace AutoFake
 					{
 						var typeDef = _gen._typeInfo.GetTypeDefinition(method.DeclaringType);
 						var methodRef = _gen._typeInfo.ImportReference(method);
-						ProcessAllOriginalMethodContracts(_gen._typeInfo.GetMethod(typeDef, methodRef), replaceCtors: true);
+						ProcessAllOriginalMethodContractsWithMocks(_gen._typeInfo.GetMethod(typeDef, methodRef), replaceCtors: true);
 					}
 				}
 			}
 
-			private void ProcessAllOriginalMethodContracts(MethodDefinition methodDef, bool replaceCtors)
+			private void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef, bool replaceCtors)
 			{
 				foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
 				{
 					var method = _gen._typeInfo.GetMethod(typeDef, methodDef);
-					if (method != null) ProcessOriginalMethodContract(method, replaceCtors);
+					if (method != null) ProcessOriginalMethodContractWithMocks(method, replaceCtors);
 				}
 			}
 
-			private void ProcessOriginalMethodContract(MethodDefinition methodDef, bool replaceCtors)
+			private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef, bool replaceCtors)
 			{
 				if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _gen._typeInfo.IsInFakeModule(methodDef.ReturnType))
 				{
@@ -232,6 +251,7 @@ namespace AutoFake
 						_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
 					}
 					_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+					TryAddImportedType(mockTypeDef, importedTypeRef);
 				}
 			}
 
@@ -242,6 +262,41 @@ namespace AutoFake
 					var importedTypeRef = _gen._typeInfo.CreateImportedTypeReference(mockTypeDef);
 					if (mockTypeDef.IsInterface) _gen._replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
 					_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+					TryAddImportedType(mockTypeDef, importedTypeRef);
+				}
+			}
+
+			private void TryAddImportedType(TypeDefinition typeDef, TypeReference typeRef)
+			{
+				var contract = typeDef.ToString();
+				if (!_gen._importedTypes.ContainsKey(contract)) _gen._importedTypes.Add(contract, typeRef);
+			}
+
+			private void ProcessAllOriginalMethodContracts(MethodDefinition methodDef)
+			{
+				foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
+				{
+					var method = _gen._typeInfo.GetMethod(typeDef, methodDef);
+					if (method != null)
+					{
+						ProcessOriginalMethodContract(method);
+					}
+				}
+			}
+
+			private void ProcessOriginalMethodContract(MethodDefinition methodDef)
+			{
+				if (_gen._importedTypes.TryGetValue(methodDef.ReturnType.ToString(), out var importedType))
+				{
+					methodDef.ReturnType = importedType;
+				}
+
+				foreach (var parameterDef in methodDef.Parameters)
+				{
+					if (_gen._importedTypes.TryGetValue(parameterDef.ParameterType.ToString(), out importedType))
+					{
+						parameterDef.ParameterType = importedType;
+					}
 				}
 			}
 		}
