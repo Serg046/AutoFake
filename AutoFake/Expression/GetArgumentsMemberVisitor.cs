@@ -76,9 +76,9 @@ namespace AutoFake.Expression
                 {
                     if (expression.Arguments.Count == 1)
                     {
-                        var lambdaExpr = (LambdaExpression) expression.Arguments.Single();
-                        var lambda = lambdaExpr.Compile();
-                        var checker = new LambdaArgumentChecker(lambda);
+                        var lambdaExpr = LinqExpression.Lambda<Func<Delegate>>(expression.Arguments.Single());
+                        var @delegate = lambdaExpr.Compile()();
+                        var checker = new LambdaArgumentChecker(@delegate);
                         return new FakeArgument(checker);
                     }
                     return CreateEqualityComparerArgument(expression);

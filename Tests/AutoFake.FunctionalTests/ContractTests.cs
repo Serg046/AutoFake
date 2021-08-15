@@ -183,18 +183,15 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().BeOfType<HelperStruct>();
         }
 
-		[Fact(Skip = "Some specifics regarding type casts")]
+		[Fact]
 		public void ReplaceMockArgsTest()
 		{
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
-			//sut.Replace(f => f.CallMethodThroughInterface(
-			//	Arg.Is<IHelper>(a => a.GetType() == typeof(HelperClass)))).Return(88);
-			sut.Replace(f => f.CallMethodThroughInterface(
-			 Arg.Is<IHelper>(IsHelperClass))).Return(88);
+            sut.Replace(f => f.CallMethodThroughInterface(Arg.Is<IHelper>(IsHelperClass))).Return(88);
 
-			sut.Execute().Should().Be(88);
+            sut.Execute().Should().Be(88);
 		}
 
 		private bool IsHelperClass(IHelper helper) => helper is HelperClass { Prop: 4 };
