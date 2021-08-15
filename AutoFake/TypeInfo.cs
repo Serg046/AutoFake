@@ -268,88 +268,22 @@ namespace AutoFake
         }
 
         private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
-
-        public IList<MethodDefinition> GetDerivedVirtualMethods(MethodDefinition method)
-        {
-	        var methodContract = method.ToString();
-            if (!_virtualMethods.ContainsKey(methodContract))
-            {
-                var list = new List<MethodDefinition>();
-                foreach (var type in GetDerivedTypes(method.DeclaringType))
-                {
-                    var derivedMethod = type.Methods.SingleOrDefault(m => m.EquivalentTo(method));
-                    if (derivedMethod != null)
-                    {
-                        list.Add(derivedMethod);
-                    }
-                }
-                _virtualMethods.Add(methodContract, list);
-            }
-
-            return _virtualMethods[methodContract];
-        }
-
+        
         public bool TryAddAffectedAssembly(AssemblyDefinition assembly)
         {
 	        return _affectedAssemblies.Add(assembly);
         }
-
-		private IEnumerable<TypeDefinition> GetDerivedTypes(TypeDefinition parentType)
-		{
-            return _fakeOptions.AnalysisLevel == AnalysisLevels.Type 
-	            ? Enumerable.Empty<TypeDefinition>()
-	            : GetReferencedAssemblies().SelectMany(a => a.Modules).SelectMany(m => m.GetTypes()
-		            .Where(t => IsDerived(t, parentType)));
-		}
         
-        private ICollection<AssemblyDefinition> GetReferencedAssemblies()
+        public ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method)
         {
-	        var referencedAssemblies = new Dictionary<AssemblyName, AssemblyDefinition>
+	        var methods = new HashSet<MethodDefinition>();
+	        foreach (var typeDef in TypeMap.GetAllParentsAndDescendants(method.DeclaringType))
 	        {
-				{SourceType.Assembly.GetName(), _assemblyDef}
-			};
-
-	        if (_fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies)
-	        {
-		        foreach (var assemblyName in SourceType.Assembly.GetReferencedAssemblies())
-		        {
-			        if (!referencedAssemblies.ContainsKey(assemblyName))
-			        {
-				        var referencedAssembly = Assembly.Load(assemblyName);
-				        foreach (var module in referencedAssembly.GetModules())
-				        {
-							referencedAssemblies.Add(assemblyName,
-								AssemblyDefinition.ReadAssembly(module.FullyQualifiedName));
-						}
-			        }
-		        }
+		        var methodDef = GetMethod(typeDef, method);
+		        if (methodDef != null) methods.Add(methodDef);
 	        }
 
-	        foreach (var assembly in _fakeOptions.Assemblies)
-	        {
-		        var assemblyName = assembly.GetName();
-                if (!referencedAssemblies.ContainsKey(assemblyName))
-		        {
-			        foreach (var module in assembly.GetModules())
-			        {
-				        referencedAssemblies.Add(assemblyName,
-					        AssemblyDefinition.ReadAssembly(module.FullyQualifiedName));
-			        }
-		        }
-	        }
-
-            return referencedAssemblies.Values;
+	        return methods;
         }
-
-        private bool IsDerived(TypeDefinition derived, TypeDefinition parent)
-		{
-			if (derived.BaseType != null)
-			{
-				var baseType = derived.BaseType.ToTypeDefinition();
-				return baseType.FullName == parent.FullName || IsDerived(baseType, parent);
-			}
-
-			return false;
-		}
-	}
+    }
 }

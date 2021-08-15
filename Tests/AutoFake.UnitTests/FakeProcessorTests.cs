@@ -110,78 +110,65 @@ namespace AutoFake.UnitTests
             _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() },
                 GetMethodInfo(nameof(TestClass.MethodWithGetType)));
         }
-
-        [Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145"), AutoMoqData]
-        internal void ProcessSourceMethod_MethodWhichCallsNullMethod_DoesNotThrow(
-	        [Frozen, InjectModule] Mock<ITypeInfo> typeInfo,
-            [Frozen] FakeOptions options,
-	        FakeProcessor generator)
-        {
-	        options.IncludeAllVirtualMembers = true;
-	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
-		        .Returns(new MethodDefinition[] {null});
-	        var typeInfoImp = new TypeInfo(typeof(object), new List<FakeDependency>(), new FakeOptions());
-	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>()))
-		        .Returns(typeInfoImp.GetMethods(m => m.Name == nameof(ToString)).Single);
-
-            Action act = () => generator.ProcessMethod(new[] {Mock.Of<IMock>()},
-		        typeof(object).GetMethod(nameof(ToString)));
-
-            act.Should().NotThrow();
-        }
-
+        
         [Fact]
         public void ProcessSourceMethod_RecursiveMethod_Success()
         {
             var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>(), new FakeOptions());
-            var gen = new FakeProcessor(typeInfo, new FakeOptions());
+            var gen = new FakeProcessor(typeInfo, new FakeOptions {DisableVirtualMembers = true});
             var method = typeof(object).GetMethod(nameof(ToString));
 
             gen.ProcessMethod(new []{Mock.Of<IMock>()}, method);
         }
 
-        [AutoMoqData, Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145")]
+        [AutoMoqData, Theory]
         internal void ProcessSourceMethod_VirtualMethodWithSpecification_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var methodDef = typeInfoImp.GetMethods(m => m.Name == method.Name).Single();
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns(methodDef);
-	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
-		        .Returns(typeInfoImp.GetDerivedVirtualMethods(methodDef));
+	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
+		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
+	        typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>()))
+		        .Returns((MethodDefinition m) => typeInfoImp.GetAllImplementations(m));
 	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
 	        {
-		        VirtualMembers = { nameof(Stream.WriteByte) }
+		        Debug = false,
+		        AllowedVirtualMembers =
+		        {
+			        m => m.Name == nameof(Stream.WriteByte) &&
+			             (m.DeclaringType is "System.IO.Stream" or "System.IO.MemoryStream")
+		        }
 	        });
 
 	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
-			typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
+			typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
 				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
-			typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
-				m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
+			//typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
+			//	m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
 		}
 
-        [AutoMoqData, Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145")]
+        [AutoMoqData, Theory(Skip = "Too long")]
         internal void ProcessSourceMethod_VirtualMethodWithAllEnabled_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
-	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions(){Debug = false});
+	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var methodDef = typeInfoImp.GetMethods(m => m.Name == method.Name).Single();
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns(methodDef);
-	        typeInfo.Setup(t => t.GetDerivedVirtualMethods(It.IsAny<MethodDefinition>()))
-		        .Returns(typeInfoImp.GetDerivedVirtualMethods(methodDef));
-	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
-	        {
-		        IncludeAllVirtualMembers = true
-	        });
+	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
+		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
+            typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>()))
+	            .Returns((MethodDefinition m) => typeInfoImp.GetAllImplementations(m));
+            var gen = new FakeProcessor(typeInfo.Object, new FakeOptions());
 
 	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
-	        typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
+	        typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
 		        m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
-			typeInfo.Verify(t => t.GetDerivedVirtualMethods(It.Is<MethodDefinition>(
-				m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
+			//typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
+			//	m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
 		}
 
         [Theory]
@@ -239,7 +226,7 @@ namespace AutoFake.UnitTests
 	            injected ? Times.Once() : Times.Never());
         }
 
-        [Theory(Skip = "https://github.com/Serg046/AutoFake/issues/145"), AutoMoqData]
+        [Theory, AutoMoqData]
         internal void ProcessSourceMethod_UnsupportedAnalysisLevel_Success(
             [Frozen] FakeOptions options,
             [Frozen] MethodDefinition executeMethod,
