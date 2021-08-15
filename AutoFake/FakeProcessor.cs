@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
@@ -57,6 +58,7 @@ namespace AutoFake
             private readonly IEmitterPool _emitterPool;
             private readonly HashSet<string> _methodContracts;
             private readonly List<MethodDefinition> _methods;
+            private readonly HashSet<MethodDefinition> _implementations;
 
             public TestMethod(FakeProcessor gen, MethodDefinition originalMethod, IEmitterPool emitterPool)
             {
@@ -65,6 +67,7 @@ namespace AutoFake
                 _emitterPool = emitterPool;
                 _methodContracts = new HashSet<string>();
                 _methods = new List<MethodDefinition>();
+                _implementations = new HashSet<MethodDefinition>();
             }
 
             public void RewriteAndProcessContracts(IEnumerable<IMock> mocks)
@@ -73,7 +76,7 @@ namespace AutoFake
 				ProcessAllOriginalMethodContractsWithMocks(_originalMethod, replaceCtors: false);
 				foreach (var methodDef in _methods.Where(m => m != _originalMethod))
 				{
-					ProcessAllOriginalMethodContracts(methodDef);
+					ProcessOriginalMethodContract(methodDef);
 				}
             }
 
@@ -84,32 +87,30 @@ namespace AutoFake
 
 			private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition methodDef)
             {
+				_methods.Clear();
 	            _methodContracts.Clear();
+				_implementations.Clear();
 				Rewrite(mocks, methodDef, Enumerable.Empty<MethodDefinition>());
 			}
 
             private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, IEnumerable<MethodDefinition> parents)
             {
-				if (currentMethod == null || !_methodContracts.Add(currentMethod.ToString())) return;
+				if (currentMethod == null || !CheckAnalysisLevel(currentMethod) || !CheckVirtualMember(currentMethod) || !_methodContracts.Add(currentMethod.ToString())) return;
 				_methods.Add(currentMethod);
 
-				if (currentMethod.DeclaringType.IsInterface)
+				if ((currentMethod.DeclaringType.IsInterface || currentMethod.IsVirtual) && !_implementations.Contains(currentMethod))
 				{
-					foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(currentMethod.DeclaringType))
+					var implementations = _gen._typeInfo.GetAllImplementations(currentMethod);
+					foreach (var implementation in implementations)
 					{
-						var method = _gen._typeInfo.GetMethod(typeDef, currentMethod);
-						if (method != null) Rewrite(mocks, method, GetParents(parents, currentMethod));
+						_implementations.Add(implementation);
+					}
+
+					foreach (var methodDef in implementations)
+					{
+						Rewrite(mocks, methodDef, GetParents(parents, currentMethod));
 					}
 				}
-
-                if (currentMethod.IsVirtual && (_gen._options.IncludeAllVirtualMembers ||
-                    _gen._options.VirtualMembers.Contains(currentMethod.Name)))
-                {
-                    foreach (var virtualMethod in _gen._typeInfo.GetDerivedVirtualMethods(currentMethod))
-                    {
-                        Rewrite(mocks, virtualMethod, GetParents(parents, currentMethod));
-                    }
-                }
 
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
@@ -129,7 +130,7 @@ namespace AutoFake
 		            var originalInstruction = true;
 		            var instructionRef = instruction;
 
-		            if (instructionRef.Operand is MethodReference method && ShouldBeAnalyzed(method))
+		            if (instructionRef.Operand is MethodReference method)
 		            {
 			            Rewrite(mocks, method.ToMethodDefinition(), GetParents(parents, currentMethod));
 		            }
@@ -166,7 +167,7 @@ namespace AutoFake
 	            }
             }
 
-            private bool ShouldBeAnalyzed(MethodReference methodReference)
+            private bool CheckAnalysisLevel(MethodReference methodReference)
             {
 	            switch (_gen._options.AnalysisLevel)
 	            {
@@ -196,6 +197,14 @@ namespace AutoFake
 	            return false;
             }
 
+            private bool CheckVirtualMember(MethodDefinition method)
+            {
+	            if (!method.IsVirtual) return true;
+	            if (_gen._options.DisableVirtualMembers) return false;
+	            var contract = method.ToMethodContract();
+	            return _gen._options.AllowedVirtualMembers.Count == 0 || _gen._options.AllowedVirtualMembers.Any(m => m(contract));
+			}
+
 			public void ProcessCommonOriginalContracts(IEnumerable<SourceMemberMock> sourceMemberMocks)
 			{
 				foreach (var mock in sourceMemberMocks)
@@ -217,10 +226,9 @@ namespace AutoFake
 
 			private void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef, bool replaceCtors)
 			{
-				foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
+				foreach (var method in _gen._typeInfo.GetAllImplementations(methodDef))
 				{
-					var method = _gen._typeInfo.GetMethod(typeDef, methodDef);
-					if (method != null) ProcessOriginalMethodContractWithMocks(method, replaceCtors);
+					ProcessOriginalMethodContractWithMocks(method, replaceCtors);
 				}
 			}
 
@@ -271,19 +279,7 @@ namespace AutoFake
 				var contract = typeDef.ToString();
 				if (!_gen._importedTypes.ContainsKey(contract)) _gen._importedTypes.Add(contract, typeRef);
 			}
-
-			private void ProcessAllOriginalMethodContracts(MethodDefinition methodDef)
-			{
-				foreach (var typeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(methodDef.DeclaringType))
-				{
-					var method = _gen._typeInfo.GetMethod(typeDef, methodDef);
-					if (method != null)
-					{
-						ProcessOriginalMethodContract(method);
-					}
-				}
-			}
-
+			
 			private void ProcessOriginalMethodContract(MethodDefinition methodDef)
 			{
 				if (_gen._importedTypes.TryGetValue(methodDef.ReturnType.ToString(), out var importedType))

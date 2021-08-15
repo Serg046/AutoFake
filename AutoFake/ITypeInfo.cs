@@ -18,7 +18,6 @@ namespace AutoFake
         MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference);
         void AddField(FieldDefinition field);
         FakeObjectInfo CreateFakeObject(MockCollection mocks);
-        IList<MethodDefinition> GetDerivedVirtualMethods(MethodDefinition method);
         TypeReference ImportReference(Type type);
         FieldReference ImportReference(FieldInfo field);
         MethodReference ImportReference(MethodBase method);
@@ -27,5 +26,6 @@ namespace AutoFake
         MethodReference ImportToFieldsAsm(MethodBase method);
         TypeDefinition GetTypeDefinition(Type type);
         bool TryAddAffectedAssembly(AssemblyDefinition assembly);
+        ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method);
     }
 }

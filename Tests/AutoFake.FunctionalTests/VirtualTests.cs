@@ -8,7 +8,7 @@ namespace AutoFake.FunctionalTests
         public void When_VirtualMethodWithExactNameConfigured_Should_ExecuteOverridingMethod()
         {
             var fake = new Fake<TestClass>();
-            fake.Options.VirtualMembers.Add(nameof(TestClass.GetNumber));
+            fake.Options.AllowedVirtualMembers.Add(m => m.Name == nameof(TestClass.GetNumber));
 
             var sut = fake.Rewrite(f => f.GetVirtualNumberByMethod());
             sut.Replace(() => NumberFactory.Get()).Return(2);
@@ -20,7 +20,6 @@ namespace AutoFake.FunctionalTests
         public void When_VirtualMethodWithAllVirtualMembers_Should_ExecuteOverridingMethod()
         {
             var fake = new Fake<TestClass>();
-            fake.Options.IncludeAllVirtualMembers = true;
 
             var sut = fake.Rewrite(f => f.GetVirtualNumberByMethod());
             sut.Replace(() => NumberFactory.Get()).Return(2);
@@ -32,7 +31,7 @@ namespace AutoFake.FunctionalTests
         public void When_VirtualPropertyWithExactNameConfigured_Should_ExecuteOverridingMethod()
         {
             var fake = new Fake<TestClass>();
-            fake.Options.VirtualMembers.Add("get_" + nameof(TestClass.Number));
+            fake.Options.AllowedVirtualMembers.Add(m => m.Name == "get_" + nameof(TestClass.Number));
 
             var sut = fake.Rewrite(f => f.GetVirtualNumberByProperty());
             sut.Replace(() => NumberFactory.Get()).Return(4);
@@ -44,7 +43,6 @@ namespace AutoFake.FunctionalTests
         public void When_VirtualPropertyWithAllVirtualMembers_Should_ExecuteOverridingMethod()
         {
             var fake = new Fake<TestClass>();
-            fake.Options.IncludeAllVirtualMembers = true;
 
             var sut = fake.Rewrite(f => f.GetVirtualNumberByProperty());
             sut.Replace(() => NumberFactory.Get()).Return(4);

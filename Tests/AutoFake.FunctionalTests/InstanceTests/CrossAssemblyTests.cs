@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AnotherSut;
 using AutoFake.Exceptions;
 using FluentAssertions;
 using Sut;
@@ -64,8 +65,9 @@ namespace AutoFake.FunctionalTests.InstanceTests
         {
 	        var fake = new Fake<TestClass>();
             fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
+            fake.Options.Assemblies.Add(typeof(AnotherSystemUnderTest).Assembly);
 
-	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
+            var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
 	        sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
 
 	        sut.Execute().Should().Be(DateTime.MaxValue);
@@ -79,8 +81,9 @@ namespace AutoFake.FunctionalTests.InstanceTests
         {
 	        var fake = new Fake<TestClass>();
 	        fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
+	        fake.Options.Assemblies.Add(typeof(AnotherSystemUnderTest).Assembly);
 
-	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
+            var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
 	        sut.Verify(() => DateTime.Now).ExpectedCalls(expectedCalls);
 
 	        Action act = () => sut.Execute();
@@ -101,6 +104,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
             var list = new List<int>();
 	        var fake = new Fake<TestClass>();
 	        fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
+	        fake.Options.Assemblies.Add(typeof(AnotherSystemUnderTest).Assembly);
 	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
 	        sut.Prepend(() => list.Add(0));
 	        sut.Prepend(() => list.Add(1)).Before(() => DateTime.Now);

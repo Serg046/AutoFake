@@ -11,18 +11,11 @@ namespace AutoFake.UnitTests
 		{
 			const string newItem = "test";
 
-			fakeOptions.VirtualMembers.Add(newItem);
+			fakeOptions.AllowedVirtualMembers.Add(m => m.Name == newItem);
 
-			fakeOptions.VirtualMembers.Should().HaveCount(1);
-			fakeOptions.VirtualMembers.Single().Should().Be(newItem);
-		}
-
-		[AutoMoqData, Theory]
-		public void IncludeAllVirtualMembers_True_Changed(FakeOptions fakeOptions)
-		{
-			fakeOptions.IncludeAllVirtualMembers = true;
-
-			fakeOptions.IncludeAllVirtualMembers.Should().BeTrue();
+			fakeOptions.AllowedVirtualMembers.Should().HaveCount(1);
+			fakeOptions.AllowedVirtualMembers.Single()(new MethodContract("", "", newItem, new string[0]))
+				.Should().BeTrue();
 		}
 	}
 }
