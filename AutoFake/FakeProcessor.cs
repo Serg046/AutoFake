@@ -73,7 +73,7 @@ namespace AutoFake
             public void RewriteAndProcessContracts(IEnumerable<IMock> mocks)
             {
                 Rewrite(mocks);
-				ProcessAllOriginalMethodContractsWithMocks(_originalMethod, replaceCtors: false);
+				ProcessAllOriginalMethodContractsWithMocks(_originalMethod);
 				foreach (var methodDef in _methods.Where(m => m != _originalMethod))
 				{
 					ProcessOriginalMethodContract(methodDef);
@@ -211,7 +211,7 @@ namespace AutoFake
 				{
 					if (mock is ReplaceMock replaceMock && replaceMock.ReturnType?.Module == _gen._typeInfo.SourceType.Module)
 					{
-						AddReplaceInterfaceCallMocks(_gen._typeInfo.GetTypeDefinition(replaceMock.ReturnType));
+						AddReplaceContractMocks(_gen._typeInfo.GetTypeDefinition(replaceMock.ReturnType));
 					}
 
 					if (mock.SourceMember.OriginalMember is MethodBase method &&
@@ -219,56 +219,48 @@ namespace AutoFake
 					{
 						var typeDef = _gen._typeInfo.GetTypeDefinition(method.DeclaringType);
 						var methodRef = _gen._typeInfo.ImportReference(method);
-						ProcessAllOriginalMethodContractsWithMocks(_gen._typeInfo.GetMethod(typeDef, methodRef), replaceCtors: true);
+						ProcessAllOriginalMethodContractsWithMocks(_gen._typeInfo.GetMethod(typeDef, methodRef));
 					}
 				}
 			}
 
-			private void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef, bool replaceCtors)
+			private void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef)
 			{
 				foreach (var method in _gen._typeInfo.GetAllImplementations(methodDef))
 				{
-					ProcessOriginalMethodContractWithMocks(method, replaceCtors);
+					ProcessOriginalMethodContractWithMocks(method);
 				}
 			}
 
-			private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef, bool replaceCtors)
+			private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef)
 			{
 				if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _gen._typeInfo.IsInFakeModule(methodDef.ReturnType))
 				{
-					AddReplaceTypeMocks(methodDef.ReturnType.ToTypeDefinition());
+					AddReplaceContractMocks(methodDef.ReturnType.ToTypeDefinition());
 					methodDef.ReturnType = _gen._typeInfo.CreateImportedTypeReference(methodDef.ReturnType);
 				}
 
 				foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _gen._typeInfo.IsInFakeModule(parameterDef.ParameterType)))
 				{
 					var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
-					AddReplaceInterfaceCallMocks(typeDefinition);
-					if (replaceCtors) AddReplaceTypeMocks(typeDefinition);
+					AddReplaceContractMocks(typeDefinition);
 					parameterDef.ParameterType = _gen._typeInfo.CreateImportedTypeReference(parameterDef.ParameterType);
 				}
 			}
 
-			private void AddReplaceTypeMocks(TypeDefinition typeDef)
+			private void AddReplaceContractMocks(TypeDefinition typeDef)
 			{
 				foreach (var mockTypeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
 				{
 					var importedTypeRef = _gen._typeInfo.CreateImportedTypeReference(mockTypeDef);
-					if (!mockTypeDef.IsInterface)
+					if (mockTypeDef.IsInterface)
+					{
+						_gen._replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
+					}
+					else
 					{
 						_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
 					}
-					_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
-					TryAddImportedType(mockTypeDef, importedTypeRef);
-				}
-			}
-
-			private void AddReplaceInterfaceCallMocks(TypeDefinition typeDef)
-			{
-				foreach (var mockTypeDef in _gen._typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
-				{
-					var importedTypeRef = _gen._typeInfo.CreateImportedTypeReference(mockTypeDef);
-					if (mockTypeDef.IsInterface) _gen._replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
 					_gen._replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
 					TryAddImportedType(mockTypeDef, importedTypeRef);
 				}

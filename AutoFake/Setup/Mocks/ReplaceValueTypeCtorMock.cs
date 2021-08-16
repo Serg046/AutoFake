@@ -16,8 +16,11 @@ namespace AutoFake.Setup.Mocks
 		}
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
-			=> instruction != null && instruction.OpCode == OpCodes.Initobj &&
+			=> instruction != null && IsValidOpCode(instruction.OpCode) &&
 			   instruction.Operand is TypeReference typeRef && _typeReference.ToString() == typeRef.ToString();
+
+		private static bool IsValidOpCode(OpCode opCode)
+			=> opCode == OpCodes.Initobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
 
 		[ExcludeFromCodeCoverage]
 		public void BeforeInjection(MethodDefinition method)
