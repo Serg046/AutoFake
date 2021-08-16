@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
+using FluentAssertions;
 using Xunit;
 
 namespace AutoFake.FunctionalTests.StaticTests
@@ -176,10 +177,27 @@ namespace AutoFake.FunctionalTests.StaticTests
 	        Assert.Equal("1", actual.Value);
         }
 
+        [Fact(Skip = "Issue #158")]
+        public void AnotherGenericTest()
+        {
+	        var fake = new Fake(typeof(GenericTestClass<int>));
+	        const string stringValue = "testValue";
+	        const int intValue = 7;
+
+	        var sut = fake.Rewrite(() => GenericTestClass<int>.GetAnotherValue());
+	        sut.Replace(() => GenericTestClass<int>.GetAnotherValueImpl(Arg.IsAny<string>())).Return(stringValue);
+	        sut.Replace(() => GenericTestClass<int>.GetAnotherValueImpl(Arg.IsAny<object>())).Return(intValue);
+
+	        sut.Execute().Should().Be(stringValue + intValue);
+        }
+
         private static class GenericTestClass<T>
         {
 	        public static KeyValuePair<T, T2> GetValueImp<T2>(T x, T2 y) => new KeyValuePair<T, T2>(x, y);
 	        public static KeyValuePair<T, T2> GetValue<T2>(T x, T2 y) => GetValueImp(x, y);
+
+	        public static T2 GetAnotherValueImpl<T2>(T2 value) => value;
+	        public static string GetAnotherValue() => GetAnotherValueImpl("test") + GetAnotherValueImpl<object>(5);
         }
 
         private static class TestClass
