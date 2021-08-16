@@ -173,7 +173,7 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().BeOfType<HelperClass>();
         }
 
-        [Fact(Skip = "Some specifics regarding type casts")]
+        [Fact]
         public void StructCreationTest()
         {
             var fake = new Fake<TestClass>();
@@ -183,7 +183,27 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().BeOfType<HelperStruct>();
         }
 
-		[Fact]
+        [Fact]
+        public void BoxTest()
+        {
+	        var fake = new Fake<TestClass>();
+
+	        var sut = fake.Rewrite(f => f.ReturnBoxedHelperStruct(new HelperStruct()));
+
+	        sut.Execute().Should().BeOfType<HelperStruct>();
+        }
+
+        [Fact]
+        public void UnboxTest()
+        {
+	        var fake = new Fake<TestClass>();
+
+	        var sut = fake.Rewrite(f => f.ReturnUnboxedHelperStruct(new HelperStruct()));
+
+	        sut.Execute().Should().BeOfType<HelperStruct>();
+        }
+
+        [Fact]
 		public void ReplaceMockArgsTest()
 		{
 			var fake = new Fake<TestClass>();
@@ -280,6 +300,16 @@ namespace AutoFake.FunctionalTests
             public IHelper CreateHelperStruct()
             {
                 return new HelperStruct();
+            }
+
+            public object ReturnBoxedHelperStruct(HelperStruct helperStruct)
+            {
+	            return helperStruct;
+            }
+
+            public HelperStruct ReturnUnboxedHelperStruct(object helperStruct)
+            {
+	            return (HelperStruct)helperStruct;
             }
         }
 
