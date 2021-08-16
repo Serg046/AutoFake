@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using FluentAssertions;
 using Xunit;
 
 namespace AutoFake.FunctionalTests.StaticTests
@@ -82,6 +84,20 @@ namespace AutoFake.FunctionalTests.StaticTests
             Assert.Equal("1", actual.Value);
         }
 
+        [Fact(Skip = "Issue #158")]
+        public void AnotherGenericTest()
+        {
+	        var fake = new Fake(typeof(TestClass));
+	        const string stringValue = "testValue";
+	        const int intValue = 7;
+
+	        var sut = fake.Rewrite(() => TestClass.GetGenericValue());
+	        sut.Replace((ValueTuple<string> tuple) => tuple.Item1).Return(stringValue);
+	        sut.Replace((ValueTuple<object> tuple) => tuple.Item1).Return(intValue);
+
+	        sut.Execute().Should().Be(stringValue + intValue);
+        }
+
         private static class GenericTestClass<T>
         {
             public static KeyValuePair<T, string> Pair = new KeyValuePair<T, string>(default, "test");
@@ -133,6 +149,16 @@ namespace AutoFake.FunctionalTests.StaticTests
                 var value = StaticStructValue.Value;
                 Debug.WriteLine("Finished");
                 return value;
+            }
+
+            public static string GetGenericValue()
+            {
+	            Debug.WriteLine("Started");
+	            var tuple1 = new ValueTuple<string>();
+	            var tuple2 = new ValueTuple<object>();
+	            var value = tuple1.Item1 + tuple2.Item1;
+	            Debug.WriteLine("Finished");
+	            return value;
             }
         }
 
