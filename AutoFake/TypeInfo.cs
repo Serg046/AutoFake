@@ -35,8 +35,11 @@ namespace AutoFake
             _assemblyHost = new AssemblyHost();
             _affectedAssemblies = new HashSet<AssemblyDefinition>(new AssemblyDefinitionComparer());
 
-            _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName,
-	            new ReaderParameters {ReadSymbols = fakeOptions.Debug});
+            _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, new ReaderParameters
+            {
+	            ReadSymbols = fakeOptions.Debug,
+                SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false)
+            });
             _assemblyDef.Name.Name += "Fake";
             _assemblyDef.MainModule.ImportReference(SourceType);
             _assemblyNameReference = _assemblyDef.MainModule.AssemblyReferences.Single(a => a.FullName == SourceType.Assembly.FullName);
@@ -300,10 +303,30 @@ namespace AutoFake
         private class SymbolsWriterProvider : ISymbolWriterProvider
         {
 	        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName)
-		        => throw new NotSupportedException();
+		        => new EmptySymbolWriter();
 
-	        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
-		        => module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream);
+
+            public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
+            {
+	            return module.SymbolReader != null
+		            ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream)
+		            : new EmptySymbolWriter();
+            }
+
+            private class EmptySymbolWriter : ISymbolWriter
+            {
+	            public ISymbolReaderProvider GetReaderProvider() => new DefaultSymbolReaderProvider();
+
+	            public ImageDebugHeader GetDebugHeader() => new ();
+
+	            public void Dispose()
+	            {
+	            }
+
+                public void Write(MethodDebugInformation info)
+	            {
+	            }
+            }
         }
     }
 }
