@@ -6,6 +6,7 @@ using System.Reflection;
 using AutoFake.Exceptions;
 using AutoFake.Setup;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace AutoFake
@@ -21,7 +22,6 @@ namespace AutoFake
         private readonly IList<FakeDependency> _dependencies;
         private readonly FakeOptions _fakeOptions;
         private readonly Dictionary<string, ushort> _addedFields;
-        private readonly Dictionary<string, IList<MethodDefinition>> _virtualMethods;
         private readonly AssemblyHost _assemblyHost;
         private readonly HashSet<AssemblyDefinition> _affectedAssemblies;
         private readonly AssemblyNameReference _assemblyNameReference;
@@ -32,7 +32,6 @@ namespace AutoFake
             _dependencies = dependencies;
             _fakeOptions = fakeOptions;
             _addedFields = new Dictionary<string, ushort>();
-            _virtualMethods = new Dictionary<string, IList<MethodDefinition>>();
             _assemblyHost = new AssemblyHost();
             _affectedAssemblies = new HashSet<AssemblyDefinition>(new AssemblyDefinitionComparer());
 
@@ -178,19 +177,17 @@ namespace AutoFake
 
         public FakeObjectInfo CreateFakeObject(MockCollection mocks)
         {
-            //TODO: Apply the fix of https://github.com/jbevain/cecil/issues/710 when released
-            using var stream = _fakeOptions.Debug 
-		        ? File.Create(Path.GetFullPath($"{_assemblyDef.Name.Name}-{Guid.NewGuid()}.dll")) 
-		        : (Stream)new MemoryStream();
-	        var fakeProcessor = new FakeProcessor(this, _fakeOptions);
+            using var stream = new MemoryStream();
+            using var symbolsStream = new MemoryStream();
+            var fakeProcessor = new FakeProcessor(this, _fakeOptions);
 	        foreach (var mock in mocks)
 	        {
 		        fakeProcessor.ProcessMethod(mock.Mocks, mock.Method);
 	        }
 
 	        LoadAffectedAssemblies();
-            _assemblyDef.Write(stream, new WriterParameters { WriteSymbols = _fakeOptions.Debug });
-            var assembly = _assemblyHost.Load(stream);
+	        _assemblyDef.Write(stream, GetWriterParameters(symbolsStream));
+            var assembly = _assemblyHost.Load(stream, symbolsStream);
             var fieldsType = _fieldsTypeDef.IsValueCreated
 	            ? GetFieldsAssembly(assembly).GetType(_fieldsTypeDef.Value.FullName, true)
 	            : null;
@@ -209,13 +206,26 @@ namespace AutoFake
 	        return new FakeObjectInfo(parameters, sourceType, fieldsType, instance);
         }
 
+        private WriterParameters GetWriterParameters(MemoryStream symbolsStream)
+        {
+	        var parameters = new WriterParameters();
+	        if (_fakeOptions.Debug)
+	        {
+		        parameters.SymbolStream = symbolsStream;
+		        parameters.SymbolWriterProvider = new SymbolsWriterProvider();
+	        }
+
+	        return parameters;
+        }
+
         private Assembly GetFieldsAssembly(Assembly executingAsm)
         {
 	        if (_fieldsAssemblyDef.Value != _assemblyDef)
 	        {
                 using var stream = new MemoryStream();
-                _fieldsAssemblyDef.Value.Write(stream);
-                return LoadRenamedAssembly(stream, _fieldsAssemblyDef.Value);
+				using var symbolsStream = new MemoryStream();
+                _fieldsAssemblyDef.Value.Write(stream, GetWriterParameters(symbolsStream));
+                return LoadRenamedAssembly(stream, symbolsStream, _fieldsAssemblyDef.Value);
 	        }
 
 	        return executingAsm;
@@ -235,8 +245,9 @@ namespace AutoFake
 			{
 				affectedAssembly.Name.Name = asmNames[affectedAssembly.Name.Name];
 				using var stream = new MemoryStream();
-				affectedAssembly.Write(stream);
-				LoadRenamedAssembly(stream, affectedAssembly);
+				using var symbolsStream = new MemoryStream();
+                affectedAssembly.Write(stream, GetWriterParameters(symbolsStream));
+				LoadRenamedAssembly(stream, symbolsStream, affectedAssembly);
 			}
 		}
 
@@ -255,12 +266,12 @@ namespace AutoFake
 			}
         }
 
-        private Assembly LoadRenamedAssembly(MemoryStream stream, AssemblyDefinition affectedAssembly)
+        private Assembly LoadRenamedAssembly(MemoryStream stream, MemoryStream symbolsStream, AssemblyDefinition affectedAssembly)
         {
 #if NETCOREAPP3_0
-			return _assemblyHost.Load(stream);
+			return _assemblyHost.Load(stream, symbolsStream);
 #else
-	        var assembly = _assemblyHost.Load(stream);
+            var assembly = _assemblyHost.Load(stream, symbolsStream);
 	        AppDomain.CurrentDomain.AssemblyResolve += (sender, args)
 		        => args.Name == affectedAssembly.FullName ? assembly : null;
 	        return assembly;
@@ -284,6 +295,15 @@ namespace AutoFake
 	        }
 
 	        return methods;
+        }
+
+        private class SymbolsWriterProvider : ISymbolWriterProvider
+        {
+	        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName)
+		        => throw new NotSupportedException();
+
+	        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
+		        => module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream);
         }
     }
 }
