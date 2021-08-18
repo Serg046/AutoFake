@@ -134,7 +134,7 @@ namespace AutoFake.UnitTests
 		        .Returns((MethodDefinition m) => typeInfoImp.GetAllImplementations(m));
 	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
 	        {
-		        Debug = false,
+		        Debug = DebugMode.Disabled,
 		        AllowedVirtualMembers =
 		        {
 			        m => m.Name == nameof(Stream.WriteByte) &&
