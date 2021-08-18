@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -37,7 +38,7 @@ namespace AutoFake
 
             _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, new ReaderParameters
             {
-	            ReadSymbols = fakeOptions.Debug,
+	            ReadSymbols = _fakeOptions.Debug == DebugMode.Enabled || (_fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached),
                 SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false)
             });
             _assemblyDef.Name.Name += "Fake";
@@ -189,7 +190,7 @@ namespace AutoFake
 	        }
 
 	        LoadAffectedAssemblies();
-	        _assemblyDef.Write(stream, GetWriterParameters(symbolsStream));
+	        _assemblyDef.Write(stream, GetWriterParameters(symbolsStream, _assemblyDef.MainModule.HasSymbols));
             var assembly = _assemblyHost.Load(stream, symbolsStream);
             var fieldsType = _fieldsTypeDef.IsValueCreated
 	            ? GetFieldsAssembly(assembly).GetType(_fieldsTypeDef.Value.FullName, true)
@@ -209,10 +210,11 @@ namespace AutoFake
 	        return new FakeObjectInfo(parameters, sourceType, fieldsType, instance);
         }
 
-        private WriterParameters GetWriterParameters(MemoryStream symbolsStream)
+        private WriterParameters GetWriterParameters(MemoryStream symbolsStream, bool hasSymbols)
         {
 	        var parameters = new WriterParameters();
-	        if (_fakeOptions.Debug)
+	        if (_fakeOptions.Debug == DebugMode.Enabled ||
+	            (_fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached && hasSymbols))
 	        {
 		        parameters.SymbolStream = symbolsStream;
 		        parameters.SymbolWriterProvider = new SymbolsWriterProvider();
@@ -227,7 +229,7 @@ namespace AutoFake
 	        {
                 using var stream = new MemoryStream();
 				using var symbolsStream = new MemoryStream();
-                _fieldsAssemblyDef.Value.Write(stream, GetWriterParameters(symbolsStream));
+                _fieldsAssemblyDef.Value.Write(stream, GetWriterParameters(symbolsStream, _fieldsAssemblyDef.Value.MainModule.HasSymbols));
                 return LoadRenamedAssembly(stream, symbolsStream, _fieldsAssemblyDef.Value);
 	        }
 
@@ -249,7 +251,7 @@ namespace AutoFake
 				affectedAssembly.Name.Name = asmNames[affectedAssembly.Name.Name];
 				using var stream = new MemoryStream();
 				using var symbolsStream = new MemoryStream();
-                affectedAssembly.Write(stream, GetWriterParameters(symbolsStream));
+                affectedAssembly.Write(stream, GetWriterParameters(symbolsStream, affectedAssembly.MainModule.HasSymbols));
 				LoadRenamedAssembly(stream, symbolsStream, affectedAssembly);
 			}
 		}
@@ -303,29 +305,13 @@ namespace AutoFake
         private class SymbolsWriterProvider : ISymbolWriterProvider
         {
 	        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName)
-		        => new EmptySymbolWriter();
+		        => throw new NotImplementedException();
 
 
             public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
             {
-	            return module.SymbolReader != null
-		            ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream)
-		            : new EmptySymbolWriter();
-            }
-
-            private class EmptySymbolWriter : ISymbolWriter
-            {
-	            public ISymbolReaderProvider GetReaderProvider() => new DefaultSymbolReaderProvider();
-
-	            public ImageDebugHeader GetDebugHeader() => new ();
-
-	            public void Dispose()
-	            {
-	            }
-
-                public void Write(MethodDebugInformation info)
-	            {
-	            }
+	            if (!module.HasSymbols) throw new InvalidOperationException("There are no debug symbols");
+	            return module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream);
             }
         }
     }
