@@ -145,30 +145,7 @@ namespace AutoFake.UnitTests
 	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
 			typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
-				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), false));
-			//typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
-			//	m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
-		}
-
-        [AutoMoqData, Theory(Skip = "Too long")]
-        internal void ProcessSourceMethod_VirtualMethodWithAllEnabled_Success([InjectModule]Mock<ITypeInfo> typeInfo)
-        {
-	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
-	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
-	        var methodDef = typeInfoImp.GetMethods(m => m.Name == method.Name).Single();
-	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns(methodDef);
-	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
-		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
-            typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>(), false))
-	            .Returns((MethodDefinition m) => typeInfoImp.GetAllImplementations(m));
-            var gen = new FakeProcessor(typeInfo.Object, new FakeOptions());
-
-	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
-
-	        typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
-		        m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), false));
-			//typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
-			//	m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
+				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), true));
 		}
 
         [Theory]
