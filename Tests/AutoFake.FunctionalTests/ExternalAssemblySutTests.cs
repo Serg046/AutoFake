@@ -80,5 +80,18 @@ namespace AutoFake.FunctionalTests
 
             sut.Execute().Should().Be(DateTime.MaxValue - DateTime.MinValue);
         }
+
+        [Fact]
+        public void When_virtual_implementation_in_another_lib_with_all_assemblies_Should_pass()
+        {
+	        var fake = new Fake<SystemUnderTest>();
+	        fake.Options.AnalysisLevel = AnalysisLevels.AllExceptSystemAndMicrosoft;
+
+	        var sut = fake.Rewrite(f => f.GetDateVirtual());
+	        sut.Replace(() => DateTime.UtcNow).Return(DateTime.MaxValue);
+	        sut.Replace(() => DateTime.Now).Return(DateTime.MinValue);
+
+	        sut.Execute().Should().Be(DateTime.MaxValue - DateTime.MinValue);
+        }
     }
 }

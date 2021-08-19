@@ -77,7 +77,7 @@ namespace AutoFake
         }
         
         public bool IsMultipleAssembliesMode
-	        => _fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies || _fakeOptions.ReferencedTypes.Count > 0;
+	        => _fakeOptions.AnalysisLevel == AnalysisLevels.AllExceptSystemAndMicrosoft || _fakeOptions.ReferencedTypes.Count > 0;
 
         public Type SourceType { get; }
 

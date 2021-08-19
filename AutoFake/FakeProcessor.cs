@@ -166,26 +166,30 @@ namespace AutoFake
 	            }
             }
 
-            private bool CheckAnalysisLevel(MethodReference methodReference)
+            private bool CheckAnalysisLevel(MethodReference methodRef)
             {
 	            switch (_gen._options.AnalysisLevel)
 	            {
 		            case AnalysisLevels.Type:
 		            {
-			            if (methodReference.DeclaringType.FullName == _originalMethod.DeclaringType.FullName &&
-			                methodReference.Module.Assembly == _originalMethod.Module.Assembly) return true;
+			            if (methodRef.DeclaringType.FullName == _originalMethod.DeclaringType.FullName &&
+			                methodRef.Module.Assembly == _originalMethod.Module.Assembly) return true;
 			            break;
 		            }
 		            case AnalysisLevels.Assembly:
 		            {
-			            if (methodReference.Module.Assembly == _originalMethod.Module.Assembly) return true;
+			            if (methodRef.Module.Assembly == _originalMethod.Module.Assembly) return true;
 			            break;
 		            }
-		            case AnalysisLevels.AllAssemblies: return true;
-                    default: throw new NotSupportedException($"{_gen._options.AnalysisLevel} is not supported");
+		            case AnalysisLevels.AllExceptSystemAndMicrosoft:
+		            {
+			            return !methodRef.DeclaringType.Namespace.StartsWith(nameof(System)) &&
+			                   !methodRef.DeclaringType.Namespace.StartsWith(nameof(Microsoft));
+		            }
+		            default: throw new NotSupportedException($"{_gen._options.AnalysisLevel} is not supported");
 	            }
 
-				return _gen._typeInfo.IsInReferencedAssembly(methodReference.DeclaringType.Module.Assembly);
+				return _gen._typeInfo.IsInReferencedAssembly(methodRef.DeclaringType.Module.Assembly);
             }
 
             private bool CheckVirtualMember(MethodDefinition method)
