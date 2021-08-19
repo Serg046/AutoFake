@@ -130,8 +130,8 @@ namespace AutoFake.UnitTests
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns(methodDef);
 	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
 		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
-	        typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>()))
-		        .Returns((MethodDefinition m) => typeInfoImp.GetAllImplementations(m));
+	        typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>(), true))
+		        .Returns((MethodDefinition m, bool _) => typeInfoImp.GetAllImplementations(m));
 	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
 	        {
 		        Debug = DebugMode.Disabled,
@@ -145,7 +145,7 @@ namespace AutoFake.UnitTests
 	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
 			typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
-				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
+				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), false));
 			//typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
 			//	m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
 		}
@@ -159,14 +159,14 @@ namespace AutoFake.UnitTests
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns(methodDef);
 	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
 		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
-            typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>()))
+            typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>(), false))
 	            .Returns((MethodDefinition m) => typeInfoImp.GetAllImplementations(m));
             var gen = new FakeProcessor(typeInfo.Object, new FakeOptions());
 
 	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
 
 	        typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
-		        m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream")));
+		        m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), false));
 			//typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
 			//	m => m.Name == method.Name && m.DeclaringType.FullName == "System.IO.MemoryStream")));
 		}
@@ -187,6 +187,7 @@ namespace AutoFake.UnitTests
             bool injected,
             [Frozen] FakeOptions options,
 	        [Frozen] MethodDefinition executeMethod,
+            [Frozen] Mock<ITypeInfo> typeInfo,
             Mock<IMock> mock,
             MethodInfo methodInfo,
 	        FakeProcessor fakeProcessor)
@@ -215,6 +216,7 @@ namespace AutoFake.UnitTests
             method.Body.Instructions.Add(instruction);
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
+            typeInfo.Setup(t => t.IsInReferencedAssembly(It.IsAny<AssemblyDefinition>())).Returns(false);
 
             // Act
             fakeProcessor.ProcessMethod(new[] { mock.Object }, methodInfo);
@@ -248,6 +250,7 @@ namespace AutoFake.UnitTests
             int asmVersion, bool injected,
             [Frozen] FakeOptions options,
             [Frozen] MethodDefinition executeMethod,
+            [Frozen] Mock<ITypeInfo> typeInfo,
             Mock<IMock> mock,
             MethodInfo methodInfo,
             FakeProcessor fakeProcessor)
@@ -261,7 +264,7 @@ namespace AutoFake.UnitTests
             module2.Assembly.Name.Version = new Version(asmVersion, 0);
 
             options.AnalysisLevel = AnalysisLevels.Type;
-            options.Assemblies.Add(assembly);
+            options.AddReference(assembly.ExportedTypes.First());
             SetType(executeMethod, type1, module1);
             var method = new MethodDefinition("WrapperMethod", MethodAttributes.Public, new TypeReference("Ns", type2, module2, null));
             SetType(method, type2, module2);
@@ -273,6 +276,8 @@ namespace AutoFake.UnitTests
             method.Body.Instructions.Add(instruction);
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
             mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
+            typeInfo.Setup(t => t.IsInReferencedAssembly(It.IsAny<AssemblyDefinition>())).Returns(false);
+            typeInfo.Setup(t => t.IsInReferencedAssembly(It.Is<AssemblyDefinition>(a => a.FullName == assembly.FullName))).Returns(true);
 
             // Act
             fakeProcessor.ProcessMethod(new[] { mock.Object }, methodInfo);

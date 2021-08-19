@@ -31,23 +31,6 @@ namespace AutoFake.UnitTests.Expression
             Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
         }
 
-        [Theory(Skip = "Disabled until contract modifications change is done"), AutoMoqData]
-        public void AcceptMemberVisitor_UnsupportedMemberExpression_Throws(MemberInfo member)
-        {
-	        Expression<Func<DateTime>> expression = () => DateTime.Now;
-	        var memberExpression = expression.Body as MemberExpression;
-	        var fake = new Fake<InvocationExpression>(memberExpression);
-            fake.Options.Assemblies.Add(typeof(ExpressionVisitor).Assembly);
-            fake.Options.AllowedVirtualMembers.Add(m => m.Name == "Accept");
-            fake.Options.AllowedVirtualMembers.Add(m => m.Name == "VisitMember");
-            var sut = fake.Rewrite(s => s.AcceptMemberVisitor(_memberVisitor.Object));
-	        sut.Replace((MemberExpression e) => e.Member).Return(member);
-
-	        Action act = () => sut.Execute();
-
-	        act.Should().Throw<NotSupportedException>().WithMessage("*is not supported*");
-        }
-
         [Theory]
         [MemberData(nameof(GetAcceptMemberVisitorTestData))]
         public void AcceptMemberVisitor_ValidData_Success(LambdaExpression expression, MemberInfo expectedMemberInfo)

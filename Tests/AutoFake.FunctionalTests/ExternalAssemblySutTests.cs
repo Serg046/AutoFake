@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using AnotherSut;
 using AutoFake.Exceptions;
+using FluentAssertions;
 using Sut;
 using Xunit;
 
@@ -64,6 +66,19 @@ namespace AutoFake.FunctionalTests
             sut.Execute();
 
             Assert.Equal(new[] {0, 1, 2, 3}, events);
+        }
+
+        [Fact]
+        public void When_virtual_implementation_in_another_lib_Should_pass()
+        {
+            var fake = new Fake<SystemUnderTest>();
+            fake.Options.AddReference(typeof(AnotherSystemUnderTest));
+
+            var sut = fake.Rewrite(f => f.GetDateVirtual());
+            sut.Replace(() => DateTime.UtcNow).Return(DateTime.MaxValue);
+            sut.Replace(() => DateTime.Now).Return(DateTime.MinValue);
+
+            sut.Execute().Should().Be(DateTime.MaxValue - DateTime.MinValue);
         }
     }
 }

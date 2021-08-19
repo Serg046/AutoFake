@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -8,30 +6,45 @@ namespace AutoFake
 	internal class TypeMap : ITypeMap
 	{
 		private readonly ModuleDefinition _moduleDef;
-		private readonly Lazy<Dictionary<TypeDefinition, List<TypeDefinition>>> _implementations;
+		private readonly Dictionary<TypeDefinition, List<TypeDefinition>> _implementations;
+		private readonly Dictionary<string, List<TypeDefinition>> _externalTypeImplementations;
 
 		public TypeMap(ModuleDefinition moduleDef)
 		{
 			_moduleDef = moduleDef;
-			_implementations = new Lazy<Dictionary<TypeDefinition, List<TypeDefinition>>>(Init);
+			_implementations = new Dictionary<TypeDefinition, List<TypeDefinition>>();
+			_externalTypeImplementations = new Dictionary<string, List<TypeDefinition>>();
+			Init();
 		}
 
-		private Dictionary<TypeDefinition, List<TypeDefinition>> Init()
+		private void Init()
 		{
-			var dict = new Dictionary<TypeDefinition, List<TypeDefinition>>();
 			foreach (var typeDef in GetAllTypes())
 			{
-				if (typeDef.BaseType != null && typeDef.BaseType.Scope == _moduleDef)
+				if (typeDef.BaseType != null)
 				{
-					AddImplementation(dict, typeDef.BaseType.ToTypeDefinition(), typeDef);
+					if (typeDef.BaseType is TypeDefinition baseType && typeDef.BaseType.Scope == _moduleDef)
+					{
+						AddImplementation(_implementations, baseType, typeDef);
+					}
+					else
+					{
+						AddImplementation(_externalTypeImplementations, typeDef.BaseType.ToString(), typeDef);
+					}
 				}
 
-				foreach (var interfaceDef in typeDef.Interfaces.Where(intr => intr.InterfaceType.Module == _moduleDef))
+				foreach (var interfaceDef in typeDef.Interfaces)
 				{
-					AddImplementation(dict, interfaceDef.InterfaceType.ToTypeDefinition(), typeDef);
+					if (interfaceDef.InterfaceType is TypeDefinition interfaceType && interfaceDef.InterfaceType.Module == _moduleDef)
+					{
+						AddImplementation(_implementations, interfaceType, typeDef);
+					}
+					else
+					{
+						AddImplementation(_externalTypeImplementations, interfaceDef.InterfaceType.ToString(), typeDef);
+					}
 				}
 			}
-			return dict;
 		}
 
 		private IEnumerable<TypeDefinition> GetAllTypes()
@@ -57,17 +70,24 @@ namespace AutoFake
 			types.Add(type);
 		}
 
-		private static void AddImplementation(Dictionary<TypeDefinition, List<TypeDefinition>> dict,
-			TypeDefinition typeDef, TypeDefinition implementationDef)
+		private static void AddImplementation<T>(Dictionary<T, List<TypeDefinition>> dict,
+			T type, TypeDefinition implementationDef)
 		{
-			if (!dict.ContainsKey(typeDef)) dict[typeDef] = new List<TypeDefinition>();
-			dict[typeDef].Add(implementationDef);
+			if (!dict.ContainsKey(type)) dict[type] = new List<TypeDefinition>();
+			dict[type].Add(implementationDef);
 		}
 
 		public ICollection<TypeDefinition> GetAllParentsAndDescendants(TypeDefinition typeDef)
 		{
 			var types = new HashSet<TypeDefinition>();
 			GetAllParentsAndDescendants(typeDef, types);
+			if (_externalTypeImplementations.TryGetValue(typeDef.ToString(), out var implementations))
+			{
+				foreach (var implementation in implementations)
+				{
+					GetAllParentsAndDescendants(implementation, types);
+				}
+			}
 			return types;
 		}
 
@@ -81,7 +101,7 @@ namespace AutoFake
 				GetAllParentsAndDescendants(interfaceDef.InterfaceType.ToTypeDefinition(), types);
 			}
 
-			if (_implementations.Value.TryGetValue(typeDef, out var implementations))
+			if (_implementations.TryGetValue(typeDef, out var implementations))
 			{
 				foreach (var implementation in implementations)
 				{

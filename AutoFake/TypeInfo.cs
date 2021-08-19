@@ -24,7 +24,8 @@ namespace AutoFake
         private readonly FakeOptions _fakeOptions;
         private readonly Dictionary<string, ushort> _addedFields;
         private readonly AssemblyHost _assemblyHost;
-        private readonly HashSet<AssemblyDefinition> _affectedAssemblies;
+        private readonly Dictionary<string, AssemblyDefinition> _affectedAssemblies;
+        private readonly List<ITypeMap> _affectedTypeMaps;
         private readonly AssemblyNameReference _assemblyNameReference;
 
         public TypeInfo(Type sourceType, IList<FakeDependency> dependencies, FakeOptions fakeOptions)
@@ -34,18 +35,26 @@ namespace AutoFake
             _fakeOptions = fakeOptions;
             _addedFields = new Dictionary<string, ushort>();
             _assemblyHost = new AssemblyHost();
-            _affectedAssemblies = new HashSet<AssemblyDefinition>(new AssemblyDefinitionComparer());
+            _affectedAssemblies = new Dictionary<string, AssemblyDefinition>();
+            _affectedTypeMaps = new List<ITypeMap>();
 
-            _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, new ReaderParameters
+            var readerParameters = new ReaderParameters
             {
 	            ReadSymbols = _fakeOptions.Debug == DebugMode.Enabled || (_fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached),
-                SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false)
-            });
+	            SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false)
+            };
+            _assemblyDef = AssemblyDefinition.ReadAssembly(SourceType.Module.FullyQualifiedName, readerParameters);
             _assemblyDef.Name.Name += "Fake";
             _assemblyDef.MainModule.ImportReference(SourceType);
             _assemblyNameReference = _assemblyDef.MainModule.AssemblyReferences.Single(a => a.FullName == SourceType.Assembly.FullName);
             _sourceTypeDef = GetTypeDefinition(SourceType);
             TypeMap = new TypeMap(_assemblyDef.MainModule);
+
+            foreach (var referencedType in _fakeOptions.ReferencedTypes)
+            {
+	            var typeRef = _assemblyDef.MainModule.ImportReference(referencedType);
+	            TryAddAffectedAssembly(typeRef.Resolve().Module.Assembly);
+            }
 
             _fieldsAssemblyDef = new Lazy<AssemblyDefinition>(() =>
             {
@@ -68,7 +77,7 @@ namespace AutoFake
         }
         
         public bool IsMultipleAssembliesMode
-	        => _fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies || _fakeOptions.Assemblies.Count > 0;
+	        => _fakeOptions.AnalysisLevel == AnalysisLevels.AllAssemblies || _fakeOptions.ReferencedTypes.Count > 0;
 
         public Type SourceType { get; }
 
@@ -240,16 +249,19 @@ namespace AutoFake
         {
             var asmNames = new Dictionary<string, string>();
 	        LoadAffectedAssembly(asmNames, _assemblyDef);
-			foreach (var affectedAssembly in _affectedAssemblies)
+			foreach (var affectedAssembly in _affectedAssemblies.Values)
 			{
 				LoadAffectedAssembly(asmNames, affectedAssembly);
 			}
 
-			//TODO: support debug symbols
-            foreach (var affectedAssembly in _affectedAssemblies)
+            foreach (var affectedAssembly in _affectedAssemblies.Values)
 			{
-				affectedAssembly.Name.Name = asmNames[affectedAssembly.Name.Name];
-				using var stream = new MemoryStream();
+				if (asmNames.TryGetValue(affectedAssembly.Name.Name, out var asmName))
+				{
+					affectedAssembly.Name.Name = asmName;
+                }
+
+                using var stream = new MemoryStream();
 				using var symbolsStream = new MemoryStream();
                 affectedAssembly.Write(stream, GetWriterParameters(symbolsStream, affectedAssembly.MainModule.HasSymbols));
 				LoadRenamedAssembly(stream, symbolsStream, affectedAssembly);
@@ -258,7 +270,7 @@ namespace AutoFake
 
 		private void LoadAffectedAssembly(Dictionary<string, string> asmNames, AssemblyDefinition assembly)
         {
-	        foreach (var affectedAssembly in _affectedAssemblies)
+	        foreach (var affectedAssembly in _affectedAssemblies.Values)
 	        foreach (var asmRef in assembly.MainModule.AssemblyReferences.Where(a => a.FullName == affectedAssembly.FullName))
 	        {
 		        if (!asmNames.TryGetValue(asmRef.Name, out var newAsmName))
@@ -287,20 +299,31 @@ namespace AutoFake
         
         public bool TryAddAffectedAssembly(AssemblyDefinition assembly)
         {
-	        return _affectedAssemblies.Add(assembly);
+	        if (!_affectedAssemblies.ContainsKey(assembly.FullName))
+	        {
+		        _affectedAssemblies.Add(assembly.FullName, assembly);
+		        _affectedTypeMaps.Add(new TypeMap(assembly.MainModule));
+		        return true;
+	        }
+
+	        return false;
         }
         
-        public ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method)
+        public ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method, bool includeAffectedAssemblies = false)
         {
 	        var methods = new HashSet<MethodDefinition>();
-	        foreach (var typeDef in TypeMap.GetAllParentsAndDescendants(method.DeclaringType))
+	        IEnumerable<ITypeMap> typeMaps = new[] {TypeMap};
+	        if (includeAffectedAssemblies) typeMaps = typeMaps.Concat(_affectedTypeMaps);
+	        foreach (var typeDef in typeMaps.SelectMany(m => m.GetAllParentsAndDescendants(method.DeclaringType)))
 	        {
 		        var methodDef = GetMethod(typeDef, method);
 		        if (methodDef != null) methods.Add(methodDef);
-	        }
+            }
 
 	        return methods;
         }
+
+        public bool IsInReferencedAssembly(AssemblyDefinition assembly) => _affectedAssemblies.ContainsKey(assembly.FullName);
 
         private class SymbolsWriterProvider : ISymbolWriterProvider
         {
