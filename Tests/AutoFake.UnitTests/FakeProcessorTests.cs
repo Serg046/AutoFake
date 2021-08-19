@@ -176,10 +176,10 @@ namespace AutoFake.UnitTests
 		[InlineAutoMoqData(AnalysisLevels.Type, "Type1", "Type2", "Asm1", "Asm1", false)]
 		[InlineAutoMoqData(AnalysisLevels.Assembly, "Type1", "Type1", "Asm1", "Asm1", true)]
 		[InlineAutoMoqData(AnalysisLevels.Assembly, "Type1", "Type1", "Asm1", "Asm2", false)]
-		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type1", "Asm1", "Asm1", true)]
-		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type2", "Asm1", "Asm1", true)]
-		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type1", "Asm1", "Asm2", true)]
-		[InlineAutoMoqData(AnalysisLevels.AllAssemblies, "Type1", "Type2", "Asm1", "Asm2", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllExceptSystemAndMicrosoft, "Type1", "Type1", "Asm1", "Asm1", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllExceptSystemAndMicrosoft, "Type1", "Type2", "Asm1", "Asm1", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllExceptSystemAndMicrosoft, "Type1", "Type1", "Asm1", "Asm2", true)]
+		[InlineAutoMoqData(AnalysisLevels.AllExceptSystemAndMicrosoft, "Type1", "Type2", "Asm1", "Asm2", true)]
 		internal void ProcessSourceMethod_DifferentAnalysisLevels_Success(
 	        AnalysisLevels analysisLevel,
             string type1, string type2,

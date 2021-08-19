@@ -4,6 +4,6 @@
 	{
 		Type,
 		Assembly,
-		AllAssemblies
+		AllExceptSystemAndMicrosoft
 	}
 }
