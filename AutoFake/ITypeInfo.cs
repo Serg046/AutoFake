@@ -26,6 +26,7 @@ namespace AutoFake
         MethodReference ImportToFieldsAsm(MethodBase method);
         TypeDefinition GetTypeDefinition(Type type);
         bool TryAddAffectedAssembly(AssemblyDefinition assembly);
-        ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method);
+        ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method, bool includeAffectedAssemblies = false);
+        bool IsInReferencedAssembly(AssemblyDefinition assembly);
     }
 }

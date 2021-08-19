@@ -64,8 +64,8 @@ namespace AutoFake.FunctionalTests.InstanceTests
         public void ReplaceMockInsideAnotherAssembly()
         {
 	        var fake = new Fake<TestClass>();
-            fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
-            fake.Options.Assemblies.Add(typeof(AnotherSystemUnderTest).Assembly);
+            fake.Options.AddReference(typeof(SystemUnderTest));
+            fake.Options.AddReference(typeof(AnotherSystemUnderTest));
 
             var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
 	        sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
@@ -80,8 +80,8 @@ namespace AutoFake.FunctionalTests.InstanceTests
         public void VerifyMockInsideAnotherAssembly(byte expectedCalls, bool success)
         {
 	        var fake = new Fake<TestClass>();
-	        fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
-	        fake.Options.Assemblies.Add(typeof(AnotherSystemUnderTest).Assembly);
+	        fake.Options.AddReference(typeof(SystemUnderTest));
+	        fake.Options.AddReference(typeof(AnotherSystemUnderTest));
 
             var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
 	        sut.Verify(() => DateTime.Now).ExpectedCalls(expectedCalls);
@@ -103,8 +103,8 @@ namespace AutoFake.FunctionalTests.InstanceTests
         {
             var list = new List<int>();
 	        var fake = new Fake<TestClass>();
-	        fake.Options.Assemblies.Add(typeof(SystemUnderTest).Assembly);
-	        fake.Options.Assemblies.Add(typeof(AnotherSystemUnderTest).Assembly);
+            fake.Options.AddReference(typeof(SystemUnderTest));
+            fake.Options.AddReference(typeof(AnotherSystemUnderTest));
 	        var sut = fake.Rewrite(f => f.GetDateFromAnotherAssembly());
 	        sut.Prepend(() => list.Add(0));
 	        sut.Prepend(() => list.Add(1)).Before(() => DateTime.Now);

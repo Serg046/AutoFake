@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace AutoFake
 {
@@ -10,6 +9,7 @@ namespace AutoFake
         public bool DisableVirtualMembers { get; set; }
         public DebugMode Debug { get; set; } = DebugMode.Auto;
         public AnalysisLevels AnalysisLevel { get; set; } = AnalysisLevels.Assembly;
-        public IList<Assembly> Assemblies { get; } = new List<Assembly>();
+        internal IList<Type> ReferencedTypes { get; } = new List<Type>();
+        public void AddReference(Type type) => ReferencedTypes.Add(type);
     }
 }

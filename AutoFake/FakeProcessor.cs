@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
@@ -100,7 +99,7 @@ namespace AutoFake
 
 				if ((currentMethod.DeclaringType.IsInterface || currentMethod.IsVirtual) && !_implementations.Contains(currentMethod))
 				{
-					var implementations = _gen._typeInfo.GetAllImplementations(currentMethod);
+					var implementations = _gen._typeInfo.GetAllImplementations(currentMethod, includeAffectedAssemblies: true);
 					foreach (var implementation in implementations)
 					{
 						_implementations.Add(implementation);
@@ -186,15 +185,7 @@ namespace AutoFake
                     default: throw new NotSupportedException($"{_gen._options.AnalysisLevel} is not supported");
 	            }
 
-	            foreach (var assembly in _gen._options.Assemblies)
-	            {
-		            if (methodReference.DeclaringType.Module.Assembly.FullName == assembly.FullName)
-		            {
-			            return true;
-		            }
-	            }
-
-	            return false;
+				return _gen._typeInfo.IsInReferencedAssembly(methodReference.DeclaringType.Module.Assembly);
             }
 
             private bool CheckVirtualMember(MethodDefinition method)
