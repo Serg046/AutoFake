@@ -124,7 +124,7 @@ namespace AutoFake.UnitTests
             var method = new MethodDefinition(nameof(BaseTestClass.BaseTypeMethod),
                 MethodAttributes.Public, type.ImportReference(typeof(void)));
 
-            var actualMethod = type.GetMethod(method);
+            var actualMethod = type.GetMethod(method, true);
 
             Assert.Equal(method.ReturnType.ToString(), actualMethod.ReturnType.ToString());
             Assert.Equal(method.Name, actualMethod.Name);

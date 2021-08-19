@@ -25,7 +25,7 @@ namespace AutoFake
         public void ProcessMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
         {
 	        var executeFuncRef = _typeInfo.ImportReference(executeFunc);
-	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef);
+	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
 			if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
 			var testMethods = new List<TestMethod>();

@@ -14,8 +14,8 @@ namespace AutoFake
         TypeReference CreateImportedTypeReference(TypeReference type);
         bool IsInFakeModule(TypeReference type);
         IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate);
-        MethodDefinition? GetMethod(MethodReference methodReference);
-        MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference);
+        MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false);
+        MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false);
         void AddField(FieldDefinition field);
         FakeObjectInfo CreateFakeObject(MockCollection mocks);
         TypeReference ImportReference(Type type);
