@@ -132,15 +132,15 @@ namespace AutoFake
         public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate) 
 	        => _sourceTypeDef.Methods.Where(m => methodPredicate(m));
 
-        public MethodDefinition? GetMethod(MethodReference methodReference) =>
-            GetMethod(_sourceTypeDef, methodReference);
+        public MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false) =>
+            GetMethod(_sourceTypeDef, methodReference, searchInBaseType);
 
-        public MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference)
+        public MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false)
         {
 	        var method = type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference));
-	        if (method == null && type.BaseType != null)
+	        if (searchInBaseType && method == null && type.BaseType != null)
 	        {
-		        return GetMethod(type.BaseType.ToTypeDefinition(), methodReference);
+		        return GetMethod(type.BaseType.ToTypeDefinition(), methodReference, searchInBaseType);
 	        }
 
 	        return method;

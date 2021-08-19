@@ -91,7 +91,7 @@ namespace AutoFake.UnitTests
 	        [Frozen] Mock<ITypeInfo> typeInfo,
 	        FakeProcessor generator)
         {
-	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns((MethodDefinition)null);
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>(), true)).Returns((MethodDefinition)null);
 
             Assert.Throws<InvalidOperationException>(() => 
 	            generator.ProcessMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetType))));
@@ -127,7 +127,7 @@ namespace AutoFake.UnitTests
 	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
 	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
 	        var methodDef = typeInfoImp.GetMethods(m => m.Name == method.Name).Single();
-	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>())).Returns(methodDef);
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>(), It.IsAny<bool>())).Returns(methodDef);
 	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
 		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
 	        typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>(), true))
