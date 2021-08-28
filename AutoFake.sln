@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sut", "Tests\Sut\Sut.csproj
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{97C271BC-B647-4141-952C-6680CE796CF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnotherSut", "AnotherSut\AnotherSut.csproj", "{4DFDF89F-A203-4E23-8CD3-4A9FDC7FFB59}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnotherSut", "Tests\AnotherSut\AnotherSut.csproj", "{4DFDF89F-A203-4E23-8CD3-4A9FDC7FFB59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
