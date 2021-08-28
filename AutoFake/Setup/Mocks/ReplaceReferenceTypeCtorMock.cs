@@ -15,7 +15,7 @@ namespace AutoFake.Setup.Mocks
 			_typeReference = typeReference;
 		}
 
-		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
+		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
 			=> instruction != null && instruction.OpCode == OpCodes.Newobj &&
 			   instruction.Operand is MethodReference mRef && _typeReference.ToString() == mRef.DeclaringType.ToString();
 

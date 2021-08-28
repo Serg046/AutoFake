@@ -195,7 +195,7 @@ namespace AutoFake
             var fakeProcessor = new FakeProcessor(this, _fakeOptions);
 	        foreach (var mock in mocks)
 	        {
-		        fakeProcessor.ProcessMethod(mock.Mocks, mock.Method);
+		        fakeProcessor.ProcessMethod(mock.Mocks, mock.InvocationExpression);
 	        }
 
 	        LoadAffectedAssemblies();

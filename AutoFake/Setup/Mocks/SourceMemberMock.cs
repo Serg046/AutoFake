@@ -57,9 +57,9 @@ namespace AutoFake.Setup.Mocks
             return new List<object>();
         }
 
-        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
+        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
-            return SourceMember.IsSourceInstruction(ProcessorFactory.TypeInfo, instruction);
+            return SourceMember.IsSourceInstruction(ProcessorFactory.TypeInfo, instruction, genericArguments);
         }
 
         protected FieldInfo GetField(Type type, string fieldName)

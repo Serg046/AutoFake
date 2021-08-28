@@ -102,7 +102,29 @@ namespace AutoFake
 	        => new(method.DeclaringType.ToString(), method.ReturnType.ToString(), method.Name,
 		        method.Parameters.Select(p => p.ParameterType.ToString()).ToArray());
 
-        private class EqualityComparer : IEqualityComparer
+        public static GenericArgument? FindGenericTypeOrDefault(this IEnumerable<GenericArgument> genericArguments, string genericParamName)
+        {
+            string? prevType = null;
+	        foreach (var genericArgument in genericArguments)
+	        {
+		        if (genericArgument.Name == genericParamName)
+		        {
+			        if (genericArgument.GenericDeclaringType != null)
+			        {
+				        genericParamName = genericArgument.Type;
+				        prevType = genericArgument.GenericDeclaringType;
+			        }
+			        else if (prevType == null || prevType == genericArgument.DeclaringType)
+			        {
+						return genericArgument;
+                    }
+                }
+	        }
+
+	        return null;
+        }
+        
+		private class EqualityComparer : IEqualityComparer
         {
             private readonly Func<object, object, bool> _comparer;
             private readonly Func<object, int> _hasher;

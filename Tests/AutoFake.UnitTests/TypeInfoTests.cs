@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using FluentAssertions;
@@ -13,6 +14,7 @@ using Moq;
 using Xunit;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
+using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.UnitTests
 {
@@ -107,7 +109,10 @@ namespace AutoFake.UnitTests
             var mock = new Mock<IMock>();
             mock.Setup(m => m.Initialize(It.IsAny<Type>())).Returns(new List<object>());
             var mocks = new MockCollection();
-            mocks.Add(type.GetMethod("CreateFakeObjectTypeCreated"), new[] {mock.Object});
+            var expr = isStaticType
+	            ? LinqExpression.Call(type.GetMethod("CreateFakeObjectTypeCreated"))
+                : LinqExpression.Call(LinqExpression.Constant(Activator.CreateInstance(type)), type.GetMethod("CreateFakeObjectTypeCreated"));
+            mocks.Add(new InvocationExpression(expr), new[] {mock.Object});
 
             var fakeObjectInfo = typeInfo.CreateFakeObject(mocks);
 

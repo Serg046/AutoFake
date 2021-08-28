@@ -1,7 +1,7 @@
 ﻿using AutoFake.Setup.Mocks;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
+using AutoFake.Expression;
 
 namespace AutoFake.Setup
 {
@@ -11,7 +11,8 @@ namespace AutoFake.Setup
 
         public int Count => _mocks.Count;
 
-        public void Add(MethodBase method, ICollection<IMock> mocks) => _mocks.Add(new Item(method, mocks));
+        public void Add(IInvocationExpression invocationExpression, ICollection<IMock> mocks)
+	        => _mocks.Add(new Item(invocationExpression, mocks));
 
         public IEnumerator<Item> GetEnumerator() => _mocks.GetEnumerator();
 
@@ -19,13 +20,13 @@ namespace AutoFake.Setup
 
         public class Item
         {
-            public Item(MethodBase method, ICollection<IMock> mocks)
+            public Item(IInvocationExpression invocationExpression, ICollection<IMock> mocks)
             {
-                Method = method;
+                InvocationExpression = invocationExpression;
                 Mocks = mocks;
             }
 
-            public MethodBase Method { get; }
+            public IInvocationExpression InvocationExpression { get; }
             public ICollection<IMock> Mocks { get; set; }
         }
     }

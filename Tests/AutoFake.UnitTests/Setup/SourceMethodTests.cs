@@ -39,7 +39,7 @@ namespace AutoFake.UnitTests.Setup
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace AutoFake.UnitTests.Setup
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
         }
 
         [Fact]
@@ -61,7 +61,7 @@ namespace AutoFake.UnitTests.Setup
             var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 1).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
 
-            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction));
+            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
         }
 
         [Fact]

@@ -84,7 +84,7 @@ namespace AutoFake.FunctionalTests.StaticTests
             Assert.Equal("1", actual.Value);
         }
 
-        [Fact(Skip = "Issue #158")]
+        [Fact]
         public void AnotherGenericTest()
         {
 	        var fake = new Fake(typeof(TestClass));

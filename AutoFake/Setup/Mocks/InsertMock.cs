@@ -59,7 +59,7 @@ namespace AutoFake.Setup.Mocks
 		        module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
         }
 
-        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction)
+        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
             switch (_location)
             {

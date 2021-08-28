@@ -24,8 +24,8 @@ namespace AutoFake.UnitTests.Setup
 
             var mock = new InsertMock(Mock.Of<IProcessorFactory>(), null, location);
 
-            Assert.True(mock.IsSourceInstruction(method, shouldBeFirst ? firstInstruction : lastInstruction));
-            Assert.False(mock.IsSourceInstruction(method, shouldBeFirst ? lastInstruction : firstInstruction));
+            Assert.True(mock.IsSourceInstruction(method, shouldBeFirst ? firstInstruction : lastInstruction, new GenericArgument[0]));
+            Assert.False(mock.IsSourceInstruction(method, shouldBeFirst ? lastInstruction : firstInstruction, new GenericArgument[0]));
         }
 
         [Fact]
@@ -33,7 +33,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var mock = new InsertMock(Mock.Of<IProcessorFactory>(), null, (InsertMock.Location)(-1));
 
-            Assert.False(mock.IsSourceInstruction(null, null));
+            Assert.False(mock.IsSourceInstruction(null, null, null));
         }
 
         [Theory, AutoMoqData]

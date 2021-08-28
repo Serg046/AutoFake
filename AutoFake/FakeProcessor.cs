@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
@@ -22,34 +23,93 @@ namespace AutoFake
             _importedTypes = new Dictionary<string, TypeReference>();
         }
 
-        public void ProcessMethod(IEnumerable<IMock> mocks, MethodBase executeFunc)
+        public void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression)
         {
-	        var executeFuncRef = _typeInfo.ImportReference(executeFunc);
+	        var visitor = new GetTestMethodVisitor();
+	        invocationExpression.AcceptMemberVisitor(visitor);
+			var executeFuncRef = _typeInfo.ImportReference(visitor.Method);
 	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
-			if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
+	        if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
 			var testMethods = new List<TestMethod>();
 	        using var emitterPool = new EmitterPool();
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
 	        var testMethod = new TestMethod(this, executeFuncDef, emitterPool);
 			testMethod.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>());
-	        testMethod.RewriteAndProcessContracts(mocks);
+	        testMethod.RewriteAndProcessContracts(mocks, 
+		        invocationExpression.GetSourceMember().GetGenericArguments(_typeInfo));
 	        foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
 	        testMethods.Add(testMethod);
 
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{
 				var testCtor = new TestMethod(this, ctor, emitterPool);
-				testCtor.RewriteAndProcessContracts(Enumerable.Empty<IMock>());
+				testCtor.RewriteAndProcessContracts(Enumerable.Empty<IMock>(), Enumerable.Empty<GenericArgument>());
 				testMethods.Add(testCtor);
 			}
 
 			foreach (var method in testMethods)
 			{
-				method.Rewrite(_replaceContractMocks);
+				method.Rewrite(_replaceContractMocks, Enumerable.Empty<GenericArgument>());
 			}
 		}
-		
+
+        private IEnumerable<GenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef)
+        {
+			if (methodRef is GenericInstanceMethod genericInstanceMethod)
+			{
+		        for (var i = 0; i < genericInstanceMethod.GenericArguments.Count; i++)
+		        {
+			        var genericArgument = genericInstanceMethod.GenericArguments[i];
+			        var declaringType = methodDef.DeclaringType.ToString();
+			        yield return new GenericArgument(
+				        methodDef.GenericParameters[i].Name,
+				        genericArgument.ToString(),
+				        declaringType,
+				        GetGenericDeclaringType(genericArgument as GenericParameter));
+		        }
+	        }
+
+			if (methodRef.DeclaringType is GenericInstanceType genericInstanceType)
+			{
+				for (var i = 0; i < genericInstanceType.GenericArguments.Count; i++)
+				{
+					var genericArgument = genericInstanceType.GenericArguments[i];
+					var declaringType = methodDef.DeclaringType.ToString();
+					yield return new GenericArgument(
+						methodDef.DeclaringType.GenericParameters[i].Name,
+						genericArgument.ToString(),
+						declaringType,
+						GetGenericDeclaringType(genericArgument as GenericParameter));
+				}
+			}
+        }
+
+        private string? GetGenericDeclaringType(GenericParameter? genericArgument)
+        {
+	        return genericArgument != null
+		        ? genericArgument.DeclaringType?.ToString() ?? genericArgument.DeclaringMethod.DeclaringType.ToString()
+		        : null;
+        }
+
+        private IEnumerable<GenericArgument> GetGenericArguments(FieldReference fieldRef)
+        {
+	        var fieldDef = fieldRef.ToFieldDefinition();
+	        if (fieldRef.DeclaringType is GenericInstanceType genericInstanceType)
+	        {
+		        for (var i = 0; i < genericInstanceType.GenericArguments.Count; i++)
+		        {
+			        var genericArgument = genericInstanceType.GenericArguments[i];
+			        var declaringType = fieldDef.DeclaringType.ToString();
+			        yield return new GenericArgument(
+				        fieldDef.DeclaringType.GenericParameters[i].Name,
+				        genericArgument.ToString(),
+				        declaringType,
+				        GetGenericDeclaringType(genericArgument as GenericParameter));
+		        }
+	        }
+        }
+
 		private class TestMethod
         {
             private readonly FakeProcessor _gen;
@@ -69,9 +129,9 @@ namespace AutoFake
                 _implementations = new HashSet<MethodDefinition>();
             }
 
-            public void RewriteAndProcessContracts(IEnumerable<IMock> mocks)
+            public void RewriteAndProcessContracts(IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs)
             {
-                Rewrite(mocks);
+                Rewrite(mocks, genericArgs);
 				ProcessAllOriginalMethodContractsWithMocks(_originalMethod);
 				foreach (var methodDef in _methods.Where(m => m != _originalMethod))
 				{
@@ -79,20 +139,20 @@ namespace AutoFake
 				}
             }
 
-			public void Rewrite(IEnumerable<IMock> mocks)
+			public void Rewrite(IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs)
             {
-	            Rewrite(mocks, _originalMethod);
+	            Rewrite(mocks, _originalMethod, genericArgs);
             }
 
-			private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition methodDef)
+			private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition methodDef, IEnumerable<GenericArgument> genericArgs)
             {
 				_methods.Clear();
 	            _methodContracts.Clear();
 				_implementations.Clear();
-				Rewrite(mocks, methodDef, Enumerable.Empty<MethodDefinition>());
+				Rewrite(mocks, methodDef, Enumerable.Empty<MethodDefinition>(), genericArgs);
 			}
 
-            private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, IEnumerable<MethodDefinition> parents)
+            private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs)
             {
 				if (currentMethod == null || !CheckAnalysisLevel(currentMethod) || !CheckVirtualMember(currentMethod) || !_methodContracts.Add(currentMethod.ToString())) return;
 				_methods.Add(currentMethod);
@@ -107,22 +167,22 @@ namespace AutoFake
 
 					foreach (var methodDef in implementations)
 					{
-						Rewrite(mocks, methodDef, GetParents(parents, currentMethod));
+						Rewrite(mocks, methodDef, GetParents(parents, currentMethod), genericArgs);
 					}
 				}
 
                 if (currentMethod.IsAsync(out var asyncMethod))
                 {
-                    Rewrite(mocks, asyncMethod, GetParents(parents, currentMethod));
+                    Rewrite(mocks, asyncMethod, GetParents(parents, currentMethod), genericArgs);
                 }
 
                 if (currentMethod.Body != null)
                 {
-	                ProcessInstructions(mocks, currentMethod, parents);
+	                ProcessInstructions(mocks, currentMethod, parents, genericArgs);
                 }
             }
 
-            private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, IEnumerable<MethodDefinition> parents)
+            private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs)
             {
 	            foreach (var instruction in currentMethod.Body.Instructions.ToList())
 	            {
@@ -131,12 +191,18 @@ namespace AutoFake
 
 		            if (instructionRef.Operand is MethodReference method)
 		            {
-			            Rewrite(mocks, method.ToMethodDefinition(), GetParents(parents, currentMethod));
+			            var methodDefinition = method.ToMethodDefinition();
+			            genericArgs = _gen.GetGenericArguments(method, methodDefinition).Concat(genericArgs);
+			            Rewrite(mocks, methodDefinition, GetParents(parents, currentMethod), genericArgs);
 		            }
-
-		            foreach (var mock in mocks)
+		            else if (instructionRef.Operand is FieldReference field)
 		            {
-			            if (mock.IsSourceInstruction(_originalMethod, instructionRef))
+			            genericArgs = _gen.GetGenericArguments(field).Concat(genericArgs);
+					}
+
+					foreach (var mock in mocks)
+		            {
+			            if (mock.IsSourceInstruction(_originalMethod, instructionRef, genericArgs))
 			            {
 				            var emitter = _emitterPool.GetEmitter(currentMethod.Body);
 				            if (originalInstruction)

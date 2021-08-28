@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Mono.Cecil;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -51,7 +49,7 @@ namespace AutoFake.UnitTests
 
             fake.Rewrite(callback);
 
-            Assert.NotNull(fake.Mocks.Single().Method);
+            Assert.NotNull(fake.Mocks.Single().InvocationExpression);
         }
 
         [Theory]
@@ -62,7 +60,7 @@ namespace AutoFake.UnitTests
 
             fake.Rewrite(callback);
             
-            Assert.NotNull(fake.Mocks.Single().Method);
+            Assert.NotNull(fake.Mocks.Single().InvocationExpression);
         }
 
         [Fact]

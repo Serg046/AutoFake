@@ -36,7 +36,7 @@ namespace AutoFake.UnitTests.Setup
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(fldInstruction, field);
 
-            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction));
+            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
         }
 
         public static IEnumerable<object[]> FieldAccessInstructions =>
@@ -56,7 +56,7 @@ namespace AutoFake.UnitTests.Setup
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Stfld, field);
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace AutoFake.UnitTests.Setup
             var instruction = Instruction.Create(OpCodes.Ldfld, field);
             var sourceMember = new SourceField(typeof(TestClass2).GetField(nameof(TestClass2.Field)));
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction));
+            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
         }
 
         [Fact]

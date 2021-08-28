@@ -203,7 +203,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        var testClass = new TestClass();
 
 	        var sut = fake.Rewrite(f => f.GetValue(Arg.IsAny<TestClass>(), "0"));
-	        sut.Replace(s => s.GetValueImp(Arg.IsAny<TestClass>(), "0"))
+	        sut.Replace(s => s.GetValueImp<int, short, string>(Arg.IsAny<TestClass>(), "0"))
 		        .Return(new KeyValuePair<TestClass, string>(testClass, "1"));
 
 	        var actual = sut.Execute();
@@ -212,7 +212,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        Assert.Equal("1", actual.Value);
         }
 
-        [Fact(Skip = "Issue #158")]
+        [Fact]
         public void AnotherGenericTest()
         {
 	        var fake = new Fake<GenericTestClass<TestClass>>();
@@ -228,8 +228,8 @@ namespace AutoFake.FunctionalTests.InstanceTests
 
         private class GenericTestClass<T>
         {
-            public KeyValuePair<T, T2> GetValueImp<T2>(T x, T2 y) => new KeyValuePair<T,T2>(x , y);
-	        public KeyValuePair<T, T2> GetValue<T2>(T x, T2 y) => GetValueImp(x, y);
+            public KeyValuePair<T, T2> GetValueImp<F, A, T2>(T x, T2 y) => new KeyValuePair<T,T2>(x , y);
+	        public KeyValuePair<T, T2> GetValue<T2>(T x, T2 y) => GetValueImp<int, short, T2>(x, y);
 
 	        public T2 GetAnotherValueImpl<T2>(T2 value) => value;
 	        public string GetAnotherValue() => GetAnotherValueImpl("test") + GetAnotherValueImpl<object>(5);

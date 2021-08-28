@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace AutoFake.Setup
@@ -9,7 +10,8 @@ namespace AutoFake.Setup
         string Name { get; }
         Type ReturnType { get; }
         MemberInfo OriginalMember { get; }
-        bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction);
+        IList<GenericArgument> GetGenericArguments(ITypeInfo typeInfo);
+        bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction, IEnumerable<GenericArgument> genericArguments);
         ParameterInfo[] GetParameters();
         bool HasStackInstance { get; }
     }

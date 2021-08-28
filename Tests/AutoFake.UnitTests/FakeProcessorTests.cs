@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
 using FluentAssertions;
@@ -11,6 +13,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Moq;
 using Xunit;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using OpCodes = Mono.Cecil.Cil.OpCodes;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -31,24 +34,24 @@ namespace AutoFake.UnitTests
         [Fact]
         public void ProcessSourceMethod_Mock_PreparedForInjecting()
         {
-            var testMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
+            Expression<Action<TestClass>> expr = t => t.SimpleMethod();
             var mock = new Mock<IMock>();
 
-            _fakeProcessor.ProcessMethod(new[] { mock.Object }, testMethod);
+            _fakeProcessor.ProcessMethod(new[] { mock.Object }, new InvocationExpression(expr));
 
-            mock.Verify(m => m.BeforeInjection(It.Is<MethodDefinition>(met => met.Name == testMethod.Name)));
+            mock.Verify(m => m.BeforeInjection(It.Is<MethodDefinition>(met => met.Name == nameof(TestClass.SimpleMethod))));
         }
 
         [Fact]
         public void ProcessSourceMethod_IsInstalledInstruction_Injected()
         {
-            var testMethod = GetMethodInfo(nameof(TestClass.TestMethod));
+            Expression<Action<TestClass>> expr = t => t.TestMethod();
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
             mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
-                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)))).Returns(true);
+                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)), It.IsAny<IEnumerable<GenericArgument>>())).Returns(true);
 
-            _fakeProcessor.ProcessMethod(new[] { mock.Object }, testMethod);
+            _fakeProcessor.ProcessMethod(new[] { mock.Object }, new InvocationExpression(expr));
 
             mock.Verify(m => m.Inject(It.IsAny<IEmitter>(), It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
         }
@@ -56,20 +59,22 @@ namespace AutoFake.UnitTests
         [Fact]
         public void ProcessSourceMethod_IsAsyncMethod_RecursivelyCallsWithBody()
         {
-            var asyncMethod = GetMethodInfo(nameof(TestClass.AsyncMethod));
+            Expression<Action<TestClass>> expr = t => t.AsyncMethod();
             var innerMethod = GetMethodInfo(nameof(TestClass.SimpleMethod));
             var mock = new Mock<IMock>();
 
-            _fakeProcessor.ProcessMethod(new[] { mock.Object }, asyncMethod);
+            _fakeProcessor.ProcessMethod(new[] { mock.Object }, new InvocationExpression(expr));
 
             mock.Verify(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(),
-                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod))));
+                It.Is<Instruction>(cmd => Equivalent(cmd.Operand, innerMethod)), It.IsAny<IEnumerable<GenericArgument>>()));
         }
 
         [Fact]
         internal void ProcessSourceMethod_MembersFromTheSameModule_Success()
         {
-            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetTestClass)));
+            Expression<Action<TestClass>> expr = t => t.GetTestClass(Arg.IsAny<TestClass>(), Arg.IsAny<int>());
+
+            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr));
 
             var method = _typeInfo.GetMethods(m => m.Name == nameof(TestClass.GetTestClass)).Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.ReturnType.Module.Name);
@@ -80,7 +85,9 @@ namespace AutoFake.UnitTests
         [Fact]
         internal void ProcessSourceMethod_CtorFromTheSameModule_Success()
         {
-            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, typeof(TestClass).GetConstructors().Single());
+	        Expression<Action> expr = () => new TestClass();
+
+            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr));
 
             var method = _typeInfo.GetMethods(m => m.Name == ".ctor").Single();
             Assert.Equal("AutoFake.UnitTests.dll", method.DeclaringType.Module.Name);
@@ -91,24 +98,28 @@ namespace AutoFake.UnitTests
 	        [Frozen] Mock<ITypeInfo> typeInfo,
 	        FakeProcessor generator)
         {
+            Expression<Action<TestClass>> expr = t => t.GetType();
 	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>(), true)).Returns((MethodDefinition)null);
 
             Assert.Throws<InvalidOperationException>(() => 
-	            generator.ProcessMethod(new[] { Mock.Of<IMock>() }, GetMethodInfo(nameof(TestClass.GetType))));
+	            generator.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr)));
         }
 
         [Fact]
         public void ProcessSourceMethod_NullMethod_Throws()
         {
+            Expression<Action<TestClass>> expr = t => t.GetType();
+
 	        Assert.Throws<InvalidOperationException>(() => _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() },
-		        GetMethodInfo(nameof(TestClass.GetType))));
+		        new InvocationExpression(expr)));
         }
 
         [Fact]
         public void ProcessSourceMethod_MethodWhichCallsMethodWithoutBody_DoesNotThrow()
         {
-            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() },
-                GetMethodInfo(nameof(TestClass.MethodWithGetType)));
+            Expression<Action<TestClass>> expr = t => t.MethodWithGetType();
+
+            _fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr));
         }
         
         [Fact]
@@ -116,9 +127,9 @@ namespace AutoFake.UnitTests
         {
             var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>(), new FakeOptions());
             var gen = new FakeProcessor(typeInfo, new FakeOptions {DisableVirtualMembers = true});
-            var method = typeof(object).GetMethod(nameof(ToString));
+            Expression<Action<TestClass>> expr = t => t.ToString();
 
-            gen.ProcessMethod(new []{Mock.Of<IMock>()}, method);
+            gen.ProcessMethod(new []{Mock.Of<IMock>()}, new InvocationExpression(expr));
         }
 
         [AutoMoqData, Theory]
@@ -141,8 +152,10 @@ namespace AutoFake.UnitTests
 			             (m.DeclaringType is "System.IO.Stream" or "System.IO.MemoryStream")
 		        }
 	        });
+	        Expression<Action<Stream>> expr = t => t.WriteByte(Arg.IsAny<byte>());
 
-	        gen.ProcessMethod(new[] { Mock.Of<IMock>() }, method);
+
+            gen.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr));
 
 			typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
 				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), true));
@@ -166,6 +179,7 @@ namespace AutoFake.UnitTests
 	        [Frozen] MethodDefinition executeMethod,
             [Frozen] Mock<ITypeInfo> typeInfo,
             Mock<IMock> mock,
+	        Mock<IInvocationExpression> invocationExpression,
             MethodInfo methodInfo,
 	        FakeProcessor fakeProcessor)
         {
@@ -191,12 +205,14 @@ namespace AutoFake.UnitTests
             var instruction = Instruction.Create(OpCodes.Call, innerMethod);
             var copy = instruction.Copy();
             method.Body.Instructions.Add(instruction);
-            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
-            mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
+            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>(), It.IsAny<IEnumerable<GenericArgument>>())).Returns(false);
+            mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction, It.IsAny<IEnumerable<GenericArgument>>())).Returns(true);
             typeInfo.Setup(t => t.IsInReferencedAssembly(It.IsAny<AssemblyDefinition>())).Returns(false);
+            invocationExpression.Setup(s => s.AcceptMemberVisitor(It.IsAny<IMemberVisitor>()))
+	            .Callback((IMemberVisitor v) => v.Visit(null, methodInfo));
 
             // Act
-            fakeProcessor.ProcessMethod(new[] { mock.Object }, methodInfo);
+            fakeProcessor.ProcessMethod(new[] { mock.Object }, invocationExpression.Object);
 
             // Assert
             mock.Verify(m => m.Inject(
@@ -210,12 +226,15 @@ namespace AutoFake.UnitTests
             [Frozen] FakeOptions options,
             [Frozen] MethodDefinition executeMethod,
             MethodInfo methodInfo,
+            Mock<IInvocationExpression> invocationExpression,
             FakeProcessor fakeProcessor)
         {
+            invocationExpression.Setup(s => s.AcceptMemberVisitor(It.IsAny<IMemberVisitor>()))
+	            .Callback((IMemberVisitor v) => v.Visit(null, methodInfo));
             options.AnalysisLevel = (AnalysisLevels)100;
             executeMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Call, executeMethod));
 
-            Action act = () => fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>()}, methodInfo);
+            Action act = () => fakeProcessor.ProcessMethod(new[] { Mock.Of<IMock>()}, invocationExpression.Object);
 
             act.Should().Throw<NotSupportedException>().WithMessage("100 is not supported");
         }
@@ -230,6 +249,7 @@ namespace AutoFake.UnitTests
             [Frozen] Mock<ITypeInfo> typeInfo,
             Mock<IMock> mock,
             MethodInfo methodInfo,
+            Mock<IInvocationExpression> invocationExpression,
             FakeProcessor fakeProcessor)
         {
             // Arrange
@@ -251,19 +271,105 @@ namespace AutoFake.UnitTests
             var instruction = Instruction.Create(OpCodes.Call, innerMethod);
             var copy = instruction.Copy();
             method.Body.Instructions.Add(instruction);
-            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>())).Returns(false);
-            mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction)).Returns(true);
+            mock.Setup(m => m.IsSourceInstruction(It.IsAny<MethodDefinition>(), It.IsAny<Instruction>(), It.IsAny<IEnumerable<GenericArgument>>())).Returns(false);
+            mock.Setup(m => m.IsSourceInstruction(executeMethod, instruction, It.IsAny<IEnumerable<GenericArgument>>())).Returns(true);
             typeInfo.Setup(t => t.IsInReferencedAssembly(It.IsAny<AssemblyDefinition>())).Returns(false);
             typeInfo.Setup(t => t.IsInReferencedAssembly(It.Is<AssemblyDefinition>(a => a.FullName == assembly.FullName))).Returns(true);
+            invocationExpression.Setup(s => s.AcceptMemberVisitor(It.IsAny<IMemberVisitor>()))
+	            .Callback((IMemberVisitor v) => v.Visit(null, methodInfo));
 
             // Act
-            fakeProcessor.ProcessMethod(new[] { mock.Object }, methodInfo);
+            fakeProcessor.ProcessMethod(new[] { mock.Object }, invocationExpression.Object);
 
             // Assert
             mock.Verify(m => m.Inject(
 		            It.IsAny<IEmitter>(),
 		            It.Is<Instruction>(cmd => cmd.OpCode == copy.OpCode && cmd.Operand == copy.Operand)),
 	            injected ? Times.Once() : Times.Never());
+        }
+
+        [Fact]
+        internal void ProcessMethod_GenericArgsOnBothLevels_Success()
+        {
+	        Expression<Action<GenericLevelOne<byte, int>>> expr1 = t => t.Method(4, 4.0);
+	        Expression<Action<GenericLevelTwo<string>>> expr2 = t => t.GenericParameters(4, 4.0, "4", 4M);
+	        var typeInfo = new TypeInfo(typeof(GenericLevelOne<byte, int>), new List<FakeDependency>(), new FakeOptions());
+	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+
+	        proc.ProcessMethod(new[] {mock}, new InvocationExpression(expr1));
+
+	        mock.AtLeastOneSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        internal void ProcessMethod_GenericArgsOnSecondLevel_Success()
+        {
+	        Expression<Action<GenericExecutor>> expr1 = t => t.GetGenericReturn();
+	        Expression<Action<GenericLevelTwo<string>>> expr2 = t => t.GenericReturn(4);
+	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
+	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+
+	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+
+	        mock.AtLeastOneSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        internal void ProcessMethod_FieldGenericArgs_Success()
+        {
+	        Expression<Action<GenericExecutor>> expr1 = t => t.GetField();
+	        Expression<Func<GenericLevelOne<short, int>, int>> expr2 = t => t.Field;
+	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
+	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+
+	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+
+	        mock.AtLeastOneSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        internal void ProcessMethod_NestedMethodGenericArg_Success()
+        {
+	        Expression<Action<GenericExecutor>> expr1 = t => t.GetNestedGeneric();
+	        Expression<Action<GenericLevelTwo<short>>> expr2 = t => t.NestedGeneric<int>(new short[0]);
+	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
+	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+
+	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+
+	        mock.AtLeastOneSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        internal void ProcessMethod_NestedFieldGenericArg_Success()
+        {
+	        Expression<Action<GenericExecutor>> expr1 = t => t.GetNestedGenericField();
+	        Expression<Func<GenericLevelTwo<short>, IEnumerable<short>>> expr2 = t => t.NestedGenericField;
+	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
+	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+
+	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+
+	        mock.AtLeastOneSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        internal void ProcessMethod_FieldGenericArgsOnBothLevels_Success()
+        {
+	        Expression<Action<GenericLevelOne<byte, int>>> expr1 = t => t.GetNestedGenericField();
+	        Expression<Func<GenericLevelTwo<byte>, IEnumerable<byte>>> expr2 = t => t.NestedGenericField;
+	        var typeInfo = new TypeInfo(typeof(GenericLevelOne<byte, int>), new List<FakeDependency>(), new FakeOptions());
+	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+
+	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+
+	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
 
         private bool Equivalent(object operand, MethodInfo innerMethod) => 
@@ -330,6 +436,61 @@ namespace AutoFake.UnitTests
             }
 
             public TestClass GetTestClass(TestClass testClass, int x) => testClass;
+        }
+
+        private class FakeMock : IMock
+        {
+	        private readonly IMock _mock;
+	        public FakeMock(IMock mock) => _mock = mock;
+	        public bool AtLeastOneSuccess { get; set; }
+            public void BeforeInjection(MethodDefinition method) => _mock.BeforeInjection(method);
+	        public void Inject(IEmitter emitter, Instruction instruction) => _mock.Inject(emitter, instruction);
+	        public void AfterInjection(IEmitter emitter) => _mock.AfterInjection(emitter);
+	        public IList<object> Initialize(Type? type) => _mock.Initialize(type);
+
+	        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+	        {
+		        var isSourceInstruction = _mock.IsSourceInstruction(method, instruction, genericArguments);
+		        if (isSourceInstruction)
+		        {
+			        AtLeastOneSuccess = true;
+		        }
+		        return isSourceInstruction;
+	        }
+        }
+
+        private class GenericLevelOne<TReturn, TType> where TReturn : new()
+        {
+	        public TType Field;
+
+	        public TReturn Method<TMet>(TType p1, TMet p2)
+	        {
+		        new GenericLevelTwo<string>().GenericParameters(p1, p2, "4", 4M);
+		        return new ();
+	        }
+
+	        public IEnumerable<TReturn> GetNestedGenericField() => new GenericLevelTwo<TReturn>().NestedGenericField;
+        }
+
+        private class GenericExecutor
+        {
+	        public int GetGenericReturn() => new GenericLevelTwo<string>().GenericReturn(4);
+	        public int GetField() => new GenericLevelOne<short, int>().Field;
+	        public IEnumerable<int> GetNestedGeneric() => new GenericLevelTwo<short>().NestedGeneric<int>(new short[0]);
+	        public IEnumerable<short> GetNestedGenericField() => new GenericLevelTwo<short>().NestedGenericField;
+        }
+
+        private class GenericLevelTwo<TType>
+        {
+	        public IEnumerable<TType> NestedGenericField;
+
+	        public void GenericParameters<TTypeBase, TMetBase, TMet>(TTypeBase p1, TMetBase p2, TType p3, TMet p4)
+	        {
+	        }
+
+	        public TRet GenericReturn<TRet>(TRet ret) => ret;
+
+	        public IEnumerable<TRet> NestedGeneric<TRet>(IEnumerable<TType> param) => Enumerable.Empty<TRet>();
         }
     }
 }
