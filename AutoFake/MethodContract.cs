@@ -2,7 +2,7 @@
 {
 	public class MethodContract
 	{
-		public MethodContract(string? declaringType, string returnType, string name, string[] parameterTypes)
+		public MethodContract(string declaringType, string returnType, string name, string[] parameterTypes)
 		{
 			DeclaringType = declaringType;
 			ReturnType = returnType;
