@@ -18,7 +18,11 @@ namespace AutoFake
 	        var visitor = _executor.Execute();
             try
             {
+#pragma warning disable 8603
+#pragma warning disable 8600
 	            return (T)visitor.RuntimeValue;
+#pragma warning restore 8600
+#pragma warning restore 8603
             }
             catch (InvalidCastException)
             {
