@@ -16,8 +16,8 @@ namespace AutoFake.Setup.Mocks
 		}
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
-			=> instruction != null && IsValidOpCode(instruction.OpCode) &&
-			   instruction.Operand is TypeReference typeRef && _typeReference.ToString() == typeRef.ToString();
+			=> IsValidOpCode(instruction.OpCode) && instruction.Operand is TypeReference typeRef &&
+			   _typeReference.ToString() == typeRef.ToString();
 
 		private static bool IsValidOpCode(OpCode opCode)
 			=> opCode == OpCodes.Initobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
@@ -41,6 +41,6 @@ namespace AutoFake.Setup.Mocks
 
 		public override int GetHashCode() => _typeReference.GetHashCode();
 
-		public override bool Equals(object obj) => obj is ReplaceValueTypeCtorMock mock && mock._typeReference == _typeReference;
+		public override bool Equals(object? obj) => obj is ReplaceValueTypeCtorMock mock && mock._typeReference == _typeReference;
     }
 }

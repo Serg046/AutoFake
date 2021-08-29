@@ -28,8 +28,11 @@ namespace AutoFake.UnitTests
 	        {
                 if (parameter.IsDefined(typeof(InjectModuleAttribute), false))
                 {
-					var injectModuleTypes = ((CustomFixture)Fixture).InjectModuleTypes;
-                    injectModuleTypes.Add(parameter.ParameterType);
+#pragma warning disable CS0618 // Type or member is obsolete
+                    // Still lazy enough, no need to move
+	                var injectModuleTypes = ((CustomFixture)Fixture).InjectModuleTypes;
+#pragma warning restore CS0618 // Type or member is obsolete
+					injectModuleTypes.Add(parameter.ParameterType);
                 }
 	        }
 

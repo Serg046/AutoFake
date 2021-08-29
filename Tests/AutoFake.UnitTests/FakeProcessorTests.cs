@@ -442,11 +442,11 @@ namespace AutoFake.UnitTests
         {
 	        private readonly IMock _mock;
 	        public FakeMock(IMock mock) => _mock = mock;
-	        public bool AtLeastOneSuccess { get; set; }
+	        public bool AtLeastOneSuccess { get; private set; }
             public void BeforeInjection(MethodDefinition method) => _mock.BeforeInjection(method);
 	        public void Inject(IEmitter emitter, Instruction instruction) => _mock.Inject(emitter, instruction);
 	        public void AfterInjection(IEmitter emitter) => _mock.AfterInjection(emitter);
-	        public IList<object> Initialize(Type? type) => _mock.Initialize(type);
+	        public IList<object> Initialize(Type type) => _mock.Initialize(type);
 
 	        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
 	        {

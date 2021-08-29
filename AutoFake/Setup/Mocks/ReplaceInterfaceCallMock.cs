@@ -16,9 +16,8 @@ namespace AutoFake.Setup.Mocks
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
-	        => instruction != null && instruction.OpCode.OperandType == OperandType.InlineMethod
-	                               && instruction.Operand is MethodReference m
-	                               && m.DeclaringType.ToString() == _typeReference.ToString();
+	        => instruction.OpCode.OperandType == OperandType.InlineMethod &&
+	           instruction.Operand is MethodReference m && m.DeclaringType.ToString() == _typeReference.ToString();
 
         [ExcludeFromCodeCoverage]
         public void BeforeInjection(MethodDefinition method)
@@ -40,6 +39,6 @@ namespace AutoFake.Setup.Mocks
 
         public override int GetHashCode() => _typeReference.ToString().GetHashCode();
 
-        public override bool Equals(object obj) => obj is ReplaceInterfaceCallMock mock && mock._typeReference.ToString() == _typeReference.ToString();
+        public override bool Equals(object? obj) => obj is ReplaceInterfaceCallMock mock && mock._typeReference.ToString() == _typeReference.ToString();
     }
 }

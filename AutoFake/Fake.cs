@@ -12,7 +12,7 @@ namespace AutoFake
 {
     public class Fake<T> : Fake
     {
-        public Fake(params object[] contructorArgs) : base(typeof(T), contructorArgs)
+        public Fake(params object[] constructorArgs) : base(typeof(T), constructorArgs)
         {
         }
 
@@ -27,10 +27,10 @@ namespace AutoFake
 
     public class Fake
     {
-        private FakeObjectInfo _fakeObjectInfo;
+        private FakeObjectInfo? _fakeObjectInfo;
         private readonly Lazy<ITypeInfo> _typeInfoHelper;
 
-        public Fake(Type type, params object[] constructorArgs)
+        public Fake(Type type, params object?[] constructorArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));

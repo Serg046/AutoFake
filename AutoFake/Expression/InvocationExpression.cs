@@ -12,7 +12,7 @@ namespace AutoFake.Expression
     public class InvocationExpression : IInvocationExpression
     {
         private readonly LinqExpression _expression;
-        private IList<IFakeArgument> _arguments;
+        private IList<IFakeArgument>? _arguments;
 
         internal InvocationExpression(LinqExpression expression)
         {

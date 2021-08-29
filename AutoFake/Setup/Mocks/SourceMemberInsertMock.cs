@@ -12,7 +12,7 @@ namespace AutoFake.Setup.Mocks
     internal class SourceMemberInsertMock : SourceMemberMock
     {
         private readonly InsertMock.Location _location;
-        private FieldDefinition _closureField;
+        private FieldDefinition? _closureField;
 
         public SourceMemberInsertMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression,
             Action closure, InsertMock.Location location) : base(processorFactory, invocationExpression)
@@ -32,6 +32,7 @@ namespace AutoFake.Setup.Mocks
 
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
+	        if (_closureField == null) throw new InvalidOperationException("Closure field should be set");
 	        var module = emitter.Body.Method.Module;
 	        var closureRef = ProcessorFactory.TypeInfo.IsMultipleAssembliesMode
 		        ? module.ImportReference(_closureField)
@@ -77,7 +78,7 @@ namespace AutoFake.Setup.Mocks
 
         public override IList<object> Initialize(Type? type)
         {
-            if (type != null)
+            if (type != null && _closureField != null)
             {
 	            var field = type.GetField(_closureField.Name, BindingFlags.Public | BindingFlags.Static)
 	                        ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;

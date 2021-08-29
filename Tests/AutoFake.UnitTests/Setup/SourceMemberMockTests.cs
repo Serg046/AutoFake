@@ -49,7 +49,7 @@ namespace AutoFake.UnitTests.Setup
         }
 
         [Theory, AutoMoqData]
-        internal void Initialize_NoSetupBodyField_NoEffect(
+        internal void Initialize_NoSetupBodyField_Fails(
             [Frozen] Mock<IPrePostProcessor> proc,
             FieldDefinition ctxField,
             MethodDefinition method,
@@ -61,11 +61,9 @@ namespace AutoFake.UnitTests.Setup
             mock.BeforeInjection(method);
             mock.ExpectedCalls = null;
 
-            Assert.Null(TestClass.InvocationExpression);
-            mock.Initialize(typeof(TestClass));
-
-            Assert.Null(TestClass.InvocationExpression);
+            Assert.Throws<InvalidOperationException>(() => mock.Initialize(typeof(TestClass)));
         }
+
         [Theory, AutoMoqData]
         internal void BeforeInjection_Method_Injected(
             [Frozen]Mock<IPrePostProcessor> preProc,
@@ -99,10 +97,15 @@ namespace AutoFake.UnitTests.Setup
         [Theory, AutoMoqData]
         internal void AfterInjection_InjectsVerification(
             [Frozen] Mock<IPrePostProcessor> proc,
-	        IEmitter emitter, 
+            FieldDefinition setupField, MethodDefinition method,
+            IEmitter emitter, 
 	        SourceMemberMock mock)
 		{
-            mock.AfterInjection(emitter);
+	        setupField.Name = nameof(TestClass.InvocationExpression);
+	        proc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns(setupField);
+            mock.BeforeInjection(method);
+
+	        mock.AfterInjection(emitter);
 
             proc.Verify(p => p.InjectVerification(emitter, It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>()));
 		}

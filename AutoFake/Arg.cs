@@ -19,6 +19,6 @@ namespace AutoFake
 
         public static T Is<T>(T argument, IEqualityComparer<T> comparer) => IsAny<T>();
 
-        public static T IsAny<T>() => default;
+        public static T IsAny<T>() => default!;
     }
 }

@@ -7,29 +7,16 @@ namespace AutoFake.Expression
 {
     internal class GetTestMethodVisitor : IMemberVisitor
     {
-        private MethodBase _methodInfo;
-        private bool _isRuntimeValueSet;
+        private MethodBase? _methodInfo;
 
-        public MethodBase Method
-        {
-            get
-            {
-                if (!_isRuntimeValueSet)
-                    throw new InvalidOperationException($"{nameof(Method)} is not set. Please run {nameof(Visit)}() method.");
-                return _methodInfo;
-            }
-            private set
-            {
-                _methodInfo = value;
-                _isRuntimeValueSet = true;
-            }
-        }
+        public MethodBase Method => _methodInfo
+            ?? throw new InvalidOperationException($"{nameof(Method)} is not set. Please run {nameof(Visit)}() method.");
 
-        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => Method = constructorInfo;
+        public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => _methodInfo = constructorInfo;
 
-        public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => Method = methodInfo;
+        public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => _methodInfo = methodInfo;
 
-        public void Visit(PropertyInfo propertyInfo) => Method = propertyInfo.GetGetMethod(true);
+        public void Visit(PropertyInfo propertyInfo) => _methodInfo = propertyInfo.GetGetMethod(true);
 
         public void Visit(FieldInfo fieldInfo)
         {

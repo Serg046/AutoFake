@@ -14,7 +14,7 @@ namespace AutoFake.Setup.Mocks
         private readonly Location _location;
         private readonly IPrePostProcessor _prePostProcessor;
         private readonly IProcessorFactory _processorFactory;
-        private FieldDefinition _closureField;
+        private FieldDefinition? _closureField;
 
         public InsertMock(IProcessorFactory processorFactory, Action closure, Location location)
         {
@@ -39,7 +39,7 @@ namespace AutoFake.Setup.Mocks
 
         public IList<object> Initialize(Type? type)
         {
-            if (type != null)
+            if (type != null && _closureField != null)
             {
 	            var field = type.GetField(_closureField.Name, BindingFlags.Public | BindingFlags.Static)
 	                ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;

@@ -11,7 +11,7 @@ namespace AutoFake
             _checker = checker;
         }
 
-        public bool Check(object argument) => (bool)_checker.DynamicInvoke(argument);
+        public bool Check(object argument) => (bool)_checker.DynamicInvoke(argument)!;
 
         public override string ToString() => "should match Is-expression";
     }

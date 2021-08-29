@@ -8,31 +8,27 @@ namespace AutoFake.Expression
 {
     internal class GetValueMemberVisitor : IMemberVisitor
     {
-        private readonly object _instance;
+        private readonly object? _instance;
+        private object? _runtimeValue;
+        private Type? _type;
         private bool _isRuntimeValueSet;
-        private object _runtimeValue;
 
-        public GetValueMemberVisitor(object instance)
+        public GetValueMemberVisitor(object? instance)
         {
             _instance = instance;
         }
 
-        public object RuntimeValue
+        public object? RuntimeValue
         {
-            get
-            {
-                if (!_isRuntimeValueSet)
-                    throw new InvalidOperationException($"{nameof(RuntimeValue)} is not set. Please run {nameof(Visit)}() method.");
-                return _runtimeValue;
-            }
-            private set
-            {
-                _runtimeValue = value;
-                _isRuntimeValueSet = true;
-            }
+	        get => _isRuntimeValueSet ? _runtimeValue : throw new InvalidOperationException($"{nameof(RuntimeValue)} is not set. Please run {nameof(Visit)}() method.");
+	        private set
+	        {
+		        _runtimeValue = value;
+		        _isRuntimeValueSet = true;
+	        }
         }
 
-        public Type Type { get; private set; }
+        public Type Type => _type ?? throw new InvalidOperationException($"Type is not set. Please run {nameof(Visit)}() method.");
 
         public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
         {
@@ -44,19 +40,19 @@ namespace AutoFake.Expression
             var instanceExpr = _instance == null || methodInfo.IsStatic ? null : LinqExpression.Constant(_instance);
             var callExpression = LinqExpression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
             var lambda = LinqExpression.Lambda(callExpression).Compile();
-            Type = methodInfo.ReturnType;
+            _type = methodInfo.ReturnType;
             RuntimeValue = lambda.DynamicInvoke();
         }
 
         public void Visit(PropertyInfo propertyInfo)
         {
-	        Type = propertyInfo.PropertyType;
+	        _type = propertyInfo.PropertyType;
 	        RuntimeValue = propertyInfo.GetValue(_instance, null);
         }
 
         public void Visit(FieldInfo fieldInfo)
         {
-	        Type = fieldInfo.FieldType;
+	        _type = fieldInfo.FieldType;
 	        RuntimeValue = fieldInfo.GetValue(_instance);
         }
     }

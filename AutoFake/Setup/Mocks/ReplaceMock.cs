@@ -10,7 +10,7 @@ namespace AutoFake.Setup.Mocks
 {
     internal class ReplaceMock : SourceMemberMock
     {
-        private FieldDefinition _retValueField;
+        private FieldDefinition? _retValueField;
 
         public ReplaceMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
             : base(processorFactory, invocationExpression)
@@ -18,7 +18,7 @@ namespace AutoFake.Setup.Mocks
         }
 
         public Type? ReturnType { get; set; }
-        public object ReturnObject { get; set; }
+        public object? ReturnObject { get; set; }
 
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
@@ -55,7 +55,7 @@ namespace AutoFake.Setup.Mocks
             if (type != null)
             {
 	            var parameters = base.Initialize(type).ToList();
-	            if (ReturnObject != null)
+	            if (ReturnObject != null && _retValueField != null)
 	            {
 	                var field = GetField(type, _retValueField.Name)
 	                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");

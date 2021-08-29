@@ -4,6 +4,8 @@
     <TargetFrameworks>netcoreapp3.0;net47</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>xUnit1026,CS0649</NoWarn>
+    <CheckEolTargetFramework >false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

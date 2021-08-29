@@ -11,33 +11,19 @@ namespace AutoFake.Expression
 {
     internal class GetArgumentsMemberVisitor : IMemberVisitor
     {
-        private IList<IFakeArgument> _arguments;
-        private bool _isRuntimeValueSet;
+        private IList<IFakeArgument>? _arguments;
 
-        public IList<IFakeArgument> Arguments
-        {
-            get
-            {
-                if (!_isRuntimeValueSet)
-                    throw new InvalidOperationException($"{nameof(Arguments)} property is not set. Please run {nameof(Visit)}() method.");
-                return _arguments;
-            }
-            private set
-            {
-                _arguments = value;
-                _isRuntimeValueSet = true;
-            }
-        }
+        public IList<IFakeArgument> Arguments => _arguments ?? throw new InvalidOperationException($"{nameof(Arguments)} property is not set. Please run {nameof(Visit)}() method.");
 
-        public void Visit(PropertyInfo propertyInfo) => Arguments = new List<IFakeArgument>();
+        public void Visit(PropertyInfo propertyInfo) => _arguments = new List<IFakeArgument>();
 
-        public void Visit(FieldInfo fieldInfo) => Arguments = new List<IFakeArgument>();
+        public void Visit(FieldInfo fieldInfo) => _arguments = new List<IFakeArgument>();
 
         public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
-            => Arguments = newExpression.Arguments.Select(TryGetArgument).ToList();
+            => _arguments = newExpression.Arguments.Select(TryGetArgument).ToList();
 
         public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
-            => Arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
+            => _arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
         [ExcludeFromCodeCoverage]
         private IFakeArgument TryGetArgument(LinqExpression expression)
@@ -95,7 +81,7 @@ namespace AutoFake.Expression
             var genericEqualityComparer = genericComparer.GetType().GetInterfaces()
                 .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEqualityComparer<>));
             var extension = typeof(Extensions).GetMethod(nameof(Extensions.ToNonGeneric));
-            var genericExtension = extension.MakeGenericMethod(
+            var genericExtension = extension!.MakeGenericMethod(
                 genericEqualityComparer.GetGenericArguments().Single());
             var comparer = genericExtension.Invoke(null, new[] {genericComparer}) as IEqualityComparer;
             return new FakeArgument(new EqualityArgumentChecker(instance, comparer));

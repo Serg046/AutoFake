@@ -42,7 +42,10 @@ namespace AutoFake.UnitTests.Setup
         [Theory, AutoMoqData]
         internal void Inject_ParametrizedSourceMember_ArgsPassed(
 	        [Frozen] Mock<ISourceMember> sourceMember,
+            [Frozen] Mock<IPrePostProcessor> preProc,
 	        [Frozen] Mock<IProcessor> processor,
+            MethodDefinition method,
+            FieldDefinition body,
             Instruction instruction,
 	        VerifyMock sut)
         {
@@ -51,8 +54,10 @@ namespace AutoFake.UnitTests.Setup
 			        BindingFlags.NonPublic | BindingFlags.Instance)
 		        .GetParameters();
 	        sourceMember.Setup(s => s.GetParameters()).Returns(parameters);
+	        preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns(body);
 
-	        sut.Inject(Mock.Of<IEmitter>(), instruction);
+            sut.BeforeInjection(method);
+            sut.Inject(Mock.Of<IEmitter>(), instruction);
 
 	        processor.Verify(p => p.RecordMethodCall(
 		        It.IsAny<FieldDefinition>(),

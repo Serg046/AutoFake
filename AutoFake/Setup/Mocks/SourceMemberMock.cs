@@ -11,7 +11,10 @@ namespace AutoFake.Setup.Mocks
 {
     internal abstract class SourceMemberMock : IMock
     {
-        protected SourceMemberMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
+	    private FieldDefinition? _setupBodyField;
+	    private FieldDefinition? _executionContext;
+
+	    protected SourceMemberMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
         {
             InvocationExpression = invocationExpression;
             SourceMember = invocationExpression.GetSourceMember();
@@ -21,18 +24,18 @@ namespace AutoFake.Setup.Mocks
         
         protected IProcessorFactory ProcessorFactory { get; }
         protected IPrePostProcessor PrePostProcessor { get; }
-        protected FieldDefinition SetupBodyField { get; private set; }
-        protected FieldDefinition ExecutionContext { get; private set; }
-
-        public IInvocationExpression InvocationExpression { get; set; }
-        public Func<uint, bool> ExpectedCalls { get; set; }
+        public IInvocationExpression InvocationExpression { get; }
         public ISourceMember SourceMember { get; }
+        public Func<uint, bool>? ExpectedCalls { get; set; }
+
+        protected FieldDefinition SetupBodyField => _setupBodyField ?? throw new InvalidOperationException("SetupBody field should be set");
+        protected FieldDefinition ExecutionContext => _executionContext ?? throw new InvalidOperationException("ExecutionContext field should be set");
 
         public virtual void BeforeInjection(MethodDefinition method)
         {
-            SetupBodyField = PrePostProcessor.GenerateField(
+            _setupBodyField = PrePostProcessor.GenerateField(
                 GetFieldName(method.Name, nameof(SetupBodyField)), typeof(IInvocationExpression));
-            ExecutionContext = PrePostProcessor.GenerateField(
+            _executionContext = PrePostProcessor.GenerateField(
                 GetFieldName(method.Name, nameof(ExecutionContext)), typeof(ExecutionContext));
         }
 
@@ -42,17 +45,14 @@ namespace AutoFake.Setup.Mocks
         {
             if (type != null)
             {
-	            if (SetupBodyField != null)
-	            {
-	                var field = GetField(type, SetupBodyField.Name)
-	                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
-	                field.SetValue(null, InvocationExpression);
-	            }
-            }
+                var field = GetField(type, SetupBodyField.Name)
+                            ?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
+                field.SetValue(null, InvocationExpression);
 
-            var ctxField = GetField(type, ExecutionContext.Name)
-                           ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
-            ctxField.SetValue(null, new ExecutionContext(ExpectedCalls));
+	            var ctxField = GetField(type, ExecutionContext.Name)
+	                           ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
+	            ctxField.SetValue(null, new ExecutionContext(ExpectedCalls));
+            }
 
             return new List<object>();
         }
@@ -62,17 +62,17 @@ namespace AutoFake.Setup.Mocks
             return SourceMember.IsSourceInstruction(ProcessorFactory.TypeInfo, instruction, genericArguments);
         }
 
-        protected FieldInfo GetField(Type type, string fieldName)
-            => type.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
+        protected FieldInfo? GetField(Type type, string fieldName)
+	        => type.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
 
         protected string GetFieldName(string prefix, string suffix)
         {
             var fieldName = new StringBuilder(prefix)
                 .Append(SourceMember.ReturnType.FullName).Replace(".", "")
                 .Append("_").Append(SourceMember.Name);
-            foreach (var parameter in SourceMember.GetParameters())
+            foreach (ParameterInfo parameter in SourceMember.GetParameters())
             {
-                fieldName.Append("_").Append(parameter.ParameterType.FullName.Replace(".", ""));
+                fieldName.Append("_").Append(parameter.ParameterType.FullName?.Replace(".", ""));
             }
             return fieldName.Append("_").Append(suffix).ToString();
         }

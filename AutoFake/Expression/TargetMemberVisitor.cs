@@ -20,8 +20,8 @@ namespace AutoFake.Expression
         public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
         {
             var paramTypes = constructorInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-            var constructor = _targetType.GetConstructor(paramTypes);
-
+            var constructor = _targetType.GetConstructor(paramTypes)
+	            ?? throw new InvalidOperationException("Cannot find a constructor");
             _requestedVisitor.Visit(newExpression, constructor);
         }
 
@@ -34,13 +34,13 @@ namespace AutoFake.Expression
             MethodInfo method;
             if (methodInfo.IsGenericMethod)
             {
-	            var contract = methodInfo.GetGenericMethodDefinition().ToString();
+	            var contract = methodInfo.GetGenericMethodDefinition().ToString()!;
 	            method = GetMethod(methodCandidates, contract);
 	            method = method.MakeGenericMethod(methodInfo.GetGenericArguments());
             }
             else
             {
-	            var contract = methodInfo.ToString();
+	            var contract = methodInfo.ToString()!;
 	            method = GetMethod(methodCandidates, contract);
             }
 
@@ -57,13 +57,14 @@ namespace AutoFake.Expression
 
         public void Visit(PropertyInfo propertyInfo)
         {
-            var property = _targetType.GetProperty(propertyInfo.Name);
+            var property = _targetType.GetProperty(propertyInfo.Name)
+	            ?? throw new InvalidOperationException("Cannot find a property");
             _requestedVisitor.Visit(property);
         }
 
         public void Visit(FieldInfo fieldInfo)
         {
-            var field = _targetType.GetField(fieldInfo.Name);
+            var field = _targetType.GetField(fieldInfo.Name) ?? throw new InvalidOperationException("Cannot find a field");
             _requestedVisitor.Visit(field);
         }
     }

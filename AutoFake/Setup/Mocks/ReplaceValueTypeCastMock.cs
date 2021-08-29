@@ -16,8 +16,8 @@ namespace AutoFake.Setup.Mocks
 		}
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
-			=> instruction != null && instruction.OpCode == OpCodes.Unbox_Any &&
-			   instruction.Operand is TypeReference typeRef && _typeReference.ToString() == typeRef.ToString();
+			=> instruction.OpCode == OpCodes.Unbox_Any && instruction.Operand is TypeReference typeRef &&
+			   _typeReference.ToString() == typeRef.ToString();
 
 		[ExcludeFromCodeCoverage]
 		public void BeforeInjection(MethodDefinition method)
@@ -38,6 +38,6 @@ namespace AutoFake.Setup.Mocks
 
 		public override int GetHashCode() => _typeReference.ToString().GetHashCode();
 
-		public override bool Equals(object obj) => obj is ReplaceValueTypeCastMock mock && mock._typeReference.ToString() == _typeReference.ToString();
+		public override bool Equals(object? obj) => obj is ReplaceValueTypeCastMock mock && mock._typeReference.ToString() == _typeReference.ToString();
 	}
 }

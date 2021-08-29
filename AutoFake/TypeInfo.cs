@@ -14,7 +14,7 @@ namespace AutoFake
 {
     internal class TypeInfo : ITypeInfo
     {
-        private const BindingFlags CONSTRUCTOR_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         private readonly AssemblyDefinition _assemblyDef;
         private readonly TypeDefinition _sourceTypeDef;
@@ -126,7 +126,7 @@ namespace AutoFake
         public MethodReference ImportToFieldsAsm(MethodBase method)
 	        => _fieldsAssemblyDef.Value.MainModule.ImportReference(method);
 
-        public FieldDefinition GetField(Predicate<FieldDefinition> fieldPredicate)
+        public FieldDefinition? GetField(Predicate<FieldDefinition> fieldPredicate)
 	        => _sourceTypeDef.Fields.SingleOrDefault(f => fieldPredicate(f));
 
         public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate) 
@@ -168,7 +168,7 @@ namespace AutoFake
                 try
                 {
                     var args = _dependencies.Select(d => d.Instance).ToArray();
-                    return Activator.CreateInstance(type, CONSTRUCTOR_FLAGS, null, args, null);
+                    return Activator.CreateInstance(type, ConstructorFlags, null, args, null)!;
                 }
                 catch (AmbiguousMatchException)
                 {
@@ -177,8 +177,8 @@ namespace AutoFake
                 }
             }
 
-            var constructor = type.GetConstructor(CONSTRUCTOR_FLAGS,
-                null, _dependencies.Select(d => d.Type).ToArray(), null);
+            var constructor = type.GetConstructor(ConstructorFlags,
+                null, _dependencies.Select(d => d.Type!).ToArray(), null);
 
             if (constructor == null)
                 throw new InitializationException("Constructor is not found");
@@ -205,13 +205,14 @@ namespace AutoFake
 	            ? GetFieldsAssembly(assembly).GetType(_fieldsTypeDef.Value.FullName, true)
 	            : null;
 
-	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true);
-	        if (SourceType.IsGenericType)
-	        {
-		        sourceType = sourceType.MakeGenericType(SourceType.GetGenericArguments());
-	        }
+	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true)
+		        ?? throw new InvalidOperationException("Cannot find a type");
+			if (SourceType.IsGenericType)
+			{
+				sourceType = sourceType.MakeGenericType(SourceType.GetGenericArguments());
+			}
 
-	        var instance = !IsStatic(SourceType) ? CreateInstance(sourceType) : null;
+			var instance = !IsStatic(SourceType) ? CreateInstance(sourceType) : null;
 	        var parameters = mocks
 		        .SelectMany(m => m.Mocks)
 		        .SelectMany(m => m.Initialize(fieldsType))

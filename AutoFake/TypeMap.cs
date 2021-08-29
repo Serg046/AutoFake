@@ -71,7 +71,7 @@ namespace AutoFake
 		}
 
 		private static void AddImplementation<T>(Dictionary<T, List<TypeDefinition>> dict,
-			T type, TypeDefinition implementationDef)
+			T type, TypeDefinition implementationDef) where T: class
 		{
 			if (!dict.ContainsKey(type)) dict[type] = new List<TypeDefinition>();
 			dict[type].Add(implementationDef);

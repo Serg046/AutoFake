@@ -10,7 +10,7 @@ namespace AutoFake
 {
     internal class PrePostProcessor : IPrePostProcessor
     {
-        private const FieldAttributes ACCESS_LEVEL = FieldAttributes.Public | FieldAttributes.Static;
+        private const FieldAttributes AccessLevel = FieldAttributes.Public | FieldAttributes.Static;
         private readonly ITypeInfo _typeInfo;
 
         public PrePostProcessor(ITypeInfo typeInfo)
@@ -21,7 +21,7 @@ namespace AutoFake
         public FieldDefinition GenerateField(string name, Type returnType)
         {
             var type = _typeInfo.ImportToFieldsAsm(returnType);
-            var field = new FieldDefinition(name, ACCESS_LEVEL, type);
+            var field = new FieldDefinition(name, AccessLevel, type);
             _typeInfo.AddField(field);
             return field;
         }
@@ -45,7 +45,7 @@ namespace AutoFake
 	        }
 
 			var verificator = GetVerificator(emitter.Body.Method, out var isAsync);
-	        VariableDefinition retValue = null;
+	        VariableDefinition? retValue = null;
 	        if (isAsync)
 	        {
 		        retValue = new VariableDefinition(emitter.Body.Method.ReturnType);

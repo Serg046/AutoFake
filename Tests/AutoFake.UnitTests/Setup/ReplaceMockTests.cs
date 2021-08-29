@@ -1,5 +1,6 @@
 ﻿using System;
 using AutoFake.Exceptions;
+using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using AutoFixture.Xunit2;
 using Mono.Cecil;
@@ -15,11 +16,13 @@ namespace AutoFake.UnitTests.Setup
         internal void Initialize_NoRetValueField_NoEffect(
             [Frozen]Mock<IPrePostProcessor> preProc,
             MethodDefinition method,
-            FieldDefinition ctx,
+            FieldDefinition body, FieldDefinition ctx,
             ReplaceMock mock)
         {
+	        body.Name = nameof(TestClass.SetupBody);
 	        ctx.Name = nameof(TestClass.ExecutionContext);
-            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+	        preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns(body);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(ExecutionContext))).Returns(ctx);
             mock.ReturnObject = null;
             mock.ExpectedCalls = null;
@@ -35,13 +38,15 @@ namespace AutoFake.UnitTests.Setup
         internal void Initialize_IncorrectRetValueField_Fails(
             [Frozen]Mock<IPrePostProcessor> preProc,
             [Frozen]FieldDefinition field,
-            FieldDefinition ctx,
+            FieldDefinition body, FieldDefinition ctx,
             MethodDefinition method,
             ReplaceMock mock)
         {
+	        body.Name = nameof(TestClass.SetupBody);
 	        ctx.Name = nameof(TestClass.ExecutionContext);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), It.IsAny<Type>())).Returns((FieldDefinition)null);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), mock.SourceMember.ReturnType)).Returns(field);
+            preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(IInvocationExpression))).Returns(body);
             preProc.Setup(p => p.GenerateField(It.IsAny<string>(), typeof(ExecutionContext))).Returns(ctx);
             field.Name = nameof(TestClass.RetValueField) + "salt";
             var type = typeof(TestClass);
@@ -120,6 +125,7 @@ namespace AutoFake.UnitTests.Setup
         private class TestClass
         {
             public static object RetValueField;
+            public static IInvocationExpression SetupBody;
             public static ExecutionContext ExecutionContext;
 
             public void TestMethod(int argument)

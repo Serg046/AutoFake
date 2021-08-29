@@ -25,7 +25,7 @@ namespace AutoFake.Setup
         {
             _method = sourceMethod;
             Name = sourceMethod.Name;
-            ReturnType = sourceMethod.DeclaringType;
+            ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type should be set");
             HasStackInstance = false;
         }
 
@@ -48,7 +48,7 @@ namespace AutoFake.Setup
         private IEnumerable<GenericArgument> GetGenericArgumentsImpl(ITypeInfo typeInfo)
         {
 	        var declaringType = GetMethod(typeInfo).DeclaringType.ToString();
-	        if (_method.DeclaringType.IsGenericType)
+	        if (_method.DeclaringType?.IsGenericType == true)
 	        {
 		        var types = _method.DeclaringType.GetGenericArguments();
 		        var names = _method.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
@@ -105,11 +105,11 @@ namespace AutoFake.Setup
 
         public ParameterInfo[] GetParameters() => _method.GetParameters();
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is SourceMethod method && _method.Equals(method._method);
 
         public override int GetHashCode() => _method.GetHashCode();
 
-        public override string ToString() => _method.ToString();
+        public override string? ToString() => _method.ToString();
 	}
 }

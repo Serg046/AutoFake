@@ -11,6 +11,6 @@
 
         public bool Check(object argument) => Checker.Check(argument);
 
-        public override string ToString() => Checker.ToString();
+        public override string? ToString() => Checker.ToString();
     }
 }

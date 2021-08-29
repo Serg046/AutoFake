@@ -6,8 +6,8 @@ namespace AutoFake
     internal class FakeObjectInfo
     {
 	    public FakeObjectInfo(IList<object> parameters, Type sourceType, Type? fieldsType, object? instance)
-        {
-	        Parameters = parameters ?? new object[0];
+	    {
+		    Parameters = parameters;
             SourceType = sourceType;
             FieldsType = fieldsType;
             Instance = instance;

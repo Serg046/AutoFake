@@ -14,6 +14,8 @@
     <PackageTags>AutoFake Mock Mocking Fake Fake-Data Testing Test</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <CheckEolTargetFramework >false</CheckEolTargetFramework>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

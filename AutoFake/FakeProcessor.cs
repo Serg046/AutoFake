@@ -280,7 +280,11 @@ namespace AutoFake
 					{
 						var typeDef = _gen._typeInfo.GetTypeDefinition(method.DeclaringType);
 						var methodRef = _gen._typeInfo.ImportReference(method);
-						ProcessAllOriginalMethodContractsWithMocks(_gen._typeInfo.GetMethod(typeDef, methodRef));
+						var methodDef = _gen._typeInfo.GetMethod(typeDef, methodRef);
+						if (methodDef != null)
+						{
+							ProcessAllOriginalMethodContractsWithMocks(methodDef);
+						}
 					}
 				}
 			}
