@@ -271,14 +271,22 @@ namespace AutoFake
 				}
 			}
 
-			if (methodRef.DeclaringType is GenericInstanceType genericInstanceType)
+			foreach (var arg in GetGenericArguments(methodRef.DeclaringType, methodDef.DeclaringType))
+			{
+				yield return arg;
+			}
+		}
+
+		private IEnumerable<GenericArgument> GetGenericArguments(TypeReference typeRef, TypeDefinition typeDef)
+		{
+			if (typeRef is GenericInstanceType genericInstanceType)
 			{
 				for (var i = 0; i < genericInstanceType.GenericArguments.Count; i++)
 				{
 					var genericArgument = genericInstanceType.GenericArguments[i];
-					var declaringType = methodDef.DeclaringType.ToString();
+					var declaringType = typeDef.ToString();
 					yield return new GenericArgument(
-						methodDef.DeclaringType.GenericParameters[i].Name,
+						typeDef.GenericParameters[i].Name,
 						genericArgument.ToString(),
 						declaringType,
 						GetGenericDeclaringType(genericArgument as GenericParameter));
@@ -296,18 +304,9 @@ namespace AutoFake
 		private IEnumerable<GenericArgument> GetGenericArguments(FieldReference fieldRef)
 		{
 			var fieldDef = fieldRef.ToFieldDefinition();
-			if (fieldRef.DeclaringType is GenericInstanceType genericInstanceType)
+			foreach (var arg in GetGenericArguments(fieldRef.DeclaringType, fieldDef.DeclaringType))
 			{
-				for (var i = 0; i < genericInstanceType.GenericArguments.Count; i++)
-				{
-					var genericArgument = genericInstanceType.GenericArguments[i];
-					var declaringType = fieldDef.DeclaringType.ToString();
-					yield return new GenericArgument(
-						fieldDef.DeclaringType.GenericParameters[i].Name,
-						genericArgument.ToString(),
-						declaringType,
-						GetGenericDeclaringType(genericArgument as GenericParameter));
-				}
+				yield return arg;
 			}
 		}
 	}
