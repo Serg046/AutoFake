@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -228,7 +229,8 @@ namespace AutoFake
 				{
 					replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
 				}
-				replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCastMock(importedTypeRef) : new ReplaceReferenceTypeCastMock(importedTypeRef));
+
+				replaceContractMocks.Add(new ReplaceTypeCastMock(importedTypeRef));
 				TryAddImportedType(mockTypeDef, importedTypeRef);
 			}
 		}

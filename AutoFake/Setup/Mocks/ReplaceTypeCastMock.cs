@@ -6,17 +6,19 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-	internal class ReplaceReferenceTypeCastMock : IMock
+	internal class ReplaceTypeCastMock : IMock
 	{
 		private readonly TypeReference _typeReference;
+		private readonly OpCode _opCode;
 
-		public ReplaceReferenceTypeCastMock(TypeReference typeReference)
+		public ReplaceTypeCastMock(TypeReference typeReference)
 		{
 			_typeReference = typeReference;
+			_opCode = typeReference.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass;
 		}
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
-			=> instruction.OpCode == OpCodes.Castclass && instruction.Operand is TypeReference typeRef &&
+			=> instruction.OpCode == _opCode && instruction.Operand is TypeReference typeRef &&
 			   _typeReference.ToString() == typeRef.ToString();
 
 		[ExcludeFromCodeCoverage]
@@ -38,6 +40,6 @@ namespace AutoFake.Setup.Mocks
 
 		public override int GetHashCode() => _typeReference.ToString().GetHashCode();
 
-		public override bool Equals(object? obj) => obj is ReplaceReferenceTypeCastMock mock && mock._typeReference.ToString() == _typeReference.ToString();
+		public override bool Equals(object? obj) => obj is ReplaceTypeCastMock mock && mock._typeReference.ToString() == _typeReference.ToString();
 	}
 }
