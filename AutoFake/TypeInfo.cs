@@ -203,7 +203,7 @@ namespace AutoFake
             var assembly = _assemblyHost.Load(stream, symbolsStream);
             var fieldsType = _fieldsTypeDef.IsValueCreated
 	            ? GetFieldsAssembly(assembly).GetType(_fieldsTypeDef.Value.FullName, true)
-	            : null;
+	            : null; // No need for init, skipping
 
 	        var sourceType = assembly.GetType(GetClrName(_sourceTypeDef.FullName), true)
 		        ?? throw new InvalidOperationException("Cannot find a type");
