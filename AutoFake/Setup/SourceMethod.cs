@@ -52,10 +52,9 @@ namespace AutoFake.Setup
 	        {
 		        var types = _method.DeclaringType.GetGenericArguments();
 		        var names = _method.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-		        for (int i = 0; i < types.Length; i++)
+		        foreach (var genericArgument in GetGenericArguments(typeInfo, types, names, declaringType))
 		        {
-			        var typeRef = typeInfo.ImportReference(types[i]);
-			        yield return new GenericArgument(names[i].ToString(), typeRef.ToString(), declaringType);
+			        yield return genericArgument;
 		        }
 	        }
 
@@ -63,10 +62,9 @@ namespace AutoFake.Setup
 	        {
 		        var types = method.GetGenericArguments();
 		        var names = method.GetGenericMethodDefinition().GetGenericArguments();
-		        for (int i = 0; i < types.Length; i++)
+		        foreach (var genericArgument in GetGenericArguments(typeInfo, types, names, declaringType))
 		        {
-			        var typeRef = typeInfo.ImportReference(types[i]);
-			        yield return new GenericArgument(names[i].ToString(), typeRef.ToString(), declaringType);
+			        yield return genericArgument;
 		        }
 	        }
         }

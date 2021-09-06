@@ -43,10 +43,9 @@ namespace AutoFake.Setup
 					var declaringType = GetField(typeInfo).DeclaringType.ToString();
 			        var types = _field.DeclaringType.GetGenericArguments();
 			        var names = _field.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-			        for (int i = 0; i < types.Length; i++)
+			        foreach (var genericArgument in GetGenericArguments(typeInfo, types, names, declaringType))
 			        {
-				        var typeRef = typeInfo.ImportReference(types[i]);
-				        _genericArguments.Add(new GenericArgument(names[i].ToString(), typeRef.ToString(), declaringType));
+				        _genericArguments.Add(genericArgument);
 			        }
 		        }
 	        }

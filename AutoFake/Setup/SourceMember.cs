@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 
@@ -16,6 +17,15 @@ namespace AutoFake.Setup
 			}
 
 			return true;
+		}
+
+		protected IEnumerable<GenericArgument> GetGenericArguments(ITypeInfo typeInfo, Type[] genericArguments, Type[] genericParameters, string declaringType)
+		{
+			for (int i = 0; i < genericArguments.Length; i++)
+			{
+				var typeRef = typeInfo.ImportReference(genericArguments[i]);
+				yield return new GenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
+			}
 		}
 	}
 }
