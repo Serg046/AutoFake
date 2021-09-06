@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class SourceField : ISourceMember
+    internal class SourceField : SourceMember, ISourceMember
     {
         private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda};
         private readonly FieldInfo _field;
@@ -71,16 +71,14 @@ namespace AutoFake.Setup
         {
 	        if (visitedField.ContainsGenericParameter)
 	        {
-		        var arguments = GetGenericArguments(typeInfo);
+		        var sourceArguments = GetGenericArguments(typeInfo);
 				foreach (var genericParameter in visitedField.DeclaringType.GenericParameters)
 				{
-					var source = arguments.SingleOrDefault(a => a.Name == genericParameter.Name);
-					var visited = genericArguments.FindGenericTypeOrDefault(genericParameter.Name);
-					if (source == null || visited == null || source.Type != visited.Type)
+					if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
 					{
 						return false;
 					}
-				}
+                }
             }
 
             return true;

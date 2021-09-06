@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class SourceMethod : ISourceMember
+    internal class SourceMethod : SourceMember, ISourceMember
     {
         private readonly MethodBase _method;
         private MethodDefinition? _monoCecilMethodDef;
@@ -88,12 +88,10 @@ namespace AutoFake.Setup
         {
 	        if (visitedMethod.HasGenericParameters || visitedMethod.DeclaringType.HasGenericParameters)
 	        {
-		        var arguments = GetGenericArguments(typeInfo);
+		        var sourceArguments = GetGenericArguments(typeInfo);
 		        foreach (var genericParameter in visitedMethod.GenericParameters.Concat(visitedMethod.DeclaringType.GenericParameters))
 		        {
-			        var source = arguments.SingleOrDefault(a => a.Name == genericParameter.Name);
-			        var visited = genericArguments.FindGenericTypeOrDefault(genericParameter.Name);
-			        if (source == null || visited == null || source.Type != visited.Type)
+			        if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
 			        {
 				        return false;
 			        }
