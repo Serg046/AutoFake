@@ -39,13 +39,18 @@ namespace AutoFake.Setup.Mocks
 
         public IList<object> Initialize(Type? type)
         {
-            if (type != null && _closureField != null)
-            {
-	            var field = type.GetField(_closureField.Name, BindingFlags.Public | BindingFlags.Static)
-	                ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
-	            field.SetValue(null, Closure);
-            }
+            InitializeClosure(type, _closureField, Closure);
             return new List<object>();
+        }
+
+        internal static void InitializeClosure(Type? type, FieldDefinition? closureField, Action closure)
+        {
+	        if (type != null && closureField != null)
+	        {
+		        var field = type.GetField(closureField.Name, BindingFlags.Public | BindingFlags.Static)
+		                    ?? throw new InitializationException($"'{closureField.Name}' is not found in the generated object"); ;
+		        field.SetValue(null, closure);
+	        }
         }
 
         public void Inject(IEmitter emitter, Instruction instruction)

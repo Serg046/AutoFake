@@ -78,12 +78,7 @@ namespace AutoFake.Setup.Mocks
 
         public override IList<object> Initialize(Type? type)
         {
-            if (type != null && _closureField != null)
-            {
-	            var field = type.GetField(_closureField.Name, BindingFlags.Public | BindingFlags.Static)
-	                        ?? throw new InitializationException($"'{_closureField.Name}' is not found in the generated object"); ;
-	            field.SetValue(null, Closure);
-            }
+            InsertMock.InitializeClosure(type, _closureField, Closure);
 			return base.Initialize(type);
         }
     }
