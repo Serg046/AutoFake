@@ -23,27 +23,25 @@ namespace AutoFake
 			{
 				if (typeDef.BaseType != null)
 				{
-					if (typeDef.BaseType is TypeDefinition baseType && typeDef.BaseType.Scope == _moduleDef)
-					{
-						AddImplementation(_implementations, baseType, typeDef);
-					}
-					else
-					{
-						AddImplementation(_externalTypeImplementations, typeDef.BaseType.ToString(), typeDef);
-					}
+					AddImplementation(typeDef, typeDef.BaseType);
 				}
 
 				foreach (var interfaceDef in typeDef.Interfaces)
 				{
-					if (interfaceDef.InterfaceType is TypeDefinition interfaceType && interfaceDef.InterfaceType.Module == _moduleDef)
-					{
-						AddImplementation(_implementations, interfaceType, typeDef);
-					}
-					else
-					{
-						AddImplementation(_externalTypeImplementations, interfaceDef.InterfaceType.ToString(), typeDef);
-					}
+					AddImplementation(typeDef, interfaceDef.InterfaceType);
 				}
+			}
+		}
+
+		private void AddImplementation(TypeDefinition currentTypeDef, TypeReference baseTypeRef)
+		{
+			if (baseTypeRef is TypeDefinition baseTypeDef && baseTypeDef.Scope == _moduleDef)
+			{
+				AddImplementation(_implementations, baseTypeDef, currentTypeDef);
+			}
+			else
+			{
+				AddImplementation(_externalTypeImplementations, baseTypeRef.ToString(), currentTypeDef);
 			}
 		}
 
