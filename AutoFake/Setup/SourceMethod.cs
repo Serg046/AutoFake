@@ -76,8 +76,7 @@ namespace AutoFake.Setup
                 method.Name == _method.Name)
             {
 	            var methodDef = method.ToMethodDefinition();
-	            return methodDef.ToString() == GetMethod(typeInfo).ToString() &&
-	                   (!method.IsGenericInstance || CompareGenericArguments(methodDef, genericArguments, typeInfo));
+	            return methodDef.ToString() == GetMethod(typeInfo).ToString() && CompareGenericArguments(methodDef, genericArguments, typeInfo);
             }
             return false;
         }

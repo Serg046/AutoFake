@@ -60,8 +60,7 @@ namespace AutoFake.Setup
                 field.Name == _field.Name)
             {
 	            var fieldDef = field.ToFieldDefinition();
-	            return fieldDef.ToString() == GetField(typeInfo).ToString() &&
-					(!field.ContainsGenericParameter || CompareGenericArguments(fieldDef, genericArguments, typeInfo));
+	            return fieldDef.ToString() == GetField(typeInfo).ToString() && CompareGenericArguments(fieldDef, genericArguments, typeInfo);
             }
             return false;
         }
