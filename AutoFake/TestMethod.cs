@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
@@ -14,31 +12,31 @@ namespace AutoFake
 		private readonly IEmitterPool _emitterPool;
 		private readonly ITypeInfo _typeInfo;
 		private readonly FakeOptions _options;
+		private readonly IContractProcessor _contractProcessor;
 		private readonly HashSet<string> _methodContracts;
 		private readonly List<MethodDefinition> _methods;
 		private readonly HashSet<MethodDefinition> _implementations;
-		private readonly Dictionary<string, TypeReference> _importedTypes;
 
 		public TestMethod(MethodDefinition originalMethod, IEmitterPool emitterPool,
-			ITypeInfo typeInfo, FakeOptions fakeOptions)
+			ITypeInfo typeInfo, FakeOptions fakeOptions, IContractProcessor contractProcessor)
 		{
 			_originalMethod = originalMethod;
 			_emitterPool = emitterPool;
 			_typeInfo = typeInfo;
 			_options = fakeOptions;
+			_contractProcessor = contractProcessor;
 			_methodContracts = new HashSet<string>();
 			_methods = new List<MethodDefinition>();
 			_implementations = new HashSet<MethodDefinition>();
-			_importedTypes = new Dictionary<string, TypeReference>();
 		}
 
 		public void RewriteAndProcessContracts(IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs, HashSet<IMock> replaceContractMocks)
 		{
 			Rewrite(mocks, genericArgs);
-			ProcessAllOriginalMethodContractsWithMocks(_originalMethod, replaceContractMocks);
+			_contractProcessor.ProcessAllOriginalMethodContractsWithMocks(_originalMethod, replaceContractMocks);
 			foreach (var methodDef in _methods.Where(m => m != _originalMethod))
 			{
-				ProcessOriginalMethodContract(methodDef);
+				_contractProcessor.ProcessOriginalMethodContract(methodDef);
 			}
 		}
 
@@ -167,94 +165,6 @@ namespace AutoFake
 			if (_options.DisableVirtualMembers) return false;
 			var contract = method.ToMethodContract();
 			return _options.AllowedVirtualMembers.Count == 0 || _options.AllowedVirtualMembers.Any(m => m(contract));
-		}
-
-		public void ProcessCommonOriginalContracts(IEnumerable<SourceMemberMock> sourceMemberMocks, HashSet<IMock> replaceContractMocks)
-		{
-			foreach (var mock in sourceMemberMocks)
-			{
-				if (mock is ReplaceMock replaceMock && replaceMock.ReturnType?.Module == _typeInfo.SourceType.Module)
-				{
-					AddReplaceContractMocks(_typeInfo.GetTypeDefinition(replaceMock.ReturnType), replaceContractMocks);
-				}
-
-				if (mock.SourceMember.OriginalMember is MethodBase method &&
-					method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
-				{
-					var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
-					var methodRef = _typeInfo.ImportReference(method);
-					var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
-					if (methodDef != null)
-					{
-						ProcessAllOriginalMethodContractsWithMocks(methodDef, replaceContractMocks);
-					}
-				}
-			}
-		}
-
-		private void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef, HashSet<IMock> replaceContractMocks)
-		{
-			foreach (var method in _typeInfo.GetAllImplementations(methodDef))
-			{
-				ProcessOriginalMethodContractWithMocks(method, replaceContractMocks);
-			}
-		}
-
-		private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef, HashSet<IMock> replaceContractMocks)
-		{
-			if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
-			{
-				AddReplaceContractMocks(methodDef.ReturnType.ToTypeDefinition(), replaceContractMocks);
-				methodDef.ReturnType = _typeInfo.CreateImportedTypeReference(methodDef.ReturnType);
-			}
-
-			foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _typeInfo.IsInFakeModule(parameterDef.ParameterType)))
-			{
-				var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
-				AddReplaceContractMocks(typeDefinition, replaceContractMocks);
-				parameterDef.ParameterType = _typeInfo.CreateImportedTypeReference(parameterDef.ParameterType);
-			}
-		}
-
-		private void AddReplaceContractMocks(TypeDefinition typeDef, HashSet<IMock> replaceContractMocks)
-		{
-			foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
-			{
-				var importedTypeRef = _typeInfo.CreateImportedTypeReference(mockTypeDef);
-				if (mockTypeDef.IsInterface)
-				{
-					replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
-				}
-				else
-				{
-					replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
-				}
-
-				replaceContractMocks.Add(new ReplaceTypeCastMock(importedTypeRef));
-				TryAddImportedType(mockTypeDef, importedTypeRef);
-			}
-		}
-
-		private void TryAddImportedType(TypeDefinition typeDef, TypeReference typeRef)
-		{
-			var contract = typeDef.ToString();
-			if (!_importedTypes.ContainsKey(contract)) _importedTypes.Add(contract, typeRef);
-		}
-
-		private void ProcessOriginalMethodContract(MethodDefinition methodDef)
-		{
-			if (_importedTypes.TryGetValue(methodDef.ReturnType.ToString(), out var importedType))
-			{
-				methodDef.ReturnType = importedType;
-			}
-
-			foreach (var parameterDef in methodDef.Parameters)
-			{
-				if (_importedTypes.TryGetValue(parameterDef.ParameterType.ToString(), out importedType))
-				{
-					parameterDef.ParameterType = importedType;
-				}
-			}
 		}
 
 		private IEnumerable<GenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef)

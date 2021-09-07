@@ -26,11 +26,12 @@ namespace AutoFake
 	        if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 
 			var testMethods = new List<TestMethod>();
+			var contractProcessor = new ContractProcessor(_typeInfo);
 	        using var emitterPool = new EmitterPool();
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
-	        var testMethod = new TestMethod(executeFuncDef, emitterPool, _typeInfo, _options);
+	        var testMethod = new TestMethod(executeFuncDef, emitterPool, _typeInfo, _options, contractProcessor);
             var replaceContractMocks = new HashSet<IMock>();
-			testMethod.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>(), replaceContractMocks);
+            contractProcessor.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>(), replaceContractMocks);
 	        testMethod.RewriteAndProcessContracts(
 		        mocks, 
 		        invocationExpression.GetSourceMember().GetGenericArguments(_typeInfo),
@@ -40,7 +41,7 @@ namespace AutoFake
 
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{
-				var testCtor = new TestMethod(ctor, emitterPool, _typeInfo, _options);
+				var testCtor = new TestMethod(ctor, emitterPool, _typeInfo, _options, contractProcessor);
 				testCtor.RewriteAndProcessContracts(
 					Enumerable.Empty<IMock>(),
 					Enumerable.Empty<GenericArgument>(),
