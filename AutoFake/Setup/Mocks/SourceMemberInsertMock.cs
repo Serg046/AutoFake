@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -61,8 +59,7 @@ namespace AutoFake.Setup.Mocks
 	        var nop = Instruction.Create(OpCodes.Nop);
 	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Brfalse, nop));
 	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, closure));
-	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Call,
-		        module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
+	        emitter.InsertBefore(instruction, InsertMock.CreateActionInvokeInstruction(module));
             emitter.InsertBefore(instruction, nop);
         }
 
@@ -70,8 +67,7 @@ namespace AutoFake.Setup.Mocks
         {
 	        var nop = Instruction.Create(OpCodes.Nop);
 	        emitter.InsertAfter(instruction, nop);
-	        emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Call,
-		        module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
+	        emitter.InsertAfter(instruction, InsertMock.CreateActionInvokeInstruction(module));
 	        emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Ldsfld, closure));
 	        emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Brfalse, nop));
         }

@@ -60,9 +60,11 @@ namespace AutoFake.Setup.Mocks
 		        ? module.ImportReference(_closureField)
 		        : _closureField;
 	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, closure));
-	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Call,
-		        module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke)))));
+	        emitter.InsertBefore(instruction, CreateActionInvokeInstruction(module));
         }
+
+        internal static Instruction CreateActionInvokeInstruction(ModuleDefinition module)
+	        => Instruction.Create(OpCodes.Call, module.ImportReference(typeof(Action).GetMethod(nameof(Action.Invoke))));
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
