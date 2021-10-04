@@ -45,9 +45,9 @@ namespace AutoFake
 		{
 			foreach (var mock in sourceMemberMocks)
 			{
-				if (mock is ReplaceMock replaceMock && replaceMock.ReturnType?.Module == _typeInfo.SourceType.Module)
+				if (mock.SourceMember.ReturnType != typeof(void) && mock.SourceMember.ReturnType.Module == _typeInfo.SourceType.Module)
 				{
-					AddReplaceContractMocks(_typeInfo.GetTypeDefinition(replaceMock.ReturnType), replaceContractMocks);
+					AddReplaceContractMocks(_typeInfo.GetTypeDefinition(mock.SourceMember.ReturnType), replaceContractMocks);
 				}
 
 				if (mock.SourceMember.OriginalMember is MethodBase method &&
