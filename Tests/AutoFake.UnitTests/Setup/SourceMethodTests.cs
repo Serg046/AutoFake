@@ -34,34 +34,46 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void IsSourceInstruction_DifferentTypes_False()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass2), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass2), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
+            var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
             var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass2.TestMethod)).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
+            Assert.False(sourceMember.IsSourceInstruction(writer, instruction, new GenericArgument[0]));
         }
 
         [Fact]
         public void IsSourceInstruction_DifferentOverloads_False()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
+            var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
             var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 0).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
+            Assert.False(sourceMember.IsSourceInstruction(writer, instruction, new GenericArgument[0]));
         }
 
         [Fact]
         public void IsSourceInstruction_TheSameMethod_True()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
+            var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
             var sourceMember = new SourceMethod(GetMethod(nameof(TestClass.TestMethod), typeof(int)));
             var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.TestMethod) && m.Parameters.Count == 1).Single();
             var instruction = Instruction.Create(OpCodes.Call, method);
 
-            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
+            Assert.True(sourceMember.IsSourceInstruction(writer, instruction, new GenericArgument[0]));
         }
 
         [Fact]

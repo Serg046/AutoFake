@@ -11,7 +11,7 @@ namespace AutoFake.UnitTests
 {
     public class ExtensionsTests
     {
-        private TypeInfo GetTypeInfo() => new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+        private TypeInfo GetTypeInfo() => new TypeInfo(new AssemblyReader(typeof(TestClass), new FakeOptions()), new FakeOptions(), new AssemblyPool());
         private MethodInfo GetMethodInfo(Expression<Action<TestClass>> func) => ((MethodCallExpression)func.Body).Method;
 
         [Fact]

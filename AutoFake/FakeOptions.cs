@@ -11,5 +11,7 @@ namespace AutoFake
         public AnalysisLevels AnalysisLevel { get; set; } = AnalysisLevels.Assembly;
         internal IList<Type> ReferencedTypes { get; } = new List<Type>();
         public void AddReference(Type type) => ReferencedTypes.Add(type);
+
+        public bool IsMultipleAssembliesMode => AnalysisLevel == AnalysisLevels.AllExceptSystemAndMicrosoft || ReferencedTypes.Count > 0;
     }
 }

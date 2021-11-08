@@ -91,7 +91,7 @@ namespace AutoFake.UnitTests.Setup
 
             mock.IsSourceInstruction(null, cmd, new GenericArgument[0]);
 
-            member.Verify(s => s.IsSourceInstruction(It.IsAny<ITypeInfo>(), cmd, It.IsAny<IEnumerable<GenericArgument>>()));
+            member.Verify(s => s.IsSourceInstruction(It.IsAny<IAssemblyWriter>(), cmd, It.IsAny<IEnumerable<GenericArgument>>()));
         }
 
         [Theory, AutoMoqData]

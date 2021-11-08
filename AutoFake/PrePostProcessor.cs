@@ -12,17 +12,19 @@ namespace AutoFake
     {
         private const FieldAttributes AccessLevel = FieldAttributes.Public | FieldAttributes.Static;
         private readonly ITypeInfo _typeInfo;
+        private readonly IAssemblyWriter _assemblyWriter;
 
-        public PrePostProcessor(ITypeInfo typeInfo)
+        public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter)
         {
-            _typeInfo = typeInfo;
+	        _typeInfo = typeInfo;
+	        _assemblyWriter = assemblyWriter;
         }
 
         public FieldDefinition GenerateField(string name, Type returnType)
         {
-            var type = _typeInfo.ImportToFieldsAsm(returnType);
+            var type = _assemblyWriter.ImportToFieldsAsm(returnType);
             var field = new FieldDefinition(name, AccessLevel, type);
-            _typeInfo.AddField(field);
+            _assemblyWriter.AddField(field);
             return field;
         }
 

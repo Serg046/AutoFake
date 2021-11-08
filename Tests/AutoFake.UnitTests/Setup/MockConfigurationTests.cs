@@ -11,8 +11,16 @@ namespace AutoFake.UnitTests.Setup
 {
     public class MockConfigurationTests
     {
-        private readonly IProcessorFactory _procFactory = new ProcessorFactory(
-            new TypeInfo(typeof(TestClass), new FakeDependency[0], new FakeOptions()));
+	    private readonly IProcessorFactory _procFactory;
+
+        public MockConfigurationTests()
+        {
+	        var options = new FakeOptions();
+	        var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+	        var assemblyPool = new AssemblyPool();
+	        _procFactory = new ProcessorFactory(new TypeInfo(assemblyReader, options, assemblyPool),
+		        new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool));
+        }
 
         [Fact]
         public void Replace_CfgInvalidInput_Throws()

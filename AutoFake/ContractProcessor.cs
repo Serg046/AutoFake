@@ -9,11 +9,13 @@ namespace AutoFake
 	internal class ContractProcessor : IContractProcessor
 	{
 		private readonly ITypeInfo _typeInfo;
+		private readonly IAssemblyWriter _assemblyWriter;
 		private readonly Dictionary<string, TypeReference> _importedTypes;
 
-		public ContractProcessor(ITypeInfo typeInfo)
+		public ContractProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter)
 		{
 			_typeInfo = typeInfo;
+			_assemblyWriter = assemblyWriter;
 			_importedTypes = new Dictionary<string, TypeReference>();
 		}
 
@@ -54,7 +56,7 @@ namespace AutoFake
 				    method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
 				{
 					var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
-					var methodRef = _typeInfo.ImportReference(method);
+					var methodRef = _assemblyWriter.ImportToSourceAsm(method);
 					var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
 					if (methodDef != null)
 					{
@@ -69,14 +71,14 @@ namespace AutoFake
 			if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
 			{
 				AddReplaceContractMocks(methodDef.ReturnType.ToTypeDefinition(), replaceContractMocks);
-				methodDef.ReturnType = _typeInfo.CreateImportedTypeReference(methodDef.ReturnType);
+				methodDef.ReturnType = _assemblyWriter.ImportToSourceAsm(methodDef.ReturnType);
 			}
 
 			foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _typeInfo.IsInFakeModule(parameterDef.ParameterType)))
 			{
 				var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
 				AddReplaceContractMocks(typeDefinition, replaceContractMocks);
-				parameterDef.ParameterType = _typeInfo.CreateImportedTypeReference(parameterDef.ParameterType);
+				parameterDef.ParameterType = _assemblyWriter.ImportToSourceAsm(parameterDef.ParameterType);
 			}
 		}
 
@@ -84,7 +86,7 @@ namespace AutoFake
 		{
 			foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
 			{
-				var importedTypeRef = _typeInfo.CreateImportedTypeReference(mockTypeDef);
+				var importedTypeRef = _assemblyWriter.ImportToSourceAsm(mockTypeDef);
 				if (mockTypeDef.IsInterface)
 				{
 					replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));

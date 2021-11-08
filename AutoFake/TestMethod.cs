@@ -13,18 +13,20 @@ namespace AutoFake
 		private readonly ITypeInfo _typeInfo;
 		private readonly FakeOptions _options;
 		private readonly IContractProcessor _contractProcessor;
+		private readonly IAssemblyWriter _assemblyWriter;
 		private readonly HashSet<string> _methodContracts;
 		private readonly List<MethodDefinition> _methods;
 		private readonly HashSet<MethodDefinition> _implementations;
 
-		public TestMethod(MethodDefinition originalMethod, IEmitterPool emitterPool,
-			ITypeInfo typeInfo, FakeOptions fakeOptions, IContractProcessor contractProcessor)
+		public TestMethod(MethodDefinition originalMethod, IEmitterPool emitterPool, ITypeInfo typeInfo,
+			FakeOptions fakeOptions, IContractProcessor contractProcessor, IAssemblyWriter assemblyWriter)
 		{
 			_originalMethod = originalMethod;
 			_emitterPool = emitterPool;
 			_typeInfo = typeInfo;
 			_options = fakeOptions;
 			_contractProcessor = contractProcessor;
+			_assemblyWriter = assemblyWriter;
 			_methodContracts = new HashSet<string>();
 			_methods = new List<MethodDefinition>();
 			_implementations = new HashSet<MethodDefinition>();
@@ -129,7 +131,7 @@ namespace AutoFake
 		{
 			if (currentMethod.Module.Assembly != _originalMethod.Module.Assembly)
 			{
-				_typeInfo.TryAddAffectedAssembly(currentMethod.Module.Assembly);
+				_assemblyWriter.TryAddAffectedAssembly(currentMethod.Module.Assembly);
 			}
 		}
 

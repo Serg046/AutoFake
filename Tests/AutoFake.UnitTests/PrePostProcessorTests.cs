@@ -15,8 +15,7 @@ namespace AutoFake.UnitTests
     {
         [Theory, AutoMoqData]
         internal void GenerateField_FieldName_Added(
-            [Frozen, InjectModule] Mock<ITypeInfo> _,
-            [Frozen]Mock<ITypeInfo> typeInfo,
+            [Frozen, InjectModule] Mock<IAssemblyWriter> writer,
             string propName, Type propType,
             PrePostProcessor proc)
         {
@@ -26,7 +25,7 @@ namespace AutoFake.UnitTests
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Public));
             Assert.True(field.Attributes.HasFlag(FieldAttributes.Static));
             Assert.Equal(propType.FullName, field.FieldType.FullName);
-            typeInfo.Verify(t => t.AddField(field));
+            writer.Verify(t => t.AddField(field));
         }
 
         [Theory]

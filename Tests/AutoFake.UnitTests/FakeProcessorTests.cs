@@ -23,12 +23,13 @@ namespace AutoFake.UnitTests
     public class FakeProcessorTests
     {
         private readonly FakeProcessor _fakeProcessor;
-        private readonly TypeInfo _typeInfo;
+        private readonly ITypeInfo _typeInfo;
 
         public FakeProcessorTests()
         {
-            _typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
-            _fakeProcessor = new FakeProcessor(_typeInfo, new FakeOptions());
+	        var proc = CreateProcessor<TestClass>();
+	        _typeInfo = proc.TypeInfo;
+	        _fakeProcessor = proc.Proc;
         }
 
         [Fact]
@@ -125,37 +126,38 @@ namespace AutoFake.UnitTests
         [Fact]
         public void ProcessSourceMethod_RecursiveMethod_Success()
         {
-            var typeInfo = new TypeInfo(typeof(object), new List<FakeDependency>(), new FakeOptions());
-            var gen = new FakeProcessor(typeInfo, new FakeOptions {DisableVirtualMembers = true});
+	        var proc = CreateProcessor<object>(new FakeOptions { DisableVirtualMembers = true });
+
             Expression<Action<TestClass>> expr = t => t.ToString();
 
-            gen.ProcessMethod(new []{Mock.Of<IMock>()}, new InvocationExpression(expr));
+            proc.Proc.ProcessMethod(new []{Mock.Of<IMock>()}, new InvocationExpression(expr));
         }
 
         [AutoMoqData, Theory]
         internal void ProcessSourceMethod_VirtualMethodWithSpecification_Success([InjectModule]Mock<ITypeInfo> typeInfo)
         {
-	        var typeInfoImp = new TypeInfo(typeof(Stream), new List<FakeDependency>(), new FakeOptions());
-	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
-	        var methodDef = typeInfoImp.GetMethods(m => m.Name == method.Name).Single();
-	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>(), It.IsAny<bool>())).Returns(methodDef);
-	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
-		        .Returns((Predicate<MethodDefinition> p) => typeInfoImp.GetMethods(p));
-	        typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>(), true))
-		        .Returns((MethodDefinition m, bool _) => typeInfoImp.GetAllImplementations(m));
-	        var gen = new FakeProcessor(typeInfo.Object, new FakeOptions
+	        var options = new FakeOptions
 	        {
-		        Debug = DebugMode.Disabled,
 		        AllowedVirtualMembers =
 		        {
 			        m => m.Name == nameof(Stream.WriteByte) &&
 			             (m.DeclaringType is "System.IO.Stream" or "System.IO.MemoryStream")
 		        }
-	        });
-	        Expression<Action<Stream>> expr = t => t.WriteByte(Arg.IsAny<byte>());
+	        };
+	        var typeInfoImpl = CreateProcessor<Stream>().TypeInfo;
+	        var method = typeof(Stream).GetMethod(nameof(Stream.WriteByte));
+	        var methodDef = typeInfoImpl.GetMethods(m => m.Name == method.Name).Single();
+	        typeInfo.Setup(t => t.GetMethod(It.IsAny<MethodReference>(), It.IsAny<bool>())).Returns(methodDef);
+	        typeInfo.Setup(t => t.GetMethods(It.IsAny<Predicate<MethodDefinition>>()))
+		        .Returns((Predicate<MethodDefinition> p) => typeInfoImpl.GetMethods(p));
+	        typeInfo.Setup(t => t.GetAllImplementations(It.IsAny<MethodDefinition>(), true))
+		        .Returns((MethodDefinition m, bool _) => typeInfoImpl.GetAllImplementations(m));
+	        var proc = CreateProcessor<Stream>(options, typeInfo.Object);
+
+            Expression<Action<Stream>> expr = t => t.WriteByte(Arg.IsAny<byte>());
 
 
-            gen.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr));
+            proc.Proc.ProcessMethod(new[] { Mock.Of<IMock>() }, new InvocationExpression(expr));
 
 			typeInfo.Verify(t => t.GetAllImplementations(It.Is<MethodDefinition>(
 				m => m.Name == method.Name && method.DeclaringType.FullName == "System.IO.Stream"), true));
@@ -293,11 +295,10 @@ namespace AutoFake.UnitTests
         {
 	        Expression<Action<GenericLevelOne<byte, int>>> expr1 = t => t.Method(4, 4.0);
 	        Expression<Action<GenericLevelTwo<string>>> expr2 = t => t.GenericParameters(4, 4.0, "4", 4M);
-	        var typeInfo = new TypeInfo(typeof(GenericLevelOne<byte, int>), new List<FakeDependency>(), new FakeOptions());
-	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
-	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+	        var proc = CreateProcessor<GenericLevelOne<byte, int>>();
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(proc.TypeInfo, proc.Writer), new InvocationExpression(expr2)));
 
-	        proc.ProcessMethod(new[] {mock}, new InvocationExpression(expr1));
+	        proc.Proc.ProcessMethod(new[] {mock}, new InvocationExpression(expr1));
 
 	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
@@ -307,11 +308,10 @@ namespace AutoFake.UnitTests
         {
 	        Expression<Action<GenericExecutor>> expr1 = t => t.GetGenericReturn();
 	        Expression<Action<GenericLevelTwo<string>>> expr2 = t => t.GenericReturn(4);
-	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
-	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
-	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+	        var proc = CreateProcessor<GenericExecutor>();
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(proc.TypeInfo, proc.Writer), new InvocationExpression(expr2)));
 
-	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+	        proc.Proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
 
 	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
@@ -321,11 +321,10 @@ namespace AutoFake.UnitTests
         {
 	        Expression<Action<GenericExecutor>> expr1 = t => t.GetField();
 	        Expression<Func<GenericLevelOne<short, int>, int>> expr2 = t => t.Field;
-	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
-	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
-	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+	        var proc = CreateProcessor<GenericExecutor>();
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(proc.TypeInfo, proc.Writer), new InvocationExpression(expr2)));
 
-	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+	        proc.Proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
 
 	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
@@ -335,11 +334,10 @@ namespace AutoFake.UnitTests
         {
 	        Expression<Action<GenericExecutor>> expr1 = t => t.GetNestedGeneric();
 	        Expression<Action<GenericLevelTwo<short>>> expr2 = t => t.NestedGeneric<int>(new short[0]);
-	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
-	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
-	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+	        var proc = CreateProcessor<GenericExecutor>();
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(proc.TypeInfo, proc.Writer), new InvocationExpression(expr2)));
 
-	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+	        proc.Proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
 
 	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
@@ -349,11 +347,10 @@ namespace AutoFake.UnitTests
         {
 	        Expression<Action<GenericExecutor>> expr1 = t => t.GetNestedGenericField();
 	        Expression<Func<GenericLevelTwo<short>, IEnumerable<short>>> expr2 = t => t.NestedGenericField;
-	        var typeInfo = new TypeInfo(typeof(GenericExecutor), new List<FakeDependency>(), new FakeOptions());
-	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
-	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+	        var proc = CreateProcessor<GenericExecutor>();
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(proc.TypeInfo, proc.Writer), new InvocationExpression(expr2)));
 
-	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+	        proc.Proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
 
 	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
@@ -363,11 +360,10 @@ namespace AutoFake.UnitTests
         {
 	        Expression<Action<GenericLevelOne<byte, int>>> expr1 = t => t.GetNestedGenericField();
 	        Expression<Func<GenericLevelTwo<byte>, IEnumerable<byte>>> expr2 = t => t.NestedGenericField;
-	        var typeInfo = new TypeInfo(typeof(GenericLevelOne<byte, int>), new List<FakeDependency>(), new FakeOptions());
-	        var proc = new FakeProcessor(typeInfo, new FakeOptions());
-	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(typeInfo), new InvocationExpression(expr2)));
+	        var proc = CreateProcessor<GenericLevelOne<byte, int>>();
+	        var mock = new FakeMock(new ReplaceMock(new ProcessorFactory(proc.TypeInfo, proc.Writer), new InvocationExpression(expr2)));
 
-	        proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
+	        proc.Proc.ProcessMethod(new[] { mock }, new InvocationExpression(expr1));
 
 	        mock.AtLeastOneSuccess.Should().BeTrue();
         }
@@ -391,6 +387,29 @@ namespace AutoFake.UnitTests
 	        var field = typeDef.GetType().GetField("module", BindingFlags.Instance | BindingFlags.NonPublic);
 	        field.SetValue(typeDef, moduleToSet);
 	        methodToUpdate.DeclaringType = typeDef;
+        }
+
+        private static (ITypeInfo TypeInfo, FakeProcessor Proc, AssemblyWriter Writer) CreateProcessor<T>() => CreateProcessor<T>(new FakeOptions());
+
+        private static (ITypeInfo TypeInfo, FakeProcessor Proc, AssemblyWriter Writer) CreateProcessor<T>(FakeOptions options)
+        {
+	        var assemblyReader = new AssemblyReader(typeof(T), options);
+	        var assemblyPool = new AssemblyPool();
+	        var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
+	        var assemblyWriter = new AssemblyWriter(assemblyReader,
+		        new AssemblyHost(), options, assemblyPool);
+	        var fakeProcessor = new FakeProcessor(typeInfo, assemblyWriter, options);
+	        return (typeInfo, fakeProcessor, assemblyWriter);
+        }
+
+        private static (ITypeInfo TypeInfo, FakeProcessor Proc, AssemblyWriter Writer) CreateProcessor<T>(FakeOptions options, ITypeInfo typeInfo)
+        {
+	        var assemblyReader = new AssemblyReader(typeof(T), options);
+	        var assemblyPool = new AssemblyPool();
+	        var assemblyWriter = new AssemblyWriter(assemblyReader,
+		        new AssemblyHost(), options, assemblyPool);
+	        var fakeProcessor = new FakeProcessor(typeInfo, assemblyWriter, options);
+	        return (typeInfo, fakeProcessor, assemblyWriter);
         }
 
         private class TypeDefHelper

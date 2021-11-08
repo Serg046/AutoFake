@@ -59,7 +59,7 @@ namespace AutoFake.Setup.Mocks
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
-            return SourceMember.IsSourceInstruction(ProcessorFactory.TypeInfo, instruction, genericArguments);
+            return SourceMember.IsSourceInstruction(ProcessorFactory.AssemblyWriter, instruction, genericArguments);
         }
 
         protected FieldInfo? GetField(Type type, string fieldName)

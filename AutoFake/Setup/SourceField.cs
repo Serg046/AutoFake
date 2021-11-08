@@ -30,20 +30,20 @@ namespace AutoFake.Setup
 
         public MemberInfo OriginalMember => _field;
 
-        private FieldDefinition GetField(ITypeInfo typeInfo)
-	        => _monoCecilField ??= typeInfo.ImportReference(_field).Resolve();
+        private FieldDefinition GetField(IAssemblyWriter assemblyWriter)
+	        => _monoCecilField ??= assemblyWriter.ImportToSourceAsm(_field).Resolve();
 
-        public IList<GenericArgument> GetGenericArguments(ITypeInfo typeInfo)
+        public IList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter)
         {
 	        if (_genericArguments == null)
 	        {
 		        _genericArguments = new List<GenericArgument>();
 		        if (_field.DeclaringType?.IsGenericType == true)
 		        {
-					var declaringType = GetField(typeInfo).DeclaringType.ToString();
+					var declaringType = GetField(assemblyWriter).DeclaringType.ToString();
 			        var types = _field.DeclaringType.GetGenericArguments();
 			        var names = _field.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-			        foreach (var genericArgument in GetGenericArguments(typeInfo, types, names, declaringType))
+			        foreach (var genericArgument in GetGenericArguments(assemblyWriter, types, names, declaringType))
 			        {
 				        _genericArguments.Add(genericArgument);
 			        }
@@ -53,23 +53,23 @@ namespace AutoFake.Setup
 	        return _genericArguments;
         }
 
-        public bool IsSourceInstruction(ITypeInfo typeInfo, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+        public bool IsSourceInstruction(IAssemblyWriter assemblyWriter, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
             if (_fieldOpCodes.Contains(instruction.OpCode) &&
                 instruction.Operand is FieldReference field &&
                 field.Name == _field.Name)
             {
 	            var fieldDef = field.ToFieldDefinition();
-	            return fieldDef.ToString() == GetField(typeInfo).ToString() && CompareGenericArguments(fieldDef, genericArguments, typeInfo);
+	            return fieldDef.ToString() == GetField(assemblyWriter).ToString() && CompareGenericArguments(fieldDef, genericArguments, assemblyWriter);
             }
             return false;
         }
 
-        private bool CompareGenericArguments(FieldDefinition visitedField, IEnumerable<GenericArgument> genericArguments, ITypeInfo typeInfo)
+        private bool CompareGenericArguments(FieldDefinition visitedField, IEnumerable<GenericArgument> genericArguments, IAssemblyWriter assemblyWriter)
         {
 	        if (visitedField.ContainsGenericParameter)
 	        {
-		        var sourceArguments = GetGenericArguments(typeInfo);
+		        var sourceArguments = GetGenericArguments(assemblyWriter);
 				foreach (var genericParameter in visitedField.DeclaringType.GenericParameters)
 				{
 					if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))

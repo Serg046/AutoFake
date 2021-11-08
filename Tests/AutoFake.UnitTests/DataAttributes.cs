@@ -103,16 +103,16 @@ namespace AutoFake.UnitTests
 		        {
 		        }
 
-		        private void Handle(Mock<ITypeInfo> mock, ISpecimenContext context)
+		        private void Handle(Mock<IAssemblyWriter> mock, ISpecimenContext context)
 		        {
 			        if (_injectModuleTypes.Contains(mock.GetType()))
 			        {
 				        var module = context.Create<ModuleDefinition>();
-				        mock.Setup(m => m.ImportReference(It.IsAny<Type>()))
+				        mock.Setup(m => m.ImportToSourceAsm(It.IsAny<Type>()))
 					        .Returns<Type>(t => module.ImportReference(t));
-				        mock.Setup(m => m.ImportReference(It.IsAny<FieldInfo>()))
+				        mock.Setup(m => m.ImportToSourceAsm(It.IsAny<FieldInfo>()))
 					        .Returns<FieldInfo>(f => module.ImportReference(f));
-				        mock.Setup(m => m.ImportReference(It.IsAny<MethodBase>()))
+				        mock.Setup(m => m.ImportToSourceAsm(It.IsAny<MethodBase>()))
 					        .Returns<MethodBase>(m => module.ImportReference(m));
 
 				        mock.Setup(m => m.ImportToFieldsAsm(It.IsAny<Type>()))
@@ -121,12 +121,10 @@ namespace AutoFake.UnitTests
 					        .Returns<FieldInfo>(f => module.ImportReference(f));
 				        mock.Setup(m => m.ImportToFieldsAsm(It.IsAny<MethodBase>()))
 					        .Returns<MethodBase>(m => module.ImportReference(m));
-
-                        mock.Setup(m => m.IsMultipleAssembliesMode).Returns(false);
 			        }
 		        }
 
-		        private void Handle(Mock<MethodInfo> mock, ISpecimenContext context)
+                private void Handle(Mock<MethodInfo> mock, ISpecimenContext context)
 		        {
 			        mock.Setup(m => m.Module).Returns((Module)null);
 		        }

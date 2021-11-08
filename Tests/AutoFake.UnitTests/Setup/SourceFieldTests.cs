@@ -31,12 +31,16 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(FieldAccessInstructions))]
         public void IsSourceInstruction_TheSameField_True(OpCode fldInstruction)
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
+            var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(fldInstruction, field);
 
-            Assert.True(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
+            Assert.True(sourceMember.IsSourceInstruction(writer, instruction, new GenericArgument[0]));
         }
 
         public static IEnumerable<object[]> FieldAccessInstructions =>
@@ -51,23 +55,31 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void IsSourceInstruction_IncorrectOpCode_False()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
+            var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
             var sourceMember = new SourceField(typeof(TestClass).GetField(nameof(TestClass.Field)));
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Stfld, field);
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
+            Assert.False(sourceMember.IsSourceInstruction(writer, instruction, new GenericArgument[0]));
         }
 
         [Fact]
         public void IsSourceInstruction_DifferentTypes_False()
         {
-            var typeInfo = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
+            var typeInfo = new TypeInfo(assemblyReader, options, assemblyPool);
             var field = typeInfo.GetField(m => m.Name == nameof(TestClass.Field));
             var instruction = Instruction.Create(OpCodes.Ldfld, field);
             var sourceMember = new SourceField(typeof(TestClass2).GetField(nameof(TestClass2.Field)));
 
-            Assert.False(sourceMember.IsSourceInstruction(typeInfo, instruction, new GenericArgument[0]));
+            Assert.False(sourceMember.IsSourceInstruction(writer, instruction, new GenericArgument[0]));
         }
 
         [Fact]

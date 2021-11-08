@@ -23,17 +23,16 @@ namespace AutoFake.UnitTests
 		[Fact]
 		public void CreateFakeObject_InvalidDependencies_Throws()
 		{
-			var type = typeof(TestClass);
-			Assert.Throws<InitializationException>(() => new TypeInfo(type,
-				GetDependencies(new StringBuilder()), new FakeOptions())
-				.CreateFakeObject(new MockCollection()));
-			Assert.Throws<InitializationException>(() => new TypeInfo(type, 
-				GetDependencies(new StringBuilder(), new StringBuilder(), new StringBuilder()),
-				new FakeOptions()).CreateFakeObject(new MockCollection()));
-			Assert.Throws<InitializationException>(() => new TypeInfo(type, 
-				GetDependencies(1, 1), new FakeOptions()).CreateFakeObject(new MockCollection()));
-			new TypeInfo(type, GetDependencies(new StringBuilder(), new StringBuilder()),
-				new FakeOptions()).CreateFakeObject(new MockCollection());
+			var options = new FakeOptions();
+			var writer = new AssemblyWriter(new AssemblyReader(typeof(TestClass), options),
+				new AssemblyHost(), options, new AssemblyPool());
+			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+				GetDependencies(new StringBuilder())));
+			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+				GetDependencies(new StringBuilder(), new StringBuilder(), new StringBuilder())));
+			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+                GetDependencies(1, 1)));
+			writer.CreateFakeObject(new MockCollection(), GetDependencies(new StringBuilder(), new StringBuilder()));
 		}
 
 		[Theory]
@@ -43,8 +42,10 @@ namespace AutoFake.UnitTests
 		[InlineData(typeof(GenericTestClass<int>))]
 		public void CreateFakeObject_NonPublicConstructor_Success(Type type)
 		{
-			var generated = new TypeInfo(type, GetDependencies(), new FakeOptions())
-				.CreateFakeObject(new MockCollection());
+			var options = new FakeOptions();
+			var writer = new AssemblyWriter(new AssemblyReader(type, options),
+				new AssemblyHost(), options, new AssemblyPool());
+            var generated = writer.CreateFakeObject(new MockCollection(), GetDependencies());
 
 			generated.SourceType.FullName.Should().Be(type.FullName);
 		}
@@ -52,29 +53,30 @@ namespace AutoFake.UnitTests
 		[Fact]
 		public void CreateFakeObject_AmbiguousCtorAndNullAsDependency_ForcesToUseArgIsNull()
 		{
-			var type = typeof(AmbiguousCtorTestClass);
+			var options = new FakeOptions();
+			var writer = new AssemblyWriter(new AssemblyReader(typeof(AmbiguousCtorTestClass), options),
+				new AssemblyHost(), options, new AssemblyPool());
 
-			Assert.Throws<InitializationException>(() => new TypeInfo(type, 
-				GetDependencies(new object[] { null }), new FakeOptions())
-				.CreateFakeObject(new MockCollection()));
-			new TypeInfo(type, new[] { Arg.IsNull<StreamReader>() }, new FakeOptions())
-				.CreateFakeObject(new MockCollection());
-			new TypeInfo(type, new[] { Arg.IsNull<StreamWriter>() }, new FakeOptions())
-				.CreateFakeObject(new MockCollection());
-			new TypeInfo(typeof(TestClass), GetDependencies(null, null), new FakeOptions())
-				.CreateFakeObject(new MockCollection());
+            Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+				GetDependencies(new object[] { null })));
+            writer.CreateFakeObject(new MockCollection(), new[] {Arg.IsNull<StreamReader>()});
+            writer.CreateFakeObject(new MockCollection(), new[] {Arg.IsNull<StreamWriter>()});
+            new AssemblyWriter(new AssemblyReader(typeof(TestClass), options), new AssemblyHost(), options,
+	            new AssemblyPool()).CreateFakeObject(new MockCollection(), GetDependencies(null, null));
 		}
 
 		[Fact]
 		public void AddField_Field_Added()
 		{
 			const string testName = "testName";
-			var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>(), new FakeOptions());
+			var options = new FakeOptions();
+			var writer = new AssemblyWriter(new AssemblyReader(GetType(), options),
+				new AssemblyHost(), options, new AssemblyPool());
 
-			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
-				typeInfo.ImportReference(typeof(string))));
+			writer.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
+				writer.ImportToSourceAsm(typeof(string))));
 
-			var generated = typeInfo.CreateFakeObject(new MockCollection());
+			var generated = writer.CreateFakeObject(new MockCollection(), new List<FakeDependency>());
 			var field = generated.FieldsType.GetField(testName, BindingFlags.NonPublic | BindingFlags.Static);
 			field.Should().NotBeNull();
 			field.FieldType.Should().Be(typeof(string));
@@ -84,14 +86,16 @@ namespace AutoFake.UnitTests
 		public void AddField_ExistingField_AddedWithInc()
 		{
 			const string testName = "testName";
-			var typeInfo = new TypeInfo(GetType(), new List<FakeDependency>(), new FakeOptions());
+			var options = new FakeOptions();
+			var writer = new AssemblyWriter(new AssemblyReader(GetType(), options),
+				new AssemblyHost(), options, new AssemblyPool());
 
-			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
-				typeInfo.ImportReference(typeof(string))));
-			typeInfo.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
-				typeInfo.ImportReference(typeof(string))));
+			writer.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
+				writer.ImportToSourceAsm(typeof(string))));
+			writer.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
+				writer.ImportToSourceAsm(typeof(string))));
 
-			var generated = typeInfo.CreateFakeObject(new MockCollection());
+			var generated = writer.CreateFakeObject(new MockCollection(), new List<FakeDependency>());
 			var field1 = generated.FieldsType.GetField(testName, BindingFlags.NonPublic | BindingFlags.Static);
 			field1.Should().NotBeNull();
 			field1.FieldType.Should().Be(typeof(string));
@@ -105,7 +109,9 @@ namespace AutoFake.UnitTests
         [InlineData(typeof(StaticTestClass), true)]
         public void CreateFakeObject_Type_Created(Type type, bool isStaticType)
         {
-            var typeInfo = new TypeInfo(type, new FakeDependency[0], new FakeOptions());
+	        var options = new FakeOptions();
+	        var writer = new AssemblyWriter(new AssemblyReader(type, options),
+		        new AssemblyHost(), options, new AssemblyPool());
             var mock = new Mock<IMock>();
             mock.Setup(m => m.Initialize(It.IsAny<Type>())).Returns(new List<object>());
             var mocks = new MockCollection();
@@ -114,7 +120,7 @@ namespace AutoFake.UnitTests
                 : LinqExpression.Call(LinqExpression.Constant(Activator.CreateInstance(type)), type.GetMethod("CreateFakeObjectTypeCreated"));
             mocks.Add(new InvocationExpression(expr), new[] {mock.Object});
 
-            var fakeObjectInfo = typeInfo.CreateFakeObject(mocks);
+            var fakeObjectInfo = writer.CreateFakeObject(mocks, new List<FakeDependency>());
 
             mock.Verify(m => m.Initialize(It.IsAny<Type>()));
             Assert.Equal(type.FullName, fakeObjectInfo.SourceType.FullName);
@@ -125,11 +131,14 @@ namespace AutoFake.UnitTests
         [Fact]
         public void GetMethod_IsInBaseType_Returned()
         {
-            var type = new TypeInfo(typeof(TestClass), new List<FakeDependency>(), new FakeOptions());
+            var options = new FakeOptions();
+            var assemblyReader = new AssemblyReader(typeof(TestClass), options);
+            var assemblyPool = new AssemblyPool();
+            var writer = new AssemblyWriter(assemblyReader, new AssemblyHost(), options, assemblyPool);
             var method = new MethodDefinition(nameof(BaseTestClass.BaseTypeMethod),
-                MethodAttributes.Public, type.ImportReference(typeof(void)));
+                MethodAttributes.Public, writer.ImportToSourceAsm(typeof(void)));
 
-            var actualMethod = type.GetMethod(method, true);
+            var actualMethod = new TypeInfo(assemblyReader, options, assemblyPool).GetMethod(method, true);
 
             Assert.Equal(method.ReturnType.ToString(), actualMethod.ReturnType.ToString());
             Assert.Equal(method.Name, actualMethod.Name);

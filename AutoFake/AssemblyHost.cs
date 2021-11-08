@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace AutoFake
 {
-	internal class AssemblyHost
+	internal class AssemblyHost : IAssemblyHost
 	{
 		public Assembly Load(MemoryStream asmStream, MemoryStream symbolsStream)
 		{

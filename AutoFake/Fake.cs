@@ -28,22 +28,30 @@ namespace AutoFake
     public class Fake
     {
         private FakeObjectInfo? _fakeObjectInfo;
-        private readonly Lazy<ITypeInfo> _typeInfoHelper;
+        private readonly Lazy<ITypeInfo> _typeInfo;
+        private readonly Lazy<IAssemblyWriter> _assemblyWriter;
+        private readonly List<FakeDependency> _dependencies;
+        private readonly AssemblyHost _assemblyHost;
+        private readonly AssemblyPool _assemblyPool;
 
         public Fake(Type type, params object?[] constructorArgs)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+	        if (type == null) throw new ArgumentNullException(nameof(type));
             if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));
 
-            var dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
+            _dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
             Mocks = new MockCollection();
             Options = new FakeOptions();
-            _typeInfoHelper = new Lazy<ITypeInfo>(() => new TypeInfo(type, dependencies, Options));
+            _assemblyHost = new AssemblyHost();
+            _assemblyPool = new AssemblyPool();
+            var assemblyReader = new Lazy<IAssemblyReader>(() => new AssemblyReader(type, Options));
+            _typeInfo = new Lazy<ITypeInfo>(() => new TypeInfo(assemblyReader.Value, Options, _assemblyPool));
+            _assemblyWriter = new Lazy<IAssemblyWriter>(() => new AssemblyWriter(assemblyReader.Value, _assemblyHost, Options, _assemblyPool));
         }
 
         public FakeOptions Options { get; }
 
-        internal ITypeInfo TypeInfo => _typeInfoHelper.Value;
+        internal ITypeInfo TypeInfo => _typeInfo.Value;
 
         internal MockCollection Mocks { get; }
         
@@ -51,7 +59,7 @@ namespace AutoFake
         {
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
             var mocks = GetMocksContainer(invocationExpression);
-            return new FuncMockConfiguration<TInput, TReturn>(mocks, new ProcessorFactory(TypeInfo),
+            return new FuncMockConfiguration<TInput, TReturn>(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
                 new Executor<TReturn>(this, invocationExpression));
         }
 
@@ -59,7 +67,7 @@ namespace AutoFake
         {
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
             var mocks = GetMocksContainer(invocationExpression);
-            return new ActionMockConfiguration<TInput>(mocks, new ProcessorFactory(TypeInfo),
+            return new ActionMockConfiguration<TInput>(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
                 new Executor(this, invocationExpression));
         }
 
@@ -67,7 +75,7 @@ namespace AutoFake
         {
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
             var mocks = GetMocksContainer(invocationExpression);
-            return new FuncMockConfiguration<TReturn>(mocks, new ProcessorFactory(TypeInfo),
+            return new FuncMockConfiguration<TReturn>(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
                 new Executor<TReturn>(this, invocationExpression));
         }
 
@@ -75,7 +83,7 @@ namespace AutoFake
         {
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
             var mocks = GetMocksContainer(invocationExpression);
-            return new ActionMockConfiguration(mocks, new ProcessorFactory(TypeInfo),
+            return new ActionMockConfiguration(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
                 new Executor(this, invocationExpression));
         }
 
@@ -109,7 +117,16 @@ namespace AutoFake
 
         internal FakeObjectInfo GetFakeObject()
         {
-            if (_fakeObjectInfo == null) _fakeObjectInfo = TypeInfo.CreateFakeObject(Mocks);
+	        if (_fakeObjectInfo == null)
+	        {
+		        var fakeProcessor = new FakeProcessor(TypeInfo, _assemblyWriter.Value, Options);
+		        foreach (var mock in Mocks)
+		        {
+			        fakeProcessor.ProcessMethod(mock.Mocks, mock.InvocationExpression);
+		        }
+
+                _fakeObjectInfo = _assemblyWriter.Value.CreateFakeObject(Mocks, _dependencies);
+	        }
             return _fakeObjectInfo;
         }
 
