@@ -89,39 +89,9 @@ namespace AutoFake
 		{
 			foreach (var instruction in currentMethod.Body.Instructions.ToList())
 			{
-				var originalInstruction = true;
-				var instructionRef = instruction;
-
-				if (instructionRef.Operand is MethodReference method)
-				{
-					var methodDefinition = method.ToMethodDefinition();
-					genericArgs = GetGenericArguments(method, methodDefinition).Concat(genericArgs);
-					Rewrite(mocks, methodDefinition, GetParents(parents, currentMethod), genericArgs);
-				}
-				else if (instructionRef.Operand is FieldReference field)
-				{
-					genericArgs = GetGenericArguments(field).Concat(genericArgs);
-				}
-
-				foreach (var mock in mocks)
-				{
-					if (mock.IsSourceInstruction(_originalMethod, instructionRef, genericArgs))
-					{
-						var emitter = _emitterPool.GetEmitter(currentMethod.Body);
-						if (originalInstruction)
-						{
-							instructionRef = emitter.ShiftDown(instructionRef);
-							originalInstruction = false;
-						}
-
-						mock.Inject(emitter, instructionRef);
-						TryAddAffectedAssembly(currentMethod);
-						foreach (var parent in parents)
-						{
-							TryAddAffectedAssembly(parent);
-						}
-					}
-				}
+				var proc = new TestMethodInstructionProcessor(_originalMethod, _emitterPool,
+					_assemblyWriter, mocks, parents, genericArgs);
+				proc.Process(currentMethod, instruction, Rewrite);
 			}
 		}
 
