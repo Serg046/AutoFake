@@ -97,14 +97,6 @@ namespace AutoFake
 
 		private IEnumerable<MethodDefinition> GetParents(IEnumerable<MethodDefinition> parents, MethodDefinition currentMethod) => parents.Concat(new[] { currentMethod });
 
-		private void TryAddAffectedAssembly(MethodDefinition currentMethod)
-		{
-			if (currentMethod.Module.Assembly != _originalMethod.Module.Assembly)
-			{
-				_assemblyWriter.TryAddAffectedAssembly(currentMethod.Module.Assembly);
-			}
-		}
-
 		private bool CheckAnalysisLevel(MethodReference methodRef)
 		{
 			switch (_options.AnalysisLevel)
@@ -137,61 +129,6 @@ namespace AutoFake
 			if (_options.DisableVirtualMembers) return false;
 			var contract = method.ToMethodContract();
 			return _options.AllowedVirtualMembers.Count == 0 || _options.AllowedVirtualMembers.Any(m => m(contract));
-		}
-
-		private IEnumerable<GenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef)
-		{
-			if (methodRef is GenericInstanceMethod genericInstanceMethod)
-			{
-				for (var i = 0; i < genericInstanceMethod.GenericArguments.Count; i++)
-				{
-					var genericArgument = genericInstanceMethod.GenericArguments[i];
-					var declaringType = methodDef.DeclaringType.ToString();
-					yield return new GenericArgument(
-						methodDef.GenericParameters[i].Name,
-						genericArgument.ToString(),
-						declaringType,
-						GetGenericDeclaringType(genericArgument as GenericParameter));
-				}
-			}
-
-			foreach (var arg in GetGenericArguments(methodRef.DeclaringType, methodDef.DeclaringType))
-			{
-				yield return arg;
-			}
-		}
-
-		private IEnumerable<GenericArgument> GetGenericArguments(TypeReference typeRef, TypeDefinition typeDef)
-		{
-			if (typeRef is GenericInstanceType genericInstanceType)
-			{
-				for (var i = 0; i < genericInstanceType.GenericArguments.Count; i++)
-				{
-					var genericArgument = genericInstanceType.GenericArguments[i];
-					var declaringType = typeDef.ToString();
-					yield return new GenericArgument(
-						typeDef.GenericParameters[i].Name,
-						genericArgument.ToString(),
-						declaringType,
-						GetGenericDeclaringType(genericArgument as GenericParameter));
-				}
-			}
-		}
-
-		private string? GetGenericDeclaringType(GenericParameter? genericArgument)
-		{
-			return genericArgument != null
-				? genericArgument.DeclaringType?.ToString() ?? genericArgument.DeclaringMethod.DeclaringType.ToString()
-				: null;
-		}
-
-		private IEnumerable<GenericArgument> GetGenericArguments(FieldReference fieldRef)
-		{
-			var fieldDef = fieldRef.ToFieldDefinition();
-			foreach (var arg in GetGenericArguments(fieldRef.DeclaringType, fieldDef.DeclaringType))
-			{
-				yield return arg;
-			}
 		}
 	}
 }
