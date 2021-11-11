@@ -31,20 +31,9 @@ namespace AutoFake
         public IList<VariableDefinition> RecordMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes)
         {
 	        var module = ((MemberReference)_instruction.Operand).Module;
-	        var variables = new List<VariableDefinition>();
-	        foreach (var argType in argumentTypes)
-	        {
-		        var variable = new VariableDefinition(module.ImportReference(argType));
-		        variables.Add(variable);
-		        _emitter.Body.Variables.Add(variable);
-	        }
+	        var variables = PushArgumentsToVariables(module, argumentTypes);
 
-	        foreach (var variable in variables.Select(v => v).Reverse())
-	        {
-		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
-	        }
-
-            var objRef = module.ImportReference(typeof(object));
+	        var objRef = module.ImportReference(typeof(object));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, variables.Count));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newarr, objRef));
             var arrVar = new VariableDefinition(module.ImportReference(typeof(object[])));
@@ -65,6 +54,24 @@ namespace AutoFake
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, incMethodRef));
 
             return variables;
+        }
+
+        private IList<VariableDefinition> PushArgumentsToVariables(ModuleDefinition module, IList<Type> argumentTypes)
+        {
+	        var variables = new List<VariableDefinition>();
+	        foreach (var argType in argumentTypes)
+	        {
+		        var variable = new VariableDefinition(module.ImportReference(argType));
+		        variables.Add(variable);
+		        _emitter.Body.Variables.Add(variable);
+	        }
+
+	        foreach (var variable in variables.Select(v => v).Reverse())
+	        {
+		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
+	        }
+
+	        return variables;
         }
 
         private void RecordMethodCall(IList<VariableDefinition> variables, VariableDefinition array, IList<Type> argumentTypes)
