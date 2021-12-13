@@ -11,9 +11,9 @@ namespace AutoFake.Expression
 {
     internal class GetArgumentsMemberVisitor : IMemberVisitor
     {
-        private IList<IFakeArgument>? _arguments;
+        private List<IFakeArgument>? _arguments;
 
-        public IList<IFakeArgument> Arguments => _arguments ?? throw new InvalidOperationException($"{nameof(Arguments)} property is not set. Please run {nameof(Visit)}() method.");
+        public IReadOnlyList<IFakeArgument> Arguments => _arguments?.ToReadOnlyList() ?? throw new InvalidOperationException($"{nameof(Arguments)} property is not set. Please run {nameof(Visit)}() method.");
 
         public void Visit(PropertyInfo propertyInfo) => _arguments = new List<IFakeArgument>();
 

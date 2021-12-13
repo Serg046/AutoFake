@@ -8,6 +8,6 @@ namespace AutoFake.Expression
         bool ThrowWhenArgumentsAreNotMatched { get; set; }
         void AcceptMemberVisitor(IMemberVisitor visitor);
         ISourceMember GetSourceMember();
-        IList<IFakeArgument> GetArguments();
+        IReadOnlyList<IFakeArgument> GetArguments();
     }
 }

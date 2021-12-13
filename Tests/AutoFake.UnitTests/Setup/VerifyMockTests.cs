@@ -27,7 +27,7 @@ namespace AutoFake.UnitTests.Setup
             expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
             {
                 new FakeArgument(new EqualityArgumentChecker(1))
-            });
+            }.ToReadOnlyList);
             var mock = new VerifyMock(processorFactory, expression.Object);
             proc.Setup(p => p.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()))
 	            .Returns(args);

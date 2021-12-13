@@ -12,7 +12,7 @@ namespace AutoFake.Expression
     public class InvocationExpression : IInvocationExpression
     {
         private readonly LinqExpression _expression;
-        private IList<IFakeArgument>? _arguments;
+        private IReadOnlyList<IFakeArgument>? _arguments;
 
         internal InvocationExpression(LinqExpression expression)
         {
@@ -89,8 +89,8 @@ namespace AutoFake.Expression
             return memberVisitor.SourceMember;
         }
 
-        IList<IFakeArgument> IInvocationExpression.GetArguments() => GetArguments();
-        internal IList<IFakeArgument> GetArguments()
+        IReadOnlyList<IFakeArgument> IInvocationExpression.GetArguments() => GetArguments();
+        internal IReadOnlyList<IFakeArgument> GetArguments()
         {
             if (_arguments == null)
             {

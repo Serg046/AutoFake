@@ -74,7 +74,7 @@ namespace AutoFake.UnitTests.Setup
             expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
             {
                 new FakeArgument(new SuccessfulArgumentChecker())
-            });
+            }.ToReadOnlyList);
             var mock = new VerifyMock(processorFactory, expression.Object) {ExpectedCalls = i => true};
 
             mock.BeforeInjection(method);
