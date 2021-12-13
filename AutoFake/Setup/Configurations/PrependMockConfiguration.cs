@@ -6,8 +6,7 @@ namespace AutoFake.Setup.Configurations
 {
     public class PrependMockConfiguration<T> : PrependMockConfiguration
     {
-        internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock, ushort> setMock,
-            ushort position, Action closure) : base(processorFactory, setMock, position, closure)
+        internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock> setMock, Action closure) : base(processorFactory, setMock, closure)
         {
         }
 
@@ -19,16 +18,13 @@ namespace AutoFake.Setup.Configurations
     public class PrependMockConfiguration
     {
         private readonly IProcessorFactory _processorFactory;
-        private readonly Action<IMock, ushort> _setMock;
-        private readonly ushort _position;
+        private readonly Action<IMock> _setMock;
         private readonly Action _closure;
 
-        internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock, ushort> setMock,
-            ushort position, Action closure)
+        internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock> setMock, Action closure)
         {
             _processorFactory = processorFactory;
             _setMock = setMock;
-            _position = position;
             _closure = closure;
         }
 
@@ -45,7 +41,7 @@ namespace AutoFake.Setup.Configurations
         {
             var mock = new SourceMemberInsertMock(_processorFactory, new Expression.InvocationExpression(expression),
                 _closure, InsertMock.Location.Before);
-            _setMock(mock, _position);
+            _setMock(mock);
             return new SourceMemberInsertMockConfiguration(mock);
         }
     }

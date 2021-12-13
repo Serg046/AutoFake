@@ -18,7 +18,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var mocks = new List<IMock>();
             mocks.Add(null);
-            var installer = new PrependMockConfiguration(factory, (m, i) => mocks[i] = m, 0, descriptor);
+            var installer = new PrependMockConfiguration(factory, m => mocks[0] = m, descriptor);
 
             installer.Before(callback);
 
@@ -34,7 +34,7 @@ namespace AutoFake.UnitTests.Setup
         {
             var mocks = new List<IMock>();
             mocks.Add(null);
-            var installer = new PrependMockConfiguration<TestClass>(factory, (m, i) => mocks[i] = m, 0, descriptor);
+            var installer = new PrependMockConfiguration<TestClass>(factory, m => mocks[0] = m, descriptor);
 
             installer.Before(callback);
 

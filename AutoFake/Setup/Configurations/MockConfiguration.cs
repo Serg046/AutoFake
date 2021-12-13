@@ -76,16 +76,14 @@ namespace AutoFake.Setup.Configurations
         {
 	        var position = (ushort)Mocks.Count;
 	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Before));
-	        return new PrependMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
-		        position, action);
+	        return new PrependMockConfiguration<T>(ProcessorFactory, mock => Mocks[position] = mock, action);
         }
 
         public new AppendMockConfiguration<T> Append(Action action)
         {
 	        var position = (ushort)Mocks.Count;
 	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.After));
-	        return new AppendMockConfiguration<T>(ProcessorFactory, (mock, index) => Mocks[index] = mock,
-		        position, action);
+	        return new AppendMockConfiguration<T>(ProcessorFactory, mock => Mocks[position] = mock, action);
         }
     }
 
@@ -156,16 +154,14 @@ namespace AutoFake.Setup.Configurations
         {
             var position = (ushort)Mocks.Count;
             Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.After));
-            return new AppendMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
-                position, action);
+            return new AppendMockConfiguration(ProcessorFactory, mock => Mocks[position] = mock, action);
         }
 
         public PrependMockConfiguration Prepend(Action action)
         {
             var position = (ushort)Mocks.Count;
             Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Before));
-            return new PrependMockConfiguration(ProcessorFactory, (mock, index) => Mocks[index] = mock,
-                position, action);
+            return new PrependMockConfiguration(ProcessorFactory, mock => Mocks[position] = mock, action);
         }
     }
 }
