@@ -21,7 +21,7 @@ namespace AutoFake.UnitTests.Setup
             IProcessorFactory processorFactory,
             Mock<IInvocationExpression> expression,
             MethodDefinition method,
-            List<VariableDefinition> args,
+            IReadOnlyList<VariableDefinition> args,
             IEmitter emitter)
         {
             expression.Setup(e => e.GetArguments()).Returns(new List<IFakeArgument>
@@ -29,13 +29,13 @@ namespace AutoFake.UnitTests.Setup
                 new FakeArgument(new EqualityArgumentChecker(1))
             }.ToReadOnlyList);
             var mock = new VerifyMock(processorFactory, expression.Object);
-            proc.Setup(p => p.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()))
+            proc.Setup(p => p.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IReadOnlyList<Type>>()))
 	            .Returns(args);
             mock.BeforeInjection(method);
 
             mock.Inject(emitter, Instruction.Create(OpCodes.Call, method));
 
-            proc.Verify(m => m.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IList<Type>>()), Times.Once());
+            proc.Verify(m => m.RecordMethodCall(It.IsAny<FieldDefinition>(), It.IsAny<FieldDefinition>(), It.IsAny<IReadOnlyList<Type>>()), Times.Once());
             proc.Verify(m => m.PushMethodArguments(args), Times.Once());
         }
 
@@ -62,7 +62,7 @@ namespace AutoFake.UnitTests.Setup
 	        processor.Verify(p => p.RecordMethodCall(
 		        It.IsAny<FieldDefinition>(),
 		        It.IsAny<FieldDefinition>(),
-		        It.Is<IList<Type>>(prms => prms
+		        It.Is<IReadOnlyList<Type>>(prms => prms
 			        .SequenceEqual(parameters.Select(prm => prm.ParameterType)))));
         }
     }

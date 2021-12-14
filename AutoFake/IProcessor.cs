@@ -9,6 +9,6 @@ namespace AutoFake
     {
         void PushMethodArguments(IEnumerable<VariableDefinition> variables);
         void RemoveStackArgument();
-        IList<VariableDefinition> RecordMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes);
+        IReadOnlyList<VariableDefinition> RecordMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IReadOnlyList<Type> argumentTypes);
     }
 }

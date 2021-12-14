@@ -35,7 +35,9 @@ namespace AutoFake.Setup.Mocks
         {
         }
 
-        public IList<object> Initialize(Type? type) => new List<object>();
+        public void Initialize(Type? type)
+        {
+        }
 
         public override int GetHashCode() => _typeReference.ToString().GetHashCode();
 

@@ -12,7 +12,7 @@ namespace AutoFake.Setup
         private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda};
         private readonly FieldInfo _field;
         private FieldDefinition? _monoCecilField;
-        private IList<GenericArgument>? _genericArguments;
+        private IReadOnlyList<GenericArgument>? _genericArguments;
 
         public SourceField(FieldInfo field)
         {
@@ -33,11 +33,11 @@ namespace AutoFake.Setup
         private FieldDefinition GetField(IAssemblyWriter assemblyWriter)
 	        => _monoCecilField ??= assemblyWriter.ImportToSourceAsm(_field).Resolve();
 
-        public IList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter)
+        public IReadOnlyList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter)
         {
 	        if (_genericArguments == null)
 	        {
-		        _genericArguments = new List<GenericArgument>();
+		        var genericArguments = new List<GenericArgument>();
 		        if (_field.DeclaringType?.IsGenericType == true)
 		        {
 					var declaringType = GetField(assemblyWriter).DeclaringType.ToString();
@@ -45,9 +45,11 @@ namespace AutoFake.Setup
 			        var names = _field.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
 			        foreach (var genericArgument in GetGenericArguments(assemblyWriter, types, names, declaringType))
 			        {
-				        _genericArguments.Add(genericArgument);
+				        genericArguments.Add(genericArgument);
 			        }
 		        }
+
+		        _genericArguments = genericArguments.ToReadOnlyList();
 	        }
 
 	        return _genericArguments;

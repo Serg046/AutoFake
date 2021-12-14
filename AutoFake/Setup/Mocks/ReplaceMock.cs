@@ -24,12 +24,12 @@ namespace AutoFake.Setup.Mocks
         {
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
             var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
-	            SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
+	            SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
 			ReplaceInstruction(emitter, processor, instruction, variables);
         }
 
         private void ReplaceInstruction(IEmitter emitter, IProcessor processor, Instruction instruction,
-	        IList<VariableDefinition> variables)
+	        IEnumerable<VariableDefinition> variables)
         {
 	        var nop = Instruction.Create(OpCodes.Nop);
 	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Brfalse, nop));
@@ -50,20 +50,15 @@ namespace AutoFake.Setup.Mocks
 	        processor.PushMethodArguments(variables);
         }
 
-		public override IList<object> Initialize(Type? type)
-        {
-            if (type != null)
+		public override void Initialize(Type? type)
+		{
+			base.Initialize(type);
+            if (type != null && ReturnObject != null && _retValueField != null)
             {
-	            var parameters = base.Initialize(type).ToList();
-	            if (ReturnObject != null && _retValueField != null)
-	            {
-	                var field = GetField(type, _retValueField.Name)
-	                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
-	                field.SetValue(null, ReturnObject);
-	            }
-				return parameters;
+                var field = GetField(type, _retValueField.Name)
+                            ?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
+                field.SetValue(null, ReturnObject);
             }
-            return new List<object>();
         }
 
         public override void BeforeInjection(MethodDefinition method)

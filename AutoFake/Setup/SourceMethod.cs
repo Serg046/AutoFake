@@ -11,7 +11,7 @@ namespace AutoFake.Setup
     {
         private readonly MethodBase _method;
         private MethodDefinition? _monoCecilMethodDef;
-        private IList<GenericArgument>? _genericArguments;
+        private IReadOnlyList<GenericArgument>? _genericArguments;
 
         public SourceMethod(MethodInfo sourceMethod)
         {
@@ -40,9 +40,9 @@ namespace AutoFake.Setup
         public MethodDefinition GetMethod(IAssemblyWriter assemblyWriter)
 	        => _monoCecilMethodDef ??= assemblyWriter.ImportToSourceAsm(_method).Resolve();
 
-        public IList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter)
+        public IReadOnlyList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter)
         {
-	        return _genericArguments ??= GetGenericArgumentsImpl(assemblyWriter).ToList();
+	        return _genericArguments ??= GetGenericArgumentsImpl(assemblyWriter).ToReadOnlyList();
         }
 
         private IEnumerable<GenericArgument> GetGenericArgumentsImpl(IAssemblyWriter assemblyWriter)

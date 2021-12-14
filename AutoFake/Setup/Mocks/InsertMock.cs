@@ -37,10 +37,9 @@ namespace AutoFake.Setup.Mocks
                 $"{method.Name}InsertCallback{Guid.NewGuid()}", Closure.GetType());
         }
 
-        public IList<object> Initialize(Type? type)
+        public void Initialize(Type? type)
         {
             InitializeClosure(type, _closureField, Closure);
-            return new List<object>();
         }
 
         internal static void InitializeClosure(Type? type, FieldDefinition? closureField, Action closure)

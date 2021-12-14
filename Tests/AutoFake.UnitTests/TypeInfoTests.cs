@@ -113,7 +113,7 @@ namespace AutoFake.UnitTests
 	        var writer = new AssemblyWriter(new AssemblyReader(type, options),
 		        new AssemblyHost(), options, new AssemblyPool());
             var mock = new Mock<IMock>();
-            mock.Setup(m => m.Initialize(It.IsAny<Type>())).Returns(new List<object>());
+            mock.Setup(m => m.Initialize(It.IsAny<Type>()));
             var mocks = new MockCollection();
             var expr = isStaticType
 	            ? LinqExpression.Call(type.GetMethod("CreateFakeObjectTypeCreated"))

@@ -28,7 +28,7 @@ namespace AutoFake
             }
         }
 
-        public IList<VariableDefinition> RecordMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IList<Type> argumentTypes)
+        public IReadOnlyList<VariableDefinition> RecordMethodCall(FieldDefinition setupBody, FieldDefinition executionContext, IReadOnlyList<Type> argumentTypes)
         {
 	        var module = ((MemberReference)_instruction.Operand).Module;
 	        var variables = PushArgumentsToVariables(module, argumentTypes);
@@ -56,7 +56,7 @@ namespace AutoFake
             return variables;
         }
 
-        private IList<VariableDefinition> PushArgumentsToVariables(ModuleDefinition module, IList<Type> argumentTypes)
+        private IReadOnlyList<VariableDefinition> PushArgumentsToVariables(ModuleDefinition module, IReadOnlyList<Type> argumentTypes)
         {
 	        var variables = new List<VariableDefinition>();
 	        foreach (var argType in argumentTypes)
@@ -71,10 +71,10 @@ namespace AutoFake
 		        _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
 	        }
 
-	        return variables;
+	        return variables.ToReadOnlyList();
         }
 
-        private void RecordMethodCall(IList<VariableDefinition> variables, VariableDefinition array, IList<Type> argumentTypes)
+        private void RecordMethodCall(IReadOnlyList<VariableDefinition> variables, VariableDefinition array, IReadOnlyList<Type> argumentTypes)
         {
 	        for (var i = 0; i < variables.Count; i++)
 	        {

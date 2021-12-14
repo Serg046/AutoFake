@@ -15,7 +15,7 @@ namespace AutoFake.Setup.Mocks
         {
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
 			var arguments = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
-				SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
+				SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
             emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Pop));
 			processor.PushMethodArguments(arguments);
         }

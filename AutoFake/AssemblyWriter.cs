@@ -113,11 +113,12 @@ namespace AutoFake
 			}
 
 			var instance = !IsStatic(_assemblyReader.SourceType) ? CreateInstance(sourceType, dependencies) : null;
-			var parameters = mocks
-				.SelectMany(m => m.Mocks)
-				.SelectMany(m => m.Initialize(fieldsType))
-				.ToList();
-			return new FakeObjectInfo(parameters, sourceType, fieldsType, instance);
+			foreach (var mock in mocks.SelectMany(m => m.Mocks))
+			{
+				mock.Initialize(fieldsType);
+			}
+			
+			return new FakeObjectInfo(sourceType, fieldsType, instance);
 		}
 
 		private static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');

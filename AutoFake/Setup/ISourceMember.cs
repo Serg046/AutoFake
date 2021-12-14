@@ -10,7 +10,7 @@ namespace AutoFake.Setup
         string Name { get; }
         Type ReturnType { get; }
         MemberInfo OriginalMember { get; }
-        IList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter);
+        IReadOnlyList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter);
         bool IsSourceInstruction(IAssemblyWriter assemblyWriter, Instruction instruction, IEnumerable<GenericArgument> genericArguments);
         ParameterInfo[] GetParameters();
         bool HasStackInstance { get; }

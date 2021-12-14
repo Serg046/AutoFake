@@ -37,7 +37,7 @@ namespace AutoFake.Setup.Mocks
 		        : _closureField;
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
             var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
-	            SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
+	            SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
             var verifyVar = new VariableDefinition(module.TypeSystem.Boolean);
             emitter.Body.Variables.Add(verifyVar);
             emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, verifyVar));
@@ -72,10 +72,10 @@ namespace AutoFake.Setup.Mocks
 	        emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Brfalse, nop));
         }
 
-        public override IList<object> Initialize(Type? type)
+        public override void Initialize(Type? type)
         {
+			base.Initialize(type);
             InsertMock.InitializeClosure(type, _closureField, Closure);
-			return base.Initialize(type);
         }
     }
 }

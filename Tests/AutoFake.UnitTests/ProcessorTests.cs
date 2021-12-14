@@ -26,7 +26,7 @@ namespace AutoFake.UnitTests
             fixture.Inject(Instruction.Create(OpCodes.Call, method));
 
             var variables = fixture.Create<Processor>().RecordMethodCall(setupBody, executionContext,
-	            new[] { typeof(object), typeof(object) });
+	            new[] { typeof(object), typeof(object) }.ToReadOnlyList());
 
             Assert.Equal(2, variables.Count);
         }
@@ -49,7 +49,7 @@ namespace AutoFake.UnitTests
             fixture.Inject(instruction);
 
             var variables = fixture.Create<Processor>().RecordMethodCall(setupBody, executionContext,
-	            new[] { typeof(int), typeof(object) });
+	            new[] { typeof(int), typeof(object) }.ToReadOnlyList());
 
             var arrVar = emitter.Body.Variables.Single(v => v.VariableType.FullName == "System.Object[]");
             Assert.True(emitter.Body.Instructions.Ordered(

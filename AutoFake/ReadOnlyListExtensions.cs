@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
-#if NET40
-namespace System.Collections.Generic
+namespace AutoFake
 {
+#if NET40
 	public interface IReadOnlyCollection<out T> : IEnumerable<T>, IEnumerable
 	{
 		int Count { get; }
@@ -20,11 +21,8 @@ namespace System.Collections.Generic
 		{
 		}
 	}
-}
 #endif
 
-namespace AutoFake
-{
 	internal static class ReadOnlyListExtensions
 	{
 		public static IReadOnlyList<T> ToReadOnlyList<T>(this IEnumerable<T> items)

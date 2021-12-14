@@ -465,7 +465,7 @@ namespace AutoFake.UnitTests
             public void BeforeInjection(MethodDefinition method) => _mock.BeforeInjection(method);
 	        public void Inject(IEmitter emitter, Instruction instruction) => _mock.Inject(emitter, instruction);
 	        public void AfterInjection(IEmitter emitter) => _mock.AfterInjection(emitter);
-	        public IList<object> Initialize(Type type) => _mock.Initialize(type);
+	        public void Initialize(Type type) => _mock.Initialize(type);
 
 	        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
 	        {

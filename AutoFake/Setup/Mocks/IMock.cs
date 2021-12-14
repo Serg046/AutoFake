@@ -11,6 +11,6 @@ namespace AutoFake.Setup.Mocks
         void BeforeInjection(MethodDefinition method);
         void Inject(IEmitter emitter, Instruction instruction);
         void AfterInjection(IEmitter emitter);
-        IList<object> Initialize(Type? type);
+        void Initialize(Type? type);
     }
 }

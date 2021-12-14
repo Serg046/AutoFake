@@ -41,7 +41,7 @@ namespace AutoFake.Setup.Mocks
 
         public abstract void Inject(IEmitter emitter, Instruction instruction);
 
-        public virtual IList<object> Initialize(Type? type)
+        public virtual void Initialize(Type? type)
         {
             if (type != null)
             {
@@ -53,8 +53,6 @@ namespace AutoFake.Setup.Mocks
 	                           ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
 	            ctxField.SetValue(null, new ExecutionContext(ExpectedCalls));
             }
-
-            return new List<object>();
         }
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
