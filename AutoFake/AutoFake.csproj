@@ -14,11 +14,12 @@
     <PackageTags>AutoFake Mock Mocking Fake Fake-Data Testing Test</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <CheckEolTargetFramework >false</CheckEolTargetFramework>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DryIoc.dll" Version="4.8.4" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4" />
   </ItemGroup>
 

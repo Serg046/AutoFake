@@ -7,7 +7,7 @@ namespace AutoFake.Setup
 {
     internal class MockCollection : IEnumerable<MockCollection.Item>
     {
-        private readonly List<Item> _mocks = new List<Item>();
+        private readonly List<Item> _mocks = new();
 
         public int Count => _mocks.Count;
 

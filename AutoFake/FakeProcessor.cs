@@ -7,7 +7,7 @@ using Mono.Cecil;
 
 namespace AutoFake
 {
-    internal class FakeProcessor
+    internal class FakeProcessor : IFakeProcessor
     {
         private readonly ITypeInfo _typeInfo;
         private readonly IAssemblyWriter _assemblyWriter;

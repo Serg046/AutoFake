@@ -6,6 +6,7 @@ using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
+using DryIoc;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake
@@ -28,11 +29,7 @@ namespace AutoFake
     public class Fake
     {
         private FakeObjectInfo? _fakeObjectInfo;
-        private readonly Lazy<ITypeInfo> _typeInfo;
-        private readonly Lazy<IAssemblyWriter> _assemblyWriter;
         private readonly List<FakeDependency> _dependencies;
-        private readonly AssemblyHost _assemblyHost;
-        private readonly AssemblyPool _assemblyPool;
 
         public Fake(Type type, params object?[] constructorArgs)
         {
@@ -40,51 +37,54 @@ namespace AutoFake
             if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));
 
             _dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
-            Mocks = new MockCollection();
             Options = new FakeOptions();
-            _assemblyHost = new AssemblyHost();
-            _assemblyPool = new AssemblyPool();
-            var assemblyReader = new Lazy<IAssemblyReader>(() => new AssemblyReader(type, Options));
-            _typeInfo = new Lazy<ITypeInfo>(() => new TypeInfo(assemblyReader.Value, Options, _assemblyPool));
-            _assemblyWriter = new Lazy<IAssemblyWriter>(() => new AssemblyWriter(assemblyReader.Value, _assemblyHost, Options, _assemblyPool));
+            Services = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
+            Services.AddServices(type, Options);
+            Mocks = Services.Resolve<MockCollection>();
         }
+
+        public Container Services { get; }
 
         public FakeOptions Options { get; }
 
-        internal ITypeInfo TypeInfo => _typeInfo.Value;
+        internal ITypeInfo TypeInfo => Services.Resolve<ITypeInfo>();
 
         internal MockCollection Mocks { get; }
         
         public FuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+	        using var scope = Services.OpenScope(expression);
+	        Services.AddInvocationExpression(expression);
+	        var invocationExpression = scope.Resolve<IInvocationExpression>();
             var mocks = GetMocksContainer(invocationExpression);
-            return new FuncMockConfiguration<TInput, TReturn>(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
-                new Executor<TReturn>(this, invocationExpression));
+            return new FuncMockConfiguration<TInput, TReturn>(mocks, Services.Resolve<IProcessorFactory>(), new Executor<TReturn>(this, invocationExpression));
         }
 
         public ActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+	        using var scope = Services.OpenScope(expression);
+	        Services.AddInvocationExpression(expression);
+	        var invocationExpression = scope.Resolve<IInvocationExpression>();
             var mocks = GetMocksContainer(invocationExpression);
-            return new ActionMockConfiguration<TInput>(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
-                new Executor(this, invocationExpression));
+            return new ActionMockConfiguration<TInput>(mocks, Services.Resolve<IProcessorFactory>(), new Executor(this, invocationExpression));
         }
 
         public FuncMockConfiguration<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+	        using var scope = Services.OpenScope(expression);
+	        Services.AddInvocationExpression(expression);
+	        var invocationExpression = scope.Resolve<IInvocationExpression>();
             var mocks = GetMocksContainer(invocationExpression);
-            return new FuncMockConfiguration<TReturn>(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
-                new Executor<TReturn>(this, invocationExpression));
+            return new FuncMockConfiguration<TReturn>(mocks, Services.Resolve<IProcessorFactory>(), new Executor<TReturn>(this, invocationExpression));
         }
 
         public ActionMockConfiguration Rewrite(Expression<Action> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+	        using var scope = Services.OpenScope(expression);
+	        Services.AddInvocationExpression(expression);
+	        var invocationExpression = scope.Resolve<IInvocationExpression>();
             var mocks = GetMocksContainer(invocationExpression);
-            return new ActionMockConfiguration(mocks, new ProcessorFactory(TypeInfo, _assemblyWriter.Value),
-                new Executor(this, invocationExpression));
+            return new ActionMockConfiguration(mocks, Services.Resolve<IProcessorFactory>(), new Executor(this, invocationExpression));
         }
 
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
@@ -119,13 +119,14 @@ namespace AutoFake
         {
 	        if (_fakeObjectInfo == null)
 	        {
-		        var fakeProcessor = new FakeProcessor(TypeInfo, _assemblyWriter.Value, Options);
+                var asmWriter = Services.Resolve<IAssemblyWriter>();
+                var fakeProcessor = new FakeProcessor(TypeInfo, asmWriter, Options);
 		        foreach (var mock in Mocks)
 		        {
 			        fakeProcessor.ProcessMethod(mock.Mocks, mock.InvocationExpression);
 		        }
 
-                _fakeObjectInfo = _assemblyWriter.Value.CreateFakeObject(Mocks, _dependencies);
+                _fakeObjectInfo = asmWriter.CreateFakeObject(Mocks, _dependencies);
 	        }
             return _fakeObjectInfo;
         }
