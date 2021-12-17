@@ -5,8 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
-using AutoFake.Expression;
-using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using FluentAssertions;
 using Mono.Cecil;
@@ -14,7 +12,6 @@ using Moq;
 using Xunit;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
-using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.UnitTests
 {
@@ -26,13 +23,13 @@ namespace AutoFake.UnitTests
 			var options = new FakeOptions();
 			var writer = new AssemblyWriter(new AssemblyReader(typeof(TestClass), options),
 				new AssemblyHost(), options, new AssemblyPool());
-			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new IMock[0],
 				GetDependencies(new StringBuilder())));
-			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new IMock[0],
 				GetDependencies(new StringBuilder(), new StringBuilder(), new StringBuilder())));
-			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+			Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new IMock[0],
                 GetDependencies(1, 1)));
-			writer.CreateFakeObject(new MockCollection(), GetDependencies(new StringBuilder(), new StringBuilder()));
+			writer.CreateFakeObject(new IMock[0], GetDependencies(new StringBuilder(), new StringBuilder()));
 		}
 
 		[Theory]
@@ -45,7 +42,7 @@ namespace AutoFake.UnitTests
 			var options = new FakeOptions();
 			var writer = new AssemblyWriter(new AssemblyReader(type, options),
 				new AssemblyHost(), options, new AssemblyPool());
-            var generated = writer.CreateFakeObject(new MockCollection(), GetDependencies());
+            var generated = writer.CreateFakeObject(new IMock[0], GetDependencies());
 
 			generated.SourceType.FullName.Should().Be(type.FullName);
 		}
@@ -57,12 +54,12 @@ namespace AutoFake.UnitTests
 			var writer = new AssemblyWriter(new AssemblyReader(typeof(AmbiguousCtorTestClass), options),
 				new AssemblyHost(), options, new AssemblyPool());
 
-            Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new MockCollection(),
+            Assert.Throws<InitializationException>(() => writer.CreateFakeObject(new IMock[0],
 				GetDependencies(new object[] { null })));
-            writer.CreateFakeObject(new MockCollection(), new[] {Arg.IsNull<StreamReader>()});
-            writer.CreateFakeObject(new MockCollection(), new[] {Arg.IsNull<StreamWriter>()});
+            writer.CreateFakeObject(new IMock[0], new[] {Arg.IsNull<StreamReader>()});
+            writer.CreateFakeObject(new IMock[0], new[] {Arg.IsNull<StreamWriter>()});
             new AssemblyWriter(new AssemblyReader(typeof(TestClass), options), new AssemblyHost(), options,
-	            new AssemblyPool()).CreateFakeObject(new MockCollection(), GetDependencies(null, null));
+	            new AssemblyPool()).CreateFakeObject(new IMock[0], GetDependencies(null, null));
 		}
 
 		[Fact]
@@ -76,7 +73,7 @@ namespace AutoFake.UnitTests
 			writer.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
 				writer.ImportToSourceAsm(typeof(string))));
 
-			var generated = writer.CreateFakeObject(new MockCollection(), new List<FakeDependency>());
+			var generated = writer.CreateFakeObject(new IMock[0], new List<FakeDependency>());
 			var field = generated.FieldsType.GetField(testName, BindingFlags.NonPublic | BindingFlags.Static);
 			field.Should().NotBeNull();
 			field.FieldType.Should().Be(typeof(string));
@@ -95,7 +92,7 @@ namespace AutoFake.UnitTests
 			writer.AddField(new FieldDefinition(testName, FieldAttributes.Assembly | FieldAttributes.Static,
 				writer.ImportToSourceAsm(typeof(string))));
 
-			var generated = writer.CreateFakeObject(new MockCollection(), new List<FakeDependency>());
+			var generated = writer.CreateFakeObject(new IMock[0], new List<FakeDependency>());
 			var field1 = generated.FieldsType.GetField(testName, BindingFlags.NonPublic | BindingFlags.Static);
 			field1.Should().NotBeNull();
 			field1.FieldType.Should().Be(typeof(string));
@@ -114,13 +111,8 @@ namespace AutoFake.UnitTests
 		        new AssemblyHost(), options, new AssemblyPool());
             var mock = new Mock<IMock>();
             mock.Setup(m => m.Initialize(It.IsAny<Type>()));
-            var mocks = new MockCollection();
-            var expr = isStaticType
-	            ? LinqExpression.Call(type.GetMethod("CreateFakeObjectTypeCreated"))
-                : LinqExpression.Call(LinqExpression.Constant(Activator.CreateInstance(type)), type.GetMethod("CreateFakeObjectTypeCreated"));
-            mocks.Add(new InvocationExpression(expr), new[] {mock.Object});
 
-            var fakeObjectInfo = writer.CreateFakeObject(mocks, new List<FakeDependency>());
+            var fakeObjectInfo = writer.CreateFakeObject(new[] { mock.Object }, new List<FakeDependency>());
 
             mock.Verify(m => m.Initialize(It.IsAny<Type>()));
             Assert.Equal(type.FullName, fakeObjectInfo.SourceType.FullName);
@@ -166,12 +158,10 @@ namespace AutoFake.UnitTests
 
         private static class StaticTestClass
         {
-            public static void CreateFakeObjectTypeCreated() { }
         }
 
         internal class InternalTestClass
         {
-            public void CreateFakeObjectTypeCreated() { }
         }
 
         protected class ProtectedTestClass

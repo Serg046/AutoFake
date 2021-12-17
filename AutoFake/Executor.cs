@@ -8,7 +8,7 @@ namespace AutoFake
     {
 	    private readonly ExecutorImpl _executor;
 
-        internal Executor(Fake fake, IInvocationExpression invocationExpression)
+        public Executor(Fake fake, IInvocationExpression invocationExpression)
         {
 	        _executor = new ExecutorImpl(fake, invocationExpression);
         }
@@ -42,7 +42,7 @@ namespace AutoFake
     {
         private readonly ExecutorImpl _executor;
 
-        internal Executor(Fake fake, IInvocationExpression invocationExpression)
+        public Executor(Fake fake, IInvocationExpression invocationExpression)
         {
             _executor = new ExecutorImpl(fake, invocationExpression);
         }

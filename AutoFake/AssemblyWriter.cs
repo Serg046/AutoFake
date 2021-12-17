@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Exceptions;
-using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -93,7 +93,7 @@ namespace AutoFake
 
 		public bool TryAddAffectedAssembly(AssemblyDefinition assembly) => _assemblyPool.TryAdd(assembly.MainModule);
 
-		public FakeObjectInfo CreateFakeObject(MockCollection mocks, ICollection<FakeDependency> dependencies)
+		public FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, ICollection<FakeDependency> dependencies)
 		{
 			using var stream = new MemoryStream();
 			using var symbolsStream = new MemoryStream();
@@ -113,7 +113,7 @@ namespace AutoFake
 			}
 
 			var instance = !IsStatic(_assemblyReader.SourceType) ? CreateInstance(sourceType, dependencies) : null;
-			foreach (var mock in mocks.SelectMany(m => m.Mocks))
+			foreach (var mock in mocks)
 			{
 				mock.Initialize(fieldsType);
 			}

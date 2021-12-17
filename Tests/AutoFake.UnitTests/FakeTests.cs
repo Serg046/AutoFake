@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using AutoFake.Expression;
+using AutoFake.Setup;
+using DryIoc;
 using FluentAssertions;
 using Xunit;
 
@@ -49,7 +52,7 @@ namespace AutoFake.UnitTests
 
             fake.Rewrite(callback);
 
-            Assert.NotNull(fake.Mocks.Single().InvocationExpression);
+            Assert.NotNull(fake.Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>().Single().Key);
         }
 
         [Theory]
@@ -60,7 +63,7 @@ namespace AutoFake.UnitTests
 
             fake.Rewrite(callback);
             
-            Assert.NotNull(fake.Mocks.Single().InvocationExpression);
+            Assert.NotNull(fake.Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>().Single().Key);
         }
 
         [Fact]

@@ -1,6 +1,5 @@
 ﻿using AutoFake.Setup.Mocks;
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace AutoFake.Setup.Configurations
@@ -9,7 +8,7 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor<TReturn> _executor;
 
-        internal FuncMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
+        internal FuncMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
         {
             _executor = executor;
         }
@@ -21,7 +20,7 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor _executor;
 
-        internal ActionMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
+        internal ActionMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
         {
             _executor = executor;
         }
@@ -33,7 +32,7 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor<TReturn> _executor;
 
-        internal FuncMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
+        internal FuncMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
         {
             _executor = executor;
         }
@@ -45,7 +44,7 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor _executor;
 
-        internal ActionMockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
+        internal ActionMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
         {
             _executor = executor;
         }
@@ -55,7 +54,7 @@ namespace AutoFake.Setup.Configurations
 
     public abstract class MockConfiguration<T> : MockConfiguration
     {
-        internal MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory)
+        internal MockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory)
             : base(mocks, processorFactory)
         {
         }
@@ -89,13 +88,13 @@ namespace AutoFake.Setup.Configurations
 
     public abstract class MockConfiguration
     {
-        internal MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory)
+        internal MockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory)
         {
             Mocks = mocks;
             ProcessorFactory = processorFactory;
         }
 
-        internal IList<IMock> Mocks { get; }
+        internal IMockCollection Mocks { get; }
 
         internal IProcessorFactory ProcessorFactory { get; }
 

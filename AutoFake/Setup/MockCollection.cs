@@ -1,33 +1,25 @@
-﻿using AutoFake.Setup.Mocks;
-using System.Collections;
+﻿using System.Collections;
+using AutoFake.Setup.Mocks;
 using System.Collections.Generic;
-using AutoFake.Expression;
 
 namespace AutoFake.Setup
 {
-    internal class MockCollection : IEnumerable<MockCollection.Item>
+    internal class MockCollection : IMockCollection
     {
-        private readonly List<Item> _mocks = new();
+	    private readonly List<IMock> _mocks = new();
 
-        public int Count => _mocks.Count;
+	    public IMock this[int index]
+	    {
+		    get => _mocks[index];
+		    set => _mocks[index] = value;
+	    }
 
-        public void Add(IInvocationExpression invocationExpression, ICollection<IMock> mocks)
-	        => _mocks.Add(new Item(invocationExpression, mocks));
+		public int Count => _mocks.Count;
 
-        public IEnumerator<Item> GetEnumerator() => _mocks.GetEnumerator();
+	    public void Add(IMock mock) => _mocks.Add(mock);
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	    public IEnumerator<IMock> GetEnumerator() => _mocks.GetEnumerator();
 
-        public class Item
-        {
-            public Item(IInvocationExpression invocationExpression, ICollection<IMock> mocks)
-            {
-                InvocationExpression = invocationExpression;
-                Mocks = mocks;
-            }
-
-            public IInvocationExpression InvocationExpression { get; }
-            public ICollection<IMock> Mocks { get; set; }
-        }
+	    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using AutoFake.Setup;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -17,6 +17,6 @@ namespace AutoFake
 		MethodReference ImportToFieldsAsm(MethodBase method);
 		void AddField(FieldDefinition field);
 		bool TryAddAffectedAssembly(AssemblyDefinition assembly);
-		FakeObjectInfo CreateFakeObject(MockCollection mocks, ICollection<FakeDependency> dependencies);
+		FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, ICollection<FakeDependency> dependencies);
 	}
 }

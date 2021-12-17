@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using AutoFake.Setup;
 using Xunit;
 
 namespace AutoFake.UnitTests.Setup
@@ -25,7 +26,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Replace_CfgInvalidInput_Throws()
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
             Assert.Throws<ArgumentNullException>(() => cfg.Replace((Expression<Func<TestClass, object>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Replace((Expression<Func<object>>)null));
         }
@@ -33,7 +34,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Replace_GenericCfgInvalidInput_Throws()
         {
-            var genericCfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var genericCfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
             AutoFake.Setup.Configurations.MockConfiguration cfg = genericCfg;
             Assert.Throws<ArgumentNullException>(() => cfg.Replace((Expression<Func<TestClass, object>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Replace((Expression<Func<object>>)null));
@@ -43,7 +44,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Remove_FakeInvalidInput_Throws()
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
             Assert.Throws<ArgumentNullException>(() => cfg.Remove((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Remove((Expression<Action>)null));
         }
@@ -51,7 +52,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Remove_GenericFakeInvalidInput_Throws()
         {
-            var genericCfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var genericCfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
             AutoFake.Setup.Configurations.MockConfiguration cfg = genericCfg;
             Assert.Throws<ArgumentNullException>(() => cfg.Remove((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Remove((Expression<Action>)null));
@@ -62,7 +63,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetFuncExpressions))]
         public void Replace_Fake_MockAdded(dynamic callback)
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
 
             cfg.Replace(callback);
 
@@ -73,7 +74,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetFuncExpressions))]
         internal void Replace_GenericFake_MockAdded(dynamic callback)
         {
-            var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
 
             cfg.Replace(callback);
 
@@ -84,7 +85,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetActionExpressions))]
         public void Remove_Fake_MockAdded(dynamic callback)
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
 
             cfg.Remove(callback);
 
@@ -95,7 +96,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetActionExpressions))]
         internal void Remove_GenericFake_MockAdded(dynamic callback)
         {
-            var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
 
             cfg.Remove(callback);
 
@@ -105,7 +106,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Verify_FakeInvalidInput_Throws()
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Func<TestClass, object>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Action<TestClass>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Func<object>>)null));
@@ -115,7 +116,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Verify_GenericFakeInvalidInput_Throws()
         {
-            var genericCfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var genericCfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
             AutoFake.Setup.Configurations.MockConfiguration cfg = genericCfg;
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Func<TestClass, object>>)null));
             Assert.Throws<ArgumentNullException>(() => cfg.Verify((Expression<Action<TestClass>>)null));
@@ -129,7 +130,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetCallbackExpressions))]
         public void Verify_Fake_MockAdded(dynamic callback)
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
 
             cfg.Verify(callback);
 
@@ -140,7 +141,7 @@ namespace AutoFake.UnitTests.Setup
         [MemberData(nameof(GetCallbackExpressions))]
         internal void Verify_GenericFake_MockAdded(dynamic callback)
         {
-            var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
 
             cfg.Verify(callback);
 
@@ -150,7 +151,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Append_GenericFake_MockAdded()
         {
-            var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
             Expression<Action> expression = () => Append_GenericFake_MockAdded();
             var callback = expression.Compile();
 
@@ -163,7 +164,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Append_Fake_MockAdded()
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
             Expression<Action> expression = () => Append_Fake_MockAdded();
             var callback = expression.Compile();
 
@@ -176,7 +177,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Prepend_GenericFake_MockAdded()
         {
-            var cfg = new MockConfiguration<TestClass>(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration<TestClass>(new MockCollection(), _procFactory);
             Expression<Action> expression = () => Prepend_GenericFake_MockAdded();
             var callback = expression.Compile();
 
@@ -189,7 +190,7 @@ namespace AutoFake.UnitTests.Setup
         [Fact]
         public void Prepend_Fake_MockAdded()
         {
-            var cfg = new MockConfiguration(new List<IMock>(), _procFactory);
+            var cfg = new MockConfiguration(new MockCollection(), _procFactory);
             Expression<Action> expression = () => Prepend_Fake_MockAdded();
             var callback = expression.Compile();
 
@@ -276,14 +277,14 @@ namespace AutoFake.UnitTests.Setup
 
         private class MockConfiguration : AutoFake.Setup.Configurations.MockConfiguration
         {
-	        public MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory) : base(mocks, processorFactory)
+	        public MockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory) : base(mocks, processorFactory)
 	        {
 	        }
         }
 
         private class MockConfiguration<T> : AutoFake.Setup.Configurations.MockConfiguration<T>
         {
-	        public MockConfiguration(IList<IMock> mocks, IProcessorFactory processorFactory) : base(mocks, processorFactory)
+	        public MockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory) : base(mocks, processorFactory)
 	        {
 	        }
         }
