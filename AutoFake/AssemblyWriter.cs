@@ -160,7 +160,7 @@ namespace AutoFake
 			{
 				try
 				{
-					return Activator.CreateInstance(type, ConstructorFlags, null, instances, null);
+					return Activator.CreateInstance(type, ConstructorFlags, null, instances, null)!;
 				}
 				catch (AmbiguousMatchException)
 				{
