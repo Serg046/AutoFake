@@ -9,9 +9,10 @@ namespace AutoFake
 {
 	internal static class ContainerExtensions
 	{
-		public static void AddServices(this Container container, Type sourceType, Fake fake, FakeOptions fakeOptions)
+		public static void AddServices(this Container container, Type sourceType, Fake fake)
 		{
 			container.Register<MockCollection>();
+			var fakeOptions = new FakeOptions();
 			container.RegisterInstance(fakeOptions);
 			container.Register<IAssemblyReader, AssemblyReader>(Reuse.Singleton,
 				Parameters.Of.Type<Type>(defaultValue: sourceType)
@@ -31,16 +32,19 @@ namespace AutoFake
 			container.RegisterInstance(fake);
 		}
 
-		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression)
+		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)
 		{
             var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
             var scope = container.OpenScope(invocationExpression);
 			scope.Use<IInvocationExpression>(_ => invocationExpression);
-            container.RegisterDelegate<IInvocationExpression>(() => invocationExpression, Reuse.ScopedTo(invocationExpression));
 
-			var mocks = new MockCollection();
-			container.RegisterDelegate<IMockCollection>(() => mocks, Reuse.ScopedTo(invocationExpression));
-			container.RegisterInstance<IMockCollection>(mocks, serviceKey: invocationExpression);
+			if (addMocks)
+			{
+				var mocks = new MockCollection();
+				container.Use<IMockCollection>(_ => mocks);
+				container.RegisterInstance<IMockCollection>(mocks, serviceKey: invocationExpression);
+			}
+
 			return scope;
 		}
 	}

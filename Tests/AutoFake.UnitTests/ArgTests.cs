@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FluentAssertions;
 using Xunit;
 
 namespace AutoFake.UnitTests
@@ -10,9 +11,9 @@ namespace AutoFake.UnitTests
         public void IsNull_ReferenceType_Success()
         {
             var dependency = Arg.IsNull<string>();
-
-            Assert.Null(dependency.Instance);
-            Assert.Equal(typeof(string), dependency.Type);
+            
+            var wrapper = dependency.Should().BeOfType<Arg.TypeWrapper>();
+            wrapper.Subject.Type.Should().Be(typeof(string));
         }
 
         [Fact]
@@ -20,8 +21,8 @@ namespace AutoFake.UnitTests
         {
             var dependency = Arg.IsNull<int?>();
 
-            Assert.Null(dependency.Instance);
-            Assert.Equal(typeof(int?), dependency.Type);
+            var wrapper = dependency.Should().BeOfType<Arg.TypeWrapper>();
+            wrapper.Subject.Type.Should().Be(typeof(int?));
         }
 
         [Fact]

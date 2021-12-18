@@ -93,7 +93,7 @@ namespace AutoFake
 
 		public bool TryAddAffectedAssembly(AssemblyDefinition assembly) => _assemblyPool.TryAdd(assembly.MainModule);
 
-		public FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, ICollection<FakeDependency> dependencies)
+		public FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, object?[] dependencies)
 		{
 			using var stream = new MemoryStream();
 			using var symbolsStream = new MemoryStream();
@@ -125,14 +125,42 @@ namespace AutoFake
 
 		private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
 
-		private object CreateInstance(Type type, ICollection<FakeDependency> dependencies)
+		private object CreateInstance(Type type, object?[] dependencies)
 		{
-			if (dependencies.Any(d => d.Type == null))
+			var types = new Type[dependencies.Length];
+			var instances = new object?[dependencies.Length];
+			var noTypeWrapper = true;
+			for (var i = 0; i < dependencies.Length; i++)
+			{
+				instances[i] = dependencies[i];
+				if (instances[i] is Arg.TypeWrapper)
+				{
+					noTypeWrapper = false;
+				}
+			}
+
+			if (!noTypeWrapper)
+			{
+				for (var i = 0; i < dependencies.Length; i++)
+				{
+					if (instances[i] is Arg.TypeWrapper w)
+					{
+						types[i] = w.Type;
+						instances[i] = null;
+					}
+					else
+					{
+						types[i] = instances[i]?.GetType() ?? throw new InitializationException(
+							$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
+					}
+				}
+			}
+
+			if (noTypeWrapper)
 			{
 				try
 				{
-					var args = dependencies.Select(d => d.Instance).ToArray();
-					return Activator.CreateInstance(type, ConstructorFlags, null, args, null)!;
+					return Activator.CreateInstance(type, ConstructorFlags, null, instances, null);
 				}
 				catch (AmbiguousMatchException)
 				{
@@ -141,13 +169,8 @@ namespace AutoFake
 				}
 			}
 
-			var constructor = type.GetConstructor(ConstructorFlags,
-				null, dependencies.Select(d => d.Type!).ToArray(), null);
-
-			if (constructor == null)
-				throw new InitializationException("Constructor is not found");
-
-			return constructor.Invoke(dependencies.Select(d => d.Instance).ToArray());
+			var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new InitializationException("Constructor is not found");
+			return constructor.Invoke(instances);
 		}
 
 		private void LoadAffectedAssemblies()

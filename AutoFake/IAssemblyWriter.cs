@@ -17,6 +17,6 @@ namespace AutoFake
 		MethodReference ImportToFieldsAsm(MethodBase method);
 		void AddField(FieldDefinition field);
 		bool TryAddAffectedAssembly(AssemblyDefinition assembly);
-		FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, ICollection<FakeDependency> dependencies);
+		FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, object?[] dependencies);
 	}
 }

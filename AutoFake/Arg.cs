@@ -5,13 +5,13 @@ namespace AutoFake
 {
     public static class Arg
     {
-        public static FakeDependency IsNull<T>()
+        public static object IsNull<T>()
         {
             var type = typeof(T);
             if (type.IsValueType && Nullable.GetUnderlyingType(type) == null)
                 throw new NotSupportedException("Value type instance cannot be null");
 
-            return new FakeDependency(type, null);
+            return new TypeWrapper(type);
         }
 
         //Used by expression's engine, see GetArgumentsMemberVisitor::GetArgument(MethodCallExpression expression)
@@ -20,5 +20,11 @@ namespace AutoFake
         public static T Is<T>(T argument, IEqualityComparer<T> comparer) => IsAny<T>();
 
         public static T IsAny<T>() => default!;
+
+        internal class TypeWrapper
+        {
+	        public TypeWrapper(Type type) => Type = type;
+	        public Type Type { get; }
+        }
     }
 }

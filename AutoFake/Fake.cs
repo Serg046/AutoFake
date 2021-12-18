@@ -6,7 +6,6 @@ using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using DryIoc;
-using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake
 {
@@ -27,18 +26,16 @@ namespace AutoFake
 
     public class Fake
     {
-        private FakeObjectInfo? _fakeObjectInfo;
-        private readonly List<FakeDependency> _dependencies;
+	    private readonly object?[] _dependencies;
+	    private FakeObjectInfo? _fakeObjectInfo;
 
         public Fake(Type type, params object?[] constructorArgs)
         {
 	        if (type == null) throw new ArgumentNullException(nameof(type));
-            if (constructorArgs == null) throw new ArgumentNullException(nameof(constructorArgs));
-
-            _dependencies = constructorArgs.Select(c => c as FakeDependency ?? new FakeDependency(c?.GetType(), c)).ToList();
-            Options = new FakeOptions();
+            _dependencies = constructorArgs ?? throw new ArgumentNullException(nameof(constructorArgs));
             Services = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
-            Services.AddServices(type, this, Options);
+            Services.AddServices(type, this);
+            Options = Services.Resolve<FakeOptions>();
         }
 
         public Container Services { get; }
@@ -49,69 +46,65 @@ namespace AutoFake
 
         public FuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
-	        using var scope = Services.AddInvocationExpression(expression);
+	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
             return scope.Resolve<FuncMockConfiguration<TInput, TReturn>>();
         }
 
         public ActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)
         {
-	        using var scope = Services.AddInvocationExpression(expression);
+	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
             return scope.Resolve<ActionMockConfiguration<TInput>>();
         }
 
         public FuncMockConfiguration<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
         {
-	        using var scope = Services.AddInvocationExpression(expression);
+	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
             return scope.Resolve<FuncMockConfiguration<TReturn>>();
         }
 
         public ActionMockConfiguration Rewrite(Expression<Action> expression)
         {
-	        using var scope = Services.AddInvocationExpression(expression);
+	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
             return scope.Resolve<ActionMockConfiguration>();
         }
 
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
-            var executor = new Executor<TReturn>(this, invocationExpression);
-            return executor.Execute();
+	        using var scope = Services.AddInvocationExpression(expression);
+            return scope.Resolve<Executor<TReturn>>().Execute();
         }
 
         public void Execute<TInput>(Expression<Action<TInput>> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
-            var executor = new Executor(this, invocationExpression);
-            executor.Execute();
+            using var scope = Services.AddInvocationExpression(expression);
+            scope.Resolve<Executor>().Execute();
         }
 
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
-            var executor = new Executor<TReturn>(this, invocationExpression);
-            return executor.Execute();
+            using var scope = Services.AddInvocationExpression(expression);
+            return scope.Resolve<Executor<TReturn>>().Execute();
         }
 
         public void Execute(Expression<Action> expression)
         {
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
-            var executor = new Executor(this, invocationExpression);
-            executor.Execute();
+            using var scope = Services.AddInvocationExpression(expression);
+            scope.Resolve<Executor>().Execute();
         }
 
         internal FakeObjectInfo GetFakeObject()
         {
 	        if (_fakeObjectInfo == null)
 	        {
-                var asmWriter = Services.Resolve<IAssemblyWriter>();
-                var fakeProcessor = new FakeProcessor(TypeInfo, asmWriter, Options);
+                var fakeProcessor = Services.Resolve<IFakeProcessor>();
                 var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
 				foreach (var mocks in setups)
 				{
 					fakeProcessor.ProcessMethod(mocks.Value, mocks.Key);
 				}
 
-				_fakeObjectInfo = asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value), _dependencies);
+                var asmWriter = Services.Resolve<IAssemblyWriter>();
+                _fakeObjectInfo = asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value), _dependencies);
 			}
             return _fakeObjectInfo;
         }
