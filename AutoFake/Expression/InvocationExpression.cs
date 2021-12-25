@@ -11,6 +11,7 @@ namespace AutoFake.Expression
 {
     public class InvocationExpression : IInvocationExpression
     {
+	    internal delegate IInvocationExpression Create(LinqExpression expression);
         private readonly LinqExpression _expression;
         private IReadOnlyList<IFakeArgument>? _arguments;
 

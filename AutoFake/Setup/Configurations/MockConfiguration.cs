@@ -1,6 +1,7 @@
 ﻿using AutoFake.Setup.Mocks;
 using System;
 using System.Linq.Expressions;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake.Setup.Configurations
 {
@@ -8,7 +9,9 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor<TReturn> _executor;
 
-        internal FuncMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
+        internal FuncMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, IMockCollection mocks, Executor<TReturn> executor)
+	        : base(exprFactory, cfgFactory, mockFactory, mocks)
         {
             _executor = executor;
         }
@@ -20,7 +23,9 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor _executor;
 
-        internal ActionMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
+        internal ActionMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, IMockCollection mocks, Executor executor)
+	        : base(exprFactory, cfgFactory, mockFactory, mocks)
         {
             _executor = executor;
         }
@@ -32,7 +37,9 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor<TReturn> _executor;
 
-        internal FuncMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor<TReturn> executor) : base(mocks, processorFactory)
+        internal FuncMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, IMockCollection mocks, Executor<TReturn> executor)
+	        : base(exprFactory, cfgFactory, mockFactory, mocks)
         {
             _executor = executor;
         }
@@ -44,7 +51,9 @@ namespace AutoFake.Setup.Configurations
     {
         private readonly Executor _executor;
 
-        internal ActionMockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory, Executor executor) : base(mocks, processorFactory)
+        internal ActionMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, IMockCollection mocks, Executor executor)
+	        : base(exprFactory,cfgFactory, mockFactory, mocks)
         {
             _executor = executor;
         }
@@ -54,8 +63,9 @@ namespace AutoFake.Setup.Configurations
 
     public abstract class MockConfiguration<T> : MockConfiguration
     {
-        internal MockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory)
-            : base(mocks, processorFactory)
+        internal MockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, IMockCollection mocks)
+            : base(exprFactory, cfgFactory, mockFactory, mocks)
         {
         }
 
@@ -73,47 +83,54 @@ namespace AutoFake.Setup.Configurations
 
         public new PrependMockConfiguration<T> Prepend(Action action)
         {
-	        var position = (ushort)Mocks.Count;
-	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Before));
-	        return new PrependMockConfiguration<T>(ProcessorFactory, mock => Mocks[position] = mock, action);
+	        var position = Mocks.Count;
+	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.Before));
+            return ConfigurationFactory.GetPrependMockConfiguration<PrependMockConfiguration<T>>(mock => Mocks[position] = mock, action);
         }
 
         public new AppendMockConfiguration<T> Append(Action action)
         {
-	        var position = (ushort)Mocks.Count;
-	        Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.After));
-	        return new AppendMockConfiguration<T>(ProcessorFactory, mock => Mocks[position] = mock, action);
+	        var position = Mocks.Count;
+	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.After));
+            return ConfigurationFactory.GetAppendMockConfiguration<AppendMockConfiguration<T>>(mock => Mocks[position] = mock, action);
         }
     }
 
     public abstract class MockConfiguration
     {
-        internal MockConfiguration(IMockCollection mocks, IProcessorFactory processorFactory)
+	    private readonly InvocationExpression.Create _exprFactory;
+
+	    internal MockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+		    IMockFactory mockFactory, IMockCollection mocks)
         {
-            Mocks = mocks;
-            ProcessorFactory = processorFactory;
+	        _exprFactory = exprFactory;
+	        ConfigurationFactory = cfgFactory;
+	        MockFactory = mockFactory;
+	        Mocks = mocks;
         }
 
-        internal IMockCollection Mocks { get; }
+        internal IMockConfigurationFactory ConfigurationFactory { get; }
 
-        internal IProcessorFactory ProcessorFactory { get; }
+        internal IMockFactory MockFactory { get; }
+
+        internal IMockCollection Mocks { get; }
 
         protected ReplaceMockConfiguration<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
-            var invocationExpression = new Expression.InvocationExpression(expression);
-            var mock = new ReplaceMock(ProcessorFactory, invocationExpression);
+            var invocationExpression = _exprFactory(expression);
+            var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
             Mocks.Add(mock);
-            return new ReplaceMockConfiguration<TReturn>(mock);
+            return ConfigurationFactory.GetReplaceMockConfiguration<ReplaceMockConfiguration<TReturn>>(mock);
         }
 
         protected RemoveMockConfiguration RemoveImpl(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
-            var invocationExpression = new Expression.InvocationExpression(expression);
-            var mock = new ReplaceMock(ProcessorFactory, invocationExpression);
+            var invocationExpression = _exprFactory(expression);
+            var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
             Mocks.Add(mock);
-            return new RemoveMockConfiguration(mock);
+            return ConfigurationFactory.GetReplaceMockConfiguration<RemoveMockConfiguration>(mock);
         }
 
         public ReplaceMockConfiguration<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
@@ -131,10 +148,10 @@ namespace AutoFake.Setup.Configurations
         protected VerifyMockConfiguration VerifyImpl(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
-            var invocationExpression = new Expression.InvocationExpression(expression);
-            var mock = new VerifyMock(ProcessorFactory, invocationExpression);
+            var invocationExpression = _exprFactory(expression);
+            var mock = MockFactory.GetExpressionBasedMock<VerifyMock>(invocationExpression);
             Mocks.Add(mock);
-            return new VerifyMockConfiguration(mock);
+            return ConfigurationFactory.GetVerifyMockConfiguration(mock);
         }
 
         public VerifyMockConfiguration Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
@@ -149,18 +166,18 @@ namespace AutoFake.Setup.Configurations
         public VerifyMockConfiguration Verify(Expression<Action> voidStaticSetupFunc)
             => VerifyImpl(voidStaticSetupFunc);
         
-        public AppendMockConfiguration Append(Action action)
-        {
-            var position = (ushort)Mocks.Count;
-            Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.After));
-            return new AppendMockConfiguration(ProcessorFactory, mock => Mocks[position] = mock, action);
-        }
-
         public PrependMockConfiguration Prepend(Action action)
         {
-            var position = (ushort)Mocks.Count;
-            Mocks.Add(new InsertMock(ProcessorFactory, action, InsertMock.Location.Before));
-            return new PrependMockConfiguration(ProcessorFactory, mock => Mocks[position] = mock, action);
+	        var position = Mocks.Count;
+            Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.Before));
+            return ConfigurationFactory.GetPrependMockConfiguration<PrependMockConfiguration>(mock => Mocks[position] = mock, action);
+        }
+
+        public AppendMockConfiguration Append(Action action)
+        {
+	        var position = Mocks.Count;
+	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.After));
+	        return ConfigurationFactory.GetAppendMockConfiguration<AppendMockConfiguration>(mock => Mocks[position] = mock, action);
         }
     }
 }

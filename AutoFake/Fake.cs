@@ -34,7 +34,7 @@ namespace AutoFake
 	        if (type == null) throw new ArgumentNullException(nameof(type));
             _dependencies = constructorArgs ?? throw new ArgumentNullException(nameof(constructorArgs));
             Services = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
-            Services.AddServices(type, this);
+            Services = ContainerExtensions.CreateContainer(type, this);
             Options = Services.Resolve<FakeOptions>();
         }
 
@@ -47,7 +47,7 @@ namespace AutoFake
         public FuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-            return scope.Resolve<FuncMockConfiguration<TInput, TReturn>>();
+	        return scope.Resolve<FuncMockConfiguration<TInput, TReturn>>();
         }
 
         public ActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)

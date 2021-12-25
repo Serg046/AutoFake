@@ -1,12 +1,15 @@
 ﻿using AutoFake.Setup.Mocks;
 using System;
 using System.Linq.Expressions;
+using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake.Setup.Configurations
 {
     public class PrependMockConfiguration<T> : PrependMockConfiguration
     {
-        internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock> setMock, Action closure) : base(processorFactory, setMock, closure)
+        internal PrependMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, Action<IMock> setMock, Action closure)
+	        : base(exprFactory, cfgFactory, mockFactory, setMock, closure)
         {
         }
 
@@ -17,13 +20,18 @@ namespace AutoFake.Setup.Configurations
 
     public class PrependMockConfiguration
     {
-        private readonly IProcessorFactory _processorFactory;
+	    private readonly InvocationExpression.Create _exprFactory;
+	    private readonly IMockConfigurationFactory _cfgFactory;
+	    private readonly IMockFactory _mockFactory;
         private readonly Action<IMock> _setMock;
         private readonly Action _closure;
 
-        internal PrependMockConfiguration(IProcessorFactory processorFactory, Action<IMock> setMock, Action closure)
+        internal PrependMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
+	        IMockFactory mockFactory, Action<IMock> setMock, Action closure)
         {
-            _processorFactory = processorFactory;
+	        _exprFactory = exprFactory;
+	        _cfgFactory = cfgFactory;
+	        _mockFactory = mockFactory;
             _setMock = setMock;
             _closure = closure;
         }
@@ -39,10 +47,9 @@ namespace AutoFake.Setup.Configurations
 
         protected SourceMemberInsertMockConfiguration BeforeImpl(LambdaExpression expression)
         {
-            var mock = new SourceMemberInsertMock(_processorFactory, new Expression.InvocationExpression(expression),
-                _closure, InsertMock.Location.Before);
+            var mock = _mockFactory.GetSourceMemberInsertMock(_exprFactory(expression), _closure, InsertMock.Location.Before);
             _setMock(mock);
-            return new SourceMemberInsertMockConfiguration(mock);
+            return _cfgFactory.GetSourceMemberInsertMockConfiguration(mock);
         }
     }
 }

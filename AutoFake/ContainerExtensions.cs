@@ -2,6 +2,7 @@
 using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
+using AutoFake.Setup.Mocks;
 using DryIoc;
 using LinqExpression = System.Linq.Expressions.Expression;
 
@@ -9,14 +10,17 @@ namespace AutoFake
 {
 	internal static class ContainerExtensions
 	{
-		public static void AddServices(this Container container, Type sourceType, Fake fake)
+		public static Container CreateContainer(Type sourceType, Fake fake)
 		{
-			container.Register<MockCollection>();
+			var container = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
+			container.RegisterInstance(fake);
 			var fakeOptions = new FakeOptions();
 			container.RegisterInstance(fakeOptions);
 			container.Register<IAssemblyReader, AssemblyReader>(Reuse.Singleton,
 				Parameters.Of.Type<Type>(defaultValue: sourceType)
 					.OverrideWith(Parameters.Of.Type<FakeOptions>(defaultValue: fakeOptions)));
+
+			container.Register<MockCollection>();
 			container.Register<ITypeInfo, TypeInfo>(Reuse.Singleton);
 			container.Register<IAssemblyWriter, AssemblyWriter>(Reuse.Singleton);
 			container.Register<IAssemblyHost, AssemblyHost>(Reuse.Singleton);
@@ -29,7 +33,33 @@ namespace AutoFake
 			container.Register(typeof(FuncMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<Executor>();
 			container.Register(typeof(Executor<>));
-			container.RegisterInstance(fake);
+			container.Register<IMockConfigurationFactory, MockConfigurationFactory>(Reuse.Singleton); //todo: shouldn't be a singleton, there is an issue with scopes 
+			container.Register<IMockFactory, MockFactory>(Reuse.Singleton); //todo: shouldn't be a singleton, there is an issue with scopes 
+			container.RegisterInstance<InvocationExpression.Create>(expr => new InvocationExpression(expr));
+
+			AddConfigurations(container);
+			AddMocks(container);
+			return container;
+		}
+
+		private static void AddMocks(IRegistrator container)
+		{
+			container.Register<InsertMock>();
+			container.Register<VerifyMock>();
+			container.Register<ReplaceMock>();
+			container.Register<SourceMemberInsertMock>();
+		}
+
+		private static void AddConfigurations(IRegistrator container)
+		{
+			container.Register<AppendMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(AppendMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register<PrependMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(PrependMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(VerifyMockConfiguration), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(ReplaceMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(RemoveMockConfiguration), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(SourceMemberInsertMockConfiguration), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)
