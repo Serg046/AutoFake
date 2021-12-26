@@ -12,14 +12,16 @@ namespace AutoFake
         private readonly ITypeInfo _typeInfo;
         private readonly IAssemblyWriter _assemblyWriter;
         private readonly FakeOptions _options;
+        private readonly IMemberVisitorFactory _memberVisitorFactory;
         private readonly ContractProcessor _contractProcessor;
 
-		public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions)
+		public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions, IMemberVisitorFactory memberVisitorFactory)
         {
             _typeInfo = typeInfo;
             _assemblyWriter = assemblyWriter;
             _options = fakeOptions;
-			_contractProcessor = new ContractProcessor(_typeInfo, _assemblyWriter);
+            _memberVisitorFactory = memberVisitorFactory;
+            _contractProcessor = new ContractProcessor(_typeInfo, _assemblyWriter);
         }
 
 		public void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression)
@@ -60,7 +62,7 @@ namespace AutoFake
 
 		private MethodDefinition GetMethodDefinition(IInvocationExpression invocationExpression)
         {
-	        var visitor = new GetTestMethodVisitor();
+	        var visitor = _memberVisitorFactory.GetMemberVisitor<GetTestMethodVisitor>();
 	        invocationExpression.AcceptMemberVisitor(visitor);
 	        var executeFuncRef = _assemblyWriter.ImportToSourceAsm(visitor.Method);
 	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);

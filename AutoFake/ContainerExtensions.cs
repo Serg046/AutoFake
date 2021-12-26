@@ -33,21 +33,18 @@ namespace AutoFake
 			container.Register(typeof(FuncMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<Executor>();
 			container.Register(typeof(Executor<>));
-			container.Register<IMockConfigurationFactory, MockConfigurationFactory>(Reuse.Singleton); //todo: shouldn't be a singleton, there is an issue with scopes 
-			container.Register<IMockFactory, MockFactory>(Reuse.Singleton); //todo: shouldn't be a singleton, there is an issue with scopes 
-			container.RegisterInstance<InvocationExpression.Create>(expr => new InvocationExpression(expr));
+			container.RegisterDelegate<InvocationExpression.Create>(ctx =>
+				expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
+
+			//todo: shouldn't be a singleton, there is an issue with scopes 
+			container.Register<IMockConfigurationFactory, MockConfigurationFactory>(Reuse.Singleton);
+			container.Register<IMockFactory, MockFactory>(Reuse.Singleton);
+			container.Register<IMemberVisitorFactory, MemberVisitorFactory>(Reuse.Singleton);
 
 			AddConfigurations(container);
 			AddMocks(container);
+			AddMemberVisitors(container);
 			return container;
-		}
-
-		private static void AddMocks(IRegistrator container)
-		{
-			container.Register<InsertMock>();
-			container.Register<VerifyMock>();
-			container.Register<ReplaceMock>();
-			container.Register<SourceMemberInsertMock>();
 		}
 
 		private static void AddConfigurations(IRegistrator container)
@@ -62,9 +59,26 @@ namespace AutoFake
 			container.Register(typeof(SourceMemberInsertMockConfiguration), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 		}
 
+		private static void AddMocks(IRegistrator container)
+		{
+			container.Register<InsertMock>();
+			container.Register<VerifyMock>();
+			container.Register<ReplaceMock>();
+			container.Register<SourceMemberInsertMock>();
+		}
+
+		private static void AddMemberVisitors(IRegistrator container)
+		{
+			container.Register<GetArgumentsMemberVisitor>();
+			container.Register<GetSourceMemberVisitor>();
+			container.Register<GetTestMethodVisitor>();
+			container.Register<GetValueMemberVisitor>();
+			container.Register<TargetMemberVisitor>();
+		}
+
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)
 		{
-            var invocationExpression = new InvocationExpression(expression ?? throw new ArgumentNullException(nameof(expression)));
+            var invocationExpression = new InvocationExpression(container.Resolve<IMemberVisitorFactory>(), expression ?? throw new ArgumentNullException(nameof(expression)));
             var scope = container.OpenScope(invocationExpression);
 			scope.Use<IInvocationExpression>(_ => invocationExpression);
 

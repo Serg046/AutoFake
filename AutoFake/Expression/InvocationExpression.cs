@@ -12,12 +12,15 @@ namespace AutoFake.Expression
     public class InvocationExpression : IInvocationExpression
     {
 	    internal delegate IInvocationExpression Create(LinqExpression expression);
-        private readonly LinqExpression _expression;
+
+	    private readonly IMemberVisitorFactory _memberVisitorFactory;
+	    private readonly LinqExpression _expression;
         private IReadOnlyList<IFakeArgument>? _arguments;
 
-        internal InvocationExpression(LinqExpression expression)
+        internal InvocationExpression(IMemberVisitorFactory memberVisitorFactory, LinqExpression expression)
         {
-            _expression = expression;
+	        _memberVisitorFactory = memberVisitorFactory;
+	        _expression = expression;
             ThrowWhenArgumentsAreNotMatched = true;
         }
 
@@ -85,7 +88,7 @@ namespace AutoFake.Expression
         ISourceMember IInvocationExpression.GetSourceMember() => GetSourceMember();
         internal ISourceMember GetSourceMember()
         {
-            var memberVisitor = new GetSourceMemberVisitor();
+            var memberVisitor = _memberVisitorFactory.GetMemberVisitor<GetSourceMemberVisitor>();
             ((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
             return memberVisitor.SourceMember;
         }
@@ -95,7 +98,7 @@ namespace AutoFake.Expression
         {
             if (_arguments == null)
             {
-                var visitor = new GetArgumentsMemberVisitor();
+                var visitor = _memberVisitorFactory.GetMemberVisitor<GetArgumentsMemberVisitor>();
                 ((IInvocationExpression) this).AcceptMemberVisitor(visitor);
                 _arguments = visitor.Arguments;
             }

@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
-using FluentAssertions;
 using Moq;
 using Xunit;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
@@ -15,156 +14,157 @@ namespace AutoFake.UnitTests.Expression
 {
     public class InvocationExpressionTests
     {
-        private readonly Mock<IMemberVisitor> _memberVisitor;
+		private readonly Mock<IMemberVisitor> _memberVisitor;
 
-        public InvocationExpressionTests()
-        {
-            _memberVisitor = new Mock<IMemberVisitor>();
-        }
+		public InvocationExpressionTests()
+		{
+			_memberVisitor = new Mock<IMemberVisitor>();
+		}
 
-        [Fact]
-        public void AcceptMemberVisitor_UnsupportedExpression_Throws()
-        {
-            Expression<Func<int>> expression = () => 0;
-            var invocationExpression = new InvocationExpression(expression);
+		[Fact]
+		public void AcceptMemberVisitor_UnsupportedExpression_Throws()
+		{
+			Expression<Func<int>> expression = () => 0;
+			var invocationExpression = new InvocationExpression(null, expression);
 
-            Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
-        }
+			Assert.Throws<NotSupportedExpressionException>(() => invocationExpression.AcceptMemberVisitor(_memberVisitor.Object));
+		}
 
-        [Theory]
-        [MemberData(nameof(GetAcceptMemberVisitorTestData))]
-        public void AcceptMemberVisitor_ValidData_Success(LambdaExpression expression, MemberInfo expectedMemberInfo)
-        {
-            var invocationExpression = new InvocationExpression(expression);
+		[Theory]
+		[MemberData(nameof(GetAcceptMemberVisitorTestData))]
+		public void AcceptMemberVisitor_ValidData_Success(LambdaExpression expression, MemberInfo expectedMemberInfo)
+		{
+			var invocationExpression = new InvocationExpression(null, expression);
 
-            invocationExpression.AcceptMemberVisitor(_memberVisitor.Object);
+			invocationExpression.AcceptMemberVisitor(_memberVisitor.Object);
 
-            switch (expectedMemberInfo)
-            {
-                case MethodInfo method:
-                    _memberVisitor.Verify(v => v.Visit((MethodCallExpression)expression.Body, method));
-                    break;
-                case ConstructorInfo ctor:
-                    _memberVisitor.Verify(v => v.Visit((NewExpression)expression.Body, ctor));
-                    break;
-                case PropertyInfo property:
-                    _memberVisitor.Verify(v => v.Visit(property));
-                    break;
-                case FieldInfo field:
-                    _memberVisitor.Verify(v => v.Visit(field));
-                    break;
-            }
-        }
+			switch (expectedMemberInfo)
+			{
+				case MethodInfo method:
+					_memberVisitor.Verify(v => v.Visit((MethodCallExpression)expression.Body, method));
+					break;
+				case ConstructorInfo ctor:
+					_memberVisitor.Verify(v => v.Visit((NewExpression)expression.Body, ctor));
+					break;
+				case PropertyInfo property:
+					_memberVisitor.Verify(v => v.Visit(property));
+					break;
+				case FieldInfo field:
+					_memberVisitor.Verify(v => v.Visit(field));
+					break;
+			}
+		}
 
-        [Fact]
-        public void VerifyExpectedCalls_ExpectedCallsMismatch_Throws()
-        {
-            Expression<Action<TestClass>> methodExpr = e => e.Method();
-            var expr = new InvocationExpression(methodExpr);
+		[Fact]
+		public void VerifyExpectedCalls_ExpectedCallsMismatch_Throws()
+		{
+			Expression<Action<TestClass>> methodExpr = e => e.Method();
+			var expr = new InvocationExpression(null, methodExpr);
 
-            Assert.Throws<ExpectedCallsException>(() => expr.VerifyExpectedCalls(new ExecutionContext(count => count > 2)));
-        }
+			Assert.Throws<ExpectedCallsException>(() => expr.VerifyExpectedCalls(new ExecutionContext(count => count > 2)));
+		}
 
-        [Fact]
-        public void VerifyExpectedCalls_ValidInput_Passes()
-        {
-            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
-            var expr = new InvocationExpression(methodExpr);
-            var executionContext = new ExecutionContext(count => count == 1);
-            executionContext.IncActualCalls();
+		[Fact]
+		public void VerifyExpectedCalls_ValidInput_Passes()
+		{
+			Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
+			var expr = new InvocationExpression(null, methodExpr);
+			var executionContext = new ExecutionContext(count => count == 1);
+			executionContext.IncActualCalls();
 
-            expr.VerifyExpectedCalls(executionContext);
-        }
+			expr.VerifyExpectedCalls(executionContext);
+		}
 
-        [Fact]
-        public void VerifyExpectedCallsAsync_ValidInput_Passes()
-        {
-            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
-            var expr = new InvocationExpression(methodExpr);
-            var executionContext = new ExecutionContext(count => count == 1);
-            executionContext.IncActualCalls();
+		[Fact]
+		public void VerifyExpectedCallsAsync_ValidInput_Passes()
+		{
+			Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
+			var expr = new InvocationExpression(null, methodExpr);
+			var executionContext = new ExecutionContext(count => count == 1);
+			executionContext.IncActualCalls();
 
-            expr.VerifyExpectedCallsAsync(Task.CompletedTask, executionContext);
-        }
+			expr.VerifyExpectedCallsAsync(Task.CompletedTask, executionContext);
+		}
 
-        [Fact]
-        public void VerifyExpectedCallsTypedAsync_ValidInput_Passes()
-        {
-            Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
-            var expr = new InvocationExpression(methodExpr);
-            var executionContext = new ExecutionContext(count => count == 1);
-            executionContext.IncActualCalls();
+		[Fact]
+		public void VerifyExpectedCallsTypedAsync_ValidInput_Passes()
+		{
+			Expression<Action<TestClass>> methodExpr = e => e.MethodWithArgs(5, "5");
+			var expr = new InvocationExpression(null, methodExpr);
+			var executionContext = new ExecutionContext(count => count == 1);
+			executionContext.IncActualCalls();
 
-            expr.VerifyExpectedCallsTypedAsync(Task.FromResult(1), executionContext);
-        }
+			expr.VerifyExpectedCallsTypedAsync(Task.FromResult(1), executionContext);
+		}
 
-        [Fact]
-        public void GetArguments_MethodExpr_Parameters()
-        {
-            var parameter = System.Linq.Expressions.Expression.Constant(5);
-            var expression = System.Linq.Expressions.Expression.Call(
-                System.Linq.Expressions.Expression.Constant(this),
-                GetType().GetMethod(nameof(Equals)),
-                System.Linq.Expressions.Expression.Convert(parameter, typeof(object))
-            );
-            var sut = new InvocationExpression(expression);
+		[Theory, AutoMoqData]
+		internal void GetArguments_MethodExpr_Parameters(Mock<IMemberVisitorFactory> factory)
+		{
+			var parameter = System.Linq.Expressions.Expression.Constant(5);
+			var expression = System.Linq.Expressions.Expression.Call(
+				System.Linq.Expressions.Expression.Constant(this),
+				GetType().GetMethod(nameof(Equals)),
+				System.Linq.Expressions.Expression.Convert(parameter, typeof(object))
+			);
+			factory.Setup(f => f.GetMemberVisitor<GetArgumentsMemberVisitor>()).Returns(new GetArgumentsMemberVisitor());
+			var sut = new InvocationExpression(factory.Object, expression);
 
-            var args = sut.GetArguments();
+			var args = sut.GetArguments();
 
-            Assert.True(args.Single().Check(5));
-        }
+			Assert.True(args.Single().Check(5));
+		}
 
 		public static IEnumerable<object[]> GetAcceptMemberVisitorTestData()
-        {
-            var method = typeof(TestClass).GetMethod(nameof(TestClass.Method));
-            Expression<Action<TestClass>> methodExpr = e => e.Method();
-            yield return new object[] { methodExpr, method };
+		{
+			var method = typeof(TestClass).GetMethod(nameof(TestClass.Method));
+			Expression<Action<TestClass>> methodExpr = e => e.Method();
+			yield return new object[] { methodExpr, method };
 
-            method = typeof(TestClass).GetMethod(nameof(TestClass.StaticMethod));
-            Expression<Action> staticMethodExpr = () => TestClass.StaticMethod();
-            yield return new object[] { staticMethodExpr, method };
+			method = typeof(TestClass).GetMethod(nameof(TestClass.StaticMethod));
+			Expression<Action> staticMethodExpr = () => TestClass.StaticMethod();
+			yield return new object[] { staticMethodExpr, method };
 
-            method = typeof(TestClass).GetMethod(".ctor");
-            Expression<Func<TestClass>> ctorExpr = () => new TestClass();
-            yield return new object[] { ctorExpr, method };
+			method = typeof(TestClass).GetMethod(".ctor");
+			Expression<Func<TestClass>> ctorExpr = () => new TestClass();
+			yield return new object[] { ctorExpr, method };
 
-            var property = typeof(TestClass).GetProperty(nameof(TestClass.Property));
-            Expression<Func<TestClass, int>> propExpr = e => e.Property;
-            yield return new object[] { propExpr, property };
+			var property = typeof(TestClass).GetProperty(nameof(TestClass.Property));
+			Expression<Func<TestClass, int>> propExpr = e => e.Property;
+			yield return new object[] { propExpr, property };
 
-            property = typeof(TestClass).GetProperty(nameof(TestClass.StaticProperty));
-            Expression<Func<int>> staticPropExpr = () => TestClass.StaticProperty;
-            yield return new object[] { staticPropExpr, property };
+			property = typeof(TestClass).GetProperty(nameof(TestClass.StaticProperty));
+			Expression<Func<int>> staticPropExpr = () => TestClass.StaticProperty;
+			yield return new object[] { staticPropExpr, property };
 
-            var field = typeof(TestClass).GetField(nameof(TestClass.Field));
-            Expression<Func<TestClass, int>> fldExpr = e => e.Field;
-            yield return new object[] { fldExpr, field };
+			var field = typeof(TestClass).GetField(nameof(TestClass.Field));
+			Expression<Func<TestClass, int>> fldExpr = e => e.Field;
+			yield return new object[] { fldExpr, field };
 
-            field = typeof(TestClass).GetField(nameof(TestClass.StaticField));
-            Expression<Func<int>> staticFldExpr = () => TestClass.StaticField;
-            yield return new object[] { staticFldExpr, field };
-            field = typeof(TestClass).GetField(nameof(TestClass.StaticField));
+			field = typeof(TestClass).GetField(nameof(TestClass.StaticField));
+			Expression<Func<int>> staticFldExpr = () => TestClass.StaticField;
+			yield return new object[] { staticFldExpr, field };
+			field = typeof(TestClass).GetField(nameof(TestClass.StaticField));
 
-            Expression<Func<object>> staticFldExprWithCast = () => TestClass.StaticField;
-            yield return new object[] { staticFldExprWithCast, field };
-        }
+			Expression<Func<object>> staticFldExprWithCast = () => TestClass.StaticField;
+			yield return new object[] { staticFldExprWithCast, field };
+		}
 
 #pragma warning disable 0649
-        private class TestClass
-        {
-            public void Method() {}
+		private class TestClass
+		{
+			public void Method() { }
 
-            public void MethodWithArgs(int a, string b) { }
+			public void MethodWithArgs(int a, string b) { }
 
-            public static void StaticMethod() {}
+			public static void StaticMethod() { }
 
-            public int Property { get; }
+			public int Property { get; }
 
-            public static int StaticProperty { get; }
+			public static int StaticProperty { get; }
 
-            public int Field;
+			public int Field;
 
-            public static int StaticField;
-        }
-    }
+			public static int StaticField;
+		}
+	}
 }
