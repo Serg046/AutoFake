@@ -33,7 +33,6 @@ namespace AutoFake
         {
 	        if (type == null) throw new ArgumentNullException(nameof(type));
             _dependencies = constructorArgs ?? throw new ArgumentNullException(nameof(constructorArgs));
-            Services = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
             Services = ContainerExtensions.CreateContainer(type, this);
             Options = Services.Resolve<FakeOptions>();
         }
