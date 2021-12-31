@@ -88,7 +88,7 @@ namespace AutoFake.Expression
         ISourceMember IInvocationExpression.GetSourceMember() => GetSourceMember();
         internal ISourceMember GetSourceMember()
         {
-            var memberVisitor = _memberVisitorFactory.GetMemberVisitor<GetSourceMemberVisitor>();
+            var memberVisitor = _memberVisitorFactory.GetMemberVisitor<IGetSourceMemberVisitor>();
             ((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
             return memberVisitor.SourceMember;
         }

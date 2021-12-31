@@ -27,7 +27,7 @@ namespace AutoFake
                 : value?.ToString() ?? "null";
         }
 
-        IEqualityComparer? TryGetEnumerableComparer(object value)
+        private IEqualityComparer? TryGetEnumerableComparer(object value)
             => value is IEnumerable ? new EnumerableEqualityComparer() : null;
 
         private class EnumerableEqualityComparer : IEqualityComparer

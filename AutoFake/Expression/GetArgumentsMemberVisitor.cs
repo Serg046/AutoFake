@@ -11,7 +11,23 @@ namespace AutoFake.Expression
 {
     internal class GetArgumentsMemberVisitor : IMemberVisitor
     {
-        private List<IFakeArgument>? _arguments;
+	    private readonly Func<Delegate, LambdaArgumentChecker> _getLambdaArgChecker;
+	    private readonly Func<IFakeArgumentChecker, FakeArgument> _getFakeArg;
+	    private readonly Func<SuccessfulArgumentChecker> _getSuccessfulArgumentChecker;
+	    private readonly Func<object, IEqualityComparer?, EqualityArgumentChecker> _getEqualityArgumentChecker;
+	    private List<IFakeArgument>? _arguments;
+
+        public GetArgumentsMemberVisitor(
+	        Func<Delegate, LambdaArgumentChecker> getLambdaArgChecker,
+	        Func<IFakeArgumentChecker, FakeArgument> getFakeArg,
+	        Func<SuccessfulArgumentChecker> getSuccessfulArgumentChecker,
+	        Func<object, IEqualityComparer?, EqualityArgumentChecker> getEqualityArgumentChecker)
+        {
+	        _getLambdaArgChecker = getLambdaArgChecker;
+	        _getFakeArg = getFakeArg;
+	        _getSuccessfulArgumentChecker = getSuccessfulArgumentChecker;
+	        _getEqualityArgumentChecker = getEqualityArgumentChecker;
+        }
 
         public IReadOnlyList<IFakeArgument> Arguments => _arguments?.ToReadOnlyList() ?? throw new InvalidOperationException($"{nameof(Arguments)} property is not set. Please run {nameof(Visit)}() method.");
 
@@ -64,17 +80,17 @@ namespace AutoFake.Expression
                     {
                         var lambdaExpr = LinqExpression.Lambda<Func<Delegate>>(expression.Arguments.Single());
                         var @delegate = lambdaExpr.Compile()();
-                        var checker = new LambdaArgumentChecker(@delegate);
-                        return new FakeArgument(checker);
+                        var checker = _getLambdaArgChecker(@delegate);
+                        return _getFakeArg(checker);
                     }
                     return CreateEqualityComparerArgument(expression);
                 }
-                return new FakeArgument(new SuccessfulArgumentChecker());
+                return _getFakeArg(_getSuccessfulArgumentChecker());
             }
             return CreateFakeArgument(expression);
         }
 
-        private static IFakeArgument CreateEqualityComparerArgument(MethodCallExpression expression)
+        private IFakeArgument CreateEqualityComparerArgument(MethodCallExpression expression)
         {
             var instance = GetArgumentInstance(expression.Arguments[0]);
             var genericComparer = GetArgumentInstance(expression.Arguments[1]);
@@ -84,13 +100,13 @@ namespace AutoFake.Expression
             var genericExtension = extension!.MakeGenericMethod(
                 genericEqualityComparer.GetGenericArguments().Single());
             var comparer = genericExtension.Invoke(null, new[] {genericComparer}) as IEqualityComparer;
-            return new FakeArgument(new EqualityArgumentChecker(instance, comparer));
+            return _getFakeArg(_getEqualityArgumentChecker(instance, comparer));
         }
 
         private IFakeArgument CreateFakeArgument(object arg)
         {
-            var checker = new EqualityArgumentChecker(arg);
-            return new FakeArgument(checker);
+            var checker = _getEqualityArgumentChecker(arg, null);
+            return _getFakeArg(checker);
         }
     }
 }

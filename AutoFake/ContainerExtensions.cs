@@ -41,6 +41,13 @@ namespace AutoFake
 			container.Register<IMockFactory, MockFactory>(Reuse.Singleton);
 			container.Register<IMemberVisitorFactory, MemberVisitorFactory>(Reuse.Singleton);
 
+			container.Register<LambdaArgumentChecker>();
+			container.Register<FakeArgument>();
+			container.Register<SuccessfulArgumentChecker>();
+			container.Register<EqualityArgumentChecker>();
+			container.Register<SourceMethod>(made: FactoryMethod.ConstructorWithResolvableArguments);
+			container.Register<SourceField>();
+
 			AddConfigurations(container);
 			AddMocks(container);
 			AddMemberVisitors(container);
@@ -70,7 +77,7 @@ namespace AutoFake
 		private static void AddMemberVisitors(IRegistrator container)
 		{
 			container.Register<GetArgumentsMemberVisitor>();
-			container.Register<GetSourceMemberVisitor>();
+			container.Register<IGetSourceMemberVisitor, GetSourceMemberVisitor>();
 			container.Register<GetTestMethodVisitor>();
 			container.Register<GetValueMemberVisitor>();
 			container.Register<TargetMemberVisitor>();

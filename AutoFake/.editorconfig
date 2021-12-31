@@ -1,0 +1,3 @@
+[*.cs]
+dotnet_diagnostic.DI0002.excluded_namespaces = System,AutoFake.Exceptions
+dotnet_diagnostic.DI0002.severity=silent
