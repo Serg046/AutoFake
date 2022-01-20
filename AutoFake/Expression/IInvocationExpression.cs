@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using AutoFake.Setup;
 
 namespace AutoFake.Expression
@@ -8,6 +7,5 @@ namespace AutoFake.Expression
         bool ThrowWhenArgumentsAreNotMatched { get; set; }
         void AcceptMemberVisitor(IMemberVisitor visitor);
         ISourceMember GetSourceMember();
-        IReadOnlyList<IFakeArgument> GetArguments();
     }
 }

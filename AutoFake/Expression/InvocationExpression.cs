@@ -93,8 +93,7 @@ namespace AutoFake.Expression
             return memberVisitor.SourceMember;
         }
 
-        IReadOnlyList<IFakeArgument> IInvocationExpression.GetArguments() => GetArguments();
-        internal IReadOnlyList<IFakeArgument> GetArguments()
+        private IReadOnlyList<IFakeArgument> GetArguments()
         {
             if (_arguments == null)
             {
