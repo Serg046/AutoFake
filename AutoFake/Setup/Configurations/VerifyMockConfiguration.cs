@@ -17,7 +17,7 @@ namespace AutoFake.Setup.Configurations
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public VerifyMockConfiguration ExpectedCalls(Func<uint, bool> expectedCallsCountFunc)
+        public VerifyMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;

@@ -12,8 +12,11 @@ namespace AutoFake.Setup.Mocks
     {
         private FieldDefinition? _retValueField;
 
-        public ReplaceMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
-            : base(processorFactory, invocationExpression)
+        public ReplaceMock(
+	        IProcessorFactory processorFactory,
+	        IExecutionContext.Create getExecutionContext,
+	        IInvocationExpression invocationExpression)
+            : base(processorFactory, getExecutionContext, invocationExpression)
         {
         }
 

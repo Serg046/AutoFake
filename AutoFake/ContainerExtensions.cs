@@ -4,6 +4,7 @@ using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using DryIoc;
+using Mono.Cecil.Cil;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake
@@ -33,6 +34,8 @@ namespace AutoFake
 			container.Register(typeof(FuncMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<Executor>();
 			container.Register(typeof(Executor<>));
+			container.RegisterDelegate<IExecutionContext.Create>(_ =>
+				callsChecker => new ExecutionContext(callsChecker));
 			container.RegisterDelegate<InvocationExpression.Create>(ctx =>
 				expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
 
@@ -51,6 +54,7 @@ namespace AutoFake
 			AddConfigurations(container);
 			AddMocks(container);
 			AddMemberVisitors(container);
+			AddCecilFactory(container);
 			return container;
 		}
 
@@ -81,6 +85,12 @@ namespace AutoFake
 			container.Register<GetTestMethodVisitor>();
 			container.Register<GetValueMemberVisitor>();
 			container.Register<TargetMemberVisitor>();
+		}
+
+		private static void AddCecilFactory(IRegistrator container)
+		{
+			container.Register<ICecilFactory, CecilFactory>();
+			container.Register<VariableDefinition>();
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)

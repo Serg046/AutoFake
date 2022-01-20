@@ -32,7 +32,7 @@ namespace AutoFake.FunctionalTests
         public void When_ExpectedCallsFunc_Should_Pass(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<SystemUnderTest>();
-            Func<uint, bool> checker;
+            IExecutionContext.CallsCheckerFunc checker;
             if (equalOp) checker = x => x == arg;
             else checker = x => x > arg;
 

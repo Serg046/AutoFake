@@ -1,17 +1,15 @@
-﻿using System;
-
-namespace AutoFake
+﻿namespace AutoFake
 {
-	public class ExecutionContext
+	internal class ExecutionContext : IExecutionContext
 	{
-		public ExecutionContext(Func<uint, bool>? callsChecker)
+		public ExecutionContext(IExecutionContext.CallsCheckerFunc? callsChecker)
 		{
 			CallsChecker = callsChecker;
 		}
 
 		public uint ActualCallsNumber { get; private set; }
 
-		public Func<uint, bool>? CallsChecker { get; }
+		public IExecutionContext.CallsCheckerFunc? CallsChecker { get; }
 
 		public void IncActualCalls() => ActualCallsNumber++;
 	}

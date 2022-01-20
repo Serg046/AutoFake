@@ -1,5 +1,4 @@
 ﻿using AutoFake.Setup.Mocks;
-using System;
 
 namespace AutoFake.Setup.Configurations
 {
@@ -17,7 +16,7 @@ namespace AutoFake.Setup.Configurations
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public RemoveMockConfiguration ExpectedCalls(Func<uint, bool> expectedCallsCountFunc)
+        public RemoveMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.ExpectedCalls = expectedCallsCountFunc;
             return this;

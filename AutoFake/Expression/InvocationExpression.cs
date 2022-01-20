@@ -123,12 +123,12 @@ namespace AutoFake.Expression
 			return true;
 		}
 
-        public Task VerifyExpectedCallsAsync(Task task, ExecutionContext executionContext)
+        public Task VerifyExpectedCallsAsync(Task task, IExecutionContext executionContext)
 		{
             return task.ContinueWith(t => VerifyExpectedCalls(executionContext));
 		}
 
-        public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, ExecutionContext executionContext)
+        public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, IExecutionContext executionContext)
         {
 	        return task.ContinueWith(t =>
 	        {
@@ -137,7 +137,7 @@ namespace AutoFake.Expression
 	        });
         }
 
-        public void VerifyExpectedCalls(ExecutionContext executionContext)
+        public void VerifyExpectedCalls(IExecutionContext executionContext)
         {
 			if (executionContext.CallsChecker != null && !executionContext.CallsChecker(executionContext.ActualCallsNumber))
 			{

@@ -40,7 +40,7 @@ namespace AutoFake.FunctionalTests
         public void ExpectedCallsCountTest(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
-            Func<uint, bool> checker;
+            IExecutionContext.CallsCheckerFunc checker;
             if (equalOp) checker = x => x == arg;
             else checker = x => x > arg;
 

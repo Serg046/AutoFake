@@ -6,8 +6,11 @@ namespace AutoFake.Setup.Mocks
 {
     internal class VerifyMock : SourceMemberMock
     {
-        public VerifyMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
-            : base(processorFactory, invocationExpression)
+        public VerifyMock(
+	        IProcessorFactory processorFactory,
+	        IExecutionContext.Create getExecutionContext,
+	        IInvocationExpression invocationExpression)
+            : base(processorFactory, getExecutionContext, invocationExpression)
         {
         }
 

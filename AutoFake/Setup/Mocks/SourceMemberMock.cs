@@ -11,12 +11,17 @@ namespace AutoFake.Setup.Mocks
 {
     internal abstract class SourceMemberMock : IMock
     {
+	    private readonly IExecutionContext.Create _getExecutionContext;
 	    private FieldDefinition? _setupBodyField;
 	    private FieldDefinition? _executionContext;
 
-	    protected SourceMemberMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression)
+	    protected SourceMemberMock(
+		    IProcessorFactory processorFactory,
+		    IExecutionContext.Create getExecutionContext,
+		    IInvocationExpression invocationExpression)
         {
-            InvocationExpression = invocationExpression;
+	        _getExecutionContext = getExecutionContext;
+	        InvocationExpression = invocationExpression;
             SourceMember = invocationExpression.GetSourceMember();
             PrePostProcessor = processorFactory.CreatePrePostProcessor();
             ProcessorFactory = processorFactory;
@@ -26,7 +31,7 @@ namespace AutoFake.Setup.Mocks
         protected IPrePostProcessor PrePostProcessor { get; }
         public IInvocationExpression InvocationExpression { get; }
         public ISourceMember SourceMember { get; }
-        public Func<uint, bool>? ExpectedCalls { get; set; }
+        public IExecutionContext.CallsCheckerFunc? ExpectedCalls { get; set; }
 
         protected FieldDefinition SetupBodyField => _setupBodyField ?? throw new InvalidOperationException("SetupBody field should be set");
         protected FieldDefinition ExecutionContext => _executionContext ?? throw new InvalidOperationException("ExecutionContext field should be set");
@@ -36,7 +41,7 @@ namespace AutoFake.Setup.Mocks
             _setupBodyField = PrePostProcessor.GenerateField(
                 GetFieldName(method.Name, nameof(SetupBodyField)), typeof(IInvocationExpression));
             _executionContext = PrePostProcessor.GenerateField(
-                GetFieldName(method.Name, nameof(ExecutionContext)), typeof(ExecutionContext));
+                GetFieldName(method.Name, nameof(ExecutionContext)), typeof(IExecutionContext));
         }
 
         public abstract void Inject(IEmitter emitter, Instruction instruction);
@@ -51,7 +56,7 @@ namespace AutoFake.Setup.Mocks
 
 	            var ctxField = GetField(type, ExecutionContext.Name)
 	                           ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
-	            ctxField.SetValue(null, new ExecutionContext(ExpectedCalls));
+	            ctxField.SetValue(null, _getExecutionContext(ExpectedCalls));
             }
         }
 

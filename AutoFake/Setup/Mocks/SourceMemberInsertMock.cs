@@ -8,13 +8,19 @@ namespace AutoFake.Setup.Mocks
 {
     internal class SourceMemberInsertMock : SourceMemberMock
     {
-        private readonly InsertMock.Location _location;
+	    private readonly ICecilFactory _cecilFactory;
+	    private readonly InsertMock.Location _location;
         private FieldDefinition? _closureField;
 
-        public SourceMemberInsertMock(IProcessorFactory processorFactory, IInvocationExpression invocationExpression,
-            Action closure, InsertMock.Location location) : base(processorFactory, invocationExpression)
+        public SourceMemberInsertMock(
+	        IProcessorFactory processorFactory,
+	        ICecilFactory cecilFactory,
+	        IInvocationExpression invocationExpression,
+	        IExecutionContext.Create getExecutionContext,
+            Action closure, InsertMock.Location location) : base(processorFactory, getExecutionContext, invocationExpression)
         {
-            _location = location;
+	        _cecilFactory = cecilFactory;
+	        _location = location;
             Closure = closure;
         }
 
@@ -37,7 +43,7 @@ namespace AutoFake.Setup.Mocks
             var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
             var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
 	            SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
-            var verifyVar = new VariableDefinition(module.TypeSystem.Boolean);
+            var verifyVar = _cecilFactory.CreateVariable(module.TypeSystem.Boolean);
             emitter.Body.Variables.Add(verifyVar);
             emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, verifyVar));
             if (_location == InsertMock.Location.Before)
