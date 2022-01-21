@@ -11,8 +11,10 @@ namespace AutoFake
             if (type.IsValueType && Nullable.GetUnderlyingType(type) == null)
                 throw new NotSupportedException("Value type instance cannot be null");
 
-            return new TypeWrapper(type);
-        }
+#pragma warning disable DI0002 // There is no way to invert control here as it is called from the client side
+			return new TypeWrapper(type);
+#pragma warning restore DI0002
+		}
 
         //Used by expression's engine, see GetArgumentsMemberVisitor::GetArgument(MethodCallExpression expression)
         public static T Is<T>(Func<T, bool> checkArgumentFunc) => IsAny<T>();

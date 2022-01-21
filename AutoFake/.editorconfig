@@ -1,5 +1,5 @@
 [*.cs]
 dotnet_diagnostic.DI0002.excluded_namespaces=System,AutoFake.Exceptions
 dotnet_diagnostic.DI0002.excluded_files=AutoFake/ContainerExtensions.cs
-dotnet_diagnostic.DI0002.exclude_nested_types=True
+dotnet_diagnostic.DI0002.exclude_private_types=True
 dotnet_diagnostic.DI0002.severity=silent
