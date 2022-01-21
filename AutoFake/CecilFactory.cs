@@ -41,5 +41,23 @@ namespace AutoFake
 			return _serviceLocator.Resolve<Func<string, string, TypeAttributes, TypeReference, TypeDefinition>>()
 				.Invoke(@namespace, @namespace, attributes, baseType);
 		}
+
+		public MethodReference CreateMethodReference(string name, TypeReference returnType, TypeReference declaringType)
+		{
+			return _serviceLocator.Resolve<Func<string, TypeReference, TypeReference, MethodReference>>()
+				.Invoke(name, returnType, declaringType);
+		}
+
+		public ParameterDefinition CreateParameterDefinition(string name, ParameterAttributes attributes, TypeReference parameterType)
+		{
+			return _serviceLocator.Resolve<Func<string, ParameterAttributes, TypeReference, ParameterDefinition>>()
+				.Invoke(name, attributes, parameterType);
+		}
+
+		public GenericParameter CreateGenericParameter(string name, IGenericParameterProvider owner)
+		{
+			return _serviceLocator.Resolve<Func<string, IGenericParameterProvider, GenericParameter>>()
+				.Invoke(name, owner);
+		}
 	}
 }

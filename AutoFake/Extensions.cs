@@ -41,23 +41,21 @@ namespace AutoFake
         public static IEqualityComparer ToNonGeneric<T>(this IEqualityComparer<T?> comparer)
             => new EqualityComparer((x, y) => comparer.Equals((T?)x, (T?)y), x => comparer.GetHashCode((T)x));
 
-        public static MethodReference ReplaceDeclaringType(this MethodReference methodDef, TypeReference declaringTypeRef)
+        public static MethodReference ReplaceDeclaringType(this MethodReference methodDef, TypeReference declaringTypeRef, ICecilFactory cecilFactory)
         {
-	        var methodRef = new MethodReference(methodDef.Name, methodDef.ReturnType, declaringTypeRef)
-	        {
-		        CallingConvention = methodDef.CallingConvention,
-		        HasThis = methodDef.HasThis,
-		        ExplicitThis = methodDef.ExplicitThis
-	        };
+	        var methodRef = cecilFactory.CreateMethodReference(methodDef.Name, methodDef.ReturnType, declaringTypeRef);
+	        methodRef.CallingConvention = methodDef.CallingConvention;
+	        methodRef.HasThis = methodDef.HasThis;
+	        methodRef.ExplicitThis = methodDef.ExplicitThis;
 
 	        foreach (var paramDef in methodDef.Parameters)
 	        {
-		        methodRef.Parameters.Add(new ParameterDefinition(paramDef.Name, paramDef.Attributes, paramDef.ParameterType));
+		        methodRef.Parameters.Add(cecilFactory.CreateParameterDefinition(paramDef.Name, paramDef.Attributes, paramDef.ParameterType));
 	        }
 
 	        foreach (var genParamDef in methodDef.GenericParameters)
 	        {
-		        methodRef.GenericParameters.Add(new GenericParameter(genParamDef.Name, methodRef));
+		        methodRef.GenericParameters.Add(cecilFactory.CreateGenericParameter(genParamDef.Name, methodRef));
 	        }
 
 	        return methodRef;

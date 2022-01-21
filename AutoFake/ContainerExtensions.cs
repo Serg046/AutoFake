@@ -33,6 +33,7 @@ namespace AutoFake
 			container.Register(typeof(ActionMockConfiguration), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(FuncMockConfiguration<,>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(FuncMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register<ExecutorImpl>();
 			container.Register<Executor>();
 			container.Register(typeof(Executor<>));
 			container.RegisterInstance<IExecutionContext.Create>(callsChecker => new ExecutionContext(callsChecker));
@@ -53,6 +54,8 @@ namespace AutoFake
 			container.Register<TypeMap>();
 			container.RegisterInstance<FakeObjectInfo.Create>((srcType, fieldsType, instance) => new FakeObjectInfo(srcType, fieldsType, instance));
 			container.Register<IContractProcessor, ContractProcessor>();
+			container.Register<Emitter>();
+			container.Register<IEmitterPool, EmitterPool>(setup: DryIoc.Setup.With(allowDisposableTransient: true));
 
 			AddConfigurations(container);
 			AddMocks(container);
@@ -103,6 +106,9 @@ namespace AutoFake
 			container.Register<ISymbolReaderProvider, DefaultSymbolReaderProvider>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 			container.Register<AssemblyNameDefinition>();
 			container.Register<TypeDefinition>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
+			container.Register<MethodReference>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
+			container.Register<ParameterDefinition>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
+			container.Register<GenericParameter>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)

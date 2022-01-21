@@ -14,22 +14,24 @@ namespace AutoFake
         private readonly FakeOptions _options;
         private readonly IMemberVisitorFactory _memberVisitorFactory;
         private readonly IContractProcessor _contractProcessor;
+        private readonly Func<IEmitterPool> _createEmitterPool;
 
-		public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions,
-			IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor)
+        public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions,
+			IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor, Func<IEmitterPool> createEmitterPool)
         {
             _typeInfo = typeInfo;
             _assemblyWriter = assemblyWriter;
             _options = fakeOptions;
             _memberVisitorFactory = memberVisitorFactory;
             _contractProcessor = contractProcessor;
+            _createEmitterPool = createEmitterPool;
         }
 
 		public void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression)
         {
 	        var executeFuncDef = GetMethodDefinition(invocationExpression);
 	        var testMethods = new List<TestMethod>();
-	        using var emitterPool = new EmitterPool();
+	        using var emitterPool = _createEmitterPool();
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
             var replaceContractMocks = new HashSet<IMock>();
             _contractProcessor.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>(), replaceContractMocks);
@@ -48,7 +50,7 @@ namespace AutoFake
 			}
 		}
 
-		private void ProcessConstructors(EmitterPool emitterPool, HashSet<IMock> replaceContractMocks, ICollection<TestMethod> testMethods)
+		private void ProcessConstructors(IEmitterPool emitterPool, HashSet<IMock> replaceContractMocks, ICollection<TestMethod> testMethods)
 		{
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{

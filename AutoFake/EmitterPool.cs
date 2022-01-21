@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Mono.Cecil.Rocks;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 
@@ -6,14 +7,20 @@ namespace AutoFake
 {
 	internal class EmitterPool : IEmitterPool
 	{
-		private readonly Dictionary<MethodBody, IEmitter> _emitters = new Dictionary<MethodBody, IEmitter>();
+		private readonly Func<MethodBody, Emitter> _createEmitter;
+		private readonly Dictionary<MethodBody, IEmitter> _emitters = new();
+
+		public EmitterPool(Func<MethodBody, Emitter> createEmitter)
+		{
+			_createEmitter = createEmitter;
+		}
 		
 		public IEmitter GetEmitter(MethodBody methodBody)
 		{
 			if (!_emitters.TryGetValue(methodBody, out var emitter))
 			{
 				methodBody.SimplifyMacros();
-				emitter = new Emitter(methodBody);
+				emitter = _createEmitter(methodBody);
 				_emitters[methodBody] = emitter;
 			}
 

@@ -12,5 +12,8 @@ namespace AutoFake
 		ISymbolReaderProvider CreateSymbolReaderProvider(bool throwIfNoSymbol);
 		AssemblyNameDefinition CreateAssemblyNameDefinition(string name, Version version);
 		TypeDefinition CreateTypeDefinition(string @namespace, string name, TypeAttributes attributes, TypeReference baseType);
+		MethodReference CreateMethodReference(string name, TypeReference returnType, TypeReference declaringType);
+		ParameterDefinition CreateParameterDefinition(string name, ParameterAttributes attributes, TypeReference parameterType);
+		GenericParameter CreateGenericParameter(string name, IGenericParameterProvider owner);
 	}
 }
