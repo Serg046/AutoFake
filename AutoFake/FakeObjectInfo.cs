@@ -4,7 +4,8 @@ namespace AutoFake
 {
     internal class FakeObjectInfo
     {
-	    public FakeObjectInfo(Type sourceType, Type? fieldsType, object? instance)
+	    public delegate FakeObjectInfo Create(Type sourceType, Type? fieldsType, object? instance);
+        public FakeObjectInfo(Type sourceType, Type? fieldsType, object? instance)
 	    {
             SourceType = sourceType;
             FieldsType = fieldsType;

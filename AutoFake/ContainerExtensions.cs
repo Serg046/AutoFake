@@ -4,6 +4,7 @@ using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using DryIoc;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using LinqExpression = System.Linq.Expressions.Expression;
 
@@ -34,8 +35,7 @@ namespace AutoFake
 			container.Register(typeof(FuncMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<Executor>();
 			container.Register(typeof(Executor<>));
-			container.RegisterDelegate<IExecutionContext.Create>(_ =>
-				callsChecker => new ExecutionContext(callsChecker));
+			container.RegisterInstance<IExecutionContext.Create>(callsChecker => new ExecutionContext(callsChecker));
 			container.RegisterDelegate<InvocationExpression.Create>(ctx =>
 				expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
 
@@ -50,6 +50,9 @@ namespace AutoFake
 			container.Register<EqualityArgumentChecker>();
 			container.Register<SourceMethod>(made: FactoryMethod.ConstructorWithResolvableArguments);
 			container.Register<SourceField>();
+			container.Register<TypeMap>();
+			container.RegisterInstance<FakeObjectInfo.Create>((srcType, fieldsType, instance) => new FakeObjectInfo(srcType, fieldsType, instance));
+			container.Register<IContractProcessor, ContractProcessor>();
 
 			AddConfigurations(container);
 			AddMocks(container);
@@ -76,6 +79,10 @@ namespace AutoFake
 			container.Register<VerifyMock>();
 			container.Register<ReplaceMock>();
 			container.Register<SourceMemberInsertMock>();
+			container.Register<ReplaceInterfaceCallMock>();
+			container.Register<ReplaceValueTypeCtorMock>();
+			container.Register<ReplaceReferenceTypeCtorMock>();
+			container.Register<ReplaceTypeCastMock>();
 		}
 
 		private static void AddMemberVisitors(IRegistrator container)
@@ -91,6 +98,11 @@ namespace AutoFake
 		{
 			container.Register<ICecilFactory, CecilFactory>();
 			container.Register<VariableDefinition>();
+			container.Register<ReaderParameters>(made: Made.Of(FactoryMethod.DefaultConstructor()));
+			container.Register<WriterParameters>();
+			container.Register<ISymbolReaderProvider, DefaultSymbolReaderProvider>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
+			container.Register<AssemblyNameDefinition>();
+			container.Register<TypeDefinition>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)

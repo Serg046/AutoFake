@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Setup;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
@@ -10,12 +11,14 @@ namespace AutoFake
 	{
 		private readonly ITypeInfo _typeInfo;
 		private readonly IAssemblyWriter _assemblyWriter;
+		private readonly IMockFactory _mockFactory;
 		private readonly Dictionary<string, TypeReference> _importedTypes;
 
-		public ContractProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter)
+		public ContractProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, IMockFactory mockFactory)
 		{
 			_typeInfo = typeInfo;
 			_assemblyWriter = assemblyWriter;
+			_mockFactory = mockFactory;
 			_importedTypes = new Dictionary<string, TypeReference>();
 		}
 
@@ -89,14 +92,16 @@ namespace AutoFake
 				var importedTypeRef = _assemblyWriter.ImportToSourceAsm(mockTypeDef);
 				if (mockTypeDef.IsInterface)
 				{
-					replaceContractMocks.Add(new ReplaceInterfaceCallMock(importedTypeRef));
+					replaceContractMocks.Add(_mockFactory.GetReplaceInterfaceCallMock(importedTypeRef));
 				}
 				else
 				{
-					replaceContractMocks.Add(mockTypeDef.IsValueType ? new ReplaceValueTypeCtorMock(importedTypeRef) : new ReplaceReferenceTypeCtorMock(importedTypeRef));
+					replaceContractMocks.Add(mockTypeDef.IsValueType ?
+						_mockFactory.GetReplaceValueTypeCtorMock(importedTypeRef)
+						: _mockFactory.GetReplaceReferenceTypeCtorMock(importedTypeRef));
 				}
 
-				replaceContractMocks.Add(new ReplaceTypeCastMock(importedTypeRef));
+				replaceContractMocks.Add(_mockFactory.GetReplaceTypeCastMock(importedTypeRef));
 				TryAddImportedType(mockTypeDef, importedTypeRef);
 			}
 		}

@@ -13,15 +13,16 @@ namespace AutoFake
         private readonly IAssemblyWriter _assemblyWriter;
         private readonly FakeOptions _options;
         private readonly IMemberVisitorFactory _memberVisitorFactory;
-        private readonly ContractProcessor _contractProcessor;
+        private readonly IContractProcessor _contractProcessor;
 
-		public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions, IMemberVisitorFactory memberVisitorFactory)
+		public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions,
+			IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor)
         {
             _typeInfo = typeInfo;
             _assemblyWriter = assemblyWriter;
             _options = fakeOptions;
             _memberVisitorFactory = memberVisitorFactory;
-            _contractProcessor = new ContractProcessor(_typeInfo, _assemblyWriter);
+            _contractProcessor = contractProcessor;
         }
 
 		public void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression)

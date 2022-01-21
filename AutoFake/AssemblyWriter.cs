@@ -21,13 +21,18 @@ namespace AutoFake
 		private readonly IAssemblyHost _assemblyHost;
 		private readonly FakeOptions _fakeOptions;
 		private readonly IAssemblyPool _assemblyPool;
+		private readonly ICecilFactory _cecilFactory;
+		private readonly FakeObjectInfo.Create _createFakeObjectInfo;
 
-		public AssemblyWriter(IAssemblyReader assemblyReader, IAssemblyHost assemblyHost, FakeOptions fakeOptions, IAssemblyPool assemblyPool)
+		public AssemblyWriter(IAssemblyReader assemblyReader, IAssemblyHost assemblyHost, FakeOptions fakeOptions,
+			IAssemblyPool assemblyPool, ICecilFactory cecilFactory, FakeObjectInfo.Create createFakeObjectInfo)
 		{
 			_assemblyReader = assemblyReader;
 			_assemblyHost = assemblyHost;
 			_fakeOptions = fakeOptions;
 			_assemblyPool = assemblyPool;
+			_cecilFactory = cecilFactory;
+			_createFakeObjectInfo = createFakeObjectInfo;
 			_assemblyNameReference = _assemblyReader.SourceTypeDefinition.Module.AssemblyReferences
 	            .Single(a => a.FullName == _assemblyReader.SourceType.Assembly.FullName);
             _addedFields = new Dictionary<string, ushort>();
@@ -118,7 +123,7 @@ namespace AutoFake
 				mock.Initialize(fieldsType);
 			}
 			
-			return new FakeObjectInfo(sourceType, fieldsType, instance);
+			return _createFakeObjectInfo(sourceType, fieldsType, instance);
 		}
 
 		private static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
@@ -225,7 +230,7 @@ namespace AutoFake
 
 		private WriterParameters GetWriterParameters(MemoryStream symbolsStream, bool hasSymbols)
 		{
-			var parameters = new WriterParameters();
+			var parameters = _cecilFactory.CreateWriterParameters();
 			if (_fakeOptions.Debug == DebugMode.Enabled ||
 			    (_fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached && hasSymbols))
 			{
