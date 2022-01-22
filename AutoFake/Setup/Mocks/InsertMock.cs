@@ -13,13 +13,13 @@ namespace AutoFake.Setup.Mocks
     {
         private readonly Location _location;
         private readonly IPrePostProcessor _prePostProcessor;
-        private readonly IProcessorFactory _processorFactory;
+        private readonly ITypeInfo _typeInfo;
         private FieldDefinition? _closureField;
 
-        public InsertMock(IProcessorFactory processorFactory, Action closure, Location location)
+        public InsertMock(Action closure, Location location, IPrePostProcessor prePostProcessor, ITypeInfo typeInfo)
         {
-            _prePostProcessor = processorFactory.CreatePrePostProcessor();
-            _processorFactory = processorFactory;
+            _prePostProcessor = prePostProcessor;
+            _typeInfo = typeInfo;
             _location = location;
             Closure = closure;
         }
@@ -55,7 +55,7 @@ namespace AutoFake.Setup.Mocks
         public void Inject(IEmitter emitter, Instruction instruction)
         {
 	        var module = emitter.Body.Method.Module;
-	        var closure = _processorFactory.TypeInfo.IsMultipleAssembliesMode
+	        var closure = _typeInfo.IsMultipleAssembliesMode
 		        ? module.ImportReference(_closureField)
 		        : _closureField;
 	        emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, closure));

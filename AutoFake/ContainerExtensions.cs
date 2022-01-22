@@ -28,7 +28,6 @@ namespace AutoFake
 			container.Register<IAssemblyHost, AssemblyHost>(Reuse.Singleton);
 			container.Register<IAssemblyPool, AssemblyPool>(Reuse.Singleton);
 			container.Register<IFakeProcessor, FakeProcessor>();
-			container.Register<IProcessorFactory, ProcessorFactory>();
 			container.Register(typeof(ActionMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(ActionMockConfiguration), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(FuncMockConfiguration<,>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));

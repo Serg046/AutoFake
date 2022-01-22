@@ -10,18 +10,25 @@ namespace AutoFake.Setup.Mocks
     {
 	    private readonly ICecilFactory _cecilFactory;
 	    private readonly InsertMock.Location _location;
-        private FieldDefinition? _closureField;
+	    private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
+	    private readonly ITypeInfo _typeInfo;
+	    private FieldDefinition? _closureField;
 
         public SourceMemberInsertMock(
-	        IProcessorFactory processorFactory,
 	        ICecilFactory cecilFactory,
 	        IInvocationExpression invocationExpression,
 	        IExecutionContext.Create getExecutionContext,
-            Action closure, InsertMock.Location location) : base(processorFactory, getExecutionContext, invocationExpression)
+            Action closure, InsertMock.Location location,
+            Func<IEmitter, Instruction, IProcessor> createProcessor,
+			ITypeInfo typeInfo,
+	        IPrePostProcessor prePostProcessor)
+	        : base(getExecutionContext, invocationExpression, prePostProcessor)
         {
 	        _cecilFactory = cecilFactory;
 	        _location = location;
-            Closure = closure;
+	        _createProcessor = createProcessor;
+	        _typeInfo = typeInfo;
+	        Closure = closure;
         }
 
         public Action Closure { get; }
@@ -37,10 +44,10 @@ namespace AutoFake.Setup.Mocks
         {
 	        if (_closureField == null) throw new InvalidOperationException("Closure field should be set");
 	        var module = emitter.Body.Method.Module;
-	        var closureRef = ProcessorFactory.TypeInfo.IsMultipleAssembliesMode
+	        var closureRef = _typeInfo.IsMultipleAssembliesMode
 		        ? module.ImportReference(_closureField)
 		        : _closureField;
-            var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
+            var processor = _createProcessor(emitter, instruction);
             var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
 	            SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
             var verifyVar = _cecilFactory.CreateVariable(module.TypeSystem.Boolean);

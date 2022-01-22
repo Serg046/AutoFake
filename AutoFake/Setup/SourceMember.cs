@@ -7,10 +7,12 @@ namespace AutoFake.Setup
 {
 	internal class SourceMember
 	{
+		private readonly IAssemblyWriter _assemblyWriter;
 		private readonly GenericArgument.Create _createGenericArgument;
 
-		public SourceMember(GenericArgument.Create createGenericArgument)
+		public SourceMember(IAssemblyWriter assemblyWriter, GenericArgument.Create createGenericArgument)
 		{
+			_assemblyWriter = assemblyWriter;
 			_createGenericArgument = createGenericArgument;
 		}
 
@@ -26,11 +28,11 @@ namespace AutoFake.Setup
 			return true;
 		}
 
-		protected IEnumerable<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter, Type[] genericArguments, Type[] genericParameters, string declaringType)
+		protected IEnumerable<GenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
 		{
 			for (int i = 0; i < genericArguments.Length; i++)
 			{
-				var typeRef = assemblyWriter.ImportToSourceAsm(genericArguments[i]);
+				var typeRef = _assemblyWriter.ImportToSourceAsm(genericArguments[i]);
 				yield return _createGenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
 			}
 		}

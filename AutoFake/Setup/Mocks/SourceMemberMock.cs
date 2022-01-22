@@ -16,18 +16,16 @@ namespace AutoFake.Setup.Mocks
 	    private FieldDefinition? _executionContext;
 
 	    protected SourceMemberMock(
-		    IProcessorFactory processorFactory,
 		    IExecutionContext.Create getExecutionContext,
-		    IInvocationExpression invocationExpression)
+		    IInvocationExpression invocationExpression,
+		    IPrePostProcessor prePostProcessor)
         {
 	        _getExecutionContext = getExecutionContext;
 	        InvocationExpression = invocationExpression;
             SourceMember = invocationExpression.GetSourceMember();
-            PrePostProcessor = processorFactory.CreatePrePostProcessor();
-            ProcessorFactory = processorFactory;
+            PrePostProcessor = prePostProcessor;
         }
         
-        protected IProcessorFactory ProcessorFactory { get; }
         protected IPrePostProcessor PrePostProcessor { get; }
         public IInvocationExpression InvocationExpression { get; }
         public ISourceMember SourceMember { get; }
@@ -62,7 +60,7 @@ namespace AutoFake.Setup.Mocks
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
-            return SourceMember.IsSourceInstruction(ProcessorFactory.AssemblyWriter, instruction, genericArguments);
+            return SourceMember.IsSourceInstruction(instruction, genericArguments);
         }
 
         protected FieldInfo? GetField(Type type, string fieldName)

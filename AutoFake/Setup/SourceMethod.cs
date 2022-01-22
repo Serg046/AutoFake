@@ -10,20 +10,25 @@ namespace AutoFake.Setup
     internal class SourceMethod : SourceMember, ISourceMember
     {
         private readonly MethodBase _method;
+        private readonly IAssemblyWriter _assemblyWriter;
         private MethodDefinition? _monoCecilMethodDef;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceMethod(MethodInfo sourceMethod, GenericArgument.Create createGenericArgument) : base(createGenericArgument)
+        public SourceMethod(MethodInfo sourceMethod, IAssemblyWriter assemblyWriter, GenericArgument.Create createGenericArgument)
+	        : base(assemblyWriter, createGenericArgument)
         {
             _method = sourceMethod;
+            _assemblyWriter = assemblyWriter;
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.ReturnType;
             HasStackInstance = !sourceMethod.IsStatic;
         }
 
-        public SourceMethod(ConstructorInfo sourceMethod, GenericArgument.Create createGenericArgument) : base(createGenericArgument)
+        public SourceMethod(ConstructorInfo sourceMethod, IAssemblyWriter assemblyWriter, GenericArgument.Create createGenericArgument)
+	        : base(assemblyWriter, createGenericArgument)
         {
             _method = sourceMethod;
+            _assemblyWriter = assemblyWriter;
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type should be set");
             HasStackInstance = false;
@@ -37,22 +42,22 @@ namespace AutoFake.Setup
 
         public MemberInfo OriginalMember => _method;
 
-        public MethodDefinition GetMethod(IAssemblyWriter assemblyWriter)
-	        => _monoCecilMethodDef ??= assemblyWriter.ImportToSourceAsm(_method).Resolve();
+        public MethodDefinition GetMethod()
+	        => _monoCecilMethodDef ??= _assemblyWriter.ImportToSourceAsm(_method).Resolve();
 
-        public IReadOnlyList<GenericArgument> GetGenericArguments(IAssemblyWriter assemblyWriter)
+        public IReadOnlyList<GenericArgument> GetGenericArguments()
         {
-	        return _genericArguments ??= GetGenericArgumentsImpl(assemblyWriter).ToReadOnlyList();
+	        return _genericArguments ??= GetGenericArgumentsImpl().ToReadOnlyList();
         }
 
-        private IEnumerable<GenericArgument> GetGenericArgumentsImpl(IAssemblyWriter assemblyWriter)
+        private IEnumerable<GenericArgument> GetGenericArgumentsImpl()
         {
-	        var declaringType = GetMethod(assemblyWriter).DeclaringType.ToString();
+	        var declaringType = GetMethod().DeclaringType.ToString();
 	        if (_method.DeclaringType?.IsGenericType == true)
 	        {
 		        var types = _method.DeclaringType.GetGenericArguments();
 		        var names = _method.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-		        foreach (var genericArgument in GetGenericArguments(assemblyWriter, types, names, declaringType))
+		        foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
 		        {
 			        yield return genericArgument;
 		        }
@@ -62,30 +67,30 @@ namespace AutoFake.Setup
 	        {
 		        var types = method.GetGenericArguments();
 		        var names = method.GetGenericMethodDefinition().GetGenericArguments();
-		        foreach (var genericArgument in GetGenericArguments(assemblyWriter, types, names, declaringType))
+		        foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
 		        {
 			        yield return genericArgument;
 		        }
 	        }
         }
 
-        public bool IsSourceInstruction(IAssemblyWriter assemblyWriter, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+        public bool IsSourceInstruction(Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
             if (instruction.OpCode.OperandType == OperandType.InlineMethod &&
                 instruction.Operand is MethodReference method &&
                 method.Name == _method.Name)
             {
 	            var methodDef = method.ToMethodDefinition();
-	            return methodDef.ToString() == GetMethod(assemblyWriter).ToString() && CompareGenericArguments(methodDef, genericArguments, assemblyWriter);
+	            return methodDef.ToString() == GetMethod().ToString() && CompareGenericArguments(methodDef, genericArguments);
             }
             return false;
         }
 
-        private bool CompareGenericArguments(MethodDefinition visitedMethod, IEnumerable<GenericArgument> genericArguments, IAssemblyWriter assemblyWriter)
+        private bool CompareGenericArguments(MethodDefinition visitedMethod, IEnumerable<GenericArgument> genericArguments)
         {
 	        if (visitedMethod.HasGenericParameters || visitedMethod.DeclaringType.HasGenericParameters)
 	        {
-		        var sourceArguments = GetGenericArguments(assemblyWriter);
+		        var sourceArguments = GetGenericArguments();
 		        foreach (var genericParameter in visitedMethod.GenericParameters.Concat(visitedMethod.DeclaringType.GenericParameters))
 		        {
 			        if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))

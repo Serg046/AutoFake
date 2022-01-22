@@ -40,7 +40,7 @@ namespace AutoFake
 	        var testMethod = _createTestMethod(executeFuncDef, emitterPool);
 	        testMethod.RewriteAndProcessContracts(
 		        mocks, 
-		        invocationExpression.GetSourceMember().GetGenericArguments(_assemblyWriter),
+		        invocationExpression.GetSourceMember().GetGenericArguments(),
 		        replaceContractMocks);
 	        foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
 	        testMethods.Add(testMethod);

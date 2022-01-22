@@ -10,14 +10,20 @@ namespace AutoFake.Setup.Mocks
 {
     internal class ReplaceMock : SourceMemberMock
     {
-        private FieldDefinition? _retValueField;
+	    private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
+	    private readonly ITypeInfo _typeInfo;
+	    private FieldDefinition? _retValueField;
 
         public ReplaceMock(
-	        IProcessorFactory processorFactory,
 	        IExecutionContext.Create getExecutionContext,
-	        IInvocationExpression invocationExpression)
-            : base(processorFactory, getExecutionContext, invocationExpression)
+	        IInvocationExpression invocationExpression,
+            Func<IEmitter, Instruction, IProcessor> createProcessor,
+            ITypeInfo typeInfo,
+	        IPrePostProcessor prePostProcessor)
+            : base(getExecutionContext, invocationExpression, prePostProcessor)
         {
+	        _createProcessor = createProcessor;
+	        _typeInfo = typeInfo;
         }
 
         public Type? ReturnType { get; set; }
@@ -25,7 +31,7 @@ namespace AutoFake.Setup.Mocks
 
         public override void Inject(IEmitter emitter, Instruction instruction)
         {
-            var processor = ProcessorFactory.CreateProcessor(emitter, instruction);
+            var processor = _createProcessor(emitter, instruction);
             var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
 	            SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
 			ReplaceInstruction(emitter, processor, instruction, variables);
@@ -42,7 +48,7 @@ namespace AutoFake.Setup.Mocks
 		        var opCode = instruction.OpCode == OpCodes.Ldsflda || instruction.OpCode == OpCodes.Ldflda
 			        ? OpCodes.Ldsflda
 			        : OpCodes.Ldsfld;
-		        var retValueFieldRef = ProcessorFactory.TypeInfo.IsMultipleAssembliesMode
+		        var retValueFieldRef = _typeInfo.IsMultipleAssembliesMode
 			        ? emitter.Body.Method.Module.ImportReference(_retValueField)
 			        : _retValueField;
 		        emitter.InsertBefore(instruction, Instruction.Create(opCode, retValueFieldRef));
