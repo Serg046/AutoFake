@@ -6,11 +6,11 @@ namespace AutoFake
 {
 	internal class AssemblyPool : IAssemblyPool
 	{
-		private readonly Func<ModuleDefinition, TypeMap> _createTypeMap;
+		private readonly Func<ModuleDefinition, ITypeMap> _createTypeMap;
 		private readonly List<ITypeMap> _typeMaps = new();
 		private readonly Dictionary<string, ModuleDefinition> _modules = new();
 
-		public AssemblyPool(Func<ModuleDefinition, TypeMap> createTypeMap)
+		public AssemblyPool(Func<ModuleDefinition, ITypeMap> createTypeMap)
 		{
 			_createTypeMap = createTypeMap;
 		}

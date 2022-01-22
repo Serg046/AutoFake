@@ -15,9 +15,12 @@ namespace AutoFake
 		private readonly IEnumerable<IMock> _mocks;
 		private readonly IEnumerable<MethodDefinition> _parents;
 		private IEnumerable<GenericArgument> _genericArgs;
+		private readonly GenericArgument.Create _createGenericArgument;
 		private bool _isOriginalInstruction;
 
-		public TestMethodInstructionProcessor(MethodDefinition originalMethod, IEmitterPool emitterPool, IAssemblyWriter assemblyWriter, IEnumerable<IMock> mocks, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs)
+		public delegate TestMethodInstructionProcessor Create(MethodDefinition originalMethod, IEmitterPool emitterPool, IEnumerable<IMock> mocks, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs);
+		public TestMethodInstructionProcessor(MethodDefinition originalMethod, IEmitterPool emitterPool, IAssemblyWriter assemblyWriter,
+			IEnumerable<IMock> mocks, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs, GenericArgument.Create createGenericArgument)
 		{
 			_originalMethod = originalMethod;
 			_emitterPool = emitterPool;
@@ -25,6 +28,7 @@ namespace AutoFake
 			_mocks = mocks;
 			_parents = parents;
 			_genericArgs = genericArgs;
+			_createGenericArgument = createGenericArgument;
 			_isOriginalInstruction = true;
 		}
 
@@ -84,7 +88,7 @@ namespace AutoFake
 				{
 					var genericArgument = genericInstanceMethod.GenericArguments[i];
 					var declaringType = methodDef.DeclaringType.ToString();
-					yield return new GenericArgument(
+					yield return _createGenericArgument(
 						methodDef.GenericParameters[i].Name,
 						genericArgument.ToString(),
 						declaringType,
@@ -106,7 +110,7 @@ namespace AutoFake
 				{
 					var genericArgument = genericInstanceType.GenericArguments[i];
 					var declaringType = typeDef.ToString();
-					yield return new GenericArgument(
+					yield return _createGenericArgument(
 						typeDef.GenericParameters[i].Name,
 						genericArgument.ToString(),
 						declaringType,

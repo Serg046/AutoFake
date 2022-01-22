@@ -13,7 +13,7 @@ namespace AutoFake.Setup
         private MethodDefinition? _monoCecilMethodDef;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceMethod(MethodInfo sourceMethod)
+        public SourceMethod(MethodInfo sourceMethod, GenericArgument.Create createGenericArgument) : base(createGenericArgument)
         {
             _method = sourceMethod;
             Name = sourceMethod.Name;
@@ -21,7 +21,7 @@ namespace AutoFake.Setup
             HasStackInstance = !sourceMethod.IsStatic;
         }
 
-        public SourceMethod(ConstructorInfo sourceMethod)
+        public SourceMethod(ConstructorInfo sourceMethod, GenericArgument.Create createGenericArgument) : base(createGenericArgument)
         {
             _method = sourceMethod;
             Name = sourceMethod.Name;

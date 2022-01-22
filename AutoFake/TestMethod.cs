@@ -14,12 +14,13 @@ namespace AutoFake
 		private readonly FakeOptions _options;
 		private readonly IContractProcessor _contractProcessor;
 		private readonly IAssemblyWriter _assemblyWriter;
+		private readonly TestMethodInstructionProcessor.Create _createTestMethodInstructionProcessor;
 		private readonly HashSet<string> _methodContracts;
 		private readonly List<MethodDefinition> _methods;
 		private readonly HashSet<MethodDefinition> _implementations;
 
-		public TestMethod(MethodDefinition originalMethod, IEmitterPool emitterPool, ITypeInfo typeInfo,
-			FakeOptions fakeOptions, IContractProcessor contractProcessor, IAssemblyWriter assemblyWriter)
+		public TestMethod(MethodDefinition originalMethod, IEmitterPool emitterPool, ITypeInfo typeInfo, FakeOptions fakeOptions,
+			IContractProcessor contractProcessor, IAssemblyWriter assemblyWriter, TestMethodInstructionProcessor.Create createTestMethodInstructionProcessor)
 		{
 			_originalMethod = originalMethod;
 			_emitterPool = emitterPool;
@@ -27,6 +28,7 @@ namespace AutoFake
 			_options = fakeOptions;
 			_contractProcessor = contractProcessor;
 			_assemblyWriter = assemblyWriter;
+			_createTestMethodInstructionProcessor = createTestMethodInstructionProcessor;
 			_methodContracts = new HashSet<string>();
 			_methods = new List<MethodDefinition>();
 			_implementations = new HashSet<MethodDefinition>();
@@ -89,8 +91,7 @@ namespace AutoFake
 		{
 			foreach (var instruction in currentMethod.Body.Instructions.ToList())
 			{
-				var proc = new TestMethodInstructionProcessor(_originalMethod, _emitterPool,
-					_assemblyWriter, mocks, parents, genericArgs);
+				var proc = _createTestMethodInstructionProcessor(_originalMethod, _emitterPool, mocks, parents, genericArgs);
 				proc.Process(currentMethod, instruction, Rewrite);
 			}
 		}

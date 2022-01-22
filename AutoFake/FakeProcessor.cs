@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
@@ -11,22 +12,23 @@ namespace AutoFake
     {
         private readonly ITypeInfo _typeInfo;
         private readonly IAssemblyWriter _assemblyWriter;
-        private readonly FakeOptions _options;
         private readonly IMemberVisitorFactory _memberVisitorFactory;
         private readonly IContractProcessor _contractProcessor;
         private readonly Func<IEmitterPool> _createEmitterPool;
+        private readonly Func<MethodDefinition, IEmitterPool, TestMethod> _createTestMethod;
 
-        public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, FakeOptions fakeOptions,
-			IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor, Func<IEmitterPool> createEmitterPool)
+        public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor,
+	        Func<IEmitterPool> createEmitterPool, Func<MethodDefinition, IEmitterPool, TestMethod> createTestMethod)
         {
             _typeInfo = typeInfo;
             _assemblyWriter = assemblyWriter;
-            _options = fakeOptions;
             _memberVisitorFactory = memberVisitorFactory;
             _contractProcessor = contractProcessor;
             _createEmitterPool = createEmitterPool;
+            _createTestMethod = createTestMethod;
         }
 
+		[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 		public void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression)
         {
 	        var executeFuncDef = GetMethodDefinition(invocationExpression);
@@ -35,7 +37,7 @@ namespace AutoFake
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
             var replaceContractMocks = new HashSet<IMock>();
             _contractProcessor.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>(), replaceContractMocks);
-	        var testMethod = new TestMethod(executeFuncDef, emitterPool, _typeInfo, _options, _contractProcessor, _assemblyWriter);
+	        var testMethod = _createTestMethod(executeFuncDef, emitterPool);
 	        testMethod.RewriteAndProcessContracts(
 		        mocks, 
 		        invocationExpression.GetSourceMember().GetGenericArguments(_assemblyWriter),
@@ -54,7 +56,7 @@ namespace AutoFake
 		{
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{
-				var testCtor = new TestMethod(ctor, emitterPool, _typeInfo, _options, _contractProcessor, _assemblyWriter);
+				var testCtor = _createTestMethod(ctor, emitterPool);
 				testCtor.RewriteAndProcessContracts(
 					Enumerable.Empty<IMock>(),
 					Enumerable.Empty<GenericArgument>(),

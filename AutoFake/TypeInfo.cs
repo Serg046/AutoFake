@@ -11,13 +11,14 @@ namespace AutoFake
         private readonly FakeOptions _fakeOptions;
         private readonly IAssemblyPool _assemblyPool;
 
-        public TypeInfo(IAssemblyReader assemblyReader, FakeOptions fakeOptions, IAssemblyPool assemblyPool)
+        public TypeInfo(IAssemblyReader assemblyReader, FakeOptions fakeOptions, IAssemblyPool assemblyPool,
+	        Func<ModuleDefinition, ITypeMap> createTypeMap)
         {
             _assemblyReader = assemblyReader;
             _fakeOptions = fakeOptions;
             _assemblyPool = assemblyPool;
 
-            TypeMap = new TypeMap(_assemblyReader.SourceTypeDefinition.Module);
+            TypeMap = createTypeMap(_assemblyReader.SourceTypeDefinition.Module);
         }
         
         public bool IsMultipleAssembliesMode

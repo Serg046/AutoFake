@@ -15,5 +15,7 @@ namespace AutoFake
 		MethodReference CreateMethodReference(string name, TypeReference returnType, TypeReference declaringType);
 		ParameterDefinition CreateParameterDefinition(string name, ParameterAttributes attributes, TypeReference parameterType);
 		GenericParameter CreateGenericParameter(string name, IGenericParameterProvider owner);
+		FieldDefinition CreateFieldDefinition(string name, FieldAttributes attributes, TypeReference fieldType);
+		GenericInstanceMethod CreateGenericInstanceMethod(MethodReference method);
 	}
 }

@@ -51,11 +51,18 @@ namespace AutoFake
 			container.Register<EqualityArgumentChecker>();
 			container.Register<SourceMethod>(made: FactoryMethod.ConstructorWithResolvableArguments);
 			container.Register<SourceField>();
-			container.Register<TypeMap>();
+			container.Register<ITypeMap, TypeMap>();
 			container.RegisterInstance<FakeObjectInfo.Create>((srcType, fieldsType, instance) => new FakeObjectInfo(srcType, fieldsType, instance));
 			container.Register<IContractProcessor, ContractProcessor>();
 			container.Register<Emitter>();
 			container.Register<IEmitterPool, EmitterPool>(setup: DryIoc.Setup.With(allowDisposableTransient: true));
+			container.Register<TestMethod>();
+			container.Register<IPrePostProcessor, PrePostProcessor>();
+			container.Register<IProcessor, Processor>();
+			container.RegisterDelegate<TestMethodInstructionProcessor.Create>(ctx => (method, pool, mocks, parents, args) =>
+				new TestMethodInstructionProcessor(method, pool, ctx.Resolve<IAssemblyWriter>(), mocks, parents, args, ctx.Resolve<GenericArgument.Create>()));
+			container.RegisterInstance<GenericArgument.Create>((name, type, declaringType, genericDeclaringType) =>
+				new GenericArgument(name, type, declaringType, genericDeclaringType));
 
 			AddConfigurations(container);
 			AddMocks(container);
@@ -109,6 +116,8 @@ namespace AutoFake
 			container.Register<MethodReference>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 			container.Register<ParameterDefinition>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 			container.Register<GenericParameter>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
+			container.Register<FieldDefinition>();
+			container.Register<GenericInstanceMethod>();
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)

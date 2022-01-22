@@ -11,11 +11,13 @@ namespace AutoFake
     {
         private readonly IEmitter _emitter;
         private readonly Instruction _instruction;
+        private readonly ICecilFactory _cecilFactory;
 
-        public Processor(IEmitter emitter, Instruction instruction)
+        public Processor(IEmitter emitter, Instruction instruction, ICecilFactory cecilFactory)
         {
             _emitter = emitter;
             _instruction = instruction;
+            _cecilFactory = cecilFactory;
         }
 
         public void RemoveStackArgument() => _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Pop));
@@ -36,7 +38,7 @@ namespace AutoFake
 	        var objRef = module.ImportReference(typeof(object));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, variables.Count));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newarr, objRef));
-            var arrVar = new VariableDefinition(module.ImportReference(typeof(object[])));
+            var arrVar = _cecilFactory.CreateVariable(module.ImportReference(typeof(object[])));
             _emitter.Body.Variables.Add(arrVar);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
 
@@ -61,7 +63,7 @@ namespace AutoFake
 	        var variables = new List<VariableDefinition>();
 	        foreach (var argType in argumentTypes)
 	        {
-		        var variable = new VariableDefinition(module.ImportReference(argType));
+		        var variable = _cecilFactory.CreateVariable(module.ImportReference(argType));
 		        variables.Add(variable);
 		        _emitter.Body.Variables.Add(variable);
 	        }

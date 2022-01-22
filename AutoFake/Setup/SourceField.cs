@@ -14,7 +14,7 @@ namespace AutoFake.Setup
         private FieldDefinition? _monoCecilField;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceField(FieldInfo field)
+        public SourceField(FieldInfo field, GenericArgument.Create createGenericArgument) : base(createGenericArgument)
         {
             _field = field;
             Name = field.Name;

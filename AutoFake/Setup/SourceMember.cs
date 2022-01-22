@@ -7,6 +7,13 @@ namespace AutoFake.Setup
 {
 	internal class SourceMember
 	{
+		private readonly GenericArgument.Create _createGenericArgument;
+
+		public SourceMember(GenericArgument.Create createGenericArgument)
+		{
+			_createGenericArgument = createGenericArgument;
+		}
+
 		protected bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
 		{
 			var source = sourceArguments.SingleOrDefault(a => a.Name == genericParameter.Name);
@@ -24,7 +31,7 @@ namespace AutoFake.Setup
 			for (int i = 0; i < genericArguments.Length; i++)
 			{
 				var typeRef = assemblyWriter.ImportToSourceAsm(genericArguments[i]);
-				yield return new GenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
+				yield return _createGenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
 			}
 		}
 	}

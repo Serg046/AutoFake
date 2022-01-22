@@ -2,6 +2,7 @@
 {
 	internal class GenericArgument
 	{
+		public delegate GenericArgument Create(string name, string type, string declaringType, string? genericDeclaringType = null);
 		public GenericArgument(string name, string type, string declaringType, string? genericDeclaringType = null)
 		{
 			Name = name;

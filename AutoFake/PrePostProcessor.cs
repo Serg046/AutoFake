@@ -13,17 +13,19 @@ namespace AutoFake
         private const FieldAttributes AccessLevel = FieldAttributes.Public | FieldAttributes.Static;
         private readonly ITypeInfo _typeInfo;
         private readonly IAssemblyWriter _assemblyWriter;
+        private readonly ICecilFactory _cecilFactory;
 
-        public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter)
+        public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, ICecilFactory cecilFactory)
         {
 	        _typeInfo = typeInfo;
 	        _assemblyWriter = assemblyWriter;
+	        _cecilFactory = cecilFactory;
         }
 
         public FieldDefinition GenerateField(string name, Type returnType)
         {
             var type = _assemblyWriter.ImportToFieldsAsm(returnType);
-            var field = new FieldDefinition(name, AccessLevel, type);
+            var field = _cecilFactory.CreateFieldDefinition(name, AccessLevel, type);
             _assemblyWriter.AddField(field);
             return field;
         }
@@ -50,7 +52,7 @@ namespace AutoFake
 	        VariableDefinition? retValue = null;
 	        if (isAsync)
 	        {
-		        retValue = new VariableDefinition(emitter.Body.Method.ReturnType);
+		        retValue = _cecilFactory.CreateVariable(emitter.Body.Method.ReturnType);
 		        emitter.Body.Variables.Add(retValue);
 		        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Stloc, retValue));
 	        }
@@ -76,7 +78,7 @@ namespace AutoFake
 		        isAsync = true;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsTypedAsync));
 		        var open = method.Module.ImportReference(methodInfo);
-		        var closed = new GenericInstanceMethod(open);
+		        var closed = _cecilFactory.CreateGenericInstanceMethod(open);
 		        closed.GenericArguments.Add(genericReturnType.GenericArguments.Single());
 		        return closed;
 	        }
