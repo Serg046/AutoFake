@@ -11,15 +11,15 @@ namespace AutoFake.Setup
     {
         private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda};
         private readonly FieldInfo _field;
-        private readonly IAssemblyWriter _assemblyWriter;
+        private readonly ITypeInfo _typeInfo;
         private FieldDefinition? _monoCecilField;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceField(FieldInfo field, IAssemblyWriter assemblyWriter, GenericArgument.Create createGenericArgument)
-	        : base(assemblyWriter, createGenericArgument)
+        public SourceField(FieldInfo field, ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
+	        : base(typeInfo, createGenericArgument)
         {
             _field = field;
-            _assemblyWriter = assemblyWriter;
+            _typeInfo = typeInfo;
             Name = field.Name;
             ReturnType = field.FieldType;
             HasStackInstance = !field.IsStatic;
@@ -34,7 +34,7 @@ namespace AutoFake.Setup
         public MemberInfo OriginalMember => _field;
 
         private FieldDefinition GetField()
-	        => _monoCecilField ??= _assemblyWriter.ImportToSourceAsm(_field).Resolve();
+	        => _monoCecilField ??= _typeInfo.ImportToSourceAsm(_field).Resolve();
 
         public IReadOnlyList<GenericArgument> GetGenericArguments()
         {

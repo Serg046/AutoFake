@@ -10,25 +10,25 @@ namespace AutoFake.Setup
     internal class SourceMethod : SourceMember, ISourceMember
     {
         private readonly MethodBase _method;
-        private readonly IAssemblyWriter _assemblyWriter;
+        private readonly ITypeInfo _typeInfo;
         private MethodDefinition? _monoCecilMethodDef;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceMethod(MethodInfo sourceMethod, IAssemblyWriter assemblyWriter, GenericArgument.Create createGenericArgument)
-	        : base(assemblyWriter, createGenericArgument)
+        public SourceMethod(MethodInfo sourceMethod, ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
+	        : base(typeInfo, createGenericArgument)
         {
             _method = sourceMethod;
-            _assemblyWriter = assemblyWriter;
+            _typeInfo = typeInfo;
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.ReturnType;
             HasStackInstance = !sourceMethod.IsStatic;
         }
 
-        public SourceMethod(ConstructorInfo sourceMethod, IAssemblyWriter assemblyWriter, GenericArgument.Create createGenericArgument)
-	        : base(assemblyWriter, createGenericArgument)
+        public SourceMethod(ConstructorInfo sourceMethod, ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
+	        : base(typeInfo, createGenericArgument)
         {
             _method = sourceMethod;
-            _assemblyWriter = assemblyWriter;
+            _typeInfo = typeInfo;
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type should be set");
             HasStackInstance = false;
@@ -43,7 +43,7 @@ namespace AutoFake.Setup
         public MemberInfo OriginalMember => _method;
 
         public MethodDefinition GetMethod()
-	        => _monoCecilMethodDef ??= _assemblyWriter.ImportToSourceAsm(_method).Resolve();
+	        => _monoCecilMethodDef ??= _typeInfo.ImportToSourceAsm(_method).Resolve();
 
         public IReadOnlyList<GenericArgument> GetGenericArguments()
         {

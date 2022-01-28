@@ -24,7 +24,7 @@ namespace AutoFake
 
         public FieldDefinition GenerateField(string name, Type returnType)
         {
-            var type = _assemblyWriter.ImportToFieldsAsm(returnType);
+            var type = _typeInfo.ImportToFieldsAsm(returnType);
             var field = _cecilFactory.CreateFieldDefinition(name, AccessLevel, type);
             _assemblyWriter.AddField(field);
             return field;

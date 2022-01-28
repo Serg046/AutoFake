@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -10,15 +11,18 @@ namespace AutoFake
         private readonly IAssemblyReader _assemblyReader;
         private readonly FakeOptions _fakeOptions;
         private readonly IAssemblyPool _assemblyPool;
+        private readonly AssemblyNameReference _assemblyNameReference;
 
-        public TypeInfo(IAssemblyReader assemblyReader, FakeOptions fakeOptions, IAssemblyPool assemblyPool,
+		public TypeInfo(IAssemblyReader assemblyReader, FakeOptions fakeOptions, IAssemblyPool assemblyPool,
 	        Func<ModuleDefinition, ITypeMap> createTypeMap)
         {
             _assemblyReader = assemblyReader;
             _fakeOptions = fakeOptions;
             _assemblyPool = assemblyPool;
+            _assemblyNameReference = _assemblyReader.SourceTypeDefinition.Module.AssemblyReferences
+	            .Single(a => a.FullName == _assemblyReader.SourceType.Assembly.FullName);
 
-            TypeMap = createTypeMap(_assemblyReader.SourceTypeDefinition.Module);
+			TypeMap = createTypeMap(_assemblyReader.SourceTypeDefinition.Module);
         }
         
         public bool IsMultipleAssembliesMode
@@ -69,5 +73,42 @@ namespace AutoFake
         }
 
         public bool IsInReferencedAssembly(AssemblyDefinition assembly) => _assemblyPool.HasModule(assembly.MainModule);
-    }
+
+        public TypeReference ImportToSourceAsm(Type type)
+	        => _assemblyReader.SourceTypeDefinition.Module.ImportReference(type);
+
+        public FieldReference ImportToSourceAsm(FieldInfo field)
+	        => _assemblyReader.SourceTypeDefinition.Module.ImportReference(field);
+
+        public MethodReference ImportToSourceAsm(MethodBase method)
+	        => _assemblyReader.SourceTypeDefinition.Module.ImportReference(method);
+
+        public TypeReference ImportToSourceAsm(TypeReference type)
+        {
+	        if (type.IsGenericParameter) return type;
+
+	        var result = NewTypeReference(type);
+	        var newType = result;
+	        while (type.DeclaringType != null)
+	        {
+		        type = type.DeclaringType;
+		        newType.DeclaringType = NewTypeReference(type);
+		        newType = newType.DeclaringType;
+	        }
+
+	        TypeReference NewTypeReference(TypeReference typeRef)
+		        => new(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
+
+	        return result;
+        }
+
+        public TypeReference ImportToFieldsAsm(Type type)
+	        => _assemblyReader.FieldsTypeDefinition.Module.ImportReference(type);
+
+        public FieldReference ImportToFieldsAsm(FieldInfo field)
+	        => _assemblyReader.FieldsTypeDefinition.Module.ImportReference(field);
+
+        public MethodReference ImportToFieldsAsm(MethodBase method)
+	        => _assemblyReader.FieldsTypeDefinition.Module.ImportReference(method);
+	}
 }

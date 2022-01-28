@@ -11,17 +11,15 @@ namespace AutoFake
     internal class FakeProcessor : IFakeProcessor
     {
         private readonly ITypeInfo _typeInfo;
-        private readonly IAssemblyWriter _assemblyWriter;
         private readonly IMemberVisitorFactory _memberVisitorFactory;
         private readonly IContractProcessor _contractProcessor;
         private readonly Func<IEmitterPool> _createEmitterPool;
         private readonly Func<MethodDefinition, IEmitterPool, TestMethod> _createTestMethod;
 
-        public FakeProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor,
+        public FakeProcessor(ITypeInfo typeInfo, IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor,
 	        Func<IEmitterPool> createEmitterPool, Func<MethodDefinition, IEmitterPool, TestMethod> createTestMethod)
         {
             _typeInfo = typeInfo;
-            _assemblyWriter = assemblyWriter;
             _memberVisitorFactory = memberVisitorFactory;
             _contractProcessor = contractProcessor;
             _createEmitterPool = createEmitterPool;
@@ -73,7 +71,7 @@ namespace AutoFake
         {
 	        var visitor = _memberVisitorFactory.GetMemberVisitor<GetTestMethodVisitor>();
 	        invocationExpression.AcceptMemberVisitor(visitor);
-	        var executeFuncRef = _assemblyWriter.ImportToSourceAsm(visitor.Method);
+	        var executeFuncRef = _typeInfo.ImportToSourceAsm(visitor.Method);
 	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
 	        if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
 	        

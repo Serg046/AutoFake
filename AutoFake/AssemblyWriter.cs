@@ -16,7 +16,6 @@ namespace AutoFake
         private const BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 		
         private readonly IAssemblyReader _assemblyReader;
-		private readonly AssemblyNameReference _assemblyNameReference;
 		private readonly Dictionary<string, ushort> _addedFields;
 		private readonly IAssemblyHost _assemblyHost;
 		private readonly FakeOptions _fakeOptions;
@@ -33,8 +32,7 @@ namespace AutoFake
 			_assemblyPool = assemblyPool;
 			_cecilFactory = cecilFactory;
 			_createFakeObjectInfo = createFakeObjectInfo;
-			_assemblyNameReference = _assemblyReader.SourceTypeDefinition.Module.AssemblyReferences
-	            .Single(a => a.FullName == _assemblyReader.SourceType.Assembly.FullName);
+			
             _addedFields = new Dictionary<string, ushort>();
 
             foreach (var referencedType in _fakeOptions.ReferencedTypes)
@@ -43,43 +41,6 @@ namespace AutoFake
 	            TryAddAffectedAssembly(typeRef.Resolve().Module.Assembly);
             }
 		}
-
-		public TypeReference ImportToSourceAsm(Type type)
-			=> _assemblyReader.SourceTypeDefinition.Module.ImportReference(type);
-
-		public FieldReference ImportToSourceAsm(FieldInfo field)
-			=> _assemblyReader.SourceTypeDefinition.Module.ImportReference(field);
-
-		public MethodReference ImportToSourceAsm(MethodBase method)
-			=> _assemblyReader.SourceTypeDefinition.Module.ImportReference(method);
-
-		public TypeReference ImportToSourceAsm(TypeReference type)
-		{
-			if (type.IsGenericParameter) return type;
-
-			var result = NewTypeReference(type);
-			var newType = result;
-			while (type.DeclaringType != null)
-			{
-				type = type.DeclaringType;
-				newType.DeclaringType = NewTypeReference(type);
-				newType = newType.DeclaringType;
-			}
-
-			TypeReference NewTypeReference(TypeReference typeRef)
-				=> new(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
-
-			return result;
-		}
-
-		public TypeReference ImportToFieldsAsm(Type type)
-			=> _assemblyReader.FieldsTypeDefinition.Module.ImportReference(type);
-
-		public FieldReference ImportToFieldsAsm(FieldInfo field)
-			=> _assemblyReader.FieldsTypeDefinition.Module.ImportReference(field);
-
-		public MethodReference ImportToFieldsAsm(MethodBase method)
-			=> _assemblyReader.FieldsTypeDefinition.Module.ImportReference(method);
 
 		public void AddField(FieldDefinition field)
 		{

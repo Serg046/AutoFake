@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -16,5 +17,12 @@ namespace AutoFake
         TypeDefinition GetTypeDefinition(Type type);
         ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method, bool includeAffectedAssemblies = false);
         bool IsInReferencedAssembly(AssemblyDefinition assembly);
+        TypeReference ImportToSourceAsm(Type type);
+        FieldReference ImportToSourceAsm(FieldInfo field);
+        MethodReference ImportToSourceAsm(MethodBase method);
+        TypeReference ImportToSourceAsm(TypeReference type);
+        TypeReference ImportToFieldsAsm(Type type);
+        FieldReference ImportToFieldsAsm(FieldInfo field);
+        MethodReference ImportToFieldsAsm(MethodBase method);
     }
 }
