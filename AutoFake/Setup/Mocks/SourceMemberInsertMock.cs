@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-    internal class SourceMemberInsertMock : SourceMemberMock
+    internal class SourceMemberInsertMock : ISourceMemberMock
     {
 	    private readonly ICecilFactory _cecilFactory;
 	    private readonly InsertMock.Location _location;
@@ -15,15 +15,13 @@ namespace AutoFake.Setup.Mocks
 	    private FieldDefinition? _closureField;
 
         public SourceMemberInsertMock(
-	        ICecilFactory cecilFactory,
-	        IInvocationExpression invocationExpression,
-	        IExecutionContext.Create getExecutionContext,
+	        SourceMemberMetaData sourceMemberMetaData,
+            ICecilFactory cecilFactory,
             Action closure, InsertMock.Location location,
             Func<IEmitter, Instruction, IProcessor> createProcessor,
-			ITypeInfo typeInfo,
-	        IPrePostProcessor prePostProcessor)
-	        : base(getExecutionContext, invocationExpression, prePostProcessor)
+			ITypeInfo typeInfo)
         {
+	        SourceMemberMetaData = sourceMemberMetaData;
 	        _cecilFactory = cecilFactory;
 	        _location = location;
 	        _createProcessor = createProcessor;
@@ -31,16 +29,22 @@ namespace AutoFake.Setup.Mocks
 	        Closure = closure;
         }
 
+	    public SourceMemberMetaData SourceMemberMetaData { get; }
         public Action Closure { get; }
 
-        public override void BeforeInjection(MethodDefinition method)
+        public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
         {
-            base.BeforeInjection(method);
-            _closureField = PrePostProcessor.GenerateField(
+	        return SourceMemberMetaData.SourceMember.IsSourceInstruction(instruction, genericArguments);
+        }
+
+        public void BeforeInjection(MethodDefinition method)
+        {
+	        SourceMemberMetaData.BeforeInjection(method);
+            _closureField = SourceMemberMetaData.PrePostProcessor.GenerateField(
                 $"{method.Name}InsertCallback{Guid.NewGuid()}", Closure.GetType());
         }
 
-        public override void Inject(IEmitter emitter, Instruction instruction)
+        public void Inject(IEmitter emitter, Instruction instruction)
         {
 	        if (_closureField == null) throw new InvalidOperationException("Closure field should be set");
 	        var module = emitter.Body.Method.Module;
@@ -48,8 +52,8 @@ namespace AutoFake.Setup.Mocks
 		        ? module.ImportReference(_closureField)
 		        : _closureField;
             var processor = _createProcessor(emitter, instruction);
-            var variables = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
-	            SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
+            var variables = processor.RecordMethodCall(SourceMemberMetaData.SetupBodyField, SourceMemberMetaData.ExecutionContext,
+	            SourceMemberMetaData.SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
             var verifyVar = _cecilFactory.CreateVariable(module.TypeSystem.Boolean);
             emitter.Body.Variables.Add(verifyVar);
             emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, verifyVar));
@@ -64,6 +68,11 @@ namespace AutoFake.Setup.Mocks
 				emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Ldloc, verifyVar));
             }
             processor.PushMethodArguments(variables);
+        }
+
+        public void AfterInjection(IEmitter emitter)
+        {
+	        SourceMemberMetaData.AfterInjection(emitter);
         }
 
         private void InjectBefore(IEmitter emitter, Instruction instruction, ModuleDefinition module, FieldReference closure)
@@ -84,9 +93,9 @@ namespace AutoFake.Setup.Mocks
 	        emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Brfalse, nop));
         }
 
-        public override void Initialize(Type? type)
+        public void Initialize(Type? type)
         {
-			base.Initialize(type);
+	        SourceMemberMetaData.Initialize(type);
             InsertMock.InitializeClosure(type, _closureField, Closure);
         }
     }

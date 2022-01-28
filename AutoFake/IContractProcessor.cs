@@ -8,6 +8,6 @@ namespace AutoFake
 	{
 		void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef, HashSet<IMock> replaceContractMocks);
 		void ProcessOriginalMethodContract(MethodDefinition methodDef);
-		void ProcessCommonOriginalContracts(IEnumerable<SourceMemberMock> sourceMemberMocks, HashSet<IMock> replaceContractMocks);
+		void ProcessCommonOriginalContracts(IEnumerable<ISourceMemberMock> sourceMemberMocks, HashSet<IMock> replaceContractMocks);
 	}
 }

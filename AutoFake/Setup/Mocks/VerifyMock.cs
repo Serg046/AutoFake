@@ -1,31 +1,52 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using AutoFake.Expression;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-    internal class VerifyMock : SourceMemberMock
-    {
-	    private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
+    internal class VerifyMock : ISourceMemberMock
+	{
+		private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 
 	    public VerifyMock(
-	        IExecutionContext.Create getExecutionContext,
-            IInvocationExpression invocationExpression,
-	        Func<IEmitter, Instruction, IProcessor> createProcessor,
-	        IPrePostProcessor prePostProcessor)
-            : base(getExecutionContext, invocationExpression, prePostProcessor)
+		    SourceMemberMetaData sourceMemberMetaData,
+	        Func<IEmitter, Instruction, IProcessor> createProcessor)
 	    {
+		    SourceMemberMetaData = sourceMemberMetaData;
 		    _createProcessor = createProcessor;
 	    }
 
-        public override void Inject(IEmitter emitter, Instruction instruction)
+		public SourceMemberMetaData SourceMemberMetaData { get; }
+
+		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+		{
+			return SourceMemberMetaData.SourceMember.IsSourceInstruction(instruction, genericArguments);
+		}
+
+		public void BeforeInjection(MethodDefinition method)
+		{
+			SourceMemberMetaData.BeforeInjection(method);
+		}
+
+		public void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = _createProcessor(emitter, instruction);
-			var arguments = processor.RecordMethodCall(SetupBodyField, ExecutionContext,
-				SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
+			var arguments = processor.RecordMethodCall(SourceMemberMetaData.SetupBodyField, SourceMemberMetaData.ExecutionContext,
+				SourceMemberMetaData.SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
             emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Pop));
 			processor.PushMethodArguments(arguments);
         }
-    }
+
+		public void AfterInjection(IEmitter emitter)
+		{
+			SourceMemberMetaData.AfterInjection(emitter);
+		}
+
+		public void Initialize(Type? type)
+		{
+			SourceMemberMetaData.Initialize(type);
+		}
+	}
 }

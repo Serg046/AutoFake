@@ -36,12 +36,9 @@ namespace AutoFake
 	        using var emitterPool = _createEmitterPool();
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
             var replaceContractMocks = new HashSet<IMock>();
-            _contractProcessor.ProcessCommonOriginalContracts(mocks.OfType<SourceMemberMock>(), replaceContractMocks);
+            _contractProcessor.ProcessCommonOriginalContracts(mocks.OfType<ISourceMemberMock>(), replaceContractMocks);
 	        var testMethod = _createTestMethod(executeFuncDef, emitterPool);
-	        testMethod.RewriteAndProcessContracts(
-		        mocks, 
-		        invocationExpression.GetSourceMember().GetGenericArguments(),
-		        replaceContractMocks);
+	        Rewrite(testMethod, executeFuncDef, mocks, invocationExpression.GetSourceMember().GetGenericArguments(), replaceContractMocks);
 	        foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
 	        testMethods.Add(testMethod);
 			ProcessConstructors(emitterPool, replaceContractMocks, testMethods);
@@ -57,11 +54,18 @@ namespace AutoFake
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{
 				var testCtor = _createTestMethod(ctor, emitterPool);
-				testCtor.RewriteAndProcessContracts(
-					Enumerable.Empty<IMock>(),
-					Enumerable.Empty<GenericArgument>(),
-					replaceContractMocks);
+				Rewrite(testCtor, ctor, Enumerable.Empty<IMock>(), Enumerable.Empty<GenericArgument>(), replaceContractMocks);
 				testMethods.Add(testCtor);
+			}
+		}
+
+		private void Rewrite(TestMethod testMethod, MethodDefinition originalMethod, IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs, HashSet<IMock> replaceContractMocks)
+		{
+			var methods = testMethod.Rewrite(mocks, genericArgs);
+			_contractProcessor.ProcessAllOriginalMethodContractsWithMocks(originalMethod, replaceContractMocks);
+			foreach (var methodDef in methods.Where(m => m != originalMethod))
+			{
+				_contractProcessor.ProcessOriginalMethodContract(methodDef);
 			}
 		}
 

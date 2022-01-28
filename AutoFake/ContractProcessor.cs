@@ -46,16 +46,16 @@ namespace AutoFake
 			}
 		}
 
-		public void ProcessCommonOriginalContracts(IEnumerable<SourceMemberMock> sourceMemberMocks, HashSet<IMock> replaceContractMocks)
+		public void ProcessCommonOriginalContracts(IEnumerable<ISourceMemberMock> sourceMemberMocks, HashSet<IMock> replaceContractMocks)
 		{
 			foreach (var mock in sourceMemberMocks)
 			{
-				if (mock.SourceMember.ReturnType != typeof(void) && mock.SourceMember.ReturnType.Module == _typeInfo.SourceType.Module)
+				if (mock.SourceMemberMetaData.SourceMember.ReturnType != typeof(void) && mock.SourceMemberMetaData.SourceMember.ReturnType.Module == _typeInfo.SourceType.Module)
 				{
-					AddReplaceContractMocks(_typeInfo.GetTypeDefinition(mock.SourceMember.ReturnType), replaceContractMocks);
+					AddReplaceContractMocks(_typeInfo.GetTypeDefinition(mock.SourceMemberMetaData.SourceMember.ReturnType), replaceContractMocks);
 				}
 
-				if (mock.SourceMember.OriginalMember is MethodBase method &&
+				if (mock.SourceMemberMetaData.SourceMember.OriginalMember is MethodBase method &&
 				    method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
 				{
 					var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);

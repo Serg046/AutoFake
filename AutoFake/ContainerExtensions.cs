@@ -58,8 +58,7 @@ namespace AutoFake
 			container.Register<TestMethod>();
 			container.Register<IPrePostProcessor, PrePostProcessor>();
 			container.Register<IProcessor, Processor>();
-			container.RegisterDelegate<TestMethodInstructionProcessor.Create>(ctx => (method, pool, mocks, parents, args) =>
-				new TestMethodInstructionProcessor(method, pool, ctx.Resolve<IAssemblyWriter>(), mocks, parents, args, ctx.Resolve<GenericArgument.Create>()));
+			container.Register<IGenericArgumentProcessor, GenericArgumentProcessor>();
 			container.RegisterInstance<GenericArgument.Create>((name, type, declaringType, genericDeclaringType) =>
 				new GenericArgument(name, type, declaringType, genericDeclaringType));
 
@@ -84,6 +83,7 @@ namespace AutoFake
 
 		private static void AddMocks(IRegistrator container)
 		{
+			container.Register<SourceMemberMetaData>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<InsertMock>();
 			container.Register<VerifyMock>();
 			container.Register<ReplaceMock>();

@@ -18,13 +18,13 @@ namespace AutoFake.Setup.Configurations
 
         public RemoveMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc;
+            _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
         public RemoveMockConfiguration WhenArgumentsAreMatched()
         {
-	        _mock.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
+	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;
         }
     }

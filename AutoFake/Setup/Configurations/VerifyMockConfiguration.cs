@@ -19,7 +19,7 @@ namespace AutoFake.Setup.Configurations
 
         public VerifyMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc;
+            _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
     }

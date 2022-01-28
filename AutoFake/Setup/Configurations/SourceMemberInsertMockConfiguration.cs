@@ -1,5 +1,4 @@
 ﻿using AutoFake.Setup.Mocks;
-using System;
 
 namespace AutoFake.Setup.Configurations
 {
@@ -19,13 +18,13 @@ namespace AutoFake.Setup.Configurations
 
         public SourceMemberInsertMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc;
+            _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
         public SourceMemberInsertMockConfiguration WhenArgumentsAreMatched()
         {
-	        _mock.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
+	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;
         }
     }

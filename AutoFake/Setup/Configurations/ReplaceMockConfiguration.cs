@@ -26,13 +26,13 @@ namespace AutoFake.Setup.Configurations
 
         public ReplaceMockConfiguration<TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
-            _mock.ExpectedCalls = expectedCallsCountFunc;
+            _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
         public ReplaceMockConfiguration<TReturn> WhenArgumentsAreMatched()
         {
-	        _mock.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
+	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;
         }
     }
