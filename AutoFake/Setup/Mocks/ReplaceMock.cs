@@ -45,9 +45,8 @@ namespace AutoFake.Setup.Mocks
 		public void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = _createProcessor(emitter, instruction);
-            var variables = processor.RecordMethodCall(SourceMemberMetaData.SetupBodyField, SourceMemberMetaData.ExecutionContext,
-	            SourceMemberMetaData.SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
-			ReplaceInstruction(emitter, processor, instruction, variables);
+			var arguments = SourceMemberMetaData.RecordMethodCall(processor);
+			ReplaceInstruction(emitter, processor, instruction, arguments);
         }
 
 		public void AfterInjection(IEmitter emitter)

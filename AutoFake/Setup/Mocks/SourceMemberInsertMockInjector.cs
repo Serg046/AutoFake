@@ -25,8 +25,7 @@ namespace AutoFake.Setup.Mocks
 		{
 			var module = emitter.Body.Method.Module;
 			var processor = _createProcessor(emitter, instruction);
-			var variables = processor.RecordMethodCall(_sourceMemberMetaData.SetupBodyField, _sourceMemberMetaData.ExecutionContext,
-				_sourceMemberMetaData.SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
+			var arguments = _sourceMemberMetaData.RecordMethodCall(processor);
 			var verifyVar = _cecilFactory.CreateVariable(module.TypeSystem.Boolean);
 			emitter.Body.Variables.Add(verifyVar);
 			emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, verifyVar));
@@ -40,7 +39,7 @@ namespace AutoFake.Setup.Mocks
 				InjectAfter(emitter, instruction, module, closureField);
 				emitter.InsertAfter(instruction, Instruction.Create(OpCodes.Ldloc, verifyVar));
 			}
-			processor.PushMethodArguments(variables);
+			processor.PushMethodArguments(arguments);
 		}
 
 		private void InjectBefore(IEmitter emitter, Instruction instruction, ModuleDefinition module, FieldReference closure)

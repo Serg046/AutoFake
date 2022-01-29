@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using AutoFake.Exceptions;
 using AutoFake.Expression;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
@@ -28,8 +31,8 @@ namespace AutoFake.Setup.Mocks
         public IInvocationExpression InvocationExpression { get; }
         public ISourceMember SourceMember { get; }
         public IExecutionContext.CallsCheckerFunc? ExpectedCalls { get; set; }
-        public FieldDefinition SetupBodyField => _setupBodyField ?? throw new InvalidOperationException("SetupBody field should be set");
-        public FieldDefinition ExecutionContext => _executionContext ?? throw new InvalidOperationException("ExecutionContext field should be set");
+        private FieldDefinition SetupBodyField => _setupBodyField ?? throw new InvalidOperationException("SetupBody field should be set");
+        private FieldDefinition ExecutionContext => _executionContext ?? throw new InvalidOperationException("ExecutionContext field should be set");
 
         public void BeforeInjection(MethodDefinition method)
         {
@@ -71,6 +74,11 @@ namespace AutoFake.Setup.Mocks
         public void AfterInjection(IEmitter emitter)
         {
 	        PrePostProcessor.InjectVerification(emitter, SetupBodyField, ExecutionContext);
+        }
+
+        public IReadOnlyList<VariableDefinition> RecordMethodCall(IProcessor processor)
+        {
+	        return processor.RecordMethodCall(SetupBodyField, ExecutionContext, SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
         }
     }
 }

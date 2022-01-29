@@ -33,8 +33,7 @@ namespace AutoFake.Setup.Mocks
 		public void Inject(IEmitter emitter, Instruction instruction)
         {
             var processor = _createProcessor(emitter, instruction);
-			var arguments = processor.RecordMethodCall(SourceMemberMetaData.SetupBodyField, SourceMemberMetaData.ExecutionContext,
-				SourceMemberMetaData.SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
+			var arguments = SourceMemberMetaData.RecordMethodCall(processor);
             emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Pop));
 			processor.PushMethodArguments(arguments);
         }
