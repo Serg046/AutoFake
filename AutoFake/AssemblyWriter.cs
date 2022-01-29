@@ -91,38 +91,41 @@ namespace AutoFake
 				}
 			}
 
-			if (!noTypeWrapper)
-			{
-				for (var i = 0; i < dependencies.Length; i++)
-				{
-					if (instances[i] is Arg.TypeWrapper w)
-					{
-						types[i] = w.Type;
-						instances[i] = null;
-					}
-					else
-					{
-						types[i] = instances[i]?.GetType() ?? throw new InitializationException(
-							$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
-					}
-				}
-			}
+			if (noTypeWrapper) return ExecuteViaActivator(type, instances);
 
-			if (noTypeWrapper)
+			FillDependencyTypes(dependencies, instances, types);
+			var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new InitializationException("Constructor is not found");
+			return constructor.Invoke(instances);
+		}
+
+		private static void FillDependencyTypes(object?[] dependencies, object?[] instances, Type[] types)
+		{
+			for (var i = 0; i < dependencies.Length; i++)
 			{
-				try
+				if (instances[i] is Arg.TypeWrapper w)
 				{
-					return Activator.CreateInstance(type, ConstructorFlags, null, instances, null)!;
+					types[i] = w.Type;
+					instances[i] = null;
 				}
-				catch (AmbiguousMatchException)
+				else
 				{
-					throw new InitializationException(
+					types[i] = instances[i]?.GetType() ?? throw new InitializationException(
 						$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
 				}
 			}
+		}
 
-			var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new InitializationException("Constructor is not found");
-			return constructor.Invoke(instances);
+		private static object ExecuteViaActivator(Type type, object?[] dependencies)
+		{
+			try
+			{
+				return Activator.CreateInstance(type, ConstructorFlags, null, dependencies, null)!;
+			}
+			catch (AmbiguousMatchException)
+			{
+				throw new InitializationException(
+					$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
+			}
 		}
 	}
 }
