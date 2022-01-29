@@ -11,10 +11,7 @@ namespace AutoFake.Setup
 
 		public MockConfigurationFactory(IContainer serviceLocator) => _serviceLocator = serviceLocator;
 
-		public T GetAppendMockConfiguration<T>(Action<IMock> setMock, Action closure) where T : AppendMockConfiguration
-			=> _serviceLocator.Resolve<Func<Action<IMock>, Action, T>>().Invoke(setMock, closure);
-
-		public T GetPrependMockConfiguration<T>(Action<IMock> setMock, Action closure) where T : PrependMockConfiguration
+		public T GetInsertMockConfiguration<T>(Action<IMock> setMock, Action closure)
 			=> _serviceLocator.Resolve<Func<Action<IMock>, Action, T>>().Invoke(setMock, closure);
 
 		public VerifyMockConfiguration GetVerifyMockConfiguration(VerifyMock mock)

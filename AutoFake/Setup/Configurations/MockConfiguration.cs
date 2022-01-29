@@ -85,14 +85,14 @@ namespace AutoFake.Setup.Configurations
         {
 	        var position = Mocks.Count;
 	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.Before));
-            return ConfigurationFactory.GetPrependMockConfiguration<PrependMockConfiguration<T>>(mock => Mocks[position] = mock, action);
+            return ConfigurationFactory.GetInsertMockConfiguration<PrependMockConfiguration<T>>(mock => Mocks[position] = mock, action);
         }
 
         public new AppendMockConfiguration<T> Append(Action action)
         {
 	        var position = Mocks.Count;
 	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.After));
-            return ConfigurationFactory.GetAppendMockConfiguration<AppendMockConfiguration<T>>(mock => Mocks[position] = mock, action);
+            return ConfigurationFactory.GetInsertMockConfiguration<AppendMockConfiguration<T>>(mock => Mocks[position] = mock, action);
         }
     }
 
@@ -170,14 +170,14 @@ namespace AutoFake.Setup.Configurations
         {
 	        var position = Mocks.Count;
             Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.Before));
-            return ConfigurationFactory.GetPrependMockConfiguration<PrependMockConfiguration>(mock => Mocks[position] = mock, action);
+            return ConfigurationFactory.GetInsertMockConfiguration<PrependMockConfiguration>(mock => Mocks[position] = mock, action);
         }
 
         public AppendMockConfiguration Append(Action action)
         {
 	        var position = Mocks.Count;
 	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.After));
-	        return ConfigurationFactory.GetAppendMockConfiguration<AppendMockConfiguration>(mock => Mocks[position] = mock, action);
+	        return ConfigurationFactory.GetInsertMockConfiguration<AppendMockConfiguration>(mock => Mocks[position] = mock, action);
         }
     }
 }
