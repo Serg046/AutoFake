@@ -9,144 +9,142 @@ namespace AutoFake
 {
 	internal class TestMethod
 	{
-		private readonly MethodDefinition _originalMethod;
 		private readonly IEmitterPool _emitterPool;
 		private readonly ITypeInfo _typeInfo;
 		private readonly FakeOptions _options;
 		private readonly IGenericArgumentProcessor _genericArgumentProcessor;
 		private readonly IAssemblyWriter _assemblyWriter;
-		private readonly HashSet<string> _methodContracts;
-		private readonly List<MethodDefinition> _methods;
-		private readonly HashSet<MethodDefinition> _implementations;
-		private bool _isOriginalInstruction;
 
-		public TestMethod(MethodDefinition originalMethod, IEmitterPool emitterPool, ITypeInfo typeInfo, FakeOptions fakeOptions,
+		public TestMethod(IEmitterPool emitterPool, ITypeInfo typeInfo, FakeOptions fakeOptions,
 			IGenericArgumentProcessor genericArgumentProcessor, IAssemblyWriter assemblyWriter)
 		{
-			_originalMethod = originalMethod;
 			_emitterPool = emitterPool;
 			_typeInfo = typeInfo;
 			_options = fakeOptions;
 			_genericArgumentProcessor = genericArgumentProcessor;
 			_assemblyWriter = assemblyWriter;
-			_methodContracts = new HashSet<string>();
-			_methods = new List<MethodDefinition>();
-			_implementations = new HashSet<MethodDefinition>();
-			_isOriginalInstruction = true;
-		}
-		
-		public IReadOnlyList<MethodDefinition> Rewrite(IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs)
-		{
-			_methods.Clear();
-			_methodContracts.Clear();
-			_implementations.Clear();
-			Rewrite(mocks, _originalMethod, Enumerable.Empty<MethodDefinition>(), genericArgs);
-			return _methods.ToReadOnlyList();
 		}
 
-		private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs)
+		public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IEnumerable<IMock> mocks,
+			IEnumerable<GenericArgument> genericArgs)
 		{
-			if (currentMethod == null || !CheckAnalysisLevel(currentMethod) || !CheckVirtualMember(currentMethod) || !_methodContracts.Add(currentMethod.ToString())) return;
-			_methods.Add(currentMethod);
+			var state = new State(originalMethod, genericArgs);
+			Rewrite(mocks, originalMethod, state);
+			return state.Methods.ToReadOnlyList();
+		}
 
-			if ((currentMethod.DeclaringType.IsInterface || currentMethod.IsVirtual) && !_implementations.Contains(currentMethod))
+		private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, State state)
+		{
+			if (currentMethod == null || !CheckAnalysisLevel(currentMethod, state) ||
+			    !CheckVirtualMember(currentMethod) || !state.MethodContracts.Add(currentMethod.ToString()))
+			{
+				return;
+			}
+			
+			state.Methods.Add(currentMethod);
+
+			if ((currentMethod.DeclaringType.IsInterface || currentMethod.IsVirtual) &&
+			    !state.Implementations.Contains(currentMethod))
 			{
 				var implementations = _typeInfo.GetAllImplementations(currentMethod, includeAffectedAssemblies: true);
 				foreach (var implementation in implementations)
 				{
-					_implementations.Add(implementation);
+					state.Implementations.Add(implementation);
 				}
 
 				foreach (var methodDef in implementations)
 				{
-					Rewrite(mocks, methodDef, GetParents(parents, currentMethod), genericArgs);
+					Rewrite(mocks, methodDef, UpdateParents(state, currentMethod));
 				}
 			}
 
 			if (currentMethod.IsAsync(out var asyncMethod))
 			{
-				Rewrite(mocks, asyncMethod, GetParents(parents, currentMethod), genericArgs);
+				Rewrite(mocks, asyncMethod, UpdateParents(state, currentMethod));
 			}
 
 			if (currentMethod.Body != null)
 			{
-				ProcessInstructions(mocks, currentMethod, parents, genericArgs);
+				ProcessInstructions(mocks, currentMethod, state);
 			}
 		}
 
-		private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs)
+		private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, State state)
 		{
 			foreach (var instruction in currentMethod.Body.Instructions.ToList())
 			{
 				if (instruction.Operand is MethodReference method)
 				{
 					var methodDefinition = method.ToMethodDefinition();
-					genericArgs = _genericArgumentProcessor.GetGenericArguments(method, methodDefinition).Concat(genericArgs);
-					Rewrite(mocks, methodDefinition, parents.Concat(new[] { currentMethod }), genericArgs);
+					state.GenericArgs = _genericArgumentProcessor.GetGenericArguments(method, methodDefinition).Concat(state.GenericArgs);
+					Rewrite(mocks, methodDefinition, UpdateParents(state, currentMethod));
 				}
 				else if (instruction.Operand is FieldReference field)
 				{
-					genericArgs = _genericArgumentProcessor.GetGenericArguments(field).Concat(genericArgs);
+					state.GenericArgs = _genericArgumentProcessor.GetGenericArguments(field).Concat(state.GenericArgs);
 				}
 
-				ProcessMocks(currentMethod, instruction, mocks, parents, genericArgs);
+				ProcessMocks(currentMethod, instruction, mocks, state);
 			}
 		}
 
-		private void ProcessMocks(MethodDefinition currentMethod, Instruction instruction,
-			IEnumerable<IMock> mocks, IEnumerable<MethodDefinition> parents, IEnumerable<GenericArgument> genericArgs)
+		private void ProcessMocks(MethodDefinition currentMethod, Instruction instruction, IEnumerable<IMock> mocks, State state)
 		{
 			foreach (var mock in mocks)
 			{
-				if (mock.IsSourceInstruction(_originalMethod, instruction, genericArgs))
+				if (mock.IsSourceInstruction(state.OriginalMethod, instruction, state.GenericArgs))
 				{
 					var emitter = _emitterPool.GetEmitter(currentMethod.Body);
-					if (_isOriginalInstruction)
+					if (state.IsOriginalInstruction)
 					{
 						instruction = emitter.ShiftDown(instruction);
-						_isOriginalInstruction = false;
+						state.IsOriginalInstruction = false;
 					}
 
 					mock.Inject(emitter, instruction);
-					TryAddAffectedAssembly(currentMethod);
-					foreach (var parent in parents)
+					TryAddAffectedAssembly(currentMethod, state);
+					foreach (var parent in state.Parents)
 					{
-						TryAddAffectedAssembly(parent);
+						TryAddAffectedAssembly(parent, state);
 					}
 				}
 			}
 		}
 
-		private void TryAddAffectedAssembly(MethodDefinition currentMethod)
+		private void TryAddAffectedAssembly(MethodDefinition currentMethod, State state)
 		{
-			if (currentMethod.Module.Assembly != _originalMethod.Module.Assembly)
+			if (currentMethod.Module.Assembly != state.OriginalMethod.Module.Assembly)
 			{
 				_assemblyWriter.TryAddAffectedAssembly(currentMethod.Module.Assembly);
 			}
 		}
 
-		private IEnumerable<MethodDefinition> GetParents(IEnumerable<MethodDefinition> parents, MethodDefinition currentMethod) => parents.Concat(new[] { currentMethod });
+		private State UpdateParents(State state, MethodDefinition currentMethod)
+		{
+			state.Parents = state.Parents.Concat(new[] {currentMethod});
+			return state;
+		}
 
-		private bool CheckAnalysisLevel(MethodReference methodRef)
+		private bool CheckAnalysisLevel(MethodReference methodRef, State state)
 		{
 			switch (_options.AnalysisLevel)
 			{
 				case AnalysisLevels.Type:
-					{
-						if (methodRef.DeclaringType.FullName == _originalMethod.DeclaringType.FullName &&
-							methodRef.Module.Assembly == _originalMethod.Module.Assembly) return true;
-						break;
-					}
+				{
+					if (methodRef.DeclaringType.FullName == state.OriginalMethod.DeclaringType.FullName &&
+					    methodRef.Module.Assembly == state.OriginalMethod.Module.Assembly) return true;
+					break;
+				}
 				case AnalysisLevels.Assembly:
-					{
-						if (methodRef.Module.Assembly == _originalMethod.Module.Assembly) return true;
-						break;
-					}
+				{
+					if (methodRef.Module.Assembly == state.OriginalMethod.Module.Assembly) return true;
+					break;
+				}
 				case AnalysisLevels.AllExceptSystemAndMicrosoft:
-					{
-						return !methodRef.DeclaringType.Namespace.StartsWith(nameof(System)) &&
-							   !methodRef.DeclaringType.Namespace.StartsWith(nameof(Microsoft));
-					}
+				{
+					return !methodRef.DeclaringType.Namespace.StartsWith(nameof(System)) &&
+					       !methodRef.DeclaringType.Namespace.StartsWith(nameof(Microsoft));
+				}
 				default: throw new NotSupportedException($"{_options.AnalysisLevel} is not supported");
 			}
 
@@ -159,6 +157,28 @@ namespace AutoFake
 			if (_options.DisableVirtualMembers) return false;
 			var contract = method.ToMethodContract();
 			return _options.AllowedVirtualMembers.Count == 0 || _options.AllowedVirtualMembers.Any(m => m(contract));
+		}
+
+		private class State
+		{
+			public State(MethodDefinition originalMethod, IEnumerable<GenericArgument> genericArgs)
+			{
+				OriginalMethod = originalMethod;
+				GenericArgs = genericArgs;
+				Parents = Enumerable.Empty<MethodDefinition>();
+				Methods = new List<MethodDefinition>();
+				MethodContracts = new();
+				Implementations = new();
+				IsOriginalInstruction = true;
+			}
+
+			public MethodDefinition OriginalMethod { get; }
+			public IEnumerable<GenericArgument> GenericArgs { get; set; }
+			public IEnumerable<MethodDefinition> Parents { get; set; }
+			public IList<MethodDefinition> Methods { get; }
+			public HashSet<string> MethodContracts { get; }
+			public HashSet<MethodDefinition> Implementations { get; }
+			public bool IsOriginalInstruction { get; set; }
 		}
 	}
 }

@@ -25,6 +25,7 @@ namespace AutoFake
 			container.Register<MockCollection>();
 			container.Register<ITypeInfo, TypeInfo>(Reuse.Singleton);
 			container.Register<IAssemblyWriter, AssemblyWriter>(Reuse.Singleton);
+			container.Register<IAssemblyLoader, AssemblyLoader>(Reuse.Singleton);
 			container.Register<IAssemblyHost, AssemblyHost>(Reuse.Singleton);
 			container.Register<IAssemblyPool, AssemblyPool>(Reuse.Singleton);
 			container.Register<IFakeProcessor, FakeProcessor>();
@@ -84,6 +85,7 @@ namespace AutoFake
 		private static void AddMocks(IRegistrator container)
 		{
 			container.Register<SourceMemberMetaData>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register<ISourceMemberInsertMockInjector, SourceMemberInsertMockInjector>();
 			container.Register<InsertMock>();
 			container.Register<VerifyMock>();
 			container.Register<ReplaceMock>();

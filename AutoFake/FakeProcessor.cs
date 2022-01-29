@@ -14,10 +14,10 @@ namespace AutoFake
         private readonly IMemberVisitorFactory _memberVisitorFactory;
         private readonly IContractProcessor _contractProcessor;
         private readonly Func<IEmitterPool> _createEmitterPool;
-        private readonly Func<MethodDefinition, IEmitterPool, TestMethod> _createTestMethod;
+        private readonly Func<IEmitterPool, TestMethod> _createTestMethod;
 
         public FakeProcessor(ITypeInfo typeInfo, IMemberVisitorFactory memberVisitorFactory, IContractProcessor contractProcessor,
-	        Func<IEmitterPool> createEmitterPool, Func<MethodDefinition, IEmitterPool, TestMethod> createTestMethod)
+	        Func<IEmitterPool> createEmitterPool, Func<IEmitterPool, TestMethod> createTestMethod)
         {
             _typeInfo = typeInfo;
             _memberVisitorFactory = memberVisitorFactory;
@@ -30,36 +30,36 @@ namespace AutoFake
 		public void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression)
         {
 	        var executeFuncDef = GetMethodDefinition(invocationExpression);
-	        var testMethods = new List<TestMethod>();
+	        var testMethods = new List<Tuple<TestMethod, MethodDefinition>>();
 	        using var emitterPool = _createEmitterPool();
 	        foreach (var mock in mocks) mock.BeforeInjection(executeFuncDef);
             var replaceContractMocks = new HashSet<IMock>();
             _contractProcessor.ProcessCommonOriginalContracts(mocks.OfType<ISourceMemberMock>(), replaceContractMocks);
-	        var testMethod = _createTestMethod(executeFuncDef, emitterPool);
+	        var testMethod = _createTestMethod(emitterPool);
 	        Rewrite(testMethod, executeFuncDef, mocks, invocationExpression.GetSourceMember().GetGenericArguments(), replaceContractMocks);
 	        foreach (var mock in mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
-	        testMethods.Add(testMethod);
+	        testMethods.Add(new (testMethod, executeFuncDef));
 			ProcessConstructors(emitterPool, replaceContractMocks, testMethods);
 
 			foreach (var method in testMethods)
 			{
-				method.Rewrite(replaceContractMocks, Enumerable.Empty<GenericArgument>());
+				method.Item1.Rewrite(method.Item2, replaceContractMocks, Enumerable.Empty<GenericArgument>());
 			}
 		}
 
-		private void ProcessConstructors(IEmitterPool emitterPool, HashSet<IMock> replaceContractMocks, ICollection<TestMethod> testMethods)
+		private void ProcessConstructors(IEmitterPool emitterPool, HashSet<IMock> replaceContractMocks, ICollection<Tuple<TestMethod, MethodDefinition>> testMethods)
 		{
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{
-				var testCtor = _createTestMethod(ctor, emitterPool);
+				var testCtor = _createTestMethod(emitterPool);
 				Rewrite(testCtor, ctor, Enumerable.Empty<IMock>(), Enumerable.Empty<GenericArgument>(), replaceContractMocks);
-				testMethods.Add(testCtor);
+				testMethods.Add(new (testCtor, ctor));
 			}
 		}
 
 		private void Rewrite(TestMethod testMethod, MethodDefinition originalMethod, IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs, HashSet<IMock> replaceContractMocks)
 		{
-			var methods = testMethod.Rewrite(mocks, genericArgs);
+			var methods = testMethod.Rewrite(originalMethod, mocks, genericArgs);
 			_contractProcessor.ProcessAllOriginalMethodContractsWithMocks(originalMethod, replaceContractMocks);
 			foreach (var methodDef in methods.Where(m => m != originalMethod))
 			{
