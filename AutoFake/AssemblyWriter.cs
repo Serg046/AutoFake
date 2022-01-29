@@ -93,23 +93,23 @@ namespace AutoFake
 
 			if (noTypeWrapper) return ExecuteViaActivator(type, instances);
 
-			FillDependencyTypes(dependencies, instances, types);
+			FillDependencyTypes(dependencies.Length, instances, types);
 			var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new InitializationException("Constructor is not found");
 			return constructor.Invoke(instances);
 		}
 
-		private static void FillDependencyTypes(object?[] dependencies, object?[] instances, Type[] types)
+		private static void FillDependencyTypes(int numberOfDependencies, object?[] dependencies, Type[] types)
 		{
-			for (var i = 0; i < dependencies.Length; i++)
+			for (var i = 0; i < numberOfDependencies; i++)
 			{
-				if (instances[i] is Arg.TypeWrapper w)
+				if (dependencies[i] is Arg.TypeWrapper w)
 				{
 					types[i] = w.Type;
-					instances[i] = null;
+					dependencies[i] = null;
 				}
 				else
 				{
-					types[i] = instances[i]?.GetType() ?? throw new InitializationException(
+					types[i] = dependencies[i]?.GetType() ?? throw new InitializationException(
 						$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
 				}
 			}
