@@ -7,6 +7,20 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
+	/// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
+	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+	public sealed class NotNullWhenAttribute : Attribute
+	{
+		/// <summary>Initializes the attribute with the specified return value condition.</summary>
+		/// <param name="returnValue">
+		/// The return value condition. If the method returns this value, the associated parameter will not be null.
+		/// </param>
+		public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
+
+		/// <summary>Gets the return value condition.</summary>
+		public bool ReturnValue { get; }
+	}
+
 	internal class TestMethod
 	{
 		private readonly IEmitterPool _emitterPool;
@@ -35,16 +49,10 @@ namespace AutoFake
 
 		private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, State state)
 		{
-			if (currentMethod == null || !CheckAnalysisLevel(currentMethod, state) ||
-			    !CheckVirtualMember(currentMethod) || !state.MethodContracts.Add(currentMethod.ToString()))
-			{
-				return;
-			}
-			
+			if (currentMethod == null || Validate(currentMethod, state)) return;
 			state.Methods.Add(currentMethod);
 
-			if ((currentMethod.DeclaringType.IsInterface || currentMethod.IsVirtual) &&
-			    !state.Implementations.Contains(currentMethod))
+			if ((currentMethod.DeclaringType.IsInterface || currentMethod.IsVirtual) && !state.Implementations.Contains(currentMethod))
 			{
 				var implementations = _typeInfo.GetAllImplementations(currentMethod, includeAffectedAssemblies: true);
 				foreach (var implementation in implementations)
@@ -58,15 +66,14 @@ namespace AutoFake
 				}
 			}
 
-			if (currentMethod.IsAsync(out var asyncMethod))
-			{
-				Rewrite(mocks, asyncMethod, UpdateParents(state, currentMethod));
-			}
+			if (currentMethod.IsAsync(out var asyncMethod)) Rewrite(mocks, asyncMethod, UpdateParents(state, currentMethod));
+			if (currentMethod.Body != null) ProcessInstructions(mocks, currentMethod, state);
+		}
 
-			if (currentMethod.Body != null)
-			{
-				ProcessInstructions(mocks, currentMethod, state);
-			}
+		private bool Validate(MethodDefinition currentMethod, State state)
+		{
+			return !CheckAnalysisLevel(currentMethod, state) || !CheckVirtualMember(currentMethod) ||
+			       !state.MethodContracts.Add(currentMethod.ToString());
 		}
 
 		private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, State state)
