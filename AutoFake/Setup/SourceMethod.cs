@@ -7,28 +7,26 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class SourceMethod : SourceMember, ISourceMember
+    internal class SourceMethod : ISourceMember
     {
         private readonly MethodBase _method;
-        private readonly ITypeInfo _typeInfo;
+        private readonly SourceMember _sourceMember;
         private MethodDefinition? _monoCecilMethodDef;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceMethod(MethodInfo sourceMethod, ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
-	        : base(typeInfo, createGenericArgument)
+        public SourceMethod(MethodInfo sourceMethod, SourceMember sourceMember)
         {
             _method = sourceMethod;
-            _typeInfo = typeInfo;
+            _sourceMember = sourceMember;
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.ReturnType;
             HasStackInstance = !sourceMethod.IsStatic;
         }
 
-        public SourceMethod(ConstructorInfo sourceMethod, ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
-	        : base(typeInfo, createGenericArgument)
+        public SourceMethod(ConstructorInfo sourceMethod, SourceMember sourceMember)
         {
             _method = sourceMethod;
-            _typeInfo = typeInfo;
+            _sourceMember = sourceMember;
             Name = sourceMethod.Name;
             ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type should be set");
             HasStackInstance = false;
@@ -43,7 +41,7 @@ namespace AutoFake.Setup
         public MemberInfo OriginalMember => _method;
 
         public MethodDefinition GetMethod()
-	        => _monoCecilMethodDef ??= _typeInfo.ImportToSourceAsm(_method).Resolve();
+	        => _monoCecilMethodDef ??= _sourceMember.TypeInfo.ImportToSourceAsm(_method).Resolve();
 
         public IReadOnlyList<GenericArgument> GetGenericArguments()
         {
@@ -57,7 +55,7 @@ namespace AutoFake.Setup
 	        {
 		        var types = _method.DeclaringType.GetGenericArguments();
 		        var names = _method.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-		        foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
+		        foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
 		        {
 			        yield return genericArgument;
 		        }
@@ -67,7 +65,7 @@ namespace AutoFake.Setup
 	        {
 		        var types = method.GetGenericArguments();
 		        var names = method.GetGenericMethodDefinition().GetGenericArguments();
-		        foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
+		        foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
 		        {
 			        yield return genericArgument;
 		        }
@@ -93,7 +91,7 @@ namespace AutoFake.Setup
 		        var sourceArguments = GetGenericArguments();
 		        foreach (var genericParameter in visitedMethod.GenericParameters.Concat(visitedMethod.DeclaringType.GenericParameters))
 		        {
-			        if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
+			        if (!_sourceMember.CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
 			        {
 				        return false;
 			        }

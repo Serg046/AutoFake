@@ -7,19 +7,18 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-    internal class SourceField : SourceMember, ISourceMember
+    internal class SourceField : ISourceMember
     {
         private static readonly OpCode[] _fieldOpCodes = {OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda};
         private readonly FieldInfo _field;
-        private readonly ITypeInfo _typeInfo;
+        private readonly SourceMember _sourceMember;
         private FieldDefinition? _monoCecilField;
         private IReadOnlyList<GenericArgument>? _genericArguments;
 
-        public SourceField(FieldInfo field, ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
-	        : base(typeInfo, createGenericArgument)
+        public SourceField(FieldInfo field, SourceMember sourceMember)
         {
             _field = field;
-            _typeInfo = typeInfo;
+            _sourceMember = sourceMember;
             Name = field.Name;
             ReturnType = field.FieldType;
             HasStackInstance = !field.IsStatic;
@@ -34,7 +33,7 @@ namespace AutoFake.Setup
         public MemberInfo OriginalMember => _field;
 
         private FieldDefinition GetField()
-	        => _monoCecilField ??= _typeInfo.ImportToSourceAsm(_field).Resolve();
+	        => _monoCecilField ??= _sourceMember.TypeInfo.ImportToSourceAsm(_field).Resolve();
 
         public IReadOnlyList<GenericArgument> GetGenericArguments()
         {
@@ -46,7 +45,7 @@ namespace AutoFake.Setup
 					var declaringType = GetField().DeclaringType.ToString();
 			        var types = _field.DeclaringType.GetGenericArguments();
 			        var names = _field.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-			        foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
+			        foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
 			        {
 				        genericArguments.Add(genericArgument);
 			        }
@@ -77,7 +76,7 @@ namespace AutoFake.Setup
 		        var sourceArguments = GetGenericArguments();
 				foreach (var genericParameter in visitedField.DeclaringType.GenericParameters)
 				{
-					if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
+					if (!_sourceMember.CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
 					{
 						return false;
 					}

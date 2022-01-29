@@ -7,16 +7,17 @@ namespace AutoFake.Setup
 {
 	internal class SourceMember
 	{
-		private readonly ITypeInfo _typeInfo;
 		private readonly GenericArgument.Create _createGenericArgument;
 
 		public SourceMember(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
 		{
-			_typeInfo = typeInfo;
+			TypeInfo = typeInfo;
 			_createGenericArgument = createGenericArgument;
 		}
 
-		protected bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
+		public ITypeInfo TypeInfo { get; }
+
+		public bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
 		{
 			var source = sourceArguments.SingleOrDefault(a => a.Name == genericParameter.Name);
 			var visited = stackArguments.FindGenericTypeOrDefault(genericParameter.Name);
@@ -28,11 +29,11 @@ namespace AutoFake.Setup
 			return true;
 		}
 
-		protected IEnumerable<GenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
+		public IEnumerable<GenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
 		{
 			for (int i = 0; i < genericArguments.Length; i++)
 			{
-				var typeRef = _typeInfo.ImportToSourceAsm(genericArguments[i]);
+				var typeRef = TypeInfo.ImportToSourceAsm(genericArguments[i]);
 				yield return _createGenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
 			}
 		}
