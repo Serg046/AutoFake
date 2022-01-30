@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;

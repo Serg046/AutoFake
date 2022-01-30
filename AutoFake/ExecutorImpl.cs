@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using AutoFake.Abstractions.Expression;
 using AutoFake.Expression;
 
 namespace AutoFake

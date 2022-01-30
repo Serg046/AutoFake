@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using AutoFake.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
 	internal interface IContractProcessor
 	{

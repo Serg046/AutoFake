@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using AutoFake.Expression;
-using AutoFake.Setup.Mocks;
+using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup.Mocks;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
 	internal interface IFakeProcessor
 	{

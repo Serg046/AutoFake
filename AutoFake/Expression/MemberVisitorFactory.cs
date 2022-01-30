@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoFake.Abstractions.Expression;
 using DryIoc;
 
 namespace AutoFake.Expression

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AutoFake.Abstractions;
 using Mono.Cecil;
 
 namespace AutoFake

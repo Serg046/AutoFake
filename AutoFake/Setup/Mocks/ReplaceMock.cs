@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

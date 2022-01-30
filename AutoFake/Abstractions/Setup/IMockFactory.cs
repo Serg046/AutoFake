@@ -1,9 +1,10 @@
 ﻿using System;
-using AutoFake.Expression;
+using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
-namespace AutoFake.Setup
+namespace AutoFake.Abstractions.Setup
 {
 	internal interface IMockFactory
 	{

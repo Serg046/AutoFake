@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
     internal interface IProcessor
     {

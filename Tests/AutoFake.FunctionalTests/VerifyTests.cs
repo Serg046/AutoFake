@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using AutoFake.Abstractions;
 using AutoFake.Exceptions;
 using FluentAssertions;
 using MultipleReturnTest;

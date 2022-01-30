@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace AutoFake.Setup.Mocks
+namespace AutoFake.Abstractions.Setup.Mocks
 {
     internal interface IMock
     {

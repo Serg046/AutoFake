@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 
-namespace AutoFake.Expression
+namespace AutoFake.Abstractions.Expression
 {
     internal interface IMemberVisitor
     {

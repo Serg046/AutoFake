@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
 	internal interface IAssemblyLoader
 	{

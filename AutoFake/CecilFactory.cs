@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoFake.Abstractions;
 using DryIoc;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

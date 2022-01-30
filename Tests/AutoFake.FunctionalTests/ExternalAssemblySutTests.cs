@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AnotherSut;
+using AutoFake.Abstractions;
 using AutoFake.Exceptions;
 using FluentAssertions;
 using Sut;

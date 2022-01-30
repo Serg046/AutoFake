@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Mocks;
 
 namespace AutoFake.Setup.Mocks
 {

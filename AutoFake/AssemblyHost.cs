@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using AutoFake.Abstractions;
 
 namespace AutoFake
 {

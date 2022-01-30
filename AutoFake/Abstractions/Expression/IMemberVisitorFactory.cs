@@ -1,6 +1,7 @@
 ﻿using System;
+using AutoFake.Expression;
 
-namespace AutoFake.Expression
+namespace AutoFake.Abstractions.Expression
 {
 	internal interface IMemberVisitorFactory
 	{

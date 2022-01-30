@@ -1,4 +1,6 @@
-﻿namespace AutoFake.Setup.Mocks
+﻿using AutoFake.Setup.Mocks;
+
+namespace AutoFake.Abstractions.Setup.Mocks
 {
 	internal interface ISourceMemberMock : IMock
 	{

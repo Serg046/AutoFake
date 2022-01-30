@@ -1,4 +1,6 @@
-﻿namespace AutoFake
+﻿using AutoFake.Abstractions;
+
+namespace AutoFake
 {
 	internal class ExecutionContext : IExecutionContext
 	{

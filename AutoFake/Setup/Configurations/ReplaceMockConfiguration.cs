@@ -1,5 +1,6 @@
 ﻿using AutoFake.Setup.Mocks;
 using System;
+using AutoFake.Abstractions;
 
 namespace AutoFake.Setup.Configurations
 {

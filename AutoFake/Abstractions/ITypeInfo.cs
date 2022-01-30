@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Mono.Cecil;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
     internal interface ITypeInfo
     {

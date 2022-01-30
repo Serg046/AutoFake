@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
 	internal interface IAssemblyHost
 	{

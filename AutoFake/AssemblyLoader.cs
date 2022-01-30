@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Abstractions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 

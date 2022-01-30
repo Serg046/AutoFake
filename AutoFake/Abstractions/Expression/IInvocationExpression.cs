@@ -1,6 +1,6 @@
-using AutoFake.Setup;
+using AutoFake.Abstractions.Setup;
 
-namespace AutoFake.Expression
+namespace AutoFake.Abstractions.Expression
 {
     internal interface IInvocationExpression
     {

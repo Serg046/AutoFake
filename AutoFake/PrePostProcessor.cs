@@ -4,6 +4,7 @@ using Mono.Cecil.Cil;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoFake.Abstractions;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 
 namespace AutoFake

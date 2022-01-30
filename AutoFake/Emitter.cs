@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using AutoFake.Abstractions;
+using Mono.Cecil.Cil;
 
 namespace AutoFake
 {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup;
 using AutoFake.Setup;
 
 namespace AutoFake.Expression

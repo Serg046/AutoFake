@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using AutoFake.Setup.Mocks;
 using System.Collections.Generic;
+using AutoFake.Abstractions.Setup;
+using AutoFake.Abstractions.Setup.Mocks;
 
 namespace AutoFake.Setup
 {

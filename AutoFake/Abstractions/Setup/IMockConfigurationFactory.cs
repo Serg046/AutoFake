@@ -1,8 +1,9 @@
 ﻿using System;
+using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 
-namespace AutoFake.Setup
+namespace AutoFake.Abstractions.Setup
 {
 	internal interface IMockConfigurationFactory
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using Mono.Cecil;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
 	internal interface IAssemblyReader
 	{

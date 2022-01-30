@@ -1,4 +1,6 @@
 ﻿using System;
+using AutoFake.Abstractions.Setup;
+using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using DryIoc;

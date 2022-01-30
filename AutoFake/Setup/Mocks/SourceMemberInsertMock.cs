@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 

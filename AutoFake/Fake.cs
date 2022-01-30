@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;

@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Expression;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression

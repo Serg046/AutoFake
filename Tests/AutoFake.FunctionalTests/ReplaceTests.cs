@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using AutoFake.Abstractions;
 using AutoFake.Exceptions;
 using Xunit;
 

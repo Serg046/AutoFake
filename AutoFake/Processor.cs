@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 using System.Linq;
+using AutoFake.Abstractions;
 using AutoFake.Expression;
 
 namespace AutoFake

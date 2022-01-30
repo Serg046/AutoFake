@@ -1,9 +1,9 @@
-﻿using Mono.Cecil.Cil;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Mono.Cecil.Cil;
 
-namespace AutoFake.Setup
+namespace AutoFake.Abstractions.Setup
 {
     internal interface ISourceMember
     {

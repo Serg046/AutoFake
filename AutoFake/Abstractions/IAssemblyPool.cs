@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Mono.Cecil;
 
-namespace AutoFake
+namespace AutoFake.Abstractions
 {
 	internal interface IAssemblyPool
 	{

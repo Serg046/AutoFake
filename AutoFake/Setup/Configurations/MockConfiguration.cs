@@ -1,6 +1,7 @@
 ﻿using AutoFake.Setup.Mocks;
 using System;
 using System.Linq.Expressions;
+using AutoFake.Abstractions.Setup;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake.Setup.Configurations

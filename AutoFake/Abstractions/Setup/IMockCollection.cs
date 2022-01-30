@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using AutoFake.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks;
 
-namespace AutoFake.Setup
+namespace AutoFake.Abstractions.Setup
 {
 	internal interface IMockCollection : IEnumerable<IMock>
 	{
