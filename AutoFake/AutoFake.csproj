@@ -27,6 +27,10 @@
     <PackageReference Include="InversionEnforcer">
       <Version>1.2.4.3</Version>
     </PackageReference>
+    <ProjectReference Include="..\Analyzers\Analyzers.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Analyzer</OutputItemType>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

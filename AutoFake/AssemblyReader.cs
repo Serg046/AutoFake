@@ -11,7 +11,7 @@ namespace AutoFake
 		private readonly Lazy<TypeDefinition> _sourceTypeDefinition;
 		private readonly Lazy<TypeDefinition> _fieldsTypeDefinition;
 
-		public AssemblyReader(Type sourceType, FakeOptions fakeOptions, ICecilFactory cecilFactory)
+		public AssemblyReader(Type sourceType, IFakeOptions fakeOptions, ICecilFactory cecilFactory)
 		{
 			_cecilFactory = cecilFactory;
 			SourceType = sourceType;
@@ -25,7 +25,7 @@ namespace AutoFake
 
 		public TypeDefinition FieldsTypeDefinition => _fieldsTypeDefinition.Value;
 
-		private TypeDefinition GetSourceTypeDefinition(Type sourceType, FakeOptions fakeOptions)
+		private TypeDefinition GetSourceTypeDefinition(Type sourceType, IFakeOptions fakeOptions)
 		{
 			var readerParameters = _cecilFactory.CreateReaderParameters();
 			readerParameters.ReadSymbols = fakeOptions.Debug == DebugMode.Enabled || (fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached);
@@ -36,7 +36,7 @@ namespace AutoFake
 			return assemblyDef.MainModule.GetType(sourceType.FullName, runtimeName: true).ToTypeDefinition();
 		}
 
-		private TypeDefinition GetFieldsTypeDef(TypeDefinition sourceTypeDef, FakeOptions options)
+		private TypeDefinition GetFieldsTypeDef(TypeDefinition sourceTypeDef, IFakeOptions options)
 		{
 			var module = sourceTypeDef.Module;
 			if (options.IsMultipleAssembliesMode)

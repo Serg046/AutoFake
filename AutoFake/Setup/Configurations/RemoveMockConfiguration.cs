@@ -1,9 +1,10 @@
 ﻿using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 
 namespace AutoFake.Setup.Configurations
 {
-    public class RemoveMockConfiguration
+	internal class RemoveMockConfiguration : IRemoveMockConfiguration
     {
         private readonly ReplaceMock _mock;
 
@@ -12,18 +13,18 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public RemoveMockConfiguration ExpectedCalls(uint expectedCallsCount)
+        public IRemoveMockConfiguration ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public RemoveMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
+        public IRemoveMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
-        public RemoveMockConfiguration WhenArgumentsAreMatched()
+        public IRemoveMockConfiguration WhenArgumentsAreMatched()
         {
 	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;

@@ -4,7 +4,6 @@ using System.Reflection;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Exceptions;
-using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -15,12 +14,12 @@ namespace AutoFake
 		
         private readonly IAssemblyReader _assemblyReader;
 		private readonly Dictionary<string, ushort> _addedFields;
-		private readonly FakeOptions _fakeOptions;
+		private readonly IFakeOptions _fakeOptions;
 		private readonly IAssemblyPool _assemblyPool;
 		private readonly IAssemblyLoader _assemblyLoader;
 		private readonly FakeObjectInfo.Create _createFakeObjectInfo;
 
-		public AssemblyWriter(IAssemblyReader assemblyReader, FakeOptions fakeOptions,
+		public AssemblyWriter(IAssemblyReader assemblyReader, IFakeOptions fakeOptions,
 			IAssemblyPool assemblyPool, IAssemblyLoader assemblyLoader, FakeObjectInfo.Create createFakeObjectInfo)
 		{
 			_assemblyReader = assemblyReader;

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 
 namespace AutoFake
 {
+#pragma warning disable AF0001 // Public by design
     public static class Arg
-    {
+#pragma warning restore AF0001
+	{
         public static object IsNull<T>()
         {
             var type = typeof(T);

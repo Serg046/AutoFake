@@ -2,12 +2,13 @@
 using System;
 using System.Linq.Expressions;
 using AutoFake.Abstractions.Setup;
+using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions.Setup.Mocks;
 using InvocationExpression = AutoFake.Expression.InvocationExpression;
 
 namespace AutoFake.Setup.Configurations
 {
-    public class AppendMockConfiguration<T> : AppendMockConfiguration
+	internal class AppendMockConfiguration<T> : AppendMockConfiguration, IAppendMockConfiguration<T>
     {
         internal AppendMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
 	        IMockFactory mockFactory, Action<IMock> setMock, Action closure)
@@ -15,12 +16,12 @@ namespace AutoFake.Setup.Configurations
         {
         }
 
-        public SourceMemberInsertMockConfiguration After<TOut>(Expression<Func<T, TOut>> expression) => AfterImpl(expression);
+        public ISourceMemberInsertMockConfiguration After<TOut>(Expression<Func<T, TOut>> expression) => AfterImpl(expression);
         
-        public SourceMemberInsertMockConfiguration After(Expression<Action<T>> expression) => AfterImpl(expression);
+        public ISourceMemberInsertMockConfiguration After(Expression<Action<T>> expression) => AfterImpl(expression);
     }
 
-    public class AppendMockConfiguration
+	internal class AppendMockConfiguration : IAppendMockConfiguration
     {
 	    private readonly InvocationExpression.Create _exprFactory;
 	    private readonly IMockConfigurationFactory _cfgFactory;
@@ -38,15 +39,15 @@ namespace AutoFake.Setup.Configurations
             _closure = closure;
         }
 
-        public SourceMemberInsertMockConfiguration After<TIn, TOut>(Expression<Func<TIn, TOut>> expression) => AfterImpl(expression);
+        public ISourceMemberInsertMockConfiguration After<TIn, TOut>(Expression<Func<TIn, TOut>> expression) => AfterImpl(expression);
         
-        public SourceMemberInsertMockConfiguration After<TIn>(Expression<Action<TIn>> expression) => AfterImpl(expression);
+        public ISourceMemberInsertMockConfiguration After<TIn>(Expression<Action<TIn>> expression) => AfterImpl(expression);
 
-        public SourceMemberInsertMockConfiguration After<TOut>(Expression<Func<TOut>> expression) => AfterImpl(expression);
+        public ISourceMemberInsertMockConfiguration After<TOut>(Expression<Func<TOut>> expression) => AfterImpl(expression);
 
-        public SourceMemberInsertMockConfiguration After(Expression<Action> expression) => AfterImpl(expression);
+        public ISourceMemberInsertMockConfiguration After(Expression<Action> expression) => AfterImpl(expression);
         
-        protected SourceMemberInsertMockConfiguration AfterImpl(LambdaExpression expression)
+        protected ISourceMemberInsertMockConfiguration AfterImpl(LambdaExpression expression)
         {
             var mock = _mockFactory.GetSourceMemberInsertMock(_exprFactory(expression), _closure, InsertMock.Location.After);
             _setMock(mock);

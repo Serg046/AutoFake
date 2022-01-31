@@ -1,6 +1,8 @@
-﻿namespace AutoFake
+﻿using AutoFake.Abstractions;
+
+namespace AutoFake
 {
-	public class MethodContract
+	internal class MethodContract : IMethodContract
 	{
 		public MethodContract(string declaringType, string returnType, string name, string[] parameterTypes)
 		{

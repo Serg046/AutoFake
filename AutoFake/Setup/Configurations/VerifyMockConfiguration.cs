@@ -1,10 +1,10 @@
 ﻿using AutoFake.Setup.Mocks;
-using System;
 using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Configurations;
 
 namespace AutoFake.Setup.Configurations
 {
-    public class VerifyMockConfiguration
+	internal class VerifyMockConfiguration : IVerifyMockConfiguration
     {
         private readonly VerifyMock _mock;
 
@@ -13,12 +13,12 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public VerifyMockConfiguration ExpectedCalls(uint expectedCallsCount)
+        public IVerifyMockConfiguration ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public VerifyMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
+        public IVerifyMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;

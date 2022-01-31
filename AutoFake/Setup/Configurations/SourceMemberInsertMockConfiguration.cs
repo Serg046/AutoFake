@@ -1,9 +1,10 @@
 ﻿using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 
 namespace AutoFake.Setup.Configurations
 {
-    public class SourceMemberInsertMockConfiguration
+	internal class SourceMemberInsertMockConfiguration : ISourceMemberInsertMockConfiguration
     {
         private readonly SourceMemberInsertMock _mock;
 
@@ -12,18 +13,18 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public SourceMemberInsertMockConfiguration ExpectedCalls(uint expectedCallsCount)
+        public ISourceMemberInsertMockConfiguration ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public SourceMemberInsertMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
+        public ISourceMemberInsertMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
-        public SourceMemberInsertMockConfiguration WhenArgumentsAreMatched()
+        public ISourceMemberInsertMockConfiguration WhenArgumentsAreMatched()
         {
 	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;

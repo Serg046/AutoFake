@@ -7,13 +7,14 @@ using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Exceptions;
-using AutoFake.Setup;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-    public class InvocationExpression : IInvocationExpression
-    {
+#pragma warning disable AF0001 // There are methods called from another assembly at runtime
+	public class InvocationExpression : IInvocationExpression
+#pragma warning restore AF0001
+	{
 	    internal delegate IInvocationExpression Create(LinqExpression expression);
 
 	    private readonly IMemberVisitorFactory _memberVisitorFactory;

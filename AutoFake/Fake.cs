@@ -5,29 +5,31 @@ using System.Linq.Expressions;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
-using AutoFake.Expression;
-using AutoFake.Setup;
-using AutoFake.Setup.Configurations;
+using AutoFake.Abstractions.Setup.Configurations;
 using DryIoc;
 
 namespace AutoFake
 {
-    public class Fake<T> : Fake
-    {
+#pragma warning disable AF0001 // Public by design
+	public class Fake<T> : Fake
+#pragma warning restore AF0001
+	{
         public Fake(params object[] constructorArgs) : base(typeof(T), constructorArgs)
         {
         }
 
-        public FuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression) => base.Rewrite(expression);
+        public IFuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression) => base.Rewrite(expression);
         
-        public ActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression) => base.Rewrite(expression);
+        public IActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression) => base.Rewrite(expression);
 
         public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> expression) => base.Execute(expression);
 
         public void Execute(Expression<Action<T>> expression) => base.Execute(expression);
     }
 
+#pragma warning disable AF0001 // Public by design
     public class Fake
+#pragma warning restore AF0001
     {
 	    private readonly object?[] _dependencies;
 	    private FakeObjectInfo? _fakeObjectInfo;
@@ -37,37 +39,35 @@ namespace AutoFake
 	        if (type == null) throw new ArgumentNullException(nameof(type));
             _dependencies = constructorArgs ?? throw new ArgumentNullException(nameof(constructorArgs));
             Services = ContainerExtensions.CreateContainer(type, this);
-            Options = Services.Resolve<FakeOptions>();
+            Options = Services.Resolve<IFakeOptions>();
         }
 
         public Container Services { get; }
 
-        public FakeOptions Options { get; }
+        public IFakeOptions Options { get; }
 
-        internal ITypeInfo TypeInfo => Services.Resolve<ITypeInfo>();
-
-        public FuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
+        public IFuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-	        return scope.Resolve<FuncMockConfiguration<TInput, TReturn>>();
+	        return scope.Resolve<IFuncMockConfiguration<TInput, TReturn>>();
         }
 
-        public ActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)
+        public IActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-            return scope.Resolve<ActionMockConfiguration<TInput>>();
+            return scope.Resolve<IActionMockConfiguration<TInput>>();
         }
 
-        public FuncMockConfiguration<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
+        public IFuncMockConfiguration<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-            return scope.Resolve<FuncMockConfiguration<TReturn>>();
+            return scope.Resolve<IFuncMockConfiguration<TReturn>>();
         }
 
-        public ActionMockConfiguration Rewrite(Expression<Action> expression)
+        public IActionMockConfiguration Rewrite(Expression<Action> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-            return scope.Resolve<ActionMockConfiguration>();
+            return scope.Resolve<IActionMockConfiguration>();
         }
 
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)

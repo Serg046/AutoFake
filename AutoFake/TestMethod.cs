@@ -3,35 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake
 {
-	/// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
-	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-	public sealed class NotNullWhenAttribute : Attribute
-	{
-		/// <summary>Initializes the attribute with the specified return value condition.</summary>
-		/// <param name="returnValue">
-		/// The return value condition. If the method returns this value, the associated parameter will not be null.
-		/// </param>
-		public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
-
-		/// <summary>Gets the return value condition.</summary>
-		public bool ReturnValue { get; }
-	}
-
 	internal class TestMethod
 	{
 		private readonly IEmitterPool _emitterPool;
 		private readonly ITypeInfo _typeInfo;
-		private readonly FakeOptions _options;
+		private readonly IFakeOptions _options;
 		private readonly IGenericArgumentProcessor _genericArgumentProcessor;
 		private readonly IAssemblyWriter _assemblyWriter;
 
-		public TestMethod(IEmitterPool emitterPool, ITypeInfo typeInfo, FakeOptions fakeOptions,
+		public TestMethod(IEmitterPool emitterPool, ITypeInfo typeInfo, IFakeOptions fakeOptions,
 			IGenericArgumentProcessor genericArgumentProcessor, IAssemblyWriter assemblyWriter)
 		{
 			_emitterPool = emitterPool;

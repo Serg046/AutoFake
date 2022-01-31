@@ -1,10 +1,11 @@
 ﻿using AutoFake.Setup.Mocks;
 using System;
 using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Configurations;
 
 namespace AutoFake.Setup.Configurations
 {
-    public class ReplaceMockConfiguration<TReturn>
+	internal class ReplaceMockConfiguration<TReturn> : IReplaceMockConfiguration<TReturn>
     {
         private readonly ReplaceMock _mock;
 
@@ -13,25 +14,25 @@ namespace AutoFake.Setup.Configurations
             _mock = mock;
         }
 
-        public ReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
+        public IReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
         {
             _mock.ReturnObject = returnObject ?? throw new ArgumentNullException(nameof(returnObject));
             _mock.ReturnType = typeof(TReturn);
             return this;
         }
 
-        public ReplaceMockConfiguration<TReturn> ExpectedCalls(uint expectedCallsCount)
+        public IReplaceMockConfiguration<TReturn> ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public ReplaceMockConfiguration<TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
+        public IReplaceMockConfiguration<TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
-        public ReplaceMockConfiguration<TReturn> WhenArgumentsAreMatched()
+        public IReplaceMockConfiguration<TReturn> WhenArgumentsAreMatched()
         {
 	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;

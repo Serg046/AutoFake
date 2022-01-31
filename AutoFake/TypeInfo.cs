@@ -10,11 +10,11 @@ namespace AutoFake
     internal class TypeInfo : ITypeInfo
     {
         private readonly IAssemblyReader _assemblyReader;
-        private readonly FakeOptions _fakeOptions;
+        private readonly IFakeOptions _fakeOptions;
         private readonly IAssemblyPool _assemblyPool;
         private readonly AssemblyNameReference _assemblyNameReference;
 
-		public TypeInfo(IAssemblyReader assemblyReader, FakeOptions fakeOptions, IAssemblyPool assemblyPool,
+		public TypeInfo(IAssemblyReader assemblyReader, IFakeOptions fakeOptions, IAssemblyPool assemblyPool,
 	        Func<ModuleDefinition, ITypeMap> createTypeMap)
         {
             _assemblyReader = assemblyReader;
