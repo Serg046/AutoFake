@@ -12,14 +12,16 @@ namespace AutoFake
         private readonly IAssemblyReader _assemblyReader;
         private readonly IFakeOptions _fakeOptions;
         private readonly IAssemblyPool _assemblyPool;
+        private readonly ICecilFactory _cecilFactory;
         private readonly AssemblyNameReference _assemblyNameReference;
 
 		public TypeInfo(IAssemblyReader assemblyReader, IFakeOptions fakeOptions, IAssemblyPool assemblyPool,
-	        Func<ModuleDefinition, ITypeMap> createTypeMap)
+	        ICecilFactory cecilFactory, Func<ModuleDefinition, ITypeMap> createTypeMap)
         {
             _assemblyReader = assemblyReader;
             _fakeOptions = fakeOptions;
             _assemblyPool = assemblyPool;
+            _cecilFactory = cecilFactory;
             _assemblyNameReference = _assemblyReader.SourceTypeDefinition.Module.AssemblyReferences
 	            .Single(a => a.FullName == _assemblyReader.SourceType.Assembly.FullName);
 
@@ -98,7 +100,7 @@ namespace AutoFake
 	        }
 
 	        TypeReference NewTypeReference(TypeReference typeRef)
-		        => new(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
+		        => _cecilFactory.CreateTypeReference(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
 
 	        return result;
         }

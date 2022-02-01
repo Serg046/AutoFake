@@ -12,24 +12,25 @@ namespace AutoFake
 	{
 		private readonly IEmitterPool _emitterPool;
 		private readonly ITypeInfo _typeInfo;
-		private readonly IFakeOptions _options;
 		private readonly IGenericArgumentProcessor _genericArgumentProcessor;
 		private readonly IAssemblyWriter _assemblyWriter;
+		private readonly Func<string, string, string, string[], IMethodContract> _createMethodContract;
 
-		public TestMethod(IEmitterPool emitterPool, ITypeInfo typeInfo, IFakeOptions fakeOptions,
-			IGenericArgumentProcessor genericArgumentProcessor, IAssemblyWriter assemblyWriter)
+		public TestMethod(IEmitterPool emitterPool, ITypeInfo typeInfo,
+			IGenericArgumentProcessor genericArgumentProcessor, IAssemblyWriter assemblyWriter,
+			Func<string, string, string, string[], IMethodContract> createMethodContract)
 		{
 			_emitterPool = emitterPool;
 			_typeInfo = typeInfo;
-			_options = fakeOptions;
 			_genericArgumentProcessor = genericArgumentProcessor;
 			_assemblyWriter = assemblyWriter;
+			_createMethodContract = createMethodContract;
 		}
 
-		public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IEnumerable<IMock> mocks,
-			IEnumerable<GenericArgument> genericArgs)
+		public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IFakeOptions options,
+			IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs)
 		{
-			var state = new State(originalMethod, genericArgs);
+			var state = new State(originalMethod, genericArgs, options);
 			Rewrite(mocks, originalMethod, state);
 			return state.Methods.ToReadOnlyList();
 		}
@@ -59,7 +60,7 @@ namespace AutoFake
 
 		private bool Validate(MethodDefinition currentMethod, State state)
 		{
-			return !CheckAnalysisLevel(currentMethod, state) || !CheckVirtualMember(currentMethod) ||
+			return !CheckAnalysisLevel(currentMethod, state) || !CheckVirtualMember(currentMethod, state) ||
 			       !state.MethodContracts.Add(currentMethod.ToString());
 		}
 
@@ -121,7 +122,7 @@ namespace AutoFake
 
 		private bool CheckAnalysisLevel(MethodReference methodRef, State state)
 		{
-			switch (_options.AnalysisLevel)
+			switch (state.Options.AnalysisLevel)
 			{
 				case AnalysisLevels.Type:
 				{
@@ -139,26 +140,29 @@ namespace AutoFake
 					return !methodRef.DeclaringType.Namespace.StartsWith(nameof(System)) &&
 					       !methodRef.DeclaringType.Namespace.StartsWith(nameof(Microsoft));
 				}
-				default: throw new NotSupportedException($"{_options.AnalysisLevel} is not supported");
+				default: throw new NotSupportedException($"{state.Options.AnalysisLevel} is not supported");
 			}
 
 			return _typeInfo.IsInReferencedAssembly(methodRef.DeclaringType.Module.Assembly);
 		}
 
-		private bool CheckVirtualMember(MethodDefinition method)
+		private bool CheckVirtualMember(MethodDefinition method, State state)
 		{
 			if (!method.IsVirtual) return true;
-			if (_options.DisableVirtualMembers) return false;
-			var contract = method.ToMethodContract();
-			return _options.AllowedVirtualMembers.Count == 0 || _options.AllowedVirtualMembers.Any(m => m(contract));
+			if (state.Options.DisableVirtualMembers) return false;
+			
+			var contract = _createMethodContract(method.DeclaringType.ToString(), method.ReturnType.ToString(),
+				method.Name, method.Parameters.Select(p => p.ParameterType.ToString()).ToArray());
+			return state.Options.AllowedVirtualMembers.Count == 0 || state.Options.AllowedVirtualMembers.Any(m => m(contract));
 		}
 
 		private class State
 		{
-			public State(MethodDefinition originalMethod, IEnumerable<GenericArgument> genericArgs)
+			public State(MethodDefinition originalMethod, IEnumerable<GenericArgument> genericArgs, IFakeOptions options)
 			{
 				OriginalMethod = originalMethod;
 				GenericArgs = genericArgs;
+				Options = options;
 				Parents = Enumerable.Empty<MethodDefinition>();
 				Methods = new List<MethodDefinition>();
 				MethodContracts = new();
@@ -168,6 +172,7 @@ namespace AutoFake
 
 			public MethodDefinition OriginalMethod { get; }
 			public IEnumerable<GenericArgument> GenericArgs { get; set; }
+			public IFakeOptions Options { get; }
 			public IEnumerable<MethodDefinition> Parents { get; set; }
 			public IList<MethodDefinition> Methods { get; }
 			public HashSet<string> MethodContracts { get; }

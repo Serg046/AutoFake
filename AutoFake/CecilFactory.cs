@@ -71,5 +71,11 @@ namespace AutoFake
 		{
 			return _serviceLocator.Resolve<Func<MethodReference, GenericInstanceMethod>>().Invoke(method);
 		}
+
+		public TypeReference CreateTypeReference(string @namespace, string name, ModuleDefinition module, IMetadataScope scope, bool valueType)
+		{
+			return _serviceLocator.Resolve<Func<string, string, ModuleDefinition, IMetadataScope, bool, TypeReference>>()
+				.Invoke(@namespace, name, module, scope, valueType);
+		}
 	}
 }

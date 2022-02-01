@@ -102,7 +102,7 @@ namespace AutoFake
                 var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
 				foreach (var mocks in setups)
 				{
-					fakeProcessor.ProcessMethod(mocks.Value, mocks.Key);
+					fakeProcessor.ProcessMethod(mocks.Value, mocks.Key, Options);
 				}
 
                 var asmWriter = Services.Resolve<IAssemblyWriter>();

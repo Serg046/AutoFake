@@ -64,6 +64,7 @@ namespace AutoFake
 			container.Register<IGenericArgumentProcessor, GenericArgumentProcessor>();
 			container.RegisterInstance<GenericArgument.Create>((name, type, declaringType, genericDeclaringType) =>
 				new GenericArgument(name, type, declaringType, genericDeclaringType));
+			container.Register<IMethodContract, MethodContract>();
 
 			AddConfigurations(container);
 			AddMocks(container);
@@ -125,6 +126,7 @@ namespace AutoFake
 			container.Register<GenericParameter>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 			container.Register<FieldDefinition>();
 			container.Register<GenericInstanceMethod>();
+			container.Register<TypeReference>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)

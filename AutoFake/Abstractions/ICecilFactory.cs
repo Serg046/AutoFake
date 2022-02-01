@@ -17,5 +17,6 @@ namespace AutoFake.Abstractions
 		GenericParameter CreateGenericParameter(string name, IGenericParameterProvider owner);
 		FieldDefinition CreateFieldDefinition(string name, FieldAttributes attributes, TypeReference fieldType);
 		GenericInstanceMethod CreateGenericInstanceMethod(MethodReference method);
+		TypeReference CreateTypeReference(string @namespace, string name, ModuleDefinition module, IMetadataScope scope, bool valueType);
 	}
 }

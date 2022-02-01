@@ -97,10 +97,6 @@ namespace AutoFake
 	        return copy;
         }
 
-        public static MethodContract ToMethodContract(this MethodDefinition method)
-	        => new (method.DeclaringType.ToString(), method.ReturnType.ToString(), method.Name,
-		        method.Parameters.Select(p => p.ParameterType.ToString()).ToArray());
-
         public static GenericArgument? FindGenericTypeOrDefault(this IEnumerable<GenericArgument> genericArguments, string genericParamName)
         {
             string? prevType = null;

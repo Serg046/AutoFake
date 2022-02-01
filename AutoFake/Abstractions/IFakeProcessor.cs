@@ -6,6 +6,6 @@ namespace AutoFake.Abstractions
 {
 	internal interface IFakeProcessor
 	{
-		void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression);
+		void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression, IFakeOptions options);
 	}
 }
