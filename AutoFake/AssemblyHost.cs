@@ -21,7 +21,7 @@ namespace AutoFake
 		}
 
 #if NETCOREAPP3_0
-		private readonly CollectibleAssemblyLoadContext _host = new CollectibleAssemblyLoadContext();
+		private readonly CollectibleAssemblyLoadContext _host = new();
 
 		private class CollectibleAssemblyLoadContext : System.Runtime.Loader.AssemblyLoadContext
 		{
