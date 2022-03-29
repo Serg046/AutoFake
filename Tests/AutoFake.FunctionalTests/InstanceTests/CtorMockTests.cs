@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
@@ -82,6 +83,17 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        Assert.Equal("1", actual.Value);
         }
 
+        [Fact]
+        public void RewriteCtorTest()
+        {
+	        var fake = new Fake<TestCtorClass>();
+
+	        var sut = fake.Rewrite(f => new TestCtorClass());
+	        sut.Replace(f => f.GetValue()).Return(5);
+
+            Assert.Equal(5, fake.Execute(f => f.Value));
+        }
+
         private class GenericTestClass<T>
         {
 	        public KeyValuePair<T, T2> GetValue<T2>(T x, T2 y) => new KeyValuePair<T, T2>(x, y);
@@ -146,6 +158,18 @@ namespace AutoFake.FunctionalTests.InstanceTests
             }
 
             public int Value { get; }
+        }
+
+        private class TestCtorClass
+        {
+	        public TestCtorClass()
+	        {
+		        Value = GetValue();
+	        }
+
+            public int Value { get; }
+
+	        public int GetValue() => throw new NotImplementedException();
         }
     }
 }

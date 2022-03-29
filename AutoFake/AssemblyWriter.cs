@@ -65,12 +65,12 @@ namespace AutoFake
 				sourceType = sourceType.MakeGenericType(_assemblyReader.SourceType.GetGenericArguments());
 			}
 
-			var instance = !IsStatic(_assemblyReader.SourceType) ? CreateInstance(sourceType, dependencies) : null;
 			foreach (var mock in mocks)
 			{
 				mock.Initialize(loader.Item2);
 			}
-			
+
+			var instance = !IsStatic(_assemblyReader.SourceType) ? CreateInstance(sourceType, dependencies) : null;
 			return _createFakeObjectInfo(sourceType, loader.Item2, instance);
 		}
 
