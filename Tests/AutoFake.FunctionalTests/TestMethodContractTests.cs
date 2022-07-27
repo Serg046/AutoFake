@@ -4,7 +4,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
-    public class ContractTests
+    public class TestMethodContractTests
     {
         [Theory]
         [InlineData(typeof(HelperClass))]
