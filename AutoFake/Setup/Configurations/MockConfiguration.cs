@@ -35,34 +35,6 @@ namespace AutoFake.Setup.Configurations
         public void Execute() => _executor.Execute();
     }
 
-    internal class FuncMockConfiguration<TReturn> : MockConfiguration, IFuncMockConfiguration<TReturn>
-    {
-        private readonly Executor<TReturn> _executor;
-
-        internal FuncMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
-	        IMockFactory mockFactory, IMockCollection mocks, Executor<TReturn> executor)
-	        : base(exprFactory, cfgFactory, mockFactory, mocks)
-        {
-            _executor = executor;
-        }
-
-        public TReturn Execute() => _executor.Execute();
-    }
-
-    internal class ActionMockConfiguration : MockConfiguration, IActionMockConfiguration
-    {
-        private readonly Executor _executor;
-
-        internal ActionMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
-	        IMockFactory mockFactory, IMockCollection mocks, Executor executor)
-	        : base(exprFactory,cfgFactory, mockFactory, mocks)
-        {
-            _executor = executor;
-        }
-
-        public void Execute() => _executor.Execute();
-    }
-
     internal abstract class MockConfiguration<T> : MockConfiguration
     {
         internal MockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,

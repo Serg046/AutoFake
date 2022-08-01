@@ -76,9 +76,7 @@ namespace AutoFake
 		private static void AddConfigurations(IRegistrator container)
 		{
 			container.Register(typeof(IActionMockConfiguration<>), typeof(ActionMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
-			container.Register<IActionMockConfiguration, ActionMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IFuncMockConfiguration<,>), typeof(FuncMockConfiguration<,>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
-			container.Register(typeof(IFuncMockConfiguration<>), typeof(FuncMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<IAppendMockConfiguration, AppendMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IAppendMockConfiguration<>), typeof(AppendMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<IPrependMockConfiguration, PrependMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));

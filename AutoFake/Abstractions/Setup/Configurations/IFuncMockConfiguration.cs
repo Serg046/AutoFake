@@ -21,19 +21,4 @@ namespace AutoFake.Abstractions.Setup.Configurations
 		IPrependMockConfiguration<TSut> Prepend(Action action);
 		IAppendMockConfiguration<TSut> Append(Action action);
 	}
-
-	public interface IFuncMockConfiguration<TExecuteReturn>
-	{
-		TExecuteReturn Execute();
-		IReplaceMockConfiguration<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc);
-		IReplaceMockConfiguration<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc);
-		IRemoveMockConfiguration Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc);
-		IRemoveMockConfiguration Remove(Expression<Action> voidStaticSetupFunc);
-		IVerifyMockConfiguration Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc);
-		IVerifyMockConfiguration Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc);
-		IVerifyMockConfiguration Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc);
-		IVerifyMockConfiguration Verify(Expression<Action> voidStaticSetupFunc);
-		IPrependMockConfiguration Prepend(Action action);
-		IAppendMockConfiguration Append(Action action);
-	}
 }

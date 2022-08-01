@@ -58,16 +58,16 @@ namespace AutoFake
             return scope.Resolve<IActionMockConfiguration<TInput>>();
         }
 
-        public IFuncMockConfiguration<TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
+        public IFuncMockConfiguration<object, TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-            return scope.Resolve<IFuncMockConfiguration<TReturn>>();
+            return scope.Resolve<IFuncMockConfiguration<object, TReturn>>();
         }
 
-        public IActionMockConfiguration Rewrite(Expression<Action> expression)
+        public IActionMockConfiguration<object> Rewrite(Expression<Action> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-            return scope.Resolve<IActionMockConfiguration>();
+            return scope.Resolve<IActionMockConfiguration<object>>();
         }
 
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
