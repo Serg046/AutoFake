@@ -48,7 +48,9 @@ namespace AutoFake
             var verifyMethodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyArguments));
             var verifyMethodRef = module.ImportReference(verifyMethodInfo);
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(setupBody)));
+            _emitter.InsertBefore(_instruction, Instruction.Create(_emitter.Body.Method.IsStatic ? OpCodes.Ldnull : OpCodes.Ldarg_0));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
+            _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(executionContext)));
             _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, verifyMethodRef));
 
             var incMethodInfo = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.IncActualCalls));

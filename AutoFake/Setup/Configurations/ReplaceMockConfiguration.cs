@@ -37,5 +37,11 @@ namespace AutoFake.Setup.Configurations
 	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;
         }
+
+        public IReplaceMockConfiguration<TReturn> When(IExecutionContext.WhenInstanceFunc when)
+        {
+            _mock.SourceMemberMetaData.WhenFunc = when;
+            return this;
+        }
     }
 }

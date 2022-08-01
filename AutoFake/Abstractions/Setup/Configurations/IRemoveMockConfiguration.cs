@@ -1,9 +1,10 @@
 ﻿namespace AutoFake.Abstractions.Setup.Configurations
 {
-	public interface IRemoveMockConfiguration
+	public interface IRemoveMockConfiguration<TSut>
 	{
-		IRemoveMockConfiguration ExpectedCalls(uint expectedCallsCount);
-		IRemoveMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
-		IRemoveMockConfiguration WhenArgumentsAreMatched();
+		IRemoveMockConfiguration<TSut> ExpectedCalls(uint expectedCallsCount);
+		IRemoveMockConfiguration<TSut> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
+		IRemoveMockConfiguration<TSut> WhenArgumentsAreMatched();
+		IRemoveMockConfiguration<TSut> When(IExecutionContext.WhenInstanceFunc when);
 	}
 }

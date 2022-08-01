@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using FluentAssertions;
@@ -189,6 +190,31 @@ namespace AutoFake.FunctionalTests.StaticTests
 	        sut.Replace(() => GenericTestClass<int>.GetAnotherValueImpl(Arg.IsAny<object>())).Return(intValue);
 
 	        sut.Execute().Should().Be(stringValue + intValue);
+        }
+
+        [Fact]
+        public void WhenTest()
+        {
+            var fake = new Fake(typeof(WhenTestClass));
+            var dateTime = DateTime.Now.AddSeconds(2);
+
+            var sut = fake.Rewrite(() => WhenTestClass.SomeMethod());
+            sut.Replace((Random r) => r.Next(Arg.IsAny<int>(), Arg.IsAny<int>())).Return(1)
+                .When(obj => DateTime.Now < dateTime);
+            sut.Replace((Random r) => r.Next(Arg.IsAny<int>(), Arg.IsAny<int>())).Return(2)
+                .When(obj => DateTime.Now > dateTime);
+
+            sut.Execute().Should().Be(3);
+        }
+
+        private static class WhenTestClass
+        {
+            public static int SomeMethod()
+            {
+                var x = new Random().Next(-100, 100);
+                Thread.Sleep(4000);
+                return x + new Random().Next(-100, 100);
+            }
         }
 
         private static class GenericTestClass<T>

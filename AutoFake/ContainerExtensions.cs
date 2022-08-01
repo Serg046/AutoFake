@@ -37,7 +37,7 @@ namespace AutoFake
 			container.Register<ExecutorImpl>();
 			container.Register<Executor>();
 			container.Register(typeof(Executor<>));
-			container.RegisterInstance<IExecutionContext.Create>(callsChecker => new ExecutionContext(callsChecker));
+			container.RegisterInstance<IExecutionContext.Create>((callsChecker, whenFunc) => new ExecutionContext(callsChecker, whenFunc));
 			container.RegisterDelegate<InvocationExpression.Create>(ctx =>
 				expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
 
@@ -83,7 +83,7 @@ namespace AutoFake
 			container.Register(typeof(IPrependMockConfiguration<>), typeof(PrependMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<IVerifyMockConfiguration, VerifyMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IReplaceMockConfiguration<>), typeof(ReplaceMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
-			container.Register<IRemoveMockConfiguration, RemoveMockConfiguration >(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(IRemoveMockConfiguration<>), typeof(RemoveMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<ISourceMemberInsertMockConfiguration, SourceMemberInsertMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 		}
 

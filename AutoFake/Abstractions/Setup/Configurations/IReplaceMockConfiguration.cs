@@ -6,5 +6,6 @@
 		IReplaceMockConfiguration<TReturn> ExpectedCalls(uint expectedCallsCount);
 		IReplaceMockConfiguration<TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
 		IReplaceMockConfiguration<TReturn> WhenArgumentsAreMatched();
+		IReplaceMockConfiguration<TReturn> When(IExecutionContext.WhenInstanceFunc when);
 	}
 }

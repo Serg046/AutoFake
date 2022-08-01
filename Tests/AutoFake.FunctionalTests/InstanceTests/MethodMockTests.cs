@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
@@ -224,6 +225,35 @@ namespace AutoFake.FunctionalTests.InstanceTests
 	        sut.Replace(f => f.GetAnotherValueImpl(Arg.IsAny<object>())).Return(intValue);
 
 	        sut.Execute().Should().Be(stringValue + intValue);
+        }
+
+		[Fact]
+        public void WhenTest()
+		{
+            var fake = new Fake<WhenTestClass>();
+
+            var sut = fake.Rewrite(f => f.SomeMethod());
+            sut.Replace((Random r) => r.Next(Arg.IsAny<int>(), Arg.IsAny<int>())).Return(1)
+                .When(obj => obj is IEquatable<int> equatable && equatable.Equals(-1));
+            sut.Replace((Random r) => r.Next(Arg.IsAny<int>(), Arg.IsAny<int>())).Return(2)
+                .When(obj => obj is IEquatable<int> equatable && equatable.Equals(1));
+
+            sut.Execute().Should().Be(3);
+		}
+
+        private class WhenTestClass : IEquatable<int>
+		{
+            public int Prop { get; set; }
+
+            bool IEquatable<int>.Equals(int other) => other == Prop;
+
+			public int SomeMethod()
+			{
+                Prop = -1;
+                var x = new Random().Next(-100, 100);
+                Prop = 1;
+                return x + new Random().Next(-100, 100);
+            }
         }
 
         private class GenericTestClass<T>

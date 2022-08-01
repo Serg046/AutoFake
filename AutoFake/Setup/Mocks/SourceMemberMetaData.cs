@@ -7,7 +7,6 @@ using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Exceptions;
-using AutoFake.Expression;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -34,6 +33,7 @@ namespace AutoFake.Setup.Mocks
         public IInvocationExpression InvocationExpression { get; }
         public ISourceMember SourceMember { get; }
         public IExecutionContext.CallsCheckerFunc? ExpectedCalls { get; set; }
+        public IExecutionContext.WhenInstanceFunc? WhenFunc { get; set; }
         private FieldDefinition SetupBodyField => _setupBodyField ?? throw new InvalidOperationException("SetupBody field should be set");
         private FieldDefinition ExecutionContext => _executionContext ?? throw new InvalidOperationException("ExecutionContext field should be set");
 
@@ -55,7 +55,7 @@ namespace AutoFake.Setup.Mocks
 
 	            var ctxField = GetField(type, ExecutionContext.Name)
 	                           ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
-	            ctxField.SetValue(null, _getExecutionContext(ExpectedCalls));
+	            ctxField.SetValue(null, _getExecutionContext(ExpectedCalls, WhenFunc));
             }
         }
 

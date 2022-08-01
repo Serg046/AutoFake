@@ -9,9 +9,9 @@ namespace AutoFake.Abstractions.Setup.Configurations
 		IReplaceMockConfiguration<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc);
 		IReplaceMockConfiguration<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc);
 		IReplaceMockConfiguration<TReturn> Replace<TReturn>(Expression<Func<TSut, TReturn>> instanceSetupFunc);
-		IRemoveMockConfiguration Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc);
-		IRemoveMockConfiguration Remove(Expression<Action> voidStaticSetupFunc);
-		IRemoveMockConfiguration Remove(Expression<Action<TSut>> voidInstanceSetupFunc);
+		IRemoveMockConfiguration<TSut> Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc);
+		IRemoveMockConfiguration<TSut> Remove(Expression<Action> voidStaticSetupFunc);
+		IRemoveMockConfiguration<TSut> Remove(Expression<Action<TSut>> voidInstanceSetupFunc);
 		IVerifyMockConfiguration Verify<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc);
 		IVerifyMockConfiguration Verify<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc);
 		IVerifyMockConfiguration Verify<TReturn>(Expression<Func<TReturn>> staticSetupFunc);
