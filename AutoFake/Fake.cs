@@ -11,10 +11,11 @@ using DryIoc;
 namespace AutoFake
 {
 #pragma warning disable AF0001 // Public by design
-	public class Fake<T> : Fake
+	public class Fake<T> : Fake, IExecutor<T>
 #pragma warning restore AF0001
-	{
-        public Fake(params object[] constructorArgs) : base(typeof(T), constructorArgs)
+    {
+        public Fake(params object[] constructorArgs)
+            : base(typeof(T), constructorArgs, typeof(Fake), typeof(IExecutor<T>), typeof(IExecutor<object>))
         {
         }
 
@@ -28,17 +29,22 @@ namespace AutoFake
     }
 
 #pragma warning disable AF0001 // Public by design
-    public class Fake
+    public class Fake : IExecutor<object>
 #pragma warning restore AF0001
     {
 	    private readonly object?[] _dependencies;
 	    private FakeObjectInfo? _fakeObjectInfo;
 
         public Fake(Type type, params object?[] constructorArgs)
+            : this(type, constructorArgs, typeof(Fake), typeof(IExecutor<object>))
         {
-	        if (type == null) throw new ArgumentNullException(nameof(type));
+        }
+
+        protected Fake(Type type, object?[] constructorArgs, params Type[] fakeServiceTypes)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
             _dependencies = constructorArgs ?? throw new ArgumentNullException(nameof(constructorArgs));
-            Services = ContainerExtensions.CreateContainer(type, this);
+            Services = ContainerExtensions.CreateContainer(type, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
             Options = Services.Resolve<IFakeOptions>();
         }
 
@@ -70,28 +76,30 @@ namespace AutoFake
             return scope.Resolve<IActionMockConfiguration<object>>();
         }
 
+        TReturn IExecutor<object>.Execute<TReturn>(Expression<Func<object, TReturn>> expression) => Execute(expression);
         public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
         {
 	        using var scope = Services.AddInvocationExpression(expression);
-            return scope.Resolve<Executor<TReturn>>().Execute();
+            return scope.Resolve<ExpressionExecutor<TReturn>>().Execute();
         }
 
+        void IExecutor<object>.Execute(Expression<Action<object>> expression) => Execute(expression);
         public void Execute<TInput>(Expression<Action<TInput>> expression)
         {
             using var scope = Services.AddInvocationExpression(expression);
-            scope.Resolve<Executor>().Execute();
+            scope.Resolve<ExpressionExecutor>().Execute();
         }
 
         public TReturn Execute<TReturn>(Expression<Func<TReturn>> expression)
         {
             using var scope = Services.AddInvocationExpression(expression);
-            return scope.Resolve<Executor<TReturn>>().Execute();
+            return scope.Resolve<ExpressionExecutor<TReturn>>().Execute();
         }
 
         public void Execute(Expression<Action> expression)
         {
             using var scope = Services.AddInvocationExpression(expression);
-            scope.Resolve<Executor>().Execute();
+            scope.Resolve<ExpressionExecutor>().Execute();
         }
 
         internal FakeObjectInfo GetFakeObject()
@@ -110,5 +118,5 @@ namespace AutoFake
 			}
             return _fakeObjectInfo;
         }
-    }
+	}
 }

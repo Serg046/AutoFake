@@ -5,42 +5,44 @@ using AutoFake.Abstractions.Setup.Configurations;
 
 namespace AutoFake.Setup.Configurations
 {
-	internal class ReplaceMockConfiguration<TReturn> : IReplaceMockConfiguration<TReturn>
+	internal class ReplaceMockConfiguration<TSut, TReturn> : IReplaceMockConfiguration<TSut, TReturn>
     {
-        private readonly ReplaceMock _mock;
+		private readonly ReplaceMock _mock;
+		private readonly IExecutor<TSut> _executor;
 
-        internal ReplaceMockConfiguration(ReplaceMock mock)
+		internal ReplaceMockConfiguration(ReplaceMock mock, IExecutor<TSut> executor)
         {
-            _mock = mock;
-        }
+			_mock = mock;
+			_executor = executor;
+		}
 
-        public IReplaceMockConfiguration<TReturn> Return(TReturn returnObject)
+        public IReplaceMockConfiguration<TSut, TReturn> Return(TReturn returnObject)
         {
             _mock.ReturnObject = returnObject ?? throw new ArgumentNullException(nameof(returnObject));
             _mock.ReturnType = typeof(TReturn);
             return this;
         }
 
-        public IReplaceMockConfiguration<TReturn> ExpectedCalls(uint expectedCallsCount)
+        public IReplaceMockConfiguration<TSut, TReturn> ExpectedCalls(uint expectedCallsCount)
         {
             return ExpectedCalls(callsCount => callsCount == expectedCallsCount);
         }
 
-        public IReplaceMockConfiguration<TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
+        public IReplaceMockConfiguration<TSut, TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc)
         {
             _mock.SourceMemberMetaData.ExpectedCalls = expectedCallsCountFunc;
             return this;
         }
 
-        public IReplaceMockConfiguration<TReturn> WhenArgumentsAreMatched()
+        public IReplaceMockConfiguration<TSut, TReturn> WhenArgumentsAreMatched()
         {
 	        _mock.SourceMemberMetaData.InvocationExpression.ThrowWhenArgumentsAreNotMatched = false;
 	        return this;
         }
 
-        public IReplaceMockConfiguration<TReturn> When(IExecutionContext.WhenInstanceFunc when)
+        public IReplaceMockConfiguration<TSut, TReturn> When(Func<IExecutor<TSut>, bool> when)
         {
-            _mock.SourceMemberMetaData.WhenFunc = when;
+            _mock.SourceMemberMetaData.WhenFunc = () => when(_executor);
             return this;
         }
     }

@@ -131,6 +131,33 @@ namespace AutoFake.FunctionalTests.InstanceTests
 			sut.Execute().Should().Be(stringValue + intValue);
 		}
 
+		[Fact]
+		public void WhenTest()
+		{
+			var fake = new Fake<WhenTestClass>();
+
+			var sut = fake.Rewrite(f => f.SomeMethod());
+			sut.Replace(() => TestClass.DynamicStaticValue).Return(1)
+				.When(x => x.Execute(f => f.Prop) == -1);
+			sut.Replace(() => TestClass.DynamicStaticValue).Return(2)
+				.When(x => x.Execute(f => f.Prop) == 1);
+
+			sut.Execute().Should().Be(3);
+		}
+
+		private class WhenTestClass
+		{
+			public int Prop { get; set; }
+
+			public int SomeMethod()
+			{
+				Prop = -1;
+				var x = TestClass.DynamicStaticValue;
+				Prop = 1;
+				return x + TestClass.DynamicStaticValue;
+			}
+		}
+
 		private class GenericTestClass<T>
 		{
 			public KeyValuePair<T, string> Pair = new KeyValuePair<T, string>(default, "test");

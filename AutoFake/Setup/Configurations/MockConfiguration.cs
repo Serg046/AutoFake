@@ -9,10 +9,10 @@ namespace AutoFake.Setup.Configurations
 {
 	internal class FuncMockConfiguration<TSut, TReturn> : MockConfiguration<TSut>, IFuncMockConfiguration<TSut, TReturn>
 	{
-        private readonly Executor<TReturn> _executor;
+        private readonly ExpressionExecutor<TReturn> _executor;
 
         internal FuncMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
-	        IMockFactory mockFactory, IMockCollection mocks, Executor<TReturn> executor)
+	        IMockFactory mockFactory, IMockCollection mocks, ExpressionExecutor<TReturn> executor)
 	        : base(exprFactory, cfgFactory, mockFactory, mocks)
         {
             _executor = executor;
@@ -23,10 +23,10 @@ namespace AutoFake.Setup.Configurations
 
 	internal class ActionMockConfiguration<TSut> : MockConfiguration<TSut>, IActionMockConfiguration<TSut>
 	{
-        private readonly Executor _executor;
+        private readonly ExpressionExecutor _executor;
 
         internal ActionMockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
-	        IMockFactory mockFactory, IMockCollection mocks, Executor executor)
+	        IMockFactory mockFactory, IMockCollection mocks, ExpressionExecutor executor)
 	        : base(exprFactory, cfgFactory, mockFactory, mocks)
         {
             _executor = executor;
@@ -35,7 +35,7 @@ namespace AutoFake.Setup.Configurations
         public void Execute() => _executor.Execute();
     }
 
-    internal abstract class MockConfiguration<T> : MockConfiguration
+    internal abstract class MockConfiguration<TSut> : MockConfiguration
     {
         internal MockConfiguration(InvocationExpression.Create exprFactory, IMockConfigurationFactory cfgFactory,
 	        IMockFactory mockFactory, IMockCollection mocks)
@@ -43,36 +43,42 @@ namespace AutoFake.Setup.Configurations
         {
         }
 
-        public IReplaceMockConfiguration<TReturn> Replace<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
-            => ReplaceImpl<TReturn>(instanceSetupFunc);
+        public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TSut, TReturn>> instanceSetupFunc)
+            => ReplaceImpl<TSut, TReturn>(instanceSetupFunc);
 
-        public IRemoveMockConfiguration<T> Remove(Expression<Action<T>> voidInstanceSetupFunc)
-            => RemoveImpl<T>(voidInstanceSetupFunc);
+        public IReplaceMockConfiguration<TSut, TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
+            => ReplaceImpl<TSut, TReturn>(instanceSetupFunc);
 
-        public IRemoveMockConfiguration<T> Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
-           => RemoveImpl<T>(voidInstanceSetupFunc);
+        public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
+            => ReplaceImpl<TSut, TReturn>(staticSetupFunc);
 
-        public IRemoveMockConfiguration<T> Remove(Expression<Action> voidStaticSetupFunc)
-           => RemoveImpl<T>(voidStaticSetupFunc);
+        public IRemoveMockConfiguration<TSut> Remove(Expression<Action<TSut>> voidInstanceSetupFunc)
+            => RemoveImpl<TSut>(voidInstanceSetupFunc);
 
-        public IVerifyMockConfiguration Verify<TReturn>(Expression<Func<T, TReturn>> instanceSetupFunc)
+        public IRemoveMockConfiguration<TSut> Remove<TInput>(Expression<Action<TInput>> voidInstanceSetupFunc)
+           => RemoveImpl<TSut>(voidInstanceSetupFunc);
+
+        public IRemoveMockConfiguration<TSut> Remove(Expression<Action> voidStaticSetupFunc)
+           => RemoveImpl<TSut>(voidStaticSetupFunc);
+
+        public IVerifyMockConfiguration Verify<TReturn>(Expression<Func<TSut, TReturn>> instanceSetupFunc)
             => VerifyImpl(instanceSetupFunc);
 
-        public IVerifyMockConfiguration Verify(Expression<Action<T>> voidInstanceSetupFunc)
+        public IVerifyMockConfiguration Verify(Expression<Action<TSut>> voidInstanceSetupFunc)
             => VerifyImpl(voidInstanceSetupFunc);
 
-        public new IPrependMockConfiguration<T> Prepend(Action action)
+        public new IPrependMockConfiguration<TSut> Prepend(Action action)
         {
 	        var position = Mocks.Count;
 	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.Before));
-            return ConfigurationFactory.GetInsertMockConfiguration<IPrependMockConfiguration<T>>(mock => Mocks[position] = mock, action);
+            return ConfigurationFactory.GetInsertMockConfiguration<IPrependMockConfiguration<TSut>>(mock => Mocks[position] = mock, action);
         }
 
-        public new IAppendMockConfiguration<T> Append(Action action)
+        public new IAppendMockConfiguration<TSut> Append(Action action)
         {
 	        var position = Mocks.Count;
 	        Mocks.Add(MockFactory.GetInsertMock(action, InsertMock.Location.After));
-            return ConfigurationFactory.GetInsertMockConfiguration<IAppendMockConfiguration<T>>(mock => Mocks[position] = mock, action);
+            return ConfigurationFactory.GetInsertMockConfiguration<IAppendMockConfiguration<TSut>>(mock => Mocks[position] = mock, action);
         }
     }
 
@@ -95,13 +101,13 @@ namespace AutoFake.Setup.Configurations
 
         internal IMockCollection Mocks { get; }
 
-        protected IReplaceMockConfiguration<TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
+        protected IReplaceMockConfiguration<TSut, TReturn> ReplaceImpl<TSut, TReturn>(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             var invocationExpression = _exprFactory(expression);
             var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
             Mocks.Add(mock);
-            return ConfigurationFactory.GetReplaceMockConfiguration<IReplaceMockConfiguration<TReturn>>(mock);
+            return ConfigurationFactory.GetReplaceMockConfiguration<IReplaceMockConfiguration<TSut, TReturn>>(mock);
         }
 
         protected IRemoveMockConfiguration<TSut> RemoveImpl<TSut>(LambdaExpression expression)
@@ -112,12 +118,6 @@ namespace AutoFake.Setup.Configurations
             Mocks.Add(mock);
             return ConfigurationFactory.GetReplaceMockConfiguration<IRemoveMockConfiguration<TSut>>(mock);
         }
-
-        public IReplaceMockConfiguration<TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc)
-            => ReplaceImpl<TReturn>(instanceSetupFunc);
-
-        public IReplaceMockConfiguration<TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc)
-            => ReplaceImpl<TReturn>(staticSetupFunc);
 
         protected IVerifyMockConfiguration VerifyImpl(LambdaExpression expression)
         {

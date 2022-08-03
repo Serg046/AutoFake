@@ -7,12 +7,14 @@ namespace AutoFake.Setup.Configurations
 {
 	internal class RemoveMockConfiguration<TSut> : IRemoveMockConfiguration<TSut>
     {
-        private readonly ReplaceMock _mock;
+		private readonly ReplaceMock _mock;
+		private readonly IExecutor<TSut> _executor;
 
-        internal RemoveMockConfiguration(ReplaceMock mock)
+		internal RemoveMockConfiguration(ReplaceMock mock, IExecutor<TSut> executor)
         {
-            _mock = mock;
-        }
+			_mock = mock;
+			_executor = executor;
+		}
 
         public IRemoveMockConfiguration<TSut> ExpectedCalls(uint expectedCallsCount)
         {
@@ -31,9 +33,9 @@ namespace AutoFake.Setup.Configurations
 	        return this;
         }
 
-        public IRemoveMockConfiguration<TSut> When(IExecutionContext.WhenInstanceFunc when)
+        public IRemoveMockConfiguration<TSut> When(Func<IExecutor<TSut>, bool> when)
         {
-            _mock.SourceMemberMetaData.WhenFunc = when;
+            _mock.SourceMemberMetaData.WhenFunc = () => when(_executor);
             return this;
         }
     }

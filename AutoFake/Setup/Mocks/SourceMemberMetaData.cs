@@ -33,7 +33,7 @@ namespace AutoFake.Setup.Mocks
         public IInvocationExpression InvocationExpression { get; }
         public ISourceMember SourceMember { get; }
         public IExecutionContext.CallsCheckerFunc? ExpectedCalls { get; set; }
-        public IExecutionContext.WhenInstanceFunc? WhenFunc { get; set; }
+        public Func<bool>? WhenFunc { get; set; }
         private FieldDefinition SetupBodyField => _setupBodyField ?? throw new InvalidOperationException("SetupBody field should be set");
         private FieldDefinition ExecutionContext => _executionContext ?? throw new InvalidOperationException("ExecutionContext field should be set");
 

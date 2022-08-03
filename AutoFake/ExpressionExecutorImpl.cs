@@ -4,13 +4,13 @@ using AutoFake.Expression;
 
 namespace AutoFake
 {
-	internal class ExecutorImpl
+	internal class ExpressionExecutorImpl
 	{
 		private readonly Fake _fake;
 		private readonly IInvocationExpression _invocationExpression;
 		private readonly IMemberVisitorFactory _memberVisitorFactory;
 
-		public ExecutorImpl(Fake fake, IInvocationExpression invocationExpression, IMemberVisitorFactory memberVisitorFactory)
+		public ExpressionExecutorImpl(Fake fake, IInvocationExpression invocationExpression, IMemberVisitorFactory memberVisitorFactory)
 		{
 			_fake = fake;
 			_invocationExpression = invocationExpression;

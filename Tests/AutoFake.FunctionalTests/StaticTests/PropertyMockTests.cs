@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentAssertions;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -65,6 +66,33 @@ namespace AutoFake.FunctionalTests.StaticTests
 	        var actual = sut.Execute();
 	        Assert.Equal(1, actual.Key);
 	        Assert.Equal("1", actual.Value);
+        }
+
+        [Fact]
+        public void WhenTest()
+        {
+            var fake = new Fake(typeof(WhenTestClass));
+
+            var sut = fake.Rewrite(() => WhenTestClass.SomeMethod());
+            sut.Replace(() => TestClass.DynamicStaticValue).Return(1)
+                .When(x => x.Execute(() => WhenTestClass.Prop) == -1);
+            sut.Replace(() => TestClass.DynamicStaticValue).Return(2)
+                .When(x => x.Execute(() => WhenTestClass.Prop) == 1);
+
+            sut.Execute().Should().Be(3);
+        }
+
+        private static class WhenTestClass
+        {
+            public static int Prop { get; set; }
+
+            public static int SomeMethod()
+            {
+                Prop = -1;
+                var x = TestClass.DynamicStaticValue;
+                Prop = 1;
+                return x + TestClass.DynamicStaticValue;
+            }
         }
 
         private static class GenericTestClass<T>

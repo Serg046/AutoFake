@@ -200,19 +200,22 @@ namespace AutoFake.FunctionalTests.StaticTests
 
             var sut = fake.Rewrite(() => WhenTestClass.SomeMethod());
             sut.Replace((Random r) => r.Next(Arg.IsAny<int>(), Arg.IsAny<int>())).Return(1)
-                .When(obj => DateTime.Now < dateTime);
+                .When(x => x.Execute(() => WhenTestClass.Prop) == -1);
             sut.Replace((Random r) => r.Next(Arg.IsAny<int>(), Arg.IsAny<int>())).Return(2)
-                .When(obj => DateTime.Now > dateTime);
+                .When(x => x.Execute(() => WhenTestClass.Prop) == 1);
 
             sut.Execute().Should().Be(3);
         }
 
         private static class WhenTestClass
         {
+            public static int Prop { get; set; }
+
             public static int SomeMethod()
             {
+                Prop = -1;
                 var x = new Random().Next(-100, 100);
-                Thread.Sleep(4000);
+                Prop = 1;
                 return x + new Random().Next(-100, 100);
             }
         }

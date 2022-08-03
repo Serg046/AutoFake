@@ -2,11 +2,11 @@
 
 namespace AutoFake
 {
-    internal class Executor<T>
+    internal class ExpressionExecutor<T>
     {
-	    private readonly ExecutorImpl _executor;
+	    private readonly ExpressionExecutorImpl _executor;
 
-        public Executor(ExecutorImpl executor)
+        public ExpressionExecutor(ExpressionExecutorImpl executor)
         {
 	        _executor = executor;
         }
@@ -36,11 +36,11 @@ namespace AutoFake
         }
     }
 
-    internal class Executor
+    internal class ExpressionExecutor
     {
-        private readonly ExecutorImpl _executor;
+        private readonly ExpressionExecutorImpl _executor;
 
-        public Executor(ExecutorImpl executor)
+        public ExpressionExecutor(ExpressionExecutorImpl executor)
         {
             _executor = executor;
         }

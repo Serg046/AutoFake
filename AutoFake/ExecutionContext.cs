@@ -1,10 +1,11 @@
 ﻿using AutoFake.Abstractions;
+using System;
 
 namespace AutoFake
 {
 	internal class ExecutionContext : IExecutionContext
 	{
-		public ExecutionContext(IExecutionContext.CallsCheckerFunc? callsChecker, IExecutionContext.WhenInstanceFunc? whenFunc)
+		public ExecutionContext(IExecutionContext.CallsCheckerFunc? callsChecker, Func<bool>? whenFunc)
 		{
 			CallsChecker = callsChecker;
 			WhenFunc = whenFunc;
@@ -14,7 +15,7 @@ namespace AutoFake
 
 		public IExecutionContext.CallsCheckerFunc? CallsChecker { get; }
 
-		public IExecutionContext.WhenInstanceFunc? WhenFunc { get; }
+		public Func<bool>? WhenFunc { get; }
 
 		public void IncActualCalls() => ActualCallsNumber++;
 	}

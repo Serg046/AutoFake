@@ -109,9 +109,9 @@ namespace AutoFake.Expression
             return _arguments;
         }
 
-        public bool VerifyArguments(object instance, object[] currentArguments, IExecutionContext executionContext)
+        public bool VerifyArguments(object[] currentArguments, IExecutionContext executionContext)
 		{
-			if (executionContext.WhenFunc != null && !executionContext.WhenFunc(instance))
+			if (executionContext.WhenFunc != null && !executionContext.WhenFunc())
 			{
 				return false;
 			}
