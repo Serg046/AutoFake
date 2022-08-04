@@ -5,7 +5,6 @@ using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using AutoFake.Exceptions;
 using FluentAssertions;
@@ -205,6 +204,27 @@ namespace AutoFake.FunctionalTests.StaticTests
                 .When(x => x.Execute(() => WhenTestClass.Prop) == 1);
 
             sut.Execute().Should().Be(3);
+        }
+
+        [Fact]
+        public void IEnumerableMethodTest()
+        {
+            var fake = new Fake(typeof(IEnumerableTestClass));
+
+            var sut = fake.Rewrite(() => IEnumerableTestClass.GetValue());
+            sut.Replace(() => IEnumerableTestClass.GetDynamicValue()).Return(7);
+
+            sut.Execute().Should().OnlyContain(i => i == 7);
+        }
+
+        private static class IEnumerableTestClass
+        {
+            public static int GetDynamicValue() => 5;
+
+            public static IEnumerable<int> GetValue()
+            {
+                yield return GetDynamicValue();
+            }
         }
 
         private static class WhenTestClass

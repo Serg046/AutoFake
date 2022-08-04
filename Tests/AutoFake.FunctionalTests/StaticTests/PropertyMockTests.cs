@@ -82,6 +82,27 @@ namespace AutoFake.FunctionalTests.StaticTests
             sut.Execute().Should().Be(3);
         }
 
+        [Fact]
+        public void IEnumerableMethodTest()
+        {
+            var fake = new Fake(typeof(IEnumerableTestClass));
+
+            var sut = fake.Rewrite(() => IEnumerableTestClass.GetValue());
+            sut.Replace(() => IEnumerableTestClass.GetDynamicValue).Return(7);
+
+            sut.Execute().Should().OnlyContain(i => i == 7);
+        }
+
+        private static class IEnumerableTestClass
+        {
+            public static int GetDynamicValue => 5;
+
+            public static IEnumerable<int> GetValue()
+            {
+                yield return GetDynamicValue;
+            }
+        }
+
         private static class WhenTestClass
         {
             public static int Prop { get; set; }

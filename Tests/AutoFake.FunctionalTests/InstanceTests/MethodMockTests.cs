@@ -240,7 +240,18 @@ namespace AutoFake.FunctionalTests.InstanceTests
             sut.Execute().Should().Be(3);
 		}
 
-		private class WhenTestClass
+        [Fact]
+        public void IEnumerableMethodTest()
+        {
+            var fake = new Fake<IEnumerableTestClass>();
+
+            var sut = fake.Rewrite(f => f.GetValue());
+            sut.Replace(a => a.GetDynamicValue()).Return(7);
+
+            sut.Execute().Should().OnlyContain(i => i == 7);
+        }
+
+        private class WhenTestClass
 		{
             public int Prop { get; set; }
 
@@ -382,6 +393,16 @@ namespace AutoFake.FunctionalTests.InstanceTests
 
             public async Task<int> GetValueAsync() => await GetDynamicValueAsync();
             public async Task<int> GetStaticValueAsync() => await GetStaticDynamicValueAsync();
+        }
+
+        private class IEnumerableTestClass
+        {
+            public int GetDynamicValue() => 5;
+
+            public IEnumerable<int> GetValue()
+            {
+                yield return GetDynamicValue();
+            }
         }
 
         private class ParamsTestClass

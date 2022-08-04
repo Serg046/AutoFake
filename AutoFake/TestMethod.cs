@@ -55,6 +55,7 @@ namespace AutoFake
 			}
 
 			if (currentMethod.IsAsync(out var asyncMethod)) Rewrite(mocks, asyncMethod, UpdateParents(state, currentMethod));
+			if (currentMethod.IsIterator(out var iterator)) Rewrite(mocks, iterator, UpdateParents(state, currentMethod));
 			if (currentMethod.Body != null) ProcessInstructions(mocks, currentMethod, state);
 		}
 

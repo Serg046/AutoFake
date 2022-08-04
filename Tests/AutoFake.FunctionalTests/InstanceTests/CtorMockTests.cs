@@ -109,6 +109,27 @@ namespace AutoFake.FunctionalTests.InstanceTests
             sut.Execute().Should().Be("cd");
         }
 
+        [Fact]
+        public void IEnumerableMethodTest()
+        {
+            var fake = new Fake<IEnumerableTestClass>();
+
+            var sut = fake.Rewrite(f => f.GetValue());
+            sut.Replace(() => new string(Arg.IsAny<char[]>())).Return("b");
+
+            sut.Execute().Should().OnlyContain(i => i == "b");
+        }
+
+        private class IEnumerableTestClass
+        {
+            public int GetDynamicValue() => 5;
+
+            public IEnumerable<string> GetValue()
+            {
+                yield return new string(new[] { 'a' });
+            }
+        }
+
         private class WhenTestClass
         {
             public int Prop { get; set; }
