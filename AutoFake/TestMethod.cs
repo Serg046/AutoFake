@@ -54,9 +54,18 @@ namespace AutoFake
 				}
 			}
 
-			if (currentMethod.IsAsync(out var asyncMethod)) Rewrite(mocks, asyncMethod, UpdateParents(state, currentMethod));
-			if (currentMethod.IsIterator(out var iterator)) Rewrite(mocks, iterator, UpdateParents(state, currentMethod));
+			foreach (var method in GetStateMachineMethods(currentMethod)) Rewrite(mocks, method, UpdateParents(state, currentMethod));
 			if (currentMethod.Body != null) ProcessInstructions(mocks, currentMethod, state);
+		}
+
+		private IEnumerable<MethodDefinition> GetStateMachineMethods(MethodDefinition currentMethod)
+		{
+			foreach (var attribute in currentMethod.CustomAttributes.Where(a => a.AttributeType.Name.EndsWith("StateMachineAttribute") 
+				&& a.AttributeType.ToTypeDefinition().BaseType?.FullName == "System.Runtime.CompilerServices.StateMachineAttribute"))
+			{
+				var typeRef = (TypeReference)attribute.ConstructorArguments[0].Value;
+				yield return typeRef.ToTypeDefinition().Methods.Single(m => m.Name == "MoveNext");
+			}
 		}
 
 		private bool Validate(MethodDefinition currentMethod, State state)

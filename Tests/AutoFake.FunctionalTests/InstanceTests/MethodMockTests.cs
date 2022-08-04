@@ -241,14 +241,53 @@ namespace AutoFake.FunctionalTests.InstanceTests
 		}
 
         [Fact]
-        public void IEnumerableMethodTest()
+        public void EnumerableMethodTest()
         {
-            var fake = new Fake<IEnumerableTestClass>();
+            var fake = new Fake<EnumerableTestClass>();
 
             var sut = fake.Rewrite(f => f.GetValue());
             sut.Replace(a => a.GetDynamicValue()).Return(7);
 
             sut.Execute().Should().OnlyContain(i => i == 7);
+        }
+
+#if NETCOREAPP3_0
+        [Fact]
+        public async Task AsyncEnumerableMethodTest()
+        {
+            var fake = new Fake<AsyncEnumerableTestClass>();
+
+            var sut = fake.Rewrite(f => f.GetValue());
+            sut.Replace(a => a.GetDynamicValue()).Return(7);
+
+            await foreach (var value in sut.Execute())
+            {
+                value.Should().Be(7);
+            }
+        }
+#endif
+
+#if NETCOREAPP3_0
+        private class AsyncEnumerableTestClass
+        {
+            public int GetDynamicValue() => 5;
+
+            public async IAsyncEnumerable<int> GetValue()
+            {
+                await Task.Yield();
+                yield return GetDynamicValue();
+            }
+        }
+#endif
+
+        private class EnumerableTestClass
+        {
+            public int GetDynamicValue() => 5;
+
+            public IEnumerable<int> GetValue()
+            {
+                yield return GetDynamicValue();
+            }
         }
 
         private class WhenTestClass
@@ -393,16 +432,6 @@ namespace AutoFake.FunctionalTests.InstanceTests
 
             public async Task<int> GetValueAsync() => await GetDynamicValueAsync();
             public async Task<int> GetStaticValueAsync() => await GetStaticDynamicValueAsync();
-        }
-
-        private class IEnumerableTestClass
-        {
-            public int GetDynamicValue() => 5;
-
-            public IEnumerable<int> GetValue()
-            {
-                yield return GetDynamicValue();
-            }
         }
 
         private class ParamsTestClass

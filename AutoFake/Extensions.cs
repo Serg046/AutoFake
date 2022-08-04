@@ -15,34 +15,6 @@ namespace AutoFake
                methodReference.Parameters.Select(p => p.ParameterType.FullName)
          .SequenceEqual(method.Parameters.Select(p => p.ParameterType.FullName)) &&
                methodReference.ReturnType.FullName == method.ReturnType.FullName;
-        
-        public static bool IsAsync(this MethodDefinition method, out MethodDefinition? asyncMethod)
-        {
-            var asyncAttribute = method.CustomAttributes.SingleOrDefault(a => a.AttributeType.Name == "AsyncStateMachineAttribute");
-            if (asyncAttribute != null)
-            {
-                var typeRef = (TypeReference)asyncAttribute.ConstructorArguments[0].Value;
-                asyncMethod = typeRef.ToTypeDefinition().Methods.Single(m => m.Name == "MoveNext");
-                return true;
-            }
-
-            asyncMethod = null;
-            return false;
-        }
-
-        public static bool IsIterator(this MethodDefinition method, out MethodDefinition? iterator)
-        {
-            var iteratorAttribute = method.CustomAttributes.SingleOrDefault(a => a.AttributeType.Name == "IteratorStateMachineAttribute");
-            if (iteratorAttribute != null)
-            {
-                var typeRef = (TypeReference)iteratorAttribute.ConstructorArguments[0].Value;
-                iterator = typeRef.ToTypeDefinition().Methods.Single(m => m.Name == "MoveNext");
-                return true;
-            }
-
-            iterator = null;
-            return false;
-        }
 
         public static TypeDefinition ToTypeDefinition(this TypeReference type)
             => type as TypeDefinition ?? type.Resolve();

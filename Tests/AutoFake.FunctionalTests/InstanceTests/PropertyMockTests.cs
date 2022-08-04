@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AutoFake.FunctionalTests.InstanceTests
@@ -105,9 +106,9 @@ namespace AutoFake.FunctionalTests.InstanceTests
         }
 
         [Fact]
-        public void IEnumerableMethodTest()
+        public void EnumerableMethodTest()
         {
-            var fake = new Fake<IEnumerableTestClass>();
+            var fake = new Fake<EnumerableTestClass>();
 
             var sut = fake.Rewrite(f => f.GetValue());
             sut.Replace(f => f.GetDynamicValue).Return(7);
@@ -115,7 +116,36 @@ namespace AutoFake.FunctionalTests.InstanceTests
             sut.Execute().Should().OnlyContain(i => i == 7);
         }
 
-        private class IEnumerableTestClass
+#if NETCOREAPP3_0
+        [Fact]
+        public async Task AsyncEnumerableMethodTest()
+        {
+            var fake = new Fake<AsyncEnumerableTestClass>();
+
+            var sut = fake.Rewrite(f => f.GetValue());
+            sut.Replace(f => f.GetDynamicValue).Return(7);
+
+            await foreach (var value in sut.Execute())
+            {
+                value.Should().Be(7);
+            }
+        }
+#endif
+
+#if NETCOREAPP3_0
+        private class AsyncEnumerableTestClass
+        {
+            public int GetDynamicValue => 5;
+
+            public async IAsyncEnumerable<int> GetValue()
+            {
+                await Task.Yield();
+                yield return GetDynamicValue;
+            }
+        }
+#endif
+
+        private class EnumerableTestClass
         {
             public int GetDynamicValue => 5;
 

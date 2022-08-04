@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AutoFake.FunctionalTests.InstanceTests
@@ -110,9 +111,9 @@ namespace AutoFake.FunctionalTests.InstanceTests
         }
 
         [Fact]
-        public void IEnumerableMethodTest()
+        public void EnumerableMethodTest()
         {
-            var fake = new Fake<IEnumerableTestClass>();
+            var fake = new Fake<EnumerableTestClass>();
 
             var sut = fake.Rewrite(f => f.GetValue());
             sut.Replace(() => new string(Arg.IsAny<char[]>())).Return("b");
@@ -120,7 +121,36 @@ namespace AutoFake.FunctionalTests.InstanceTests
             sut.Execute().Should().OnlyContain(i => i == "b");
         }
 
-        private class IEnumerableTestClass
+#if NETCOREAPP3_0
+        [Fact]
+        public async Task AsyncEnumerableMethodTest()
+        {
+            var fake = new Fake<AsyncEnumerableTestClass>();
+
+            var sut = fake.Rewrite(f => f.GetValue());
+            sut.Replace(() => new string(Arg.IsAny<char[]>())).Return("b");
+
+            await foreach (var value in sut.Execute())
+			{
+                value.Should().Be("b");
+			}
+        }
+#endif
+
+#if NETCOREAPP3_0
+        private class AsyncEnumerableTestClass
+        {
+            public int GetDynamicValue() => 5;
+
+            public async IAsyncEnumerable<string> GetValue()
+            {
+                await Task.Yield();
+                yield return new string(new[] { 'a' });
+            }
+        }
+#endif
+
+        private class EnumerableTestClass
         {
             public int GetDynamicValue() => 5;
 
