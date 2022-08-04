@@ -33,6 +33,12 @@ namespace AutoFake.Setup.Configurations
 	        return this;
         }
 
+        public IRemoveMockConfiguration<TSut> When(Func<bool> when)
+        {
+            _mock.SourceMemberMetaData.WhenFunc = when;
+            return this;
+        }
+
         public IRemoveMockConfiguration<TSut> When(Func<IExecutor<TSut>, bool> when)
         {
             _mock.SourceMemberMetaData.WhenFunc = () => when(_executor);

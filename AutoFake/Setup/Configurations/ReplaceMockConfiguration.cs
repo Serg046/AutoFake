@@ -40,10 +40,16 @@ namespace AutoFake.Setup.Configurations
 	        return this;
         }
 
+        public IReplaceMockConfiguration<TSut, TReturn> When(Func<bool> when)
+        {
+            _mock.SourceMemberMetaData.WhenFunc = when;
+            return this;
+        }
+
         public IReplaceMockConfiguration<TSut, TReturn> When(Func<IExecutor<TSut>, bool> when)
         {
             _mock.SourceMemberMetaData.WhenFunc = () => when(_executor);
             return this;
         }
-    }
+	}
 }

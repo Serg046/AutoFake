@@ -8,6 +8,7 @@ namespace AutoFake.Abstractions.Setup.Configurations
 		IReplaceMockConfiguration<TSut, TReturn> ExpectedCalls(uint expectedCallsCount);
 		IReplaceMockConfiguration<TSut, TReturn> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
 		IReplaceMockConfiguration<TSut, TReturn> WhenArgumentsAreMatched();
+		IReplaceMockConfiguration<TSut, TReturn> When(Func<bool> when);
 		IReplaceMockConfiguration<TSut, TReturn> When(Func<IExecutor<TSut>, bool> when);
 	}
 }
