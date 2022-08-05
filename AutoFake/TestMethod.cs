@@ -54,18 +54,11 @@ namespace AutoFake
 				}
 			}
 
-			foreach (var method in GetStateMachineMethods(currentMethod)) Rewrite(mocks, method, UpdateParents(state, currentMethod));
-			if (currentMethod.Body != null) ProcessInstructions(mocks, currentMethod, state);
-		}
-
-		private IEnumerable<MethodDefinition> GetStateMachineMethods(MethodDefinition currentMethod)
-		{
-			foreach (var attribute in currentMethod.CustomAttributes.Where(a => a.AttributeType.Name.EndsWith("StateMachineAttribute") 
-				&& a.AttributeType.ToTypeDefinition().BaseType?.FullName == "System.Runtime.CompilerServices.StateMachineAttribute"))
+			foreach (var method in currentMethod.GetStateMachineMethods(methods => methods.Single(m => m.Name == "MoveNext")))
 			{
-				var typeRef = (TypeReference)attribute.ConstructorArguments[0].Value;
-				yield return typeRef.ToTypeDefinition().Methods.Single(m => m.Name == "MoveNext");
+				Rewrite(mocks, method, UpdateParents(state, currentMethod));
 			}
+			if (currentMethod.Body != null) ProcessInstructions(mocks, currentMethod, state);
 		}
 
 		private bool Validate(MethodDefinition currentMethod, State state)

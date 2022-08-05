@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Abstractions;
 using AutoFake.Exceptions;
@@ -93,11 +96,48 @@ namespace AutoFake.FunctionalTests
             var fake = new Fake<TestClass>();
 
             var sut = fake.Rewrite(f => f.DoSomethingAsync());
-            sut.Verify(f => f.Sum(1, 2))
-                .ExpectedCalls(i => i == 1);
+            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
 
             await sut.Execute();
         }
+
+        [Fact]
+        public void EnumerableTest()
+        {
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.DoSomethingInIterator());
+            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
+
+            sut.Execute().Cast<int>().Sum().Should().Be(6);
+        }
+
+        [Fact]
+        public void TypedEnumerableTest()
+        {
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.DoSomethingInTypedIterator());
+            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
+
+            sut.Execute().Sum().Should().Be(6);
+        }
+
+#if NETCOREAPP3_0
+        [Fact]
+        public async Task AsyncEnumerableTest()
+        {
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.DoSomethingInAsyncIterator());
+            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
+
+            await foreach (var value in sut.Execute())
+            {
+                value.Should().Be(6);
+            }
+        }
+#endif
 
         [Theory]
         [InlineData(-10, -1)]
@@ -149,7 +189,25 @@ namespace AutoFake.FunctionalTests
 				return CodeBranch(0, 0);
 			}
 
-			public Task DoSomethingAsync() => Task.Run(() => Sum(1, 2));
+			public async Task DoSomethingAsync() => await Task.Run(() => Sum(1, 2));
+
+			public IEnumerable DoSomethingInIterator()
+			{
+				yield return Sum(1, 2);
+			}
+
+            public IEnumerable<int> DoSomethingInTypedIterator()
+            {
+                yield return Sum(1, 2);
+            }
+
+#if NETCOREAPP3_0
+            public async IAsyncEnumerable<int> DoSomethingInAsyncIterator()
+            {
+                await Task.Yield();
+                yield return Sum(1, 2);
+            }
+#endif
         }
     }
 }

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Abstractions;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace AutoFake
 {
@@ -15,13 +17,15 @@ namespace AutoFake
         private readonly ITypeInfo _typeInfo;
         private readonly IAssemblyWriter _assemblyWriter;
         private readonly ICecilFactory _cecilFactory;
+		private readonly IEmitterPool _emitterPool;
 
-        public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, ICecilFactory cecilFactory)
+		public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, ICecilFactory cecilFactory, IEmitterPool emitterPool)
         {
 	        _typeInfo = typeInfo;
 	        _assemblyWriter = assemblyWriter;
 	        _cecilFactory = cecilFactory;
-        }
+			_emitterPool = emitterPool;
+		}
 
         public FieldDefinition GenerateField(string name, Type returnType)
         {
@@ -33,13 +37,27 @@ namespace AutoFake
 
         public void InjectVerification(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext)
         {
-	        foreach (var instruction in emitter.Body.Instructions.Where(cmd => cmd.OpCode == OpCodes.Ret).ToList())
-	        {
-		        InjectVerifications(emitter, emitter.ShiftDown(instruction), setupBody, executionContext);
-	        }
-        }
+			var stateMachineMethods = emitter.Body.Method.GetStateMachineMethods(methods => methods
+				.SingleOrDefault(m => m.Name is "System.IDisposable.Dispose" or "System.IAsyncDisposable.DisposeAsync"));
+			if (stateMachineMethods.SingleOrDefault() is MethodDefinition disposeMethod)
+			{
+				InjectVerificationToCurrentMethod(_emitterPool.GetEmitter(disposeMethod.Body), setupBody, executionContext);
+			}
+			else
+			{
+				InjectVerificationToCurrentMethod(emitter, setupBody, executionContext);
+			}
+		}
 
-        private void InjectVerifications(IEmitter emitter, Instruction retInstruction, FieldDefinition setupBody, FieldDefinition executionContext)
+		private void InjectVerificationToCurrentMethod(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext)
+		{
+			foreach (var instruction in emitter.Body.Instructions.Where(cmd => cmd.OpCode == OpCodes.Ret).ToList())
+			{
+				InjectVerificationToCurrentMethod(emitter, emitter.ShiftDown(instruction), setupBody, executionContext);
+			}
+		}
+
+		private void InjectVerificationToCurrentMethod(IEmitter emitter, Instruction retInstruction, FieldDefinition setupBody, FieldDefinition executionContext)
         {
 	        FieldReference setupBodyRef = setupBody;
 	        FieldReference executionContextRef = executionContext;
@@ -49,9 +67,9 @@ namespace AutoFake
 		        executionContextRef = emitter.Body.Method.Module.ImportReference(executionContext);
 	        }
 
-			var verificator = GetVerificator(emitter.Body.Method, out var isAsync);
+			var verificator = GetVerificator(emitter.Body.Method, out var rewriteRetValue);
 	        VariableDefinition? retValue = null;
-	        if (isAsync)
+	        if (rewriteRetValue)
 	        {
 		        retValue = _cecilFactory.CreateVariable(emitter.Body.Method.ReturnType);
 		        emitter.Body.Variables.Add(retValue);
@@ -64,28 +82,28 @@ namespace AutoFake
 	        emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Call, verificator));
         }
 
-        private MethodReference GetVerificator(MethodReference method, out bool isAsync)
+        private MethodReference GetVerificator(MethodReference method, out bool rewriteRetValue)
         {
 	        var returnType = method.ReturnType;
 	        if (returnType.FullName == typeof(Task).FullName)
 	        {
-		        isAsync = true;
+				rewriteRetValue = true;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsAsync));
 		        return method.Module.ImportReference(methodInfo);
 	        }
 	        else if (returnType.Namespace == typeof(Task).Namespace && returnType.Name == "Task`1" &&
-	                 returnType is GenericInstanceType genericReturnType)
+	                 returnType is GenericInstanceType genericTaskType)
 	        {
-		        isAsync = true;
+				rewriteRetValue = true;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCallsTypedAsync));
 		        var open = method.Module.ImportReference(methodInfo);
 		        var closed = _cecilFactory.CreateGenericInstanceMethod(open);
-		        closed.GenericArguments.Add(genericReturnType.GenericArguments.Single());
+		        closed.GenericArguments.Add(genericTaskType.GenericArguments.Single());
 		        return closed;
 	        }
-	        else
+			else
 	        {
-		        isAsync = false;
+				rewriteRetValue = false;
 		        var methodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyExpectedCalls));
 		        return method.Module.ImportReference(methodInfo);
 	        }

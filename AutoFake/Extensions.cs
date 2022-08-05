@@ -104,7 +104,17 @@ namespace AutoFake
 
 	        return null;
         }
-        
+
+		public static IEnumerable<MethodDefinition> GetStateMachineMethods(this MethodDefinition currentMethod, Func<ICollection<MethodDefinition>, MethodDefinition> filter)
+		{
+			foreach (var attribute in currentMethod.CustomAttributes.Where(a => a.AttributeType.Name.EndsWith("StateMachineAttribute")
+				&& a.AttributeType.ToTypeDefinition().BaseType?.FullName == "System.Runtime.CompilerServices.StateMachineAttribute"))
+			{
+				var typeRef = (TypeReference)attribute.ConstructorArguments[0].Value;
+				yield return filter(typeRef.ToTypeDefinition().Methods);
+			}
+		}
+
 		private class EqualityComparer : IEqualityComparer
         {
             private readonly Func<object?, object?, bool> _comparer;
