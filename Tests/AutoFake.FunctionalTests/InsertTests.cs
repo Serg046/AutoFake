@@ -101,8 +101,42 @@ namespace AutoFake.FunctionalTests
             numbers.Should().ContainInOrder(3, 5, -6, 6, 7);
         }
 
+		[Fact]
+        public void Should_add_numbers_When_arguments_are_matched()
+		{
+            var numbers = new List<int>();
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.SomeMethod(numbers));
+            sut.Append(() => numbers.Add(0)).After((List<int> list) => list.Add(Arg.IsAny<int>()));
+            sut.Append(() => numbers.Add(-1)).After((List<int> list) => list.Add(3)).WhenArgumentsAreMatched();
+            sut.Append(() => numbers.Add(-2)).After((List<int> list) => list.Add(7)).WhenArgumentsAreMatched();
+
+            sut.Execute();
+            numbers.Should().ContainInOrder(3, -1, 0, 5, 7, -2, 0);
+        }
+
+        [Fact]
+        public void Should_add_numbers_When_invariants_are_matched()
+        {
+            var numbers = new List<int>();
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.SomeMethod(numbers));
+            sut.Append(() => numbers.Add(0)).After((List<int> list) => list.Add(Arg.IsAny<int>()));
+            sut.Append(() => numbers.Add(-1)).After((List<int> list) => list.Add(Arg.IsAny<int>()))
+                .When(f => f.Execute(x => x.Prop) == 0);
+            sut.Append(() => numbers.Add(-2)).After((List<int> list) => list.Add(Arg.IsAny<int>()))
+                .When(f => f.Execute(x => x.Prop) == 1);
+
+            sut.Execute();
+            numbers.Should().ContainInOrder(3, -1, 0, 5, 7, -2, 0);
+        }
+
         private class TestClass
         {
+            public int Prop { get; private set; }
+
             public void SomeMethod(List<int> numbers)
             {
                 numbers.Add(3);
@@ -111,7 +145,10 @@ namespace AutoFake.FunctionalTests
                 numbers.Add(7);
             }
 
-            public void AnotherMethod() { }
+            public void AnotherMethod()
+            {
+                Prop = 1;
+            }
         }
     }
 }

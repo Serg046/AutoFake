@@ -3,21 +3,13 @@ using System.Linq.Expressions;
 
 namespace AutoFake.Abstractions.Setup.Configurations
 {
-	public interface IPrependMockConfiguration<T>
+	public interface IPrependMockConfiguration<TSut>
 	{
-		ISourceMemberInsertMockConfiguration Before<TOut>(Expression<Func<T, TOut>> expression);
-		ISourceMemberInsertMockConfiguration Before(Expression<Action<T>> expression);
-		ISourceMemberInsertMockConfiguration Before<TIn, TOut>(Expression<Func<TIn, TOut>> expression);
-		ISourceMemberInsertMockConfiguration Before<TIn>(Expression<Action<TIn>> expression);
-		ISourceMemberInsertMockConfiguration Before<TOut>(Expression<Func<TOut>> expression);
-		ISourceMemberInsertMockConfiguration Before(Expression<Action> expression);
-	}
-
-	public interface IPrependMockConfiguration
-	{
-		ISourceMemberInsertMockConfiguration Before<TIn, TOut>(Expression<Func<TIn, TOut>> expression);
-		ISourceMemberInsertMockConfiguration Before<TIn>(Expression<Action<TIn>> expression);
-		ISourceMemberInsertMockConfiguration Before<TOut>(Expression<Func<TOut>> expression);
-		ISourceMemberInsertMockConfiguration Before(Expression<Action> expression);
+		ISourceMemberInsertMockConfiguration<TSut> Before<TOut>(Expression<Func<TSut, TOut>> expression);
+		ISourceMemberInsertMockConfiguration<TSut> Before(Expression<Action<TSut>> expression);
+		ISourceMemberInsertMockConfiguration<TSut> Before<TIn, TOut>(Expression<Func<TIn, TOut>> expression);
+		ISourceMemberInsertMockConfiguration<TSut> Before<TIn>(Expression<Action<TIn>> expression);
+		ISourceMemberInsertMockConfiguration<TSut> Before<TOut>(Expression<Func<TOut>> expression);
+		ISourceMemberInsertMockConfiguration<TSut> Before(Expression<Action> expression);
 	}
 }

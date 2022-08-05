@@ -1,9 +1,13 @@
-﻿namespace AutoFake.Abstractions.Setup.Configurations
+﻿using System;
+
+namespace AutoFake.Abstractions.Setup.Configurations
 {
-	public interface ISourceMemberInsertMockConfiguration
+	public interface ISourceMemberInsertMockConfiguration<TSut>
 	{
-		ISourceMemberInsertMockConfiguration ExpectedCalls(uint expectedCallsCount);
-		ISourceMemberInsertMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
-		ISourceMemberInsertMockConfiguration WhenArgumentsAreMatched();
+		ISourceMemberInsertMockConfiguration<TSut> ExpectedCalls(uint expectedCallsCount);
+		ISourceMemberInsertMockConfiguration<TSut> ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
+		ISourceMemberInsertMockConfiguration<TSut> WhenArgumentsAreMatched();
+		ISourceMemberInsertMockConfiguration<TSut> When(Func<bool> when);
+		ISourceMemberInsertMockConfiguration<TSut> When(Func<IExecutor<TSut>, bool> when);
 	}
 }

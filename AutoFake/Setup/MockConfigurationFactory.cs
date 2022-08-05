@@ -22,7 +22,7 @@ namespace AutoFake.Setup
 		public T GetReplaceMockConfiguration<T>(ReplaceMock mock)
 			=> _serviceLocator.Resolve<Func<ReplaceMock, T>>().Invoke(mock);
 
-		public ISourceMemberInsertMockConfiguration GetSourceMemberInsertMockConfiguration(SourceMemberInsertMock mock)
-			=> _serviceLocator.Resolve<Func<SourceMemberInsertMock, ISourceMemberInsertMockConfiguration>>().Invoke(mock);
+		public ISourceMemberInsertMockConfiguration<T> GetSourceMemberInsertMockConfiguration<T>(SourceMemberInsertMock mock)
+			=> _serviceLocator.Resolve<Func<SourceMemberInsertMock, ISourceMemberInsertMockConfiguration<T>>>().Invoke(mock);
 	}
 }

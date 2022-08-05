@@ -10,6 +10,6 @@ namespace AutoFake.Abstractions.Setup
 		T GetInsertMockConfiguration<T>(Action<IMock> setMock, Action closure);
 		IVerifyMockConfiguration GetVerifyMockConfiguration(VerifyMock mock);
 		T GetReplaceMockConfiguration<T>(ReplaceMock mock);
-		ISourceMemberInsertMockConfiguration GetSourceMemberInsertMockConfiguration(SourceMemberInsertMock mock);
+		ISourceMemberInsertMockConfiguration<T> GetSourceMemberInsertMockConfiguration<T>(SourceMemberInsertMock mock);
 	}
 }

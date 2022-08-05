@@ -77,14 +77,12 @@ namespace AutoFake
 		{
 			container.Register(typeof(IActionMockConfiguration<>), typeof(ActionMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IFuncMockConfiguration<,>), typeof(FuncMockConfiguration<,>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
-			container.Register<IAppendMockConfiguration, AppendMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IAppendMockConfiguration<>), typeof(AppendMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
-			container.Register<IPrependMockConfiguration, PrependMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IPrependMockConfiguration<>), typeof(PrependMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<IVerifyMockConfiguration, VerifyMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IReplaceMockConfiguration<,>), typeof(ReplaceMockConfiguration<,>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IRemoveMockConfiguration<>), typeof(RemoveMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
-			container.Register<ISourceMemberInsertMockConfiguration, SourceMemberInsertMockConfiguration>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register(typeof(ISourceMemberInsertMockConfiguration<>), typeof(SourceMemberInsertMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 		}
 
 		private static void AddMocks(IRegistrator container)
