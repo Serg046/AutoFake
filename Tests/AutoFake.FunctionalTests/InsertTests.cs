@@ -7,7 +7,7 @@ namespace AutoFake.FunctionalTests
     public class InsertTests
     {
         [Fact]
-        public void Should_AddNumberInTheEnd_When_Append()
+        public void When_append_Should_add_number_in_the_end()
         {
             var fake = new Fake<TestClass>();
             var numbers = new List<int>();
@@ -20,7 +20,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_AddNumberInTheBeginning_When_Prepend()
+        public void When_prepend_Should_add_number_in_the_beginning()
         {
             var fake = new Fake<TestClass>();
             var numbers = new List<int>();
@@ -33,7 +33,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_AddNumberAfterCmd_When_AppendWithSourceMember()
+        public void When_append_with_source_member_Should_add_number_after_cmd()
         {
             var fake = new Fake<TestClass>();
             var numbers = new List<int>();
@@ -47,7 +47,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_AddBothNumbers_When_MultipleCallbacks()
+        public void When_multiple_callbacks_Should_add_both_number()
         {
             var fake = new Fake<TestClass>();
             var numbers = new List<int>();
@@ -61,7 +61,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_AddNumberBeforeCmd_When_PrependWithSourceMember()
+        public void When_prepend_with_source_member_Should_add_number_before_cmd()
         {
             var fake = new Fake<TestClass>();
             var numbers = new List<int>();
@@ -75,7 +75,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_AddNumberToLocalVar_When_Append()
+        public void When_append_Should_add_number_to_local_val()
         {
             var numbers = new List<int>();
             var fake = new Fake<TestClass>();
@@ -88,7 +88,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_add_numbers_to_the_appropriate_places_When_generic_insert_mocks()
+        public void When_generic_insert_mocks_Should_add_numbers_to_the_appropriate_places()
         {
             var numbers = new List<int>();
             var fake = new Fake<TestClass>();
@@ -102,7 +102,7 @@ namespace AutoFake.FunctionalTests
         }
 
 		[Fact]
-        public void Should_add_numbers_When_arguments_are_matched()
+        public void When_arguments_are_matched_Should_add_numbers()
 		{
             var numbers = new List<int>();
             var fake = new Fake<TestClass>();
@@ -117,7 +117,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Should_add_numbers_When_invariants_are_matched()
+        public void When_invariants_are_matched_Should_add_numbers()
         {
             var numbers = new List<int>();
             var fake = new Fake<TestClass>();

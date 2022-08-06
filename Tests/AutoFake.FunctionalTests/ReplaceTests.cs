@@ -13,7 +13,7 @@ namespace AutoFake.FunctionalTests
         [InlineData(true, false, true)]
         [InlineData(false, true, true)]
         [InlineData(true, true, false)]
-        public void CheckArgumentsTest(bool correctDate, bool correctZone, bool throws)
+        public void When_arguments_are_passed_Should_be_checked(bool correctDate, bool correctZone, bool throws)
         {
             var fake = new Fake<TestClass>();
             var date = correctDate ? new DateTime(2019, 1, 1) : DateTime.MinValue;
@@ -38,7 +38,7 @@ namespace AutoFake.FunctionalTests
         [InlineData(true, 2, true)]
         [InlineData(true, 1, false)]
         [InlineData(false, 0, false)]
-        public void ExpectedCallsCountTest(bool equalOp, int arg, bool throws)
+        public void When_expected_calls_configured_Should_check(bool equalOp, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
             IExecutionContext.CallsCheckerFunc checker;
@@ -61,7 +61,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void BranchesTest()
+        public void When_there_are_branches_Should_pass()
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.Sum(1, 2));
@@ -81,7 +81,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Replace_SourceAsmInstance_Replaced()
+        public void When_source_assembly_instance_Should_succeed()
         {
             var date = new DateTime(2020, 5, 23);
             var fake = new Fake<TestClass>();
@@ -94,7 +94,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void Replace_Class_Replaced()
+        public void When_replace_some_instance_Should_succeed()
         {
             const int mutator = 4;
             var cl2 = new TestClass2 {Value = 2};

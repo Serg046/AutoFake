@@ -5,7 +5,7 @@ namespace AutoFake.FunctionalTests
 	public class RewriteTests
 	{
 		[Fact]
-		public void MultipleTestMethodsTest()
+		public void When_multiple_suts_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
 
@@ -17,19 +17,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
-		public void ResetTest()
-		{
-			var fake = new Fake<TestClass>();
-
-			var sut1 = fake.Rewrite(m => m.FirstMethod()); sut1.Replace(m => m.GetValue()).Return(1);
-			var sut2 = fake.Rewrite(m => m.SecondMethod()); sut2.Replace(m => m.GetValue()).Return(2);
-
-			Assert.Equal(1, sut1.Execute());
-			Assert.Equal(2, sut2.Execute());
-		}
-
-		[Fact]
-		public void OverloadedMethodTest()
+		public void When_overloaded_methods_Should_choose_the_right()
 		{
 			var fake = new Fake<TestClass>();
 

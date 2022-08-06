@@ -7,7 +7,7 @@ namespace AutoFake.FunctionalTests
 	public class SelfReferenceTests
 	{
 		[Fact]
-		public void When_assert_instance_It_should_fail()
+		public void When_assert_instance_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
 
@@ -17,7 +17,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
-		public void When_assert_instance_member_It_should_succeed()
+		public void When_assert_instance_member_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
 
@@ -27,7 +27,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
-		public void When_assert_new_instance_without_rewriting_It_should_fail()
+		public void When_assert_new_instance_without_rewriting_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
 
@@ -37,7 +37,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
-		public void When_assert_new_instance_It_should_succeed()
+		public void When_assert_new_instance_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
 
@@ -48,7 +48,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
-		public void When_assert_replaced_instance_It_should_succeed()
+		public void When_assert_replaced_instance_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
 			var expected = new TestClass { Prop = 4 };

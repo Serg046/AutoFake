@@ -19,7 +19,7 @@ namespace AutoFake.FunctionalTests
         [InlineData(true, false, true)]
         [InlineData(false, true, true)]
         [InlineData(true, true, false)]
-        public void CheckArgumentsTest(bool correctDate, bool correctZone, bool throws)
+        public void When_arguments_are_passed_Should_be_checked(bool correctDate, bool correctZone, bool throws)
         {
             var fake = new Fake<TestClass>();
             var date = correctDate ? new DateTime(2019, 1, 1) : DateTime.MinValue;
@@ -44,7 +44,7 @@ namespace AutoFake.FunctionalTests
         [InlineData("==", 1, false)]
         [InlineData("<", 1, true)]
         [InlineData(">", 0, false)]
-        public void ExpectedCallsCountTest(string op, int arg, bool throws)
+        public void When_expected_calls_configured_Should_check(string op, int arg, bool throws)
         {
             var fake = new Fake<TestClass>();
             IExecutionContext.CallsCheckerFunc checker;
@@ -73,7 +73,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void BranchesTest()
+        public void When_there_are_branches_Should_pass()
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.Sum(1, 2));
@@ -102,7 +102,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void EnumerableTest()
+        public void When_enumerable_Should_verify()
         {
             var fake = new Fake<TestClass>();
 
@@ -113,7 +113,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void TypedEnumerableTest()
+        public void When_typed_enumerable_Should_verify()
         {
             var fake = new Fake<TestClass>();
 
@@ -125,7 +125,7 @@ namespace AutoFake.FunctionalTests
 
 #if NETCOREAPP3_0
         [Fact]
-        public async Task AsyncEnumerableTest()
+        public async Task When_async_enumerable_Should_verify()
         {
             var fake = new Fake<TestClass>();
 
@@ -143,7 +143,7 @@ namespace AutoFake.FunctionalTests
         [InlineData(-10, -1)]
         [InlineData(0, 0)]
         [InlineData(10, 1)]
-        public void MultipleReturnTest_Success(int arg, int expected)
+        public void When_multiple_return_with_matched_args_Should_succeed(int arg, int expected)
         {
 	        var fake = new Fake<SystemUnderTest>();
 
@@ -157,7 +157,7 @@ namespace AutoFake.FunctionalTests
         [InlineData(-10, 1)]
         [InlineData(0, 123)]
         [InlineData(10, -1)]
-        public void MultipleReturnTest_Throws(int arg, int expected)
+        public void When_multiple_return_without_matched_args_Should_fail(int arg, int expected)
         {
 	        var fake = new Fake<SystemUnderTest>();
 

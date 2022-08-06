@@ -9,7 +9,7 @@ namespace AutoFake.FunctionalTests
         [Theory]
         [InlineData(typeof(HelperClass))]
         [InlineData(typeof(HelperStruct))]
-        public void MethodCallThroughInterfaceTest(Type type)
+        public void When_method_call_through_interface_Should_succeed(Type type)
         {
             var helper = Activator.CreateInstance(type) as IHelper;
 
@@ -20,7 +20,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void MethodCallThroughBaseClassTest()
+        public void When_method_call_through_base_class_Should_succeed()
         {
             var fake = new Fake<TestClass>();
             var sut = fake.Rewrite(f => f.CallMethodThroughBaseClass(new HelperClass()));
@@ -31,7 +31,7 @@ namespace AutoFake.FunctionalTests
         [Theory]
         [InlineData(typeof(HelperClass))]
         [InlineData(typeof(HelperStruct))]
-        public void MethodCallThroughInterfaceFromCtorTest(Type type)
+        public void When_method_call_through_interface_from_ctor_Should_succeed(Type type)
         {
             var helper = Activator.CreateInstance(type) as IHelper;
 
@@ -42,7 +42,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void MethodCallThroughBaseClassFromCtorTest()
+        public void When_method_call_through_base_class_from_ctor_Should_succeed()
         {
             var fake = new Fake<TestClassWithBaseClassCtor>(new HelperClass());
             var sut = fake.Rewrite(f => f.CallMethodThroughBaseClass());
@@ -53,7 +53,7 @@ namespace AutoFake.FunctionalTests
         [Theory]
         [InlineData(typeof(HelperClass))]
         [InlineData(typeof(HelperStruct))]
-        public void MethodCallThroughInterfaceFromFieldTest(Type type)
+        public void When_method_call_through_interface_from_field_Should_succeed(Type type)
         {
             var helper = Activator.CreateInstance(type) as IHelper;
 
@@ -65,7 +65,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void MethodCallThroughBaseClassFromFieldTest()
+        public void When_method_call_through_base_class_from_field_Should_succeed()
         {
             var fake = new Fake<TestClassWithFields>();
             var sut = fake.Rewrite(f => f.CallMethodThroughBaseClass());
@@ -77,7 +77,7 @@ namespace AutoFake.FunctionalTests
         [Theory]
         [InlineData(typeof(HelperClass))]
         [InlineData(typeof(HelperStruct))]
-        public void InterfaceContractTest(Type type)
+        public void When_interface_contract_Should_succeed(Type type)
         {
             var helper = Activator.CreateInstance(type) as IHelper;
 
@@ -88,7 +88,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void InterfaceContractThroughImplClassTest()
+        public void When_interface_contract_through_impl_class_Should_succeed()
         {
             var helper = new HelperClass();
 
@@ -99,7 +99,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void InterfaceContractThroughImplClassInterfaceTest()
+        public void When_interface_contract_through_impl_class_interface_Should_succeed()
         {
             var helper = new HelperClass();
 
@@ -110,7 +110,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void BaseClassContractTest()
+        public void When_base_class_contract_Should_succeed()
         {
             var fake = new Fake<InheritedTestClass>();
             var sut = fake.Rewrite(f => f.CallMethodThroughBaseClass(new HelperClass()));
@@ -119,7 +119,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void InterfaceContractThroughAnotherTypeTest()
+        public void When_interface_contract_through_another_type_Should_succeed()
         {
             var fake = new Fake<InheritedTestClassWithInterface>();
 
@@ -129,7 +129,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void ClassCastTest()
+        public void When_class_cast_Should_succeed()
         {
             var fake = new Fake<TestClass>();
             var helper = new HelperClass();
@@ -140,7 +140,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void StructCastTest()
+        public void When_struct_cast_Should_succeed()
         {
             var fake = new Fake<TestClass>();
             var helper = new HelperStruct();
@@ -153,7 +153,7 @@ namespace AutoFake.FunctionalTests
         [Theory]
         [InlineData(typeof(HelperClass))]
         [InlineData(typeof(HelperStruct))]
-        public void InterfaceCastTest(Type type)
+        public void When_interface_cast_Should_succeed(Type type)
         {
             var fake = new Fake<TestClass>();
             var helper = Activator.CreateInstance(type) as IHelper;
@@ -164,7 +164,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void ClassCreationTest()
+        public void When_class_creation_Should_succeed()
         {
             var fake = new Fake<TestClass>();
 
@@ -174,7 +174,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void StructCreationTest()
+        public void When_struct_creation_Should_succeed()
         {
             var fake = new Fake<TestClass>();
 
@@ -184,7 +184,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void BoxTest()
+        public void When_boxing_Should_succeed()
         {
 	        var fake = new Fake<TestClass>();
 
@@ -194,7 +194,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void UnboxTest()
+        public void When_unboxing_Should_succeed()
         {
 	        var fake = new Fake<TestClass>();
 
@@ -204,7 +204,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-		public void ReplaceMockArgsTest()
+		public void When_replace_mock_args_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
 
