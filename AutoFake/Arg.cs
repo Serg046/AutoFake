@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AutoFake
 {
@@ -19,12 +20,15 @@ namespace AutoFake
 		}
 
         //Used by expression's engine, see GetArgumentsMemberVisitor::GetArgument(MethodCallExpression expression)
+        [ExcludeFromCodeCoverage]
         public static T Is<T>(Func<T, bool> checkArgumentFunc) => IsAny<T>();
 
+        [ExcludeFromCodeCoverage]
         public static T Is<T>(T argument, IEqualityComparer<T> comparer) => IsAny<T>();
 
         public static T IsAny<T>() => default!;
 
+        [ExcludeFromCodeCoverage]
         internal class TypeWrapper
         {
 	        public TypeWrapper(Type type) => Type = type;
