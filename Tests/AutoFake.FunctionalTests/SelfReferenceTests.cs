@@ -2,7 +2,7 @@
 using FluentAssertions;
 using Xunit;
 
-namespace AutoFake.FunctionalTests.InstanceTests
+namespace AutoFake.FunctionalTests
 {
 	public class SelfReferenceTests
 	{
@@ -51,7 +51,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 		public void When_assert_replaced_instance_It_should_succeed()
 		{
 			var fake = new Fake<TestClass>();
-			var expected = new TestClass {Prop = 4};
+			var expected = new TestClass { Prop = 4 };
 
 			var sut = fake.Rewrite(f => f.GetNewReference(7));
 			sut.Replace(() => new TestClass()).Return(expected);
@@ -65,7 +65,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 
 			public TestClass GetReference() => this;
 
-			public TestClass GetNewReference(int arg) => new TestClass {Prop = arg};
+			public TestClass GetNewReference(int arg) => new TestClass { Prop = arg };
 		}
 	}
 }

@@ -1,21 +1,20 @@
-﻿using System;
+﻿using FluentAssertions;
+using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Diagnostics;
-using System.IO;
-using System.Numerics;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Xunit;
 
-namespace AutoFake.FunctionalTests.InstanceTests
+namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 {
-	public class FieldMockTests
+	public class PropertyMockTests
 	{
 		[Fact]
 		public void OwnInstanceTest()
 		{
 			var fake = new Fake<TestClass>();
-        
+
 			var sut = fake.Rewrite(f => f.GetDynamicValue());
 			sut.Replace(t => t.DynamicValue).Return(7);
 
@@ -56,15 +55,15 @@ namespace AutoFake.FunctionalTests.InstanceTests
 		}
 
 		[Fact]
-		public void FrameworkTest()
+		public void FrameworkInstanceTest()
 		{
 			var fake = new Fake<TestClass>();
 
-			const float value = 78;
+			const string cmd = "select * from Test";
 			var sut = fake.Rewrite(f => f.GetFrameworkValue());
-			sut.Replace((Quaternion quaternion) => quaternion.X).Return(value);
+			sut.Replace((SqlCommand c) => c.CommandText).Return(cmd);
 
-			Assert.Equal(value, sut.Execute());
+			Assert.Equal(cmd, sut.Execute());
 		}
 
 		[Fact]
@@ -72,37 +71,11 @@ namespace AutoFake.FunctionalTests.InstanceTests
 		{
 			var fake = new Fake<TestClass>();
 
-			var sr = new StringReader(string.Empty);
+			var date = new DateTime(2016, 9, 25);
 			var sut = fake.Rewrite(f => f.GetFrameworkStaticValue());
-			sut.Replace(() => TextReader.Null).Return(sr);
+			sut.Replace(() => DateTime.Now).Return(date);
 
-			var actual = sut.Execute();
-			Assert.Equal(sr, actual);
-			Assert.NotEqual(TextReader.Null, actual);
-		}
-
-		[Fact]
-		public void StructFieldByAddress()
-		{
-			var fake = new Fake<TestClass>();
-
-			var data = new HelperStruct {Value = 5};
-			var sut = fake.Rewrite(f => f.GetStructValueByAddress());
-			sut.Replace(f => f.StructValue).Return(data);
-
-			Assert.Equal(data.Value, sut.Execute());
-		}
-
-		[Fact]
-		public void StaticStructFieldByAddress()
-		{
-			var fake = new Fake<TestClass>();
-
-			var data = new HelperStruct {Value = 5};
-			var sut = fake.Rewrite(f => f.GetStaticStructValueByAddress());
-			sut.Replace(() => TestClass.StaticStructValue).Return(data);
-
-			Assert.Equal(data.Value, sut.Execute());
+			Assert.Equal(date, sut.Execute());
 		}
 
 		[Fact]
@@ -116,20 +89,6 @@ namespace AutoFake.FunctionalTests.InstanceTests
 			var actual = sut.Execute();
 			Assert.Equal(1, actual.Key);
 			Assert.Equal("1", actual.Value);
-		}
-
-		[Fact]
-		public void AnotherGenericTest()
-		{
-			var fake = new Fake<TestClass>();
-			const string stringValue = "testValue";
-			const int intValue = 7;
-
-			var sut = fake.Rewrite(f => f.GetGenericValue());
-			sut.Replace((ValueTuple<string> tuple) => tuple.Item1).Return(stringValue);
-			sut.Replace((ValueTuple<object> tuple) => tuple.Item1).Return(intValue);
-
-			sut.Execute().Should().Be(stringValue + intValue);
 		}
 
 		[Fact]
@@ -176,11 +135,11 @@ namespace AutoFake.FunctionalTests.InstanceTests
 #if NETCOREAPP3_0
 		private class AsyncEnumerableTestClass
 		{
-			public int GetDynamicValue = 5;
+			public int GetDynamicValue => 5;
 
 			public async IAsyncEnumerable<int> GetValue()
 			{
-                await Task.Yield();
+				await Task.Yield();
 				yield return GetDynamicValue;
 			}
 		}
@@ -188,7 +147,7 @@ namespace AutoFake.FunctionalTests.InstanceTests
 
 		private class EnumerableTestClass
 		{
-			public int GetDynamicValue = 5;
+			public int GetDynamicValue => 5;
 
 			public IEnumerable<int> GetValue()
 			{
@@ -211,17 +170,14 @@ namespace AutoFake.FunctionalTests.InstanceTests
 
 		private class GenericTestClass<T>
 		{
-			public KeyValuePair<T, string> Pair = new KeyValuePair<T, string>(default, "test");
+			public KeyValuePair<T, string> Pair => new KeyValuePair<T, string>(default, "test");
 			public KeyValuePair<T, string> GetValue(T x, string y) => Pair;
 		}
 
-#pragma warning disable 0649
 		private class TestClass
 		{
-			public int DynamicValue = 5;
-			public static int DynamicStaticValue = 5;
-			public HelperStruct StructValue;
-			public static HelperStruct StaticStructValue;
+			public int DynamicValue => 5;
+			public static int DynamicStaticValue => 5;
 
 			public int GetDynamicValue()
 			{
@@ -256,58 +212,27 @@ namespace AutoFake.FunctionalTests.InstanceTests
 				return value;
 			}
 
-			public float GetFrameworkValue()
+			public string GetFrameworkValue()
 			{
 				Debug.WriteLine("Started");
-				var quaternion = new Quaternion();
-				var value = quaternion.X;
+				var cmd = new SqlCommand();
+				var vaue = cmd.CommandText;
 				Debug.WriteLine("Finished");
-				return value;
+				return vaue;
 			}
-			public TextReader GetFrameworkStaticValue()
+			public DateTime GetFrameworkStaticValue()
 			{
 				Debug.WriteLine("Started");
-				var value = TextReader.Null;
+				var vaue = DateTime.Now;
 				Debug.WriteLine("Finished");
-				return value;
-			}
-
-			public int GetStructValueByAddress()
-			{
-				Debug.WriteLine("Started");
-				var value = StructValue.Value;
-				Debug.WriteLine("Finished");
-				return value;
-			}
-
-			public int GetStaticStructValueByAddress()
-			{
-				Debug.WriteLine("Started");
-				var value = StaticStructValue.Value;
-				Debug.WriteLine("Finished");
-				return value;
-			}
-
-			public string GetGenericValue()
-			{
-				Debug.WriteLine("Started");
-				var tuple1 = new ValueTuple<string>();
-				var tuple2 = new ValueTuple<object>();
-				var value = tuple1.Item1 + tuple2.Item1;
-				Debug.WriteLine("Finished");
-				return value;
+				return vaue;
 			}
 		}
 
 		private class HelperClass
 		{
-			public int DynamicValue = 5;
-			public static int DynamicStaticValue = 5;
-		}
-
-		public struct HelperStruct
-		{
-			public int Value;
+			public int DynamicValue => 5;
+			public static int DynamicStaticValue => 5;
 		}
 	}
 }
