@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using AutoFake.Abstractions;
 using AutoFake.Exceptions;
+using FluentAssertions;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -108,8 +109,27 @@ namespace AutoFake.FunctionalTests
             Assert.Equal(cl2, sut.Execute());
         }
 
+		[Fact]
+        public void When_null_ctor_arg_Should_be_passed()
+		{
+            var fake = new Fake<TestClass>(Arg.IsNull<object>());
+
+            fake.Execute(f => f.ReturnCtorArg()).Should().BeNull();
+		}
+
         public class TestClass
         {
+			private object _arg;
+
+			public TestClass() { }
+
+            public TestClass(object arg)
+			{
+				_arg = arg;
+			}
+
+            public object ReturnCtorArg() => _arg;
+
             public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
             {
                 Debug.WriteLine("Started");
