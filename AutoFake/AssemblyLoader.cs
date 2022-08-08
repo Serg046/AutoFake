@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -116,13 +116,11 @@ namespace AutoFake
 
 		private class SymbolsWriterProvider : ISymbolWriterProvider
 		{
-			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName)
-				=> throw new NotImplementedException();
-
+			[ExcludeFromCodeCoverage]
+			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotImplementedException();
 
 			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
 			{
-				if (!module.HasSymbols) throw new InvalidOperationException("There are no debug symbols");
 				return module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream);
 			}
 		}
