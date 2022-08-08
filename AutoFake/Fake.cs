@@ -43,7 +43,7 @@ namespace AutoFake
         protected Fake(Type type, object?[] constructorArgs, params Type[] fakeServiceTypes)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            _dependencies = constructorArgs ?? throw new ArgumentNullException(nameof(constructorArgs));
+            _dependencies = constructorArgs ?? new object?[] { null }; 
             Services = ContainerExtensions.CreateContainer(type, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
             Options = Services.Resolve<IFakeOptions>();
         }

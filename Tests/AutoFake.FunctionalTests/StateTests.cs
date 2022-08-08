@@ -1,5 +1,8 @@
-﻿using FluentAssertions;
+﻿using AutoFake.Exceptions;
+using FluentAssertions;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -19,6 +22,69 @@ namespace AutoFake.FunctionalTests
 			sut.Replace((IEnumerator<int> enumerator) => enumerator.MoveNext()).Return(false).When(() => i > 3);
 
 			sut.Execute().Should().Be(3);
+		}
+
+		[Fact]
+		public void When_null_ctor_arg_Should_be_passed()
+		{
+			new Fake<CtorTestClass>("someObj").Execute(f => f.ReturnCtorArg()).Should().Be("someObj");
+			new Fake<CtorTestClass>(Arg.IsNull<object>()).Execute(f => f.ReturnCtorArg()).Should().BeNull();
+			new Fake<CtorTestClass>(null).Execute(f => f.ReturnCtorArg()).Should().BeNull();
+		}
+
+		[Fact]
+		public void When_value_type_ctor_arg_Should_be_passed()
+		{
+			new Fake<CtorTestClass>(1, 1).Execute(f => f.ReturnCtorArg()).Should().Be(2);
+			new Fake<CtorTestClass>(1 , Arg.IsNull<int?>()).Execute(f => f.ReturnCtorArg()).Should().Be(1);
+			new Fake<CtorTestClass>(1 , null).Execute(f => f.ReturnCtorArg()).Should().Be(1);
+			new Action(() => new Fake<CtorTestClass>(Arg.IsNull<int>(), 1).Execute(f => f.ReturnCtorArg()))
+				.Should().Throw<InvalidOperationException>().WithMessage("*cannot be null*");
+		}
+
+		[Fact]
+		public void When_ambiguous_ctor_arg_Should_throw()
+		{
+			new Action(() => new Fake<AmbiguousCtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()))
+				.Should().Throw<InitializationException>().WithMessage("*use Arg.IsNull<T>()*");
+			new Fake<AmbiguousCtorTestClass>(1 , Arg.IsNull<StreamReader>()).Execute(f => f.ReturnCtorArg())
+				.Should().Be(2);
+			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<StreamWriter>()).Execute(f => f.ReturnCtorArg())
+				.Should().Be(3);
+		}
+
+		private class AmbiguousCtorTestClass
+		{
+			private object _arg;
+
+			public AmbiguousCtorTestClass(int arg1, StreamReader _)
+			{
+				_arg = arg1 + 1;
+			}
+
+			public AmbiguousCtorTestClass(int arg1, StreamWriter _)
+			{
+				_arg = arg1 + 2;
+			}
+
+			public object ReturnCtorArg() => _arg;
+		}
+
+		private class CtorTestClass
+		{
+			private object _arg;
+
+			public CtorTestClass(object arg)
+			{
+				_arg = arg;
+			}
+
+			public CtorTestClass(int arg1, int? arg2)
+			{
+				_arg = arg1 + (arg2 ?? 0);
+			}
+
+			public object ReturnCtorArg() => _arg;
 		}
 
 		private class TestClass

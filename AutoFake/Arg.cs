@@ -12,7 +12,9 @@ namespace AutoFake
         {
             var type = typeof(T);
             if (type.IsValueType && Nullable.GetUnderlyingType(type) == null)
-                throw new NotSupportedException("Value type instance cannot be null");
+            {
+                throw new InvalidOperationException("Value type instance cannot be null");
+            }
 
 #pragma warning disable DI0002 // There is no way to invert control here as it is called from the client side
 			return new TypeWrapper(type);
