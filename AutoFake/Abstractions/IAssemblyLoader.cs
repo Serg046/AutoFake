@@ -5,6 +5,6 @@ namespace AutoFake.Abstractions
 {
 	internal interface IAssemblyLoader
 	{
-		Tuple<Assembly, Type?> LoadAssemblies(DebugMode debugMode, bool loadFieldsAsm);
+		Tuple<Assembly, Type?> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm);
 	}
 }

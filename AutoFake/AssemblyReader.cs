@@ -28,8 +28,11 @@ namespace AutoFake
 		private TypeDefinition GetSourceTypeDefinition(Type sourceType, IFakeOptions fakeOptions)
 		{
 			var readerParameters = _cecilFactory.CreateReaderParameters();
-			readerParameters.ReadSymbols = fakeOptions.Debug == DebugMode.Enabled || (fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached);
-			readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: readerParameters.ReadSymbols);
+			readerParameters.ReadSymbols = fakeOptions.IsDebugEnabled;
+			if (readerParameters.ReadSymbols)
+			{
+				readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: true);
+			}
 			var assemblyDef = AssemblyDefinition.ReadAssembly(sourceType.Module.FullyQualifiedName, readerParameters);
 			assemblyDef.Name.Name += "Fake";
 			assemblyDef.MainModule.ImportReference(sourceType);

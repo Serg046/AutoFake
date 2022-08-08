@@ -26,22 +26,21 @@ namespace AutoFake
 			_cecilFactory = cecilFactory;
 		}
 
-		public Tuple<Assembly, Type?> LoadAssemblies(DebugMode debugMode, bool loadFieldsAsm)
+		public Tuple<Assembly, Type?> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm)
 		{
 			using var stream = new MemoryStream();
 			using var symbolsStream = new MemoryStream();
 
-			LoadAffectedAssemblies(debugMode);
-			_assemblyReader.SourceTypeDefinition.Module.Write(stream, GetWriterParameters(symbolsStream,
-				_assemblyReader.SourceTypeDefinition.Module.HasSymbols, debugMode));
+			LoadAffectedAssemblies(options);
+			_assemblyReader.SourceTypeDefinition.Module.Write(stream, GetWriterParameters(symbolsStream, options));
 			var assembly = _assemblyHost.Load(stream, symbolsStream);
 			var fieldsType = loadFieldsAsm
-				? GetFieldsAssembly(assembly, debugMode).GetType(_assemblyReader.FieldsTypeDefinition.FullName, true)
+				? GetFieldsAssembly(assembly, options).GetType(_assemblyReader.FieldsTypeDefinition.FullName, true)
 				: null;
 			return new(assembly, fieldsType);
 		}
 
-		private void LoadAffectedAssemblies(DebugMode debugMode)
+		private void LoadAffectedAssemblies(IFakeOptions options)
 		{
 			var asmNames = new Dictionary<string, string>();
 			LoadAffectedAssembly(asmNames, _assemblyReader.SourceTypeDefinition.Module.Assembly);
@@ -59,7 +58,7 @@ namespace AutoFake
 
 				using var stream = new MemoryStream();
 				using var symbolsStream = new MemoryStream();
-				affectedAssembly.Write(stream, GetWriterParameters(symbolsStream, affectedAssembly.MainModule.HasSymbols, debugMode));
+				affectedAssembly.Write(stream, GetWriterParameters(symbolsStream, options));
 				LoadRenamedAssembly(stream, symbolsStream, affectedAssembly);
 			}
 		}
@@ -85,16 +84,15 @@ namespace AutoFake
 			return _assemblyHost.Load(stream, symbolsStream);
 #else
 			var assembly = _assemblyHost.Load(stream, symbolsStream);
-			AppDomain.CurrentDomain.AssemblyResolve += (sender, args)
-				=> args.Name == affectedAssembly.FullName ? assembly : null;
+			AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => args.Name == affectedAssembly.FullName ? assembly : null;
 			return assembly;
 #endif
 		}
 
-		private WriterParameters GetWriterParameters(MemoryStream symbolsStream, bool hasSymbols, DebugMode debugMode)
+		private WriterParameters GetWriterParameters(MemoryStream symbolsStream, IFakeOptions options)
 		{
 			var parameters = _cecilFactory.CreateWriterParameters();
-			if (debugMode == DebugMode.Enabled || (debugMode == DebugMode.Auto && Debugger.IsAttached && hasSymbols))
+			if (options.IsDebugEnabled)
 			{
 				parameters.SymbolStream = symbolsStream;
 				parameters.SymbolWriterProvider = new SymbolsWriterProvider();
@@ -103,14 +101,13 @@ namespace AutoFake
 			return parameters;
 		}
 
-		private Assembly GetFieldsAssembly(Assembly executingAsm, DebugMode debugMode)
+		private Assembly GetFieldsAssembly(Assembly executingAsm, IFakeOptions options)
 		{
 			if (_assemblyReader.FieldsTypeDefinition.Module.Assembly != _assemblyReader.SourceTypeDefinition.Module.Assembly)
 			{
 				using var stream = new MemoryStream();
 				using var symbolsStream = new MemoryStream();
-				_assemblyReader.FieldsTypeDefinition.Module.Write(stream,
-					GetWriterParameters(symbolsStream, _assemblyReader.FieldsTypeDefinition.Module.HasSymbols, debugMode));
+				_assemblyReader.FieldsTypeDefinition.Module.Write(stream, GetWriterParameters(symbolsStream, options));
 				return LoadRenamedAssembly(stream, symbolsStream, _assemblyReader.FieldsTypeDefinition.Module.Assembly);
 			}
 

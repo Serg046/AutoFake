@@ -9,8 +9,9 @@ namespace AutoFake.Abstractions
 		bool DisableVirtualMembers { get; set; }
 		DebugMode Debug { get; set; }
 		AnalysisLevels AnalysisLevel { get; set; }
-		bool IsMultipleAssembliesMode { get; }
         IList<Type> ReferencedTypes { get; }
 		void AddReference(Type type);
+		bool IsMultipleAssembliesMode { get; }
+		bool IsDebugEnabled { get; }
 	}
 }
