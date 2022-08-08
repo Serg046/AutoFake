@@ -47,22 +47,22 @@ namespace AutoFake.FunctionalTests
 		{
 			new Action(() => new Fake<AmbiguousCtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()))
 				.Should().Throw<InitializationException>().WithMessage("*use Arg.IsNull<T>()*");
-			new Fake<AmbiguousCtorTestClass>(1 , Arg.IsNull<StreamReader>()).Execute(f => f.ReturnCtorArg())
-				.Should().Be(2);
-			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<StreamWriter>()).Execute(f => f.ReturnCtorArg())
-				.Should().Be(3);
+			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<CtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
+				.Execute().Should().Be(2);
+			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<AmbiguousCtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
+				.Execute().Should().Be(3);
 		}
 
 		private class AmbiguousCtorTestClass
 		{
 			private object _arg;
 
-			public AmbiguousCtorTestClass(int arg1, StreamReader _)
+			public AmbiguousCtorTestClass(int arg1, CtorTestClass _)
 			{
 				_arg = arg1 + 1;
 			}
 
-			public AmbiguousCtorTestClass(int arg1, StreamWriter _)
+			public AmbiguousCtorTestClass(int arg1, AmbiguousCtorTestClass _)
 			{
 				_arg = arg1 + 2;
 			}
