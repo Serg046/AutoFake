@@ -29,7 +29,7 @@ namespace AutoFake
 		{
 			var readerParameters = _cecilFactory.CreateReaderParameters();
 			readerParameters.ReadSymbols = fakeOptions.Debug == DebugMode.Enabled || (fakeOptions.Debug == DebugMode.Auto && Debugger.IsAttached);
-			readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: false);
+			readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: readerParameters.ReadSymbols);
 			var assemblyDef = AssemblyDefinition.ReadAssembly(sourceType.Module.FullyQualifiedName, readerParameters);
 			assemblyDef.Name.Name += "Fake";
 			assemblyDef.MainModule.ImportReference(sourceType);

@@ -1,7 +1,12 @@
-﻿using AutoFake.Exceptions;
+﻿using AutoFake.Abstractions;
+using AutoFake.Exceptions;
+using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -51,6 +56,28 @@ namespace AutoFake.FunctionalTests
 				.Execute().Should().Be(2);
 			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<AmbiguousCtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
 				.Execute().Should().Be(3);
+		}
+
+		[Fact]
+		public void When_debug_mode_with_symbols_Should_load_symbols()
+		{
+			var fake = new Fake<StateTests>();
+			fake.Options.Debug = DebugMode.Enabled;
+
+			var type = fake.Execute(f => f.GetType());
+
+			type.Should().NotBeNull();
+		}
+
+		[Fact]
+		public void When_debug_mode_without_symbols_Should_fail()
+		{
+			var fake = new Fake<object>();
+			fake.Options.Debug = DebugMode.Enabled;
+
+			Action act = () => fake.Execute(f => f.GetType());
+
+			act.Should().Throw<SymbolsNotFoundException>().WithMessage("No symbol found*");
 		}
 
 		private class AmbiguousCtorTestClass
