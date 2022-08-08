@@ -82,7 +82,7 @@ namespace AutoFake.FunctionalTests
 
 		private class AmbiguousCtorTestClass
 		{
-			private object _arg;
+			private readonly object _arg;
 
 			public AmbiguousCtorTestClass(int arg1, CtorTestClass _)
 			{
@@ -99,7 +99,7 @@ namespace AutoFake.FunctionalTests
 
 		private class CtorTestClass
 		{
-			private object _arg;
+			private readonly object _arg;
 
 			public CtorTestClass(object arg)
 			{
