@@ -57,9 +57,7 @@ namespace AutoFake
 		public FakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, object?[] dependencies)
 		{
 			var loader = _assemblyLoader.LoadAssemblies(_fakeOptions, loadFieldsAsm: _addedFields.Count > 0);
-
-			var sourceType = loader.Item1.GetType(GetClrName(_assemblyReader.SourceTypeDefinition.FullName), true)
-			                 ?? throw new InvalidOperationException("Cannot find a type");
+			var sourceType = loader.Item1.GetType(GetClrName(_assemblyReader.SourceTypeDefinition.FullName)) ?? throw new InvalidOperationException("Cannot find a type");
 			if (_assemblyReader.SourceType.IsGenericType)
 			{
 				sourceType = sourceType.MakeGenericType(_assemblyReader.SourceType.GetGenericArguments());

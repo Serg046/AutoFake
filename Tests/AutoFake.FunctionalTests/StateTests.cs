@@ -2,12 +2,9 @@
 using AutoFake.Exceptions;
 using DryIoc;
 using FluentAssertions;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -78,6 +75,20 @@ namespace AutoFake.FunctionalTests
 			Action act = () => fake.Execute(f => f.GetType());
 
 			act.Should().Throw<SymbolsNotFoundException>().WithMessage("No symbol found*");
+		}
+
+		[Fact]
+		public void When_incorrect_type_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+			fake.Services.Resolve<ITypeInfo>();
+			var assemblyReader = fake.Services.Resolve<IAssemblyReader>();
+			var typeDef = assemblyReader.SourceTypeDefinition.Module.Types.Single(t => t.FullName == typeof(StateTests).FullName);
+			assemblyReader.SourceTypeDefinition.Module.Types.Remove(typeDef);
+
+			Action act = () => fake.Execute(f => f.GetType());
+
+			act.Should().Throw<InvalidOperationException>().WithMessage("Cannot find a type");
 		}
 
 		private class AmbiguousCtorTestClass
