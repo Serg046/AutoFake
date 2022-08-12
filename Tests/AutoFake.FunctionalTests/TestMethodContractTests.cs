@@ -230,6 +230,19 @@ namespace AutoFake.FunctionalTests
         [Theory]
         [InlineData(typeof(GenericClassHelper<int>))]
         [InlineData(typeof(GenericStructHelper<int>))]
+        public void When_method_call_through_inferred_generic_interface_Should_succeed(Type type)
+        {
+            var helper = Activator.CreateInstance(type, 5) as IGenericHelper<int>;
+
+            var fake = new Fake<GenericTestClass<int>>();
+            var sut = fake.Rewrite(f => f.CallMethodThroughGenericInterface(helper));
+
+            sut.Execute().Should().Be(5);
+        }
+
+        [Theory]
+        [InlineData(typeof(GenericClassHelper<int>))]
+        [InlineData(typeof(GenericStructHelper<int>))]
         public void When_generic_method_call_through_generic_interface_Should_succeed(Type type)
         {
             var helper = Activator.CreateInstance(type, 5) as IGenericHelper<int>;
@@ -296,6 +309,14 @@ namespace AutoFake.FunctionalTests
             public int Prop { get; set; }
 
             public int GetFive() => 5;
+        }
+
+        private class GenericTestClass<T>
+		{
+            public double CallMethodThroughGenericInterface(IGenericHelper<T> helper)
+            {
+                return helper.GetValue(v => 5);
+            }
         }
 
         private class TestClass
