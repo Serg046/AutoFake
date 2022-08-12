@@ -4,7 +4,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
-    public class TestMethodContractTests
+    public class TestMethodContractCallTests
     {
         [Theory]
         [InlineData(typeof(HelperClass))]
@@ -129,41 +129,6 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void When_class_cast_Should_succeed()
-        {
-            var fake = new Fake<TestClass>();
-            var helper = new HelperClass();
-
-            var sut = fake.Rewrite(f => f.CastToHelperClass(helper));
-
-            sut.Execute().Should().Be(helper);
-        }
-
-        [Fact]
-        public void When_struct_cast_Should_succeed()
-        {
-            var fake = new Fake<TestClass>();
-            var helper = new HelperStruct();
-
-            var sut = fake.Rewrite(f => f.CastToHelperStruct(helper));
-
-            sut.Execute().Should().Be(helper);
-        }
-
-        [Theory]
-        [InlineData(typeof(HelperClass))]
-        [InlineData(typeof(HelperStruct))]
-        public void When_interface_cast_Should_succeed(Type type)
-        {
-            var fake = new Fake<TestClass>();
-            var helper = Activator.CreateInstance(type) as IHelper;
-
-            var sut = fake.Rewrite(f => f.CastToHelperInterface(helper));
-
-            sut.Execute().Should().Be(helper);
-        }
-
-        [Fact]
         public void When_class_creation_Should_succeed()
         {
             var fake = new Fake<TestClass>();
@@ -253,6 +218,26 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().Be(5);
         }
 
+        [Fact]
+        public void When_generic_class_creation_Should_succeed()
+        {
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.CreateGenericHelperClass());
+
+            sut.Execute().Should().BeOfType<GenericClassHelper<int>>();
+        }
+
+        [Fact]
+        public void When_generic_struct_creation_Should_succeed()
+        {
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.CreateGenericHelperStruct());
+
+            sut.Execute().Should().BeOfType<GenericStructHelper<int>>();
+        }
+
         private bool IsHelperClass(IHelper helper) => helper is HelperClass { Prop: 4 };
 
 		public interface IGenericHelper<T>
@@ -269,7 +254,7 @@ namespace AutoFake.FunctionalTests
 			public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(_value);
 		}
 
-        public class GenericStructHelper<T> : IGenericHelper<T>
+        public struct GenericStructHelper<T> : IGenericHelper<T>
         {
             private readonly T _value;
             public GenericStructHelper(T value) => _value = value;
@@ -356,21 +341,6 @@ namespace AutoFake.FunctionalTests
                 return helper.GetFive();
             }
 
-            public HelperClass CastToHelperClass(object helper)
-            {
-                return (HelperClass)helper;
-            }
-
-            public HelperStruct CastToHelperStruct(object helper)
-            {
-                return (HelperStruct)helper;
-            }
-
-            public IHelper CastToHelperInterface(object helper)
-            {
-                return (IHelper)helper;
-            }
-
             public IHelper CreateHelperClass()
             {
                 return new HelperClass();
@@ -379,6 +349,16 @@ namespace AutoFake.FunctionalTests
             public IHelper CreateHelperStruct()
             {
                 return new HelperStruct();
+            }
+
+            public IGenericHelper<int> CreateGenericHelperClass()
+            {
+                return new GenericClassHelper<int>(5);
+            }
+
+            public IGenericHelper<int> CreateGenericHelperStruct()
+            {
+                return new GenericStructHelper<int>(5);
             }
 
             public object ReturnBoxedHelperStruct(HelperStruct helperStruct)

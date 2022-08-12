@@ -42,7 +42,7 @@ namespace AutoFake
 			}
 			else
 			{
-				AddImplementation(_externalTypeImplementations, baseTypeRef.ToString(), currentTypeDef);
+				AddImplementation(_externalTypeImplementations, baseTypeRef.GetElementType().FullName, currentTypeDef);
 			}
 		}
 
@@ -80,7 +80,7 @@ namespace AutoFake
 		{
 			var types = new HashSet<TypeDefinition>();
 			GetAllParentsAndDescendants(typeDef, types);
-			if (_externalTypeImplementations.TryGetValue(typeDef.ToString(), out var implementations))
+			if (_externalTypeImplementations.TryGetValue(typeDef.GetElementType().FullName, out var implementations))
 			{
 				foreach (var implementation in implementations)
 				{

@@ -4,8 +4,6 @@ using System.Reflection;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Setup;
-using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 
 namespace AutoFake

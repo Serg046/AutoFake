@@ -2,7 +2,6 @@
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Expression;
 using AutoFake.Setup.Mocks;
 using DryIoc;
 using Mono.Cecil;

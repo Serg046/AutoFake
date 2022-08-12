@@ -11,15 +11,17 @@ namespace AutoFake.Setup.Mocks
 	internal class ReplaceValueTypeCtorMock : IMock
 	{
 		private readonly TypeReference _typeReference;
+		private readonly ITypeInfo _typeInfo;
 
-		public ReplaceValueTypeCtorMock(TypeReference typeReference)
+		public ReplaceValueTypeCtorMock(TypeReference typeReference, ITypeInfo typeInfo)
 		{
 			_typeReference = typeReference;
+			_typeInfo = typeInfo;
 		}
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
 			=> IsValidOpCode(instruction.OpCode) && instruction.Operand is TypeReference typeRef &&
-			   _typeReference.ToString() == typeRef.ToString();
+			   typeRef.GetElementType().FullName == _typeReference.FullName;
 
 		private static bool IsValidOpCode(OpCode opCode)
 			=> opCode == OpCodes.Initobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
@@ -31,7 +33,8 @@ namespace AutoFake.Setup.Mocks
 
 		public void Inject(IEmitter emitter, Instruction instruction)
 		{
-			instruction.Operand = _typeReference;
+			var typeRef = (TypeReference)instruction.Operand;
+			instruction.Operand = _typeInfo.ImportToSourceAsm(typeRef);
 		}
 
 		[ExcludeFromCodeCoverage]
