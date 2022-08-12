@@ -227,7 +227,7 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().Be(5);
         }
 
-        [Theory(Skip = "todo: add support for this")]
+        [Theory]
         [InlineData(typeof(GenericClassHelper<int>))]
         [InlineData(typeof(GenericStructHelper<int>))]
         public void When_generic_method_call_through_generic_interface_Should_succeed(Type type)

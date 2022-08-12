@@ -122,17 +122,33 @@ namespace AutoFake
 		public MethodReference ImportToSourceAsm(MethodReference originalMethodRef)
 		{
 			var declaringType = ImportToSourceAsm(originalMethodRef.DeclaringType);
-			var methodRef = _cecilFactory.CreateMethodReference(originalMethodRef.Name, originalMethodRef.ReturnType, declaringType);
-			methodRef.CallingConvention = originalMethodRef.CallingConvention;
-			methodRef.HasThis = originalMethodRef.HasThis;
-			methodRef.ExplicitThis = originalMethodRef.ExplicitThis;
+			var newMethodRef = _cecilFactory.CreateMethodReference(originalMethodRef.Name, originalMethodRef.ReturnType, declaringType);
+			newMethodRef.CallingConvention = originalMethodRef.CallingConvention;
+			newMethodRef.HasThis = originalMethodRef.HasThis;
+			newMethodRef.ExplicitThis = originalMethodRef.ExplicitThis;
 
 			foreach (var paramDef in originalMethodRef.Parameters)
 			{
-				methodRef.Parameters.Add(_cecilFactory.CreateParameterDefinition(paramDef.Name, paramDef.Attributes, paramDef.ParameterType));
+				newMethodRef.Parameters.Add(_cecilFactory.CreateParameterDefinition(paramDef.Name, paramDef.Attributes, paramDef.ParameterType));
 			}
 
-			return methodRef;
+			foreach (var paramDef in originalMethodRef.GetElementMethod().GenericParameters)
+			{
+				newMethodRef.GenericParameters.Add(_cecilFactory.CreateGenericParameter(paramDef.Name, newMethodRef));
+			}
+
+			if (originalMethodRef is GenericInstanceMethod genericInstanceMethod)
+			{
+				var newGenericInstanceMethod = _cecilFactory.CreateGenericInstanceMethod(newMethodRef);
+				foreach (var arg in genericInstanceMethod.GenericArguments)
+				{
+					newGenericInstanceMethod.GenericArguments.Add(arg);
+				}
+
+				return newGenericInstanceMethod;
+			}
+
+			return newMethodRef;
 		}
 
 		public TypeReference ImportToFieldsAsm(Type type)
