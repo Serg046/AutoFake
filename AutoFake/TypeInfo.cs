@@ -86,26 +86,56 @@ namespace AutoFake
         public MethodReference ImportToSourceAsm(MethodBase method)
 	        => _assemblyReader.SourceTypeDefinition.Module.ImportReference(method);
 
-        public TypeReference ImportToSourceAsm(TypeReference type)
-        {
-	        if (type.IsGenericParameter) return type;
+		public TypeReference ImportToSourceAsm(TypeReference type)
+		{
+			if (type.IsGenericParameter) return type;
 
-	        var result = NewTypeReference(type);
-	        var newType = result;
-	        while (type.DeclaringType != null)
-	        {
-		        type = type.DeclaringType;
-		        newType.DeclaringType = NewTypeReference(type);
-		        newType = newType.DeclaringType;
-	        }
+			var result = NewTypeReference(type);
+			var newType = result;
+			while (type.DeclaringType != null)
+			{
+				type = type.DeclaringType;
+				newType.GetElementType().DeclaringType = NewTypeReference(type);
+				newType = newType.DeclaringType;
+			}
 
-	        TypeReference NewTypeReference(TypeReference typeRef)
-		        => _cecilFactory.CreateTypeReference(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
+			TypeReference NewTypeReference(TypeReference typeRef)
+			{
+				var newTypeRef = _cecilFactory.CreateTypeReference(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
+				if (typeRef is GenericInstanceType genericInstanceType)
+				{
+					var newGenericInstanceType = _cecilFactory.CreateGenericInstanceType(newTypeRef);
+					foreach (var arg in genericInstanceType.GenericArguments)
+					{
+						newGenericInstanceType.GenericArguments.Add(arg);
+					}
 
-	        return result;
-        }
+					return newGenericInstanceType;
+				}
 
-        public TypeReference ImportToFieldsAsm(Type type)
+				return newTypeRef;
+			}
+
+			return result;
+		}
+
+		public MethodReference ImportToSourceAsm(MethodReference originalMethodRef)
+		{
+			var declaringType = ImportToSourceAsm(originalMethodRef.DeclaringType);
+			var methodRef = _cecilFactory.CreateMethodReference(originalMethodRef.Name, originalMethodRef.ReturnType, declaringType);
+			methodRef.CallingConvention = originalMethodRef.CallingConvention;
+			methodRef.HasThis = originalMethodRef.HasThis;
+			methodRef.ExplicitThis = originalMethodRef.ExplicitThis;
+
+			foreach (var paramDef in originalMethodRef.Parameters)
+			{
+				methodRef.Parameters.Add(_cecilFactory.CreateParameterDefinition(paramDef.Name, paramDef.Attributes, paramDef.ParameterType));
+			}
+
+			return methodRef;
+		}
+
+		public TypeReference ImportToFieldsAsm(Type type)
 	        => _assemblyReader.FieldsTypeDefinition.Module.ImportReference(type);
 
         public FieldReference ImportToFieldsAsm(FieldInfo field)

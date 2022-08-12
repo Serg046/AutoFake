@@ -123,6 +123,7 @@ namespace AutoFake
 			container.Register<FieldDefinition>();
 			container.Register<GenericInstanceMethod>();
 			container.Register<TypeReference>(made: Made.Of(FactoryMethod.ConstructorWithResolvableArguments));
+			container.Register<GenericInstanceType>();
 		}
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)

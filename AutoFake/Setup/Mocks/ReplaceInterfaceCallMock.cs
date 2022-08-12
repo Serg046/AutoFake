@@ -11,17 +11,18 @@ namespace AutoFake.Setup.Mocks
     internal class ReplaceInterfaceCallMock : IMock
     {
 	    private readonly TypeReference _typeReference;
-	    private readonly ICecilFactory _cecilFactory;
+		private readonly ITypeInfo _typeInfo;
 
-	    public ReplaceInterfaceCallMock(TypeReference typeReference, ICecilFactory cecilFactory)
+		public ReplaceInterfaceCallMock(TypeReference typeReference, ITypeInfo typeInfo)
 	    {
 		    _typeReference = typeReference;
-		    _cecilFactory = cecilFactory;
-	    }
+			_typeInfo = typeInfo;
+		}
 
         public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
 	        => instruction.OpCode.OperandType == OperandType.InlineMethod &&
-	           instruction.Operand is MethodReference m && m.DeclaringType.ToString() == _typeReference.ToString();
+	           instruction.Operand is MethodReference m &&
+               m.DeclaringType.GetElementType().FullName == _typeReference.FullName;
 
         [ExcludeFromCodeCoverage]
         public void BeforeInjection(MethodDefinition method)
@@ -31,7 +32,7 @@ namespace AutoFake.Setup.Mocks
         public void Inject(IEmitter emitter, Instruction instruction)
         {
 	        var method = (MethodReference)instruction.Operand;
-	        instruction.Operand = method.ReplaceDeclaringType(_typeReference, _cecilFactory);
+            instruction.Operand = _typeInfo.ImportToSourceAsm(method);
         }
 
         [ExcludeFromCodeCoverage]

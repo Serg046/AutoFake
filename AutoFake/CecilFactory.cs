@@ -63,7 +63,7 @@ namespace AutoFake
 
 		public FieldDefinition CreateFieldDefinition(string name, FieldAttributes attributes, TypeReference fieldType)
 		{
-			return _serviceLocator.Resolve<Func<string, FieldAttributes, TypeReference, FieldDefinition >>()
+			return _serviceLocator.Resolve<Func<string, FieldAttributes, TypeReference, FieldDefinition>>()
 				.Invoke(name, attributes, fieldType);
 		}
 
@@ -76,6 +76,11 @@ namespace AutoFake
 		{
 			return _serviceLocator.Resolve<Func<string, string, ModuleDefinition, IMetadataScope, bool, TypeReference>>()
 				.Invoke(@namespace, name, module, scope, valueType);
+		}
+
+		public GenericInstanceType CreateGenericInstanceType(TypeReference type)
+		{
+			return _serviceLocator.Resolve<Func<TypeReference, GenericInstanceType>>().Invoke(type);
 		}
 	}
 }
