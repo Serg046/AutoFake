@@ -218,6 +218,29 @@ namespace AutoFake.FunctionalTests
             sut.Execute().Should().Be(5);
         }
 
+        [Theory]
+        [InlineData(typeof(GenericClassHelper<TestClass>))]
+        [InlineData(typeof(GenericStructHelper<TestClass>))]
+        public void When_generic_method_call_through__internal_generic_interface_Should_succeed(Type type)
+        {
+            var helper = Activator.CreateInstance(type, new TestClass { Prop = 5 }) as IGenericHelper<TestClass>;
+
+            var fake = new Fake<TestClass>();
+            var sut = fake.Rewrite(f => f.CallGenericMethodThroughGenericInterface(helper));
+
+            sut.Execute().Should().Be(helper.Value);
+        }
+
+        [Fact]
+        public void When_generic_type_inside_Should_succeed()
+        {
+            var fake = new Fake<TestClass>();
+            var sut = fake.Rewrite(f => f.CallGenericMethodThroughGenericInterface<TestClass>());
+
+            sut.Execute().Should().BeOfType<TestClass>();
+            sut.Execute().Prop.Should().Be(5);
+        }
+
         [Fact]
         public void When_generic_class_creation_Should_succeed()
         {
@@ -242,24 +265,25 @@ namespace AutoFake.FunctionalTests
 
 		public interface IGenericHelper<T>
         {
+            T Value { get; }
             double GetValue(Func<T, double> functor);
             TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor);
         }
 
 		public class GenericClassHelper<T> : IGenericHelper<T>
 		{
-            private readonly T _value;
-			public GenericClassHelper(T value) => _value = value;
-			public double GetValue(Func<T, double> functor) => functor(_value);
-			public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(_value);
+			public GenericClassHelper(T value) => Value = value;
+            public T Value { get; }
+			public double GetValue(Func<T, double> functor) => functor(Value);
+			public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(Value);
 		}
 
         public struct GenericStructHelper<T> : IGenericHelper<T>
         {
-            private readonly T _value;
-            public GenericStructHelper(T value) => _value = value;
-            public double GetValue(Func<T, double> functor) => functor(_value);
-            public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(_value);
+            public GenericStructHelper(T value) => Value = value;
+            public T Value { get; }
+            public double GetValue(Func<T, double> functor) => functor(Value);
+            public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(Value);
         }
 
         public interface IHelper : IHelper2 { }
@@ -304,8 +328,10 @@ namespace AutoFake.FunctionalTests
             }
         }
 
-        private class TestClass
+        public class TestClass
         {
+            public int Prop { get; set; }
+
 	        public int CallMethodThroughInterface()
 	        {
 		        return CallMethodThroughInterface(new HelperClass {Prop = 4});
@@ -324,6 +350,16 @@ namespace AutoFake.FunctionalTests
             public float CallGenericMethodThroughGenericInterface(IGenericHelper<int> helper)
             {
                 return helper.GetValueGeneric<float>(v => v);
+            }
+
+            public T CallGenericMethodThroughGenericInterface<T>(IGenericHelper<T> helper)
+            {
+                return helper.Value;
+            }
+
+            public TestClass CallGenericMethodThroughGenericInterface<T>()
+            {
+                return new GenericClassHelper<TestClass>(new TestClass { Prop = 5 }).Value;
             }
 
             public int CallMethodThroughImplClass(HelperClassBase helper)
