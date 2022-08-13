@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using AutoFake.Abstractions.Expression;
-using AutoFake.Abstractions.Setup.Mocks;
+﻿using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup;
 
 namespace AutoFake.Abstractions
 {
 	internal interface IFakeProcessor
 	{
-		void ProcessMethod(IEnumerable<IMock> mocks, IInvocationExpression invocationExpression, IFakeOptions options);
+		void ProcessMethod(IMockCollection mockCollection, IInvocationExpression invocationExpression, IFakeOptions options);
 	}
 }

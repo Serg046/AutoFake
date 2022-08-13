@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using AutoFake.Setup.Mocks;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
 
@@ -8,20 +6,7 @@ namespace AutoFake.Setup
 {
     internal class MockCollection : IMockCollection
     {
-	    private readonly List<IMock> _mocks = new();
-
-	    public IMock this[int index]
-	    {
-		    get => _mocks[index];
-		    set => _mocks[index] = value;
-	    }
-
-		public int Count => _mocks.Count;
-
-	    public void Add(IMock mock) => _mocks.Add(mock);
-
-	    public IEnumerator<IMock> GetEnumerator() => _mocks.GetEnumerator();
-
-	    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		public IList<IMock> Mocks { get; } = new List<IMock>();
+        public ISet<IMock> ContractMocks { get; } = new HashSet<IMock>();
     }
 }

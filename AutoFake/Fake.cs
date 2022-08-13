@@ -6,6 +6,7 @@ using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
+using AutoFake.Abstractions.Setup.Mocks;
 using DryIoc;
 
 namespace AutoFake
@@ -114,7 +115,7 @@ namespace AutoFake
 				}
 
                 var asmWriter = Services.Resolve<IAssemblyWriter>();
-                _fakeObjectInfo = asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value), _dependencies);
+                _fakeObjectInfo = asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value.Mocks), _dependencies);
 			}
             return _fakeObjectInfo;
         }

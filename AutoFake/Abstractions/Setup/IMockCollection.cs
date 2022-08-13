@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using AutoFake.Abstractions.Setup.Mocks;
+﻿using AutoFake.Abstractions.Setup.Mocks;
+using System.Collections.Generic;
 
 namespace AutoFake.Abstractions.Setup
 {
-	internal interface IMockCollection : IEnumerable<IMock>
+	internal interface IMockCollection
 	{
-		IMock this[int index] { get; set; }
-		int Count { get; }
-		void Add(IMock mock);
+		IList<IMock> Mocks { get; }
+		ISet<IMock> ContractMocks { get; }
 	}
 }

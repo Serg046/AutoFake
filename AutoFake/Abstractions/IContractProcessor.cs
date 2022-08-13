@@ -6,8 +6,9 @@ namespace AutoFake.Abstractions
 {
 	internal interface IContractProcessor
 	{
-		void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef, HashSet<IMock> replaceContractMocks);
+		void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef);
 		void ProcessOriginalMethodContract(MethodDefinition methodDef);
-		void ProcessCommonOriginalContracts(IEnumerable<ISourceMemberMock> sourceMemberMocks, HashSet<IMock> replaceContractMocks);
+		void ProcessCommonOriginalContracts(IEnumerable<ISourceMemberMock> sourceMemberMocks);
+		void AddReplaceContractMocks(TypeDefinition typeDef);
 	}
 }

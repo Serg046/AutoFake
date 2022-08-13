@@ -90,33 +90,33 @@ namespace AutoFake
 		{
 			if (type.IsGenericParameter) return type;
 
-			var result = NewTypeReference(type);
+			var result = CreateTypeReference(type);
 			var newType = result;
 			while (type.DeclaringType != null)
 			{
 				type = type.DeclaringType;
-				newType.GetElementType().DeclaringType = NewTypeReference(type);
+				newType.GetElementType().DeclaringType = CreateTypeReference(type);
 				newType = newType.DeclaringType;
 			}
 
-			TypeReference NewTypeReference(TypeReference typeRef)
-			{
-				var newTypeRef = _cecilFactory.CreateTypeReference(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
-				if (typeRef is GenericInstanceType genericInstanceType)
-				{
-					var newGenericInstanceType = _cecilFactory.CreateGenericInstanceType(newTypeRef);
-					foreach (var arg in genericInstanceType.GenericArguments)
-					{
-						newGenericInstanceType.GenericArguments.Add(arg);
-					}
+			return result;
+		}
 
-					return newGenericInstanceType;
+		private TypeReference CreateTypeReference(TypeReference typeRef)
+		{
+			var newTypeRef = _cecilFactory.CreateTypeReference(typeRef.Namespace, typeRef.Name, _assemblyReader.SourceTypeDefinition.Module, _assemblyNameReference, typeRef.IsValueType);
+			if (typeRef is GenericInstanceType genericInstanceType)
+			{
+				var newGenericInstanceType = _cecilFactory.CreateGenericInstanceType(newTypeRef);
+				foreach (var arg in genericInstanceType.GenericArguments)
+				{
+					newGenericInstanceType.GenericArguments.Add(IsInFakeModule(arg) ? ImportToSourceAsm(arg) : arg);
 				}
 
-				return newTypeRef;
+				return newGenericInstanceType;
 			}
 
-			return result;
+			return newTypeRef;
 		}
 
 		public MethodReference ImportToSourceAsm(MethodReference originalMethodRef)
