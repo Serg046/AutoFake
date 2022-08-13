@@ -75,6 +75,7 @@ namespace AutoFake
 
 		private static void AddConfigurations(IRegistrator container)
 		{
+			container.Register<IMockConfiguration, MockConfiguration>();
 			container.Register(typeof(IActionMockConfiguration<>), typeof(ActionMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IFuncMockConfiguration<,>), typeof(FuncMockConfiguration<,>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register(typeof(IAppendMockConfiguration<>), typeof(AppendMockConfiguration<>), made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
@@ -135,7 +136,7 @@ namespace AutoFake
 			if (addMocks)
 			{
 				var mocks = new MockCollection();
-				container.Use<IMockCollection>(_ => mocks);
+				scope.Use<IMockCollection>(_ => mocks);
 				container.RegisterInstance<IMockCollection>(mocks, serviceKey: invocationExpression);
 			}
 
