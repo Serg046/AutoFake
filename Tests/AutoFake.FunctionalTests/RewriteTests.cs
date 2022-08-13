@@ -1,9 +1,21 @@
-﻿using Xunit;
+﻿using FluentAssertions;
+using System;
+using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
 	public class RewriteTests
 	{
+		[Fact]
+		public void When_null_expression_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+
+			Action act = () => fake.Rewrite(null);
+
+			act.Should().Throw<ArgumentNullException>();
+		}
+
 		[Fact]
 		public void When_multiple_suts_Should_succeed()
 		{
