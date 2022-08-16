@@ -68,13 +68,11 @@ namespace AutoFake
 				mock.Initialize(loader.Item2);
 			}
 
-			var instance = !IsStatic(_assemblyReader.SourceType) ? CreateInstance(sourceType, dependencies) : null;
+			var instance = !_assemblyReader.SourceType.IsStatic() ? CreateInstance(sourceType, dependencies) : null;
 			return _createFakeObjectInfo(sourceType, loader.Item2, instance);
 		}
 
 		private static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
-
-		private bool IsStatic(Type type) => type.IsAbstract && type.IsSealed;
 
 		private object CreateInstance(Type type, object?[] dependencies)
 		{

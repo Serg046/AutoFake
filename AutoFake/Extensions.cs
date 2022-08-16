@@ -95,6 +95,8 @@ namespace AutoFake
 			}
 		}
 
+		public static bool IsStatic(this Type type) => type.IsAbstract && type.IsSealed;
+
 		private class EqualityComparer : IEqualityComparer
         {
             private readonly Func<object?, object?, bool> _comparer;

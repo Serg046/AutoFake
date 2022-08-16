@@ -11,6 +11,7 @@ namespace AutoFake.Setup.Configurations
         internal VerifyMockConfiguration(VerifyMock mock)
         {
             _mock = mock;
+            ExpectedCalls(callsCount => callsCount > 0);
         }
 
         public IVerifyMockConfiguration ExpectedCalls(uint expectedCallsCount)

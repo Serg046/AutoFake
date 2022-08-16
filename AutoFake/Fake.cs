@@ -6,7 +6,6 @@ using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
-using AutoFake.Abstractions.Setup.Mocks;
 using DryIoc;
 
 namespace AutoFake
