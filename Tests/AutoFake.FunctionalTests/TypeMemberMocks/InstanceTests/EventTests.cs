@@ -84,7 +84,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			return true;
 		}
 
-		[Fact(Skip = "todo")]
+		[Fact]
 		public void When_event_called_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();
@@ -117,7 +117,13 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 
 			public void InvokeHandler()
 			{
-				Event?.Invoke(5);
+				Event += TestClass_Event;
+				Event.Invoke(5);
+				Event -= TestClass_Event;
+
+				static void TestClass_Event(int obj)
+				{
+				}
 			}
 		}
 	}

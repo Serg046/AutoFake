@@ -6,8 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Abstractions;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace AutoFake
 {

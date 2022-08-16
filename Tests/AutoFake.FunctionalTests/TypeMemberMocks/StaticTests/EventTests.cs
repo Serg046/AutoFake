@@ -71,6 +71,17 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			return true;
 		}
 
+		[Fact]
+		public void When_event_called_Should_be_intercepted()
+		{
+			var fake = new Fake(typeof(TestClass));
+
+			var sut = fake.Rewrite(() => TestClass.InvokeHandler());
+			sut.Verify((Action<int> handler) => handler.Invoke(5));
+
+			sut.Execute();
+		}
+
 		private static class TestClass
 		{
 			public static event Action<int> Event;
@@ -89,6 +100,17 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			public static void AddHandlerToExternalEvent()
 			{
 				Console.CancelKeyPress += (sender, eventArgs) => CancelKeyPressData = (sender, eventArgs);
+			}
+
+			public static void InvokeHandler()
+			{
+				Event += TestClass_Event;
+				Event.Invoke(5);
+				Event -= TestClass_Event;
+
+				static void TestClass_Event(int obj)
+				{
+				}
 			}
 		}
 	}
