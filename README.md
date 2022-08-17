@@ -2,7 +2,7 @@
 [![NuGet](https://img.shields.io/nuget/v/AutoFake)](https://www.nuget.org/packages/AutoFake)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/AutoFake.svg?label=downloads)](https://www.nuget.org/packages/AutoFake)
 [![.NET Framework 4](https://img.shields.io/badge/.NET%20%20Framework-4.5+-brightgreen)](https://www.nuget.org/packages/AutoFake)
-[![.NET Standard 2](https://img.shields.io/badge/.NET%20%20Standard-2+-brightgreen)](https://www.nuget.org/packages/AutoFake)  
+[![.NET Standard 2](https://img.shields.io/badge/.NET%20%20Standard-2+-brightgreen)](https://www.nuget.org/packages/AutoFake)   
 [![Telegram](https://img.shields.io/badge/telegram-AutoFakeLib-brightgreen)](https://t.me/AutoFakeLib)
 [![Codecov](https://img.shields.io/codecov/c/github/Serg046/AutoFake?flag=functional_tests&label=coverage%20by%20functional%20tests&token=j95lb948sw02nqqd)](https://codecov.io/gh/Serg046/AutoFake)
 [![Code Climate](https://img.shields.io/codeclimate/maintainability/Serg046/AutoFake)](https://codeclimate.com/github/Serg046/AutoFake)
