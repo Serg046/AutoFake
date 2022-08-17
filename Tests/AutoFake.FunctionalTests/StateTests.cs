@@ -74,7 +74,7 @@ namespace AutoFake.FunctionalTests
 
 			Action act = () => fake.Execute(f => f.GetType());
 
-			act.Should().Throw<SymbolsNotFoundException>().WithMessage("No symbol found*");
+			act.Should().Throw<InvalidOperationException>().WithMessage("No symbols found");
 		}
 
 		[Fact]

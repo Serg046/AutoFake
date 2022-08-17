@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using AutoFake.Abstractions;
 using Mono.Cecil;
 
@@ -31,9 +30,10 @@ namespace AutoFake
 			readerParameters.ReadSymbols = fakeOptions.IsDebugEnabled;
 			if (readerParameters.ReadSymbols)
 			{
-				readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: true);
+				readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: false);
 			}
 			var assemblyDef = AssemblyDefinition.ReadAssembly(sourceType.Module.FullyQualifiedName, readerParameters);
+			if (fakeOptions.Debug == DebugMode.Enabled && !assemblyDef.MainModule.HasSymbols) throw new InvalidOperationException("No symbols found");
 			assemblyDef.Name.Name += "Fake";
 			assemblyDef.MainModule.ImportReference(sourceType);
 			return assemblyDef.MainModule.GetType(sourceType.FullName, runtimeName: true).ToTypeDefinition();

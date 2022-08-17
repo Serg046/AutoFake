@@ -119,9 +119,9 @@ namespace AutoFake
 			[ExcludeFromCodeCoverage]
 			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotImplementedException();
 
-			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
+			public ISymbolWriter? GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
 			{
-				return module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream);
+				return module.HasSymbols ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream) : null;
 			}
 		}
 	}
