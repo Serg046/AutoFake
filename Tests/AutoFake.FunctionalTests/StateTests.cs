@@ -2,7 +2,7 @@
 using AutoFake.Exceptions;
 using DryIoc;
 using FluentAssertions;
-using Mono.Cecil.Cil;
+using MultipleReturnTest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,10 +69,10 @@ namespace AutoFake.FunctionalTests
 		[Fact]
 		public void When_debug_mode_without_symbols_Should_fail()
 		{
-			var fake = new Fake<object>();
+			var fake = new Fake<SystemUnderTest>();
 			fake.Options.Debug = DebugMode.Enabled;
 
-			Action act = () => fake.Execute(f => f.GetType());
+			Action act = () => fake.Execute(f => f.ConditionalReturn(0));
 
 			act.Should().Throw<InvalidOperationException>().WithMessage("No symbols found");
 		}
@@ -80,13 +80,11 @@ namespace AutoFake.FunctionalTests
 		[Fact]
 		public void When_auto_debug_mode_without_symbols_Should_not_fail()
 		{
-			var fake = new Fake<object>();
+			var fake = new Fake<SystemUnderTest>();
 			fake.Services.Resolve<IAssemblyReader>().SourceTypeDefinition.Should().NotBeNull();
 			fake.Options.Debug = DebugMode.Enabled;
 
-			Action act = () => fake.Execute(f => f.GetType());
-
-			act.Should().NotThrow<InvalidOperationException>();
+			fake.Execute(f => f.ConditionalReturn(-1)).Should().Be(-1);
 		}
 
 		[Fact]
