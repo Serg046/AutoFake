@@ -78,6 +78,18 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
+		public void When_auto_debug_mode_without_symbols_Should_not_fail()
+		{
+			var fake = new Fake<object>();
+			fake.Services.Resolve<IAssemblyReader>().SourceTypeDefinition.Should().NotBeNull();
+			fake.Options.Debug = DebugMode.Enabled;
+
+			Action act = () => fake.Execute(f => f.GetType());
+
+			act.Should().NotThrow<InvalidOperationException>();
+		}
+
+		[Fact]
 		public void When_incorrect_type_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
