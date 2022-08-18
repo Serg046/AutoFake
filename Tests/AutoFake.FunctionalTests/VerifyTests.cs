@@ -180,7 +180,19 @@ namespace AutoFake.FunctionalTests
             act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
 		}
 
-		private class TestClass
+        [Fact]
+        public void When_incorrect_null_string_arg_Should_add_quotes_to_output()
+        {
+            var fake = new Fake<TestClass>();
+
+            var sut = fake.Rewrite(f => f.Append());
+            sut.Verify(s => s.Append(null));
+            Action act = () => sut.Execute();
+
+            act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
+        }
+
+        private class TestClass
         {
             public void Append() => Append("default");
             public void Append(string value) { }

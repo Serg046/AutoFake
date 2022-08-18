@@ -5,7 +5,7 @@ namespace AutoFake.FunctionalTests
     public class VirtualTests
     {
         [Fact]
-        public void When_VirtualMethodWithExactNameConfigured_Should_ExecuteOverridingMethod()
+        public void When_virtual_method_with_exact_name_configured_Should_execute_overriden_method()
         {
             var fake = new Fake<TestClass>();
             fake.Options.AllowedVirtualMembers.Add(m => m.Name == nameof(TestClass.GetNumber));
@@ -17,7 +17,23 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void When_VirtualMethodWithAllVirtualMembers_Should_ExecuteOverridingMethod()
+        public void When_virtual_method_with_everything_configured_Should_execute_overriden_method()
+        {
+            var fake = new Fake<TestClass>();
+            fake.Options.AllowedVirtualMembers.Add(m =>
+                m.DeclaringType is "AutoFake.FunctionalTests.VirtualTests/TestClass" or "AutoFake.FunctionalTests.VirtualTests/TestClass/Derived" &&
+                m.ReturnType == "System.Int32" &&
+                m.Name == nameof(TestClass.GetNumber) &&
+                m.ParameterTypes.Length == 0);
+
+            var sut = fake.Rewrite(f => f.GetVirtualNumberByMethod());
+            sut.Replace(() => NumberFactory.Get()).Return(2);
+
+            Assert.Equal(2, sut.Execute());
+        }
+
+        [Fact]
+        public void When_virtual_method_with_all_virtual_members_Should_execute_overriden_method()
         {
             var fake = new Fake<TestClass>();
 
@@ -28,7 +44,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void When_VirtualPropertyWithExactNameConfigured_Should_ExecuteOverridingMethod()
+        public void When_virtual_property_with_exact_name_configured_Should_execute_overriden_method()
         {
             var fake = new Fake<TestClass>();
             fake.Options.AllowedVirtualMembers.Add(m => m.Name == "get_" + nameof(TestClass.Number));
@@ -40,7 +56,7 @@ namespace AutoFake.FunctionalTests
         }
 
         [Fact]
-        public void When_VirtualPropertyWithAllVirtualMembers_Should_ExecuteOverridingMethod()
+        public void When_virtual_property_with_all_virtual_members_Should_execute_overriden_method()
         {
             var fake = new Fake<TestClass>();
 

@@ -19,8 +19,6 @@ namespace AutoFake
 
         public override string ToString() => ToString(_value);
 
-        public override int GetHashCode() => _comparer.GetHashCode(_value);
-
         public static string ToString(object value)
         {
             return value is string str
