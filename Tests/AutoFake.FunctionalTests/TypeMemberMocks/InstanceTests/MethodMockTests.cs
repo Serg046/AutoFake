@@ -145,15 +145,9 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 		public void ParamsMethodTest()
 		{
 			var fake = new Fake<ParamsTestClass>();
+
 			var sut = fake.Rewrite(f => f.Test());
-			sut.Replace(p => p.GetValue(1, 2, 3)).Return(-1);
-
-			Assert.Equal(-1, sut.Execute());
-
-			fake = new Fake<ParamsTestClass>();
-			sut = fake.Rewrite(f => f.Test());
-			sut.Replace(p => p.GetValue(Arg.Is(new[] { 1, 2, 3 }, new IntArrayComparer())))
-				.Return(-1);
+			sut.Replace(p => p.GetValue(Arg.Is(new[] { 1, 2, 3 }, new IntArrayComparer()))).Return(-1);
 
 			Assert.Equal(-1, sut.Execute());
 		}

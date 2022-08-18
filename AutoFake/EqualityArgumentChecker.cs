@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using System.Linq;
+using System.Collections.Generic;
 using AutoFake.Abstractions;
 
 namespace AutoFake
@@ -12,7 +12,7 @@ namespace AutoFake
         public EqualityArgumentChecker(object value, IEqualityComparer? comparer = null)
         {
             _value = value;
-            _comparer = comparer ?? TryGetEnumerableComparer(value) ?? new DefaultEqualityComparer();
+            _comparer = comparer ?? EqualityComparer<object>.Default;
         }
 
         public bool Check(object argument) => _comparer.Equals(_value, argument);
@@ -26,43 +26,6 @@ namespace AutoFake
             return value is string str
                 ? $"\"{str}\""
                 : value?.ToString() ?? "null";
-        }
-
-        private IEqualityComparer? TryGetEnumerableComparer(object value)
-            => value is IEnumerable ? new EnumerableEqualityComparer() : null;
-
-        private class EnumerableEqualityComparer : IEqualityComparer
-        {
-	        bool IEqualityComparer.Equals(object? x, object? y)
-			{
-                if (x == null && y == null) return true;
-                return x is IEnumerable firstEnumerable && y is IEnumerable secondEnumerable 
-                    && firstEnumerable.Cast<object>().SequenceEqual(secondEnumerable.Cast<object>());
-            }
-
-            public int GetHashCode(object? obj) => obj?.GetHashCode() ?? 0;
-        }
-
-        private class DefaultEqualityComparer : IEqualityComparer
-        {
-	        bool IEqualityComparer.Equals(object? x, object? y)
-			{
-                if (x != null)
-                {
-                    if (y != null)
-                    {
-                        return x.Equals(y);
-                    }
-                }
-                else if (y == null)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-
-            public int GetHashCode(object? obj) => obj?.GetHashCode() ?? 0;
         }
     }
 }

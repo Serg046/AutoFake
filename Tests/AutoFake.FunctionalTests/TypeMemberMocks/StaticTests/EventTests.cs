@@ -19,6 +19,14 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 		}
 
 		[Fact]
+		public void When_incorrect_event_name_Should_fail()
+		{
+			Action act = () => Event.Of(typeof(TestClass), "IncorrectEvent").Add(() => Arg.IsAny<Action>());
+
+			act.Should().Throw<MissingMethodException>();
+		}
+
+		[Fact]
 		public void When_remove_event_handler_Should_be_intercepted()
 		{
 			var fake = new Fake(typeof(TestClass));
