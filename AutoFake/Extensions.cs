@@ -5,11 +5,26 @@ using Mono.Cecil;
 using System.Linq;
 using AutoFake.Abstractions;
 using Mono.Cecil.Cil;
+using LinqExpression = System.Linq.Expressions.Expression;
+using System.Reflection;
 
 namespace AutoFake
 {
     internal static class Extensions
     {
+		private static readonly Func<OpCode, object, Instruction> _createinstruction;
+
+		static Extensions()
+		{
+			var ctor = typeof(Instruction)
+				.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+				null, new[] { typeof(OpCode), typeof(object) }, null);
+			var opCode = LinqExpression.Parameter(typeof(OpCode));
+			var operand = LinqExpression.Parameter(typeof(object));
+			_createinstruction = LinqExpression.Lambda<Func<OpCode, object, Instruction>>(
+				LinqExpression.New(ctor, opCode, operand), opCode, operand).Compile();
+		}
+
         public static bool EquivalentTo(this MethodReference methodReference, MethodReference method)
             => methodReference.Name == method.Name &&
                methodReference.Parameters.Select(p => p.ParameterType.FullName)
@@ -30,31 +45,12 @@ namespace AutoFake
 
         public static Instruction Copy(this Instruction instruction)
         {
-	        if (instruction is null) throw new ArgumentNullException(nameof(instruction));
-            if (instruction.Operand is null) return Instruction.Create(instruction.OpCode);
+			return instruction.Operand == null
+				? Instruction.Create(instruction.OpCode)
+				: _createinstruction(instruction.OpCode, instruction.Operand);
+		}
 
-            return instruction.Operand switch
-            {
-	            TypeReference operand => Instruction.Create(instruction.OpCode, operand),
-	            CallSite operand => Instruction.Create(instruction.OpCode, operand),
-	            MethodReference operand => Instruction.Create(instruction.OpCode, operand),
-	            FieldReference operand => Instruction.Create(instruction.OpCode, operand),
-	            string operand => Instruction.Create(instruction.OpCode, operand),
-	            sbyte operand => Instruction.Create(instruction.OpCode, operand),
-	            byte operand => Instruction.Create(instruction.OpCode, operand),
-	            int operand => Instruction.Create(instruction.OpCode, operand),
-	            long operand => Instruction.Create(instruction.OpCode, operand),
-	            float operand => Instruction.Create(instruction.OpCode, operand),
-	            double operand => Instruction.Create(instruction.OpCode, operand),
-	            Instruction operand => Instruction.Create(instruction.OpCode, operand),
-	            Instruction[] operand => Instruction.Create(instruction.OpCode, operand),
-	            VariableDefinition operand => Instruction.Create(instruction.OpCode, operand),
-	            ParameterDefinition operand => Instruction.Create(instruction.OpCode, operand),
-	            _ => throw new NotSupportedException("The operand is not supported")
-            };
-        }
-
-        public static Instruction ShiftDown(this IEmitter emitter, Instruction instruction)
+		public static Instruction ShiftDown(this IEmitter emitter, Instruction instruction)
         {
 	        var copy = instruction.Copy();
 	        instruction.OpCode = OpCodes.Nop;
