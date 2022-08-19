@@ -1,4 +1,4 @@
-﻿using AutoFake.Exceptions;
+using AutoFake.Exceptions;
 using FluentAssertions;
 using System;
 using Xunit;
@@ -28,7 +28,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 		private class TestClass
-		{ 
+		{
 		}
 	}
 }

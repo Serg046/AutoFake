@@ -1,7 +1,7 @@
-﻿namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions
 {
-    internal interface IFakeArgumentChecker
-    {
-        bool Check(object argument);
-    }
+	internal interface IFakeArgumentChecker
+	{
+		bool Check(object argument);
+	}
 }

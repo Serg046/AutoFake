@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using AutoFake.Abstractions;
 using Mono.Cecil.Rocks;
@@ -15,7 +15,7 @@ namespace AutoFake
 		{
 			_createEmitter = createEmitter;
 		}
-		
+
 		public IEmitter GetEmitter(MethodBody methodBody)
 		{
 			if (!_emitters.TryGetValue(methodBody, out var emitter))

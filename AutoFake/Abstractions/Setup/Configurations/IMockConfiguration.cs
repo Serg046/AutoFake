@@ -1,4 +1,4 @@
-﻿using AutoFake.Setup.Mocks;
+using AutoFake.Setup.Mocks;
 using System.Linq.Expressions;
 
 namespace AutoFake.Abstractions.Setup.Configurations

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Abstractions;
@@ -64,7 +64,7 @@ namespace AutoFake
 		private bool Validate(MethodDefinition currentMethod, State state)
 		{
 			return !CheckAnalysisLevel(currentMethod, state) || !CheckVirtualMember(currentMethod, state) ||
-			       !state.MethodContracts.Add(currentMethod.ToString());
+				   !state.MethodContracts.Add(currentMethod.ToString());
 		}
 
 		private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, State state)
@@ -119,7 +119,7 @@ namespace AutoFake
 
 		private State UpdateParents(State state, MethodDefinition currentMethod)
 		{
-			state.Parents = state.Parents.Concat(new[] {currentMethod});
+			state.Parents = state.Parents.Concat(new[] { currentMethod });
 			return state;
 		}
 
@@ -128,21 +128,21 @@ namespace AutoFake
 			switch (state.Options.AnalysisLevel)
 			{
 				case AnalysisLevels.Type:
-				{
-					if (methodRef.DeclaringType.FullName == state.OriginalMethod.DeclaringType.FullName &&
-					    methodRef.Module.Assembly == state.OriginalMethod.Module.Assembly) return true;
-					break;
-				}
+					{
+						if (methodRef.DeclaringType.FullName == state.OriginalMethod.DeclaringType.FullName &&
+							methodRef.Module.Assembly == state.OriginalMethod.Module.Assembly) return true;
+						break;
+					}
 				case AnalysisLevels.Assembly:
-				{
-					if (methodRef.Module.Assembly == state.OriginalMethod.Module.Assembly) return true;
-					break;
-				}
+					{
+						if (methodRef.Module.Assembly == state.OriginalMethod.Module.Assembly) return true;
+						break;
+					}
 				case AnalysisLevels.AllExceptSystemAndMicrosoft:
-				{
-					return !methodRef.DeclaringType.Namespace.StartsWith(nameof(System)) &&
-					       !methodRef.DeclaringType.Namespace.StartsWith(nameof(Microsoft));
-				}
+					{
+						return !methodRef.DeclaringType.Namespace.StartsWith(nameof(System)) &&
+							   !methodRef.DeclaringType.Namespace.StartsWith(nameof(Microsoft));
+					}
 				default: throw new NotSupportedException($"{state.Options.AnalysisLevel} is not supported");
 			}
 
@@ -153,7 +153,7 @@ namespace AutoFake
 		{
 			if (!method.IsVirtual) return true;
 			if (state.Options.DisableVirtualMembers) return false;
-			
+
 			var contract = _createMethodContract(method.DeclaringType.ToString(), method.ReturnType.ToString(),
 				method.Name, method.Parameters.Select(p => p.ParameterType.ToString()).ToArray());
 			return state.Options.AllowedVirtualMembers.Count == 0 || state.Options.AllowedVirtualMembers.Any(m => m(contract));

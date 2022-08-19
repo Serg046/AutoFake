@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,116 +12,116 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
-    public class VerifyTests
-    {
-        [Theory]
-        [InlineData(false, false, true)]
-        [InlineData(true, false, true)]
-        [InlineData(false, true, true)]
-        [InlineData(true, true, false)]
-        public void When_arguments_are_passed_Should_be_checked(bool correctDate, bool correctZone, bool throws)
-        {
-            var fake = new Fake<TestClass>();
-            var date = correctDate ? new DateTime(2019, 1, 1) : DateTime.MinValue;
-            var zone = correctZone ? TimeZoneInfo.Utc
-                : TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
+	public class VerifyTests
+	{
+		[Theory]
+		[InlineData(false, false, true)]
+		[InlineData(true, false, true)]
+		[InlineData(false, true, true)]
+		[InlineData(true, true, false)]
+		public void When_arguments_are_passed_Should_be_checked(bool correctDate, bool correctZone, bool throws)
+		{
+			var fake = new Fake<TestClass>();
+			var date = correctDate ? new DateTime(2019, 1, 1) : DateTime.MinValue;
+			var zone = correctZone ? TimeZoneInfo.Utc
+				: TimeZoneInfo.CreateCustomTimeZone("incorrect", TimeSpan.FromHours(-6), "", "");
 
-            var sut = fake.Rewrite(f => f.GetValueByArguments(date, zone));
-            sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
+			var sut = fake.Rewrite(f => f.GetValueByArguments(date, zone));
+			sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(new DateTime(2019, 1, 1), TimeZoneInfo.Utc));
 
-            if (throws)
-            {
-                Assert.Throws<VerifyException>(() => sut.Execute());
-            }
-            else
-            {
-                sut.Execute();
-            }
-        }
+			if (throws)
+			{
+				Assert.Throws<VerifyException>(() => sut.Execute());
+			}
+			else
+			{
+				sut.Execute();
+			}
+		}
 
-        [Theory]
-        [InlineData("==", 2, true)]
-        [InlineData("==", 1, false)]
-        [InlineData("<", 1, true)]
-        [InlineData(">", 0, false)]
-        public void When_expected_calls_configured_Should_check(string op, int arg, bool throws)
-        {
-            var fake = new Fake<TestClass>();
-            IExecutionContext.CallsCheckerFunc checker;
-            switch (op)
-            {
-                case "==": checker = x => x == arg; break;
-                case ">": checker = x => x > arg; break;
-                case "<": checker = x => x < arg; break;
-                default: throw new InvalidOperationException();
-            }
-            var originalDate = new DateTime(2019, 1, 1);
-            var zone = TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", "");
+		[Theory]
+		[InlineData("==", 2, true)]
+		[InlineData("==", 1, false)]
+		[InlineData("<", 1, true)]
+		[InlineData(">", 0, false)]
+		public void When_expected_calls_configured_Should_check(string op, int arg, bool throws)
+		{
+			var fake = new Fake<TestClass>();
+			IExecutionContext.CallsCheckerFunc checker;
+			switch (op)
+			{
+				case "==": checker = x => x == arg; break;
+				case ">": checker = x => x > arg; break;
+				case "<": checker = x => x < arg; break;
+				default: throw new InvalidOperationException();
+			}
+			var originalDate = new DateTime(2019, 1, 1);
+			var zone = TimeZoneInfo.CreateCustomTimeZone("correct", TimeSpan.FromHours(6), "", "");
 
-            var sut = fake.Rewrite(f => f.GetValueByArguments(originalDate, zone));
-            sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(originalDate, zone))
-                .ExpectedCalls(checker);
+			var sut = fake.Rewrite(f => f.GetValueByArguments(originalDate, zone));
+			sut.Verify(() => TimeZoneInfo.ConvertTimeFromUtc(originalDate, zone))
+				.ExpectedCalls(checker);
 
-            if (throws)
-            {
-                Assert.Throws<ExpectedCallsException>(() => sut.Execute());
-            }
-            else
-            {
-                Assert.Equal(new DateTime(2019, 1, 1, 6, 0, 0), sut.Execute());
-            }
-        }
+			if (throws)
+			{
+				Assert.Throws<ExpectedCallsException>(() => sut.Execute());
+			}
+			else
+			{
+				Assert.Equal(new DateTime(2019, 1, 1, 6, 0, 0), sut.Execute());
+			}
+		}
 
-        [Fact]
-        public void When_there_are_branches_Should_pass()
-        {
-            var fake = new Fake<TestClass>();
-            var sut = fake.Rewrite(f => f.Sum(1, 2));
-            sut.Verify(t => t.CodeBranch(1, 2))
-                .ExpectedCalls(2);
+		[Fact]
+		public void When_there_are_branches_Should_pass()
+		{
+			var fake = new Fake<TestClass>();
+			var sut = fake.Rewrite(f => f.Sum(1, 2));
+			sut.Verify(t => t.CodeBranch(1, 2))
+				.ExpectedCalls(2);
 
-            Assert.Equal(6, sut.Execute());
+			Assert.Equal(6, sut.Execute());
 
-            fake = new Fake<TestClass>();
-            sut = fake.Rewrite(f => f.Sum(0, 1));
-            sut.Verify(t => t.CodeBranch(0, 0))
-                .ExpectedCalls(1);
+			fake = new Fake<TestClass>();
+			sut = fake.Rewrite(f => f.Sum(0, 1));
+			sut.Verify(t => t.CodeBranch(0, 0))
+				.ExpectedCalls(1);
 
-            Assert.Equal(0, sut.Execute());
-        }
+			Assert.Equal(0, sut.Execute());
+		}
 
-        [Fact]
-        public async Task When_async_method_Should_verify()
-        {
-            var fake = new Fake<TestClass>();
+		[Fact]
+		public async Task When_async_method_Should_verify()
+		{
+			var fake = new Fake<TestClass>();
 
-            var sut = fake.Rewrite(f => f.DoSomethingAsync());
-            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
+			var sut = fake.Rewrite(f => f.DoSomethingAsync());
+			sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
 
-            await sut.Execute();
-        }
+			await sut.Execute();
+		}
 
-        [Fact]
-        public void When_enumerable_Should_verify()
-        {
-            var fake = new Fake<TestClass>();
+		[Fact]
+		public void When_enumerable_Should_verify()
+		{
+			var fake = new Fake<TestClass>();
 
-            var sut = fake.Rewrite(f => f.DoSomethingInIterator());
-            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
+			var sut = fake.Rewrite(f => f.DoSomethingInIterator());
+			sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
 
-            sut.Execute().Cast<int>().Sum().Should().Be(6);
-        }
+			sut.Execute().Cast<int>().Sum().Should().Be(6);
+		}
 
-        [Fact]
-        public void When_typed_enumerable_Should_verify()
-        {
-            var fake = new Fake<TestClass>();
+		[Fact]
+		public void When_typed_enumerable_Should_verify()
+		{
+			var fake = new Fake<TestClass>();
 
-            var sut = fake.Rewrite(f => f.DoSomethingInTypedIterator());
-            sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
+			var sut = fake.Rewrite(f => f.DoSomethingInTypedIterator());
+			sut.Verify(f => f.Sum(1, 2)).ExpectedCalls(i => i == 1);
 
-            sut.Execute().Sum().Should().Be(6);
-        }
+			sut.Execute().Sum().Should().Be(6);
+		}
 
 #if NETCOREAPP3_0
         [Fact]
@@ -139,34 +139,34 @@ namespace AutoFake.FunctionalTests
         }
 #endif
 
-        [Theory]
-        [InlineData(-10, -1)]
-        [InlineData(0, 0)]
-        [InlineData(10, 1)]
-        public void When_multiple_return_with_matched_args_Should_succeed(int arg, int expected)
-        {
-	        var fake = new Fake<SystemUnderTest>();
+		[Theory]
+		[InlineData(-10, -1)]
+		[InlineData(0, 0)]
+		[InlineData(10, 1)]
+		public void When_multiple_return_with_matched_args_Should_succeed(int arg, int expected)
+		{
+			var fake = new Fake<SystemUnderTest>();
 
-	        var sut = fake.Rewrite(f => f.ConditionalReturn(arg));
-	        sut.Verify(s => s.PrintAndReturn(arg, expected));
+			var sut = fake.Rewrite(f => f.ConditionalReturn(arg));
+			sut.Verify(s => s.PrintAndReturn(arg, expected));
 
-	        sut.Execute().Should().Be(expected);
-        }
+			sut.Execute().Should().Be(expected);
+		}
 
-        [Theory]
-        [InlineData(-10, 1)]
-        [InlineData(0, 123)]
-        [InlineData(10, -1)]
-        public void When_multiple_return_without_matched_args_Should_fail(int arg, int expected)
-        {
-	        var fake = new Fake<SystemUnderTest>();
+		[Theory]
+		[InlineData(-10, 1)]
+		[InlineData(0, 123)]
+		[InlineData(10, -1)]
+		public void When_multiple_return_without_matched_args_Should_fail(int arg, int expected)
+		{
+			var fake = new Fake<SystemUnderTest>();
 
-	        var sut = fake.Rewrite(f => f.ConditionalReturn(arg));
-	        sut.Verify(s => s.PrintAndReturn(arg, expected));
-	        Action act = () => sut.Execute();
+			var sut = fake.Rewrite(f => f.ConditionalReturn(arg));
+			sut.Verify(s => s.PrintAndReturn(arg, expected));
+			Action act = () => sut.Execute();
 
-	        act.Should().Throw<VerifyException>();
-        }
+			act.Should().Throw<VerifyException>();
+		}
 
 		[Fact]
 		public void When_incorrect_string_arg_Should_add_quotes_to_output()
@@ -174,38 +174,38 @@ namespace AutoFake.FunctionalTests
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.Append());
-            sut.Verify(s => s.Append("incorrect default"));
+			sut.Verify(s => s.Append("incorrect default"));
 			Action act = () => sut.Execute();
 
-            act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
+			act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
 		}
 
-        [Fact]
-        public void When_incorrect_null_string_arg_Should_add_quotes_to_output()
-        {
-            var fake = new Fake<TestClass>();
+		[Fact]
+		public void When_incorrect_null_string_arg_Should_add_quotes_to_output()
+		{
+			var fake = new Fake<TestClass>();
 
-            var sut = fake.Rewrite(f => f.Append());
-            sut.Verify(s => s.Append(null));
-            Action act = () => sut.Execute();
+			var sut = fake.Rewrite(f => f.Append());
+			sut.Verify(s => s.Append(null));
+			Action act = () => sut.Execute();
 
-            act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
-        }
+			act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
+		}
 
-        private class TestClass
-        {
-            public void Append() => Append("default");
-            public void Append(string value) { }
+		private class TestClass
+		{
+			public void Append() => Append("default");
+			public void Append(string value) { }
 
-            public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
-            {
-                Debug.WriteLine("Started");
-                var value = TimeZoneInfo.ConvertTimeFromUtc(dateTime, zone);
-                Debug.WriteLine("Finished");
-                return value;
-            }
+			public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
+			{
+				Debug.WriteLine("Started");
+				var value = TimeZoneInfo.ConvertTimeFromUtc(dateTime, zone);
+				Debug.WriteLine("Finished");
+				return value;
+			}
 
-            public int CodeBranch(int a, int b) => a + b;
+			public int CodeBranch(int a, int b) => a + b;
 
 			public int Sum(int a, int b)
 			{
@@ -223,10 +223,10 @@ namespace AutoFake.FunctionalTests
 				yield return Sum(1, 2);
 			}
 
-            public IEnumerable<int> DoSomethingInTypedIterator()
-            {
-                yield return Sum(1, 2);
-            }
+			public IEnumerable<int> DoSomethingInTypedIterator()
+			{
+				yield return Sum(1, 2);
+			}
 
 #if NETCOREAPP3_0
             public async IAsyncEnumerable<int> DoSomethingInAsyncIterator()
@@ -235,6 +235,6 @@ namespace AutoFake.FunctionalTests
                 yield return Sum(1, 2);
             }
 #endif
-        }
-    }
+		}
+	}
 }

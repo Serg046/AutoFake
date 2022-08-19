@@ -1,4 +1,4 @@
-﻿using AutoFake.Abstractions;
+using AutoFake.Abstractions;
 
 namespace AutoFake
 {

@@ -1,4 +1,4 @@
-﻿using AutoFake.Abstractions.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks;
 using System.Collections.Generic;
 
 namespace AutoFake.Abstractions.Setup

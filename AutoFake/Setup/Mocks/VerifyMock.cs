@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
@@ -7,17 +7,17 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-    internal class VerifyMock : ISourceMemberMock
+	internal class VerifyMock : ISourceMemberMock
 	{
 		private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 
-	    public VerifyMock(
-		    SourceMemberMetaData sourceMemberMetaData,
-	        Func<IEmitter, Instruction, IProcessor> createProcessor)
-	    {
-		    SourceMemberMetaData = sourceMemberMetaData;
-		    _createProcessor = createProcessor;
-	    }
+		public VerifyMock(
+			SourceMemberMetaData sourceMemberMetaData,
+			Func<IEmitter, Instruction, IProcessor> createProcessor)
+		{
+			SourceMemberMetaData = sourceMemberMetaData;
+			_createProcessor = createProcessor;
+		}
 
 		public SourceMemberMetaData SourceMemberMetaData { get; }
 
@@ -32,12 +32,12 @@ namespace AutoFake.Setup.Mocks
 		}
 
 		public void Inject(IEmitter emitter, Instruction instruction)
-        {
-            var processor = _createProcessor(emitter, instruction);
+		{
+			var processor = _createProcessor(emitter, instruction);
 			var arguments = SourceMemberMetaData.RecordMethodCall(processor);
-            emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Pop));
+			emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Pop));
 			processor.PushMethodArguments(arguments);
-        }
+		}
 
 		public void AfterInjection(IEmitter emitter)
 		{

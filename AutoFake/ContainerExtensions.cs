@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
@@ -129,8 +129,8 @@ namespace AutoFake
 
 		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)
 		{
-            var invocationExpression = new InvocationExpression(container.Resolve<IMemberVisitorFactory>(), expression ?? throw new ArgumentNullException(nameof(expression)));
-            var scope = container.OpenScope(invocationExpression);
+			var invocationExpression = new InvocationExpression(container.Resolve<IMemberVisitorFactory>(), expression ?? throw new ArgumentNullException(nameof(expression)));
+			var scope = container.OpenScope(invocationExpression);
 			scope.Use<IInvocationExpression>(_ => invocationExpression);
 
 			if (addMocks)

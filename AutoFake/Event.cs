@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 using LinqExpression = System.Linq.Expressions.Expression;
 
@@ -62,4 +62,3 @@ namespace AutoFake
 		}
 	}
 }
-

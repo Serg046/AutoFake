@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -29,8 +29,8 @@ namespace Analyzers
 
 		private void AnalyzeTypeDeclarationNode(SyntaxNodeAnalysisContext context)
 		{
-			if (context.ContainingSymbol is ITypeSymbol {DeclaredAccessibility: Accessibility.Public} typeSymbol
-			    && !IsInheritedFrom(typeSymbol, nameof(Exception)))
+			if (context.ContainingSymbol is ITypeSymbol { DeclaredAccessibility: Accessibility.Public } typeSymbol
+				&& !IsInheritedFrom(typeSymbol, nameof(Exception)))
 			{
 				var typeSyntax = (TypeDeclarationSyntax)context.Node;
 				context.ReportDiagnostic(Diagnostic.Create(AccessModifierRule, typeSyntax.Identifier.GetLocation()));

@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 
 namespace AutoFake.Exceptions
 {
-    public class VerifyException : Exception
-    {
-        public VerifyException(string message) : base(message)
-        {
-        }
-    }
+	public class VerifyException : Exception
+	{
+		public VerifyException(string message) : base(message)
+		{
+		}
+	}
 }

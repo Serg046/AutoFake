@@ -1,4 +1,4 @@
-﻿namespace AutoFake
+namespace AutoFake
 {
 	public enum AnalysisLevels
 	{

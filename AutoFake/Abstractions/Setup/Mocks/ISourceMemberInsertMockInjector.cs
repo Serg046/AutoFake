@@ -1,4 +1,4 @@
-﻿using AutoFake.Setup.Mocks;
+using AutoFake.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 

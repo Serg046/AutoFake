@@ -1,4 +1,4 @@
-﻿using AutoFake.Abstractions;
+using AutoFake.Abstractions;
 using AutoFake.Exceptions;
 using DryIoc;
 using FluentAssertions;
@@ -38,8 +38,8 @@ namespace AutoFake.FunctionalTests
 		public void When_value_type_ctor_arg_Should_be_passed()
 		{
 			new Fake<CtorTestClass>(1, 1).Execute(f => f.ReturnCtorArg()).Should().Be(2);
-			new Fake<CtorTestClass>(1 , Arg.IsNull<int?>()).Execute(f => f.ReturnCtorArg()).Should().Be(1);
-			new Fake<CtorTestClass>(1 , null).Execute(f => f.ReturnCtorArg()).Should().Be(1);
+			new Fake<CtorTestClass>(1, Arg.IsNull<int?>()).Execute(f => f.ReturnCtorArg()).Should().Be(1);
+			new Fake<CtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()).Should().Be(1);
 			new Action(() => new Fake<CtorTestClass>(Arg.IsNull<int>(), 1).Execute(f => f.ReturnCtorArg()))
 				.Should().Throw<InvalidOperationException>().WithMessage("*cannot be null*");
 		}

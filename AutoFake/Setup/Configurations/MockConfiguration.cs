@@ -1,4 +1,4 @@
-﻿using AutoFake.Abstractions.Setup;
+using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Setup.Mocks;
 using System;

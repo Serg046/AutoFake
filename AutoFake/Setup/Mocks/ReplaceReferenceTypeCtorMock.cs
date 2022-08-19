@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AutoFake.Abstractions;
@@ -31,7 +31,7 @@ namespace AutoFake.Setup.Mocks
 		public void Inject(IEmitter emitter, Instruction instruction)
 		{
 			var method = (MethodReference)instruction.Operand;
-            instruction.Operand = _typeInfo.ImportToSourceAsm(method);
+			instruction.Operand = _typeInfo.ImportToSourceAsm(method);
 		}
 
 		[ExcludeFromCodeCoverage]
@@ -46,5 +46,5 @@ namespace AutoFake.Setup.Mocks
 		public override int GetHashCode() => _typeReference.ToString().GetHashCode();
 
 		public override bool Equals(object? obj) => obj is ReplaceReferenceTypeCtorMock mock && mock._typeReference.ToString() == _typeReference.ToString();
-    }
+	}
 }

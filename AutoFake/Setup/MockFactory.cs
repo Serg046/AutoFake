@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
@@ -17,7 +17,7 @@ namespace AutoFake.Setup
 		public InsertMock GetInsertMock(Action closure, InsertMock.Location location)
 			=> _serviceLocator.Resolve<Func<Action, InsertMock.Location, InsertMock>>().Invoke(closure, location);
 
-		public T GetExpressionBasedMock<T>(IInvocationExpression expression) where T: IMock
+		public T GetExpressionBasedMock<T>(IInvocationExpression expression) where T : IMock
 			=> _serviceLocator.Resolve<Func<IInvocationExpression, T>>().Invoke(expression);
 
 		public SourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location)

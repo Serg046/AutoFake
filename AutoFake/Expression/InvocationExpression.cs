@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,108 +15,108 @@ namespace AutoFake.Expression
 	public class InvocationExpression : IInvocationExpression
 #pragma warning restore AF0001
 	{
-	    internal delegate IInvocationExpression Create(LinqExpression expression);
+		internal delegate IInvocationExpression Create(LinqExpression expression);
 
-	    private readonly IMemberVisitorFactory _memberVisitorFactory;
-	    private readonly LinqExpression _expression;
-        private IReadOnlyList<IFakeArgument>? _arguments;
+		private readonly IMemberVisitorFactory _memberVisitorFactory;
+		private readonly LinqExpression _expression;
+		private IReadOnlyList<IFakeArgument>? _arguments;
 
-        internal InvocationExpression(IMemberVisitorFactory memberVisitorFactory, LinqExpression expression)
-        {
-	        _memberVisitorFactory = memberVisitorFactory;
-	        _expression = expression;
-            ThrowWhenArgumentsAreNotMatched = true;
-        }
+		internal InvocationExpression(IMemberVisitorFactory memberVisitorFactory, LinqExpression expression)
+		{
+			_memberVisitorFactory = memberVisitorFactory;
+			_expression = expression;
+			ThrowWhenArgumentsAreNotMatched = true;
+		}
 
-        public bool ThrowWhenArgumentsAreNotMatched { get; set; }
+		public bool ThrowWhenArgumentsAreNotMatched { get; set; }
 
-        void IInvocationExpression.AcceptMemberVisitor(IMemberVisitor visitor) => AcceptMemberVisitor(visitor);
-        internal void AcceptMemberVisitor(IMemberVisitor visitor)
-        {
-	        var expressionVisitor = new ExpressionVisitor(visitor);
-		    expressionVisitor.Visit(_expression);
-		    if (!expressionVisitor.Visited)
-		    {
-			    throw new NotSupportedExpressionException(
-				    $"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
-		    }
-        }
+		void IInvocationExpression.AcceptMemberVisitor(IMemberVisitor visitor) => AcceptMemberVisitor(visitor);
+		internal void AcceptMemberVisitor(IMemberVisitor visitor)
+		{
+			var expressionVisitor = new ExpressionVisitor(visitor);
+			expressionVisitor.Visit(_expression);
+			if (!expressionVisitor.Visited)
+			{
+				throw new NotSupportedExpressionException(
+					$"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
+			}
+		}
 
-        private class ExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
-        {
-	        private readonly IMemberVisitor _memberVisitorHelper;
+		private class ExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
+		{
+			private readonly IMemberVisitor _memberVisitorHelper;
 
-	        public ExpressionVisitor(IMemberVisitor memberVisitor)
-	        {
-		        _memberVisitorHelper = memberVisitor;
-	        }
+			public ExpressionVisitor(IMemberVisitor memberVisitor)
+			{
+				_memberVisitorHelper = memberVisitor;
+			}
 
-	        private IMemberVisitor MemberVisitor
-	        {
-		        get
-		        {
-			        Visited = true;
-			        return _memberVisitorHelper;
-		        }
-	        }
+			private IMemberVisitor MemberVisitor
+			{
+				get
+				{
+					Visited = true;
+					return _memberVisitorHelper;
+				}
+			}
 
-	        public bool Visited { get; private set; }
+			public bool Visited { get; private set; }
 
-	        protected override LinqExpression VisitNew(NewExpression node)
-	        {
-		        MemberVisitor.Visit(node, node.Constructor);
-		        return node;
-	        }
+			protected override LinqExpression VisitNew(NewExpression node)
+			{
+				MemberVisitor.Visit(node, node.Constructor);
+				return node;
+			}
 
-	        protected override LinqExpression VisitMethodCall(MethodCallExpression node)
-	        {
-		        MemberVisitor.Visit(node, node.Method);
-                return node;
-	        }
+			protected override LinqExpression VisitMethodCall(MethodCallExpression node)
+			{
+				MemberVisitor.Visit(node, node.Method);
+				return node;
+			}
 
-	        protected override LinqExpression VisitMember(MemberExpression node)
-	        {
-		        switch (node.Member)
-		        {
-			        case FieldInfo field: MemberVisitor.Visit(field); break;
-			        case PropertyInfo property: MemberVisitor.Visit(property); break;
-			        default: throw new NotSupportedException($"'{node.Member.GetType().FullName}' is not supported.");
-		        }
+			protected override LinqExpression VisitMember(MemberExpression node)
+			{
+				switch (node.Member)
+				{
+					case FieldInfo field: MemberVisitor.Visit(field); break;
+					case PropertyInfo property: MemberVisitor.Visit(property); break;
+					default: throw new NotSupportedException($"'{node.Member.GetType().FullName}' is not supported.");
+				}
 
-		        return node;
-	        }
-        }
+				return node;
+			}
+		}
 
-        //-----------------------------------------------------------------------------------------------------------
+		//-----------------------------------------------------------------------------------------------------------
 
-        ISourceMember IInvocationExpression.GetSourceMember() => GetSourceMember();
-        internal ISourceMember GetSourceMember()
-        {
-            var memberVisitor = _memberVisitorFactory.GetMemberVisitor<IGetSourceMemberVisitor>();
-            ((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
-            return memberVisitor.SourceMember;
-        }
+		ISourceMember IInvocationExpression.GetSourceMember() => GetSourceMember();
+		internal ISourceMember GetSourceMember()
+		{
+			var memberVisitor = _memberVisitorFactory.GetMemberVisitor<IGetSourceMemberVisitor>();
+			((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
+			return memberVisitor.SourceMember;
+		}
 
-        private IReadOnlyList<IFakeArgument> GetArguments()
-        {
-            if (_arguments == null)
-            {
-                var visitor = _memberVisitorFactory.GetMemberVisitor<GetArgumentsMemberVisitor>();
-                ((IInvocationExpression) this).AcceptMemberVisitor(visitor);
-                _arguments = visitor.Arguments;
-            }
+		private IReadOnlyList<IFakeArgument> GetArguments()
+		{
+			if (_arguments == null)
+			{
+				var visitor = _memberVisitorFactory.GetMemberVisitor<GetArgumentsMemberVisitor>();
+				((IInvocationExpression)this).AcceptMemberVisitor(visitor);
+				_arguments = visitor.Arguments;
+			}
 
-            return _arguments;
-        }
+			return _arguments;
+		}
 
-        public bool VerifyArguments(object[] currentArguments, IExecutionContext executionContext)
+		public bool VerifyArguments(object[] currentArguments, IExecutionContext executionContext)
 		{
 			if (executionContext.WhenFunc != null && !executionContext.WhenFunc())
 			{
 				return false;
 			}
 
-            var fakeArguments = GetArguments();
+			var fakeArguments = GetArguments();
 			for (var i = 0; i < currentArguments.Length; i++)
 			{
 				var fakeArgument = fakeArguments[i];
@@ -132,26 +132,26 @@ namespace AutoFake.Expression
 			return true;
 		}
 
-        public Task VerifyExpectedCallsAsync(Task task, IExecutionContext executionContext)
+		public Task VerifyExpectedCallsAsync(Task task, IExecutionContext executionContext)
 		{
-            return task.ContinueWith(t => VerifyExpectedCalls(executionContext));
+			return task.ContinueWith(t => VerifyExpectedCalls(executionContext));
 		}
 
-        public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, IExecutionContext executionContext)
-        {
-	        return task.ContinueWith(t =>
-	        {
-		        VerifyExpectedCalls(executionContext);
-                return t.Result;
-	        });
-        }
+		public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, IExecutionContext executionContext)
+		{
+			return task.ContinueWith(t =>
+			{
+				VerifyExpectedCalls(executionContext);
+				return t.Result;
+			});
+		}
 
-        public void VerifyExpectedCalls(IExecutionContext executionContext)
-        {
+		public void VerifyExpectedCalls(IExecutionContext executionContext)
+		{
 			if (executionContext.CallsChecker != null && !executionContext.CallsChecker(executionContext.ActualCallsNumber))
 			{
 				throw new ExpectedCallsException($"Setup and actual calls are not matched. Actual value - {executionContext.ActualCallsNumber}.");
 			}
 		}
-    }
+	}
 }

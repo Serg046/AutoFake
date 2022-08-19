@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoFake.Abstractions;
@@ -57,7 +57,7 @@ namespace AutoFake
 				}
 
 				if (mock.SourceMemberMetaData.SourceMember.OriginalMember is MethodBase method &&
-				    method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
+					method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
 				{
 					var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
 					var methodRef = _typeInfo.ImportToSourceAsm(method);

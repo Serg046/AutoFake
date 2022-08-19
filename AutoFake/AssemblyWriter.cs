@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Abstractions;
@@ -10,9 +10,9 @@ namespace AutoFake
 {
 	internal class AssemblyWriter : IAssemblyWriter
 	{
-        private const BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-		
-        private readonly IAssemblyReader _assemblyReader;
+		private const BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+		private readonly IAssemblyReader _assemblyReader;
 		private readonly Dictionary<string, ushort> _addedFields;
 		private readonly IFakeOptions _fakeOptions;
 		private readonly IAssemblyPool _assemblyPool;
@@ -27,14 +27,14 @@ namespace AutoFake
 			_assemblyPool = assemblyPool;
 			_assemblyLoader = assemblyLoader;
 			_createFakeObjectInfo = createFakeObjectInfo;
-			
-            _addedFields = new Dictionary<string, ushort>();
 
-            foreach (var referencedType in _fakeOptions.ReferencedTypes)
-            {
-	            var typeRef = _assemblyReader.SourceTypeDefinition.Module.ImportReference(referencedType);
-	            TryAddAffectedAssembly(typeRef.Resolve().Module.Assembly);
-            }
+			_addedFields = new Dictionary<string, ushort>();
+
+			foreach (var referencedType in _fakeOptions.ReferencedTypes)
+			{
+				var typeRef = _assemblyReader.SourceTypeDefinition.Module.ImportReference(referencedType);
+				TryAddAffectedAssembly(typeRef.Resolve().Module.Assembly);
+			}
 		}
 
 		public void AddField(FieldDefinition field)

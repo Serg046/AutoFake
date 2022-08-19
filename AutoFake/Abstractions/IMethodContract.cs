@@ -1,4 +1,4 @@
-﻿namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions
 {
 	public interface IMethodContract
 	{

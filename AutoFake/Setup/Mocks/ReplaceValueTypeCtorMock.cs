@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -49,5 +49,5 @@ namespace AutoFake.Setup.Mocks
 		public override int GetHashCode() => _typeReference.GetHashCode();
 
 		public override bool Equals(object? obj) => obj is ReplaceValueTypeCtorMock mock && mock._typeReference == _typeReference;
-    }
+	}
 }

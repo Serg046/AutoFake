@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Abstractions;
@@ -10,38 +10,38 @@ using Mono.Cecil;
 
 namespace AutoFake
 {
-    internal class FakeProcessor : IFakeProcessor
-    {
-        private readonly ITypeInfo _typeInfo;
-        private readonly IMemberVisitorFactory _memberVisitorFactory;
-        private readonly Func<IMockCollection, IContractProcessor> _createContractProcessor;
-        private readonly Func<IEmitterPool> _createEmitterPool;
-        private readonly Func<IEmitterPool, TestMethod> _createTestMethod;
+	internal class FakeProcessor : IFakeProcessor
+	{
+		private readonly ITypeInfo _typeInfo;
+		private readonly IMemberVisitorFactory _memberVisitorFactory;
+		private readonly Func<IMockCollection, IContractProcessor> _createContractProcessor;
+		private readonly Func<IEmitterPool> _createEmitterPool;
+		private readonly Func<IEmitterPool, TestMethod> _createTestMethod;
 
-        public FakeProcessor(ITypeInfo typeInfo, IMemberVisitorFactory memberVisitorFactory, 
+		public FakeProcessor(ITypeInfo typeInfo, IMemberVisitorFactory memberVisitorFactory,
 			Func<IMockCollection, IContractProcessor> createContractProcessor,
-	        Func<IEmitterPool> createEmitterPool, Func<IEmitterPool, TestMethod> createTestMethod)
-        {
-            _typeInfo = typeInfo;
-            _memberVisitorFactory = memberVisitorFactory;
+			Func<IEmitterPool> createEmitterPool, Func<IEmitterPool, TestMethod> createTestMethod)
+		{
+			_typeInfo = typeInfo;
+			_memberVisitorFactory = memberVisitorFactory;
 			_createContractProcessor = createContractProcessor;
-            _createEmitterPool = createEmitterPool;
-            _createTestMethod = createTestMethod;
-        }
+			_createEmitterPool = createEmitterPool;
+			_createTestMethod = createTestMethod;
+		}
 
 		public void ProcessMethod(IMockCollection mockCollection, IInvocationExpression invocationExpression, IFakeOptions options)
-        {
+		{
 			var contractProcessor = _createContractProcessor(mockCollection);
 			var executeFuncDef = GetMethodDefinition(invocationExpression);
-	        var testMethods = new List<Tuple<TestMethod, MethodDefinition>>();
-	        using var emitterPool = _createEmitterPool();
-	        foreach (var mock in mockCollection.Mocks) mock.BeforeInjection(executeFuncDef);
-            contractProcessor.ProcessCommonOriginalContracts(mockCollection.Mocks.OfType<ISourceMemberMock>());
-	        var testMethod = _createTestMethod(emitterPool);
+			var testMethods = new List<Tuple<TestMethod, MethodDefinition>>();
+			using var emitterPool = _createEmitterPool();
+			foreach (var mock in mockCollection.Mocks) mock.BeforeInjection(executeFuncDef);
+			contractProcessor.ProcessCommonOriginalContracts(mockCollection.Mocks.OfType<ISourceMemberMock>());
+			var testMethod = _createTestMethod(emitterPool);
 			var methods = testMethod.Rewrite(executeFuncDef, options, mockCollection.Mocks, invocationExpression.GetSourceMember().GetGenericArguments());
-	        Rewrite(methods, executeFuncDef, contractProcessor);
-	        foreach (var mock in mockCollection.Mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
-	        testMethods.Add(new (testMethod, executeFuncDef));
+			Rewrite(methods, executeFuncDef, contractProcessor);
+			foreach (var mock in mockCollection.Mocks) mock.AfterInjection(emitterPool.GetEmitter(executeFuncDef.Body));
+			testMethods.Add(new(testMethod, executeFuncDef));
 			ProcessConstructors(emitterPool, options, contractProcessor, testMethods);
 
 			foreach (var method in testMethods)
@@ -72,14 +72,14 @@ namespace AutoFake
 		}
 
 		private MethodDefinition GetMethodDefinition(IInvocationExpression invocationExpression)
-        {
-	        var visitor = _memberVisitorFactory.GetMemberVisitor<GetTestMethodVisitor>();
-	        invocationExpression.AcceptMemberVisitor(visitor);
-	        var executeFuncRef = _typeInfo.ImportToSourceAsm(visitor.Method);
-	        var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
-	        if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
-	        
-	        return executeFuncDef;
-        }
-    }
+		{
+			var visitor = _memberVisitorFactory.GetMemberVisitor<GetTestMethodVisitor>();
+			invocationExpression.AcceptMemberVisitor(visitor);
+			var executeFuncRef = _typeInfo.ImportToSourceAsm(visitor.Method);
+			var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
+			if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
+
+			return executeFuncDef;
+		}
+	}
 }

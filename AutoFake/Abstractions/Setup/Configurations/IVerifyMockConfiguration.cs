@@ -1,4 +1,4 @@
-﻿namespace AutoFake.Abstractions.Setup.Configurations
+namespace AutoFake.Abstractions.Setup.Configurations
 {
 	public interface IVerifyMockConfiguration
 	{

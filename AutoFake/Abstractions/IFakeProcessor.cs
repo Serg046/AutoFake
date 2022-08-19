@@ -1,4 +1,4 @@
-﻿using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 
 namespace AutoFake.Abstractions
