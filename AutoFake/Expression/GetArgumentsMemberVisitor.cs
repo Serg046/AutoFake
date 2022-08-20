@@ -14,10 +14,14 @@ namespace AutoFake.Expression
 	{
 		private static readonly MethodInfo _getComparerMethod;
 
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 		static GetArgumentsMemberVisitor()
 		{
 			_getComparerMethod = typeof(GetArgumentsMemberVisitor).GetMethod(nameof(GetComparer), BindingFlags.Static | BindingFlags.NonPublic);
 		}
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning restore CS8601 // Possible null reference assignment.
 
 		private readonly Func<Delegate, LambdaArgumentChecker> _getLambdaArgChecker;
 		private readonly Func<IFakeArgumentChecker, FakeArgument> _getFakeArg;
