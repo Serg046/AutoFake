@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -13,17 +12,24 @@ namespace AutoFake.Expression
 {
 	internal class GetArgumentsMemberVisitor : IMemberVisitor
 	{
+		private static readonly MethodInfo _getComparerMethod;
+
+		static GetArgumentsMemberVisitor()
+		{
+			_getComparerMethod = typeof(GetArgumentsMemberVisitor).GetMethod(nameof(GetComparer), BindingFlags.Static | BindingFlags.NonPublic);
+		}
+
 		private readonly Func<Delegate, LambdaArgumentChecker> _getLambdaArgChecker;
 		private readonly Func<IFakeArgumentChecker, FakeArgument> _getFakeArg;
 		private readonly Func<SuccessfulArgumentChecker> _getSuccessfulArgumentChecker;
-		private readonly Func<object, IEqualityComparer?, EqualityArgumentChecker> _getEqualityArgumentChecker;
+		private readonly Func<object, IFakeArgumentChecker.Comparer?, EqualityArgumentChecker> _getEqualityArgumentChecker;
 		private List<IFakeArgument>? _arguments;
 
 		public GetArgumentsMemberVisitor(
 			Func<Delegate, LambdaArgumentChecker> getLambdaArgChecker,
 			Func<IFakeArgumentChecker, FakeArgument> getFakeArg,
 			Func<SuccessfulArgumentChecker> getSuccessfulArgumentChecker,
-			Func<object, IEqualityComparer?, EqualityArgumentChecker> getEqualityArgumentChecker)
+			Func<object, IFakeArgumentChecker.Comparer?, EqualityArgumentChecker> getEqualityArgumentChecker)
 		{
 			_getLambdaArgChecker = getLambdaArgChecker;
 			_getFakeArg = getFakeArg;
@@ -85,7 +91,10 @@ namespace AutoFake.Expression
 						var checker = _getLambdaArgChecker(@delegate);
 						return _getFakeArg(checker);
 					}
-					return CreateEqualityComparerArgument(expression);
+					else if (expression.Arguments.Count == 2 && expression.Arguments[1].Type.GenericTypeArguments.Length == 1)
+					{
+						return CreateEqualityComparerArgument(expression);
+					}
 				}
 				return _getFakeArg(_getSuccessfulArgumentChecker());
 			}
@@ -95,13 +104,10 @@ namespace AutoFake.Expression
 		private IFakeArgument CreateEqualityComparerArgument(MethodCallExpression expression)
 		{
 			var instance = GetArgumentInstance(expression.Arguments[0]);
-			var genericComparer = GetArgumentInstance(expression.Arguments[1]);
-			var genericEqualityComparer = genericComparer.GetType().GetInterfaces()
-				.Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEqualityComparer<>));
-			var extension = typeof(Extensions).GetMethod(nameof(Extensions.ToNonGeneric));
-			var genericExtension = extension!.MakeGenericMethod(
-				genericEqualityComparer.GetGenericArguments().Single());
-			var comparer = genericExtension.Invoke(null, new[] { genericComparer }) as IEqualityComparer;
+			var genericType = expression.Arguments[1].Type.GenericTypeArguments.Single();
+			var closedMethod = _getComparerMethod.MakeGenericMethod(genericType);
+			var comparer = LinqExpression.Lambda<Func<IFakeArgumentChecker.Comparer>>(
+				LinqExpression.Call(closedMethod, expression.Arguments[1])).Compile().Invoke();
 			return _getFakeArg(_getEqualityArgumentChecker(instance, comparer));
 		}
 
@@ -110,5 +116,8 @@ namespace AutoFake.Expression
 			var checker = _getEqualityArgumentChecker(arg, null);
 			return _getFakeArg(checker);
 		}
+
+		private static IFakeArgumentChecker.Comparer GetComparer<T>(IFakeArgumentChecker.Comparer<T> comparer)
+			=> (x, y) => x is T xT && y is T yT && comparer(xT, yT);
 	}
 }

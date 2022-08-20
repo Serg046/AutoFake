@@ -114,7 +114,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			var fake = new Fake(typeof(ParamsTestClass));
 
 			var sut = fake.Rewrite(() => ParamsTestClass.Test());
-			sut.Replace(() => ParamsTestClass.GetValue(Arg.Is(new[] { 1, 2, 3 }, new IntArrayComparer())))
+			sut.Replace(() => ParamsTestClass.GetValue(Arg.Is(new[] { 1, 2, 3 }, (x, y) => x.SequenceEqual(y))))
 				.Return(-1);
 
 			Assert.Equal(-1, sut.Execute());
@@ -378,12 +378,6 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 				Debug.WriteLine("Finished");
 				return value;
 			}
-		}
-
-		private class IntArrayComparer : IEqualityComparer<int[]>
-		{
-			public bool Equals(int[] x, int[] y) => x.SequenceEqual(y);
-			public int GetHashCode(int[] obj) => obj.GetHashCode();
 		}
 	}
 }
