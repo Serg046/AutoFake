@@ -7,6 +7,7 @@ using AutoFake.Abstractions;
 using Mono.Cecil.Cil;
 using LinqExpression = System.Linq.Expressions.Expression;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace AutoFake
 {
@@ -80,8 +81,8 @@ namespace AutoFake
 
 		public static IEnumerable<MethodDefinition> GetStateMachineMethods(this MethodDefinition currentMethod, Func<ICollection<MethodDefinition>, MethodDefinition> filter)
 		{
-			foreach (var attribute in currentMethod.CustomAttributes.Where(a => a.AttributeType.Name.EndsWith("StateMachineAttribute")
-				&& a.AttributeType.ToTypeDefinition().BaseType?.FullName == "System.Runtime.CompilerServices.StateMachineAttribute"))
+			var attributeName = typeof(StateMachineAttribute).FullName;
+			foreach (var attribute in currentMethod.CustomAttributes.Where(a => a.AttributeType.ToTypeDefinition().BaseType?.FullName == attributeName))
 			{
 				var typeRef = (TypeReference)attribute.ConstructorArguments[0].Value;
 				yield return filter(typeRef.ToTypeDefinition().Methods);
