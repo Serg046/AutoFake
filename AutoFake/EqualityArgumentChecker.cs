@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using AutoFake.Abstractions;
 
 namespace AutoFake
@@ -7,15 +5,15 @@ namespace AutoFake
 	internal class EqualityArgumentChecker : IFakeArgumentChecker
 	{
 		private readonly object _value;
-		private readonly IEqualityComparer _comparer;
+		private readonly IFakeArgumentChecker.Comparer _comparer;
 
-		public EqualityArgumentChecker(object value, IEqualityComparer? comparer = null)
+		public EqualityArgumentChecker(object value, IFakeArgumentChecker.Comparer? comparer = null)
 		{
 			_value = value;
-			_comparer = comparer ?? EqualityComparer<object>.Default;
+			_comparer = comparer ?? Equals;
 		}
 
-		public bool Check(object argument) => _comparer.Equals(_value, argument);
+		public bool Check(object argument) => _comparer(_value, argument);
 
 		public override string ToString() => ToString(_value);
 

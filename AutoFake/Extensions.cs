@@ -40,9 +40,6 @@ namespace AutoFake
 		public static MethodDefinition ToMethodDefinition(this MethodReference method)
 			=> method as MethodDefinition ?? method.Resolve();
 
-		public static IEqualityComparer ToNonGeneric<T>(this IEqualityComparer<T?> comparer)
-			=> new EqualityComparer((x, y) => comparer.Equals((T?)x, (T?)y), x => comparer.GetHashCode((T)x));
-
 		public static Instruction Copy(this Instruction instruction)
 		{
 			return instruction.Operand == null
@@ -92,20 +89,5 @@ namespace AutoFake
 		}
 
 		public static bool IsStatic(this Type type) => type.IsAbstract && type.IsSealed;
-
-		private class EqualityComparer : IEqualityComparer
-		{
-			private readonly Func<object?, object?, bool> _comparer;
-			private readonly Func<object, int> _hasher;
-
-			public EqualityComparer(Func<object?, object?, bool> comparer, Func<object, int> hasher)
-			{
-				_comparer = comparer;
-				_hasher = hasher;
-			}
-
-			bool IEqualityComparer.Equals(object? x, object? y) => _comparer(x, y);
-			int IEqualityComparer.GetHashCode(object obj) => _hasher(obj);
-		}
 	}
 }
