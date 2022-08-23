@@ -40,6 +40,18 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(3, sut2.Execute());
 		}
 
+		[Fact]
+		public void When_rewrite_func_with_input_Should_succeed()
+		{
+			var fake = new Fake(typeof(TestClass));
+
+			var sut1 = fake.Rewrite((TestClass m) => m.FirstMethod()); sut1.Replace((TestClass m) => m.GetValue()).Return(1);
+			var sut2 = fake.Rewrite((TestClass m) => m.FirstMethod(1)); sut2.Replace((TestClass m) => m.GetValue()).Return(2);
+
+			Assert.Equal(1, sut1.Execute());
+			Assert.Equal(3, sut2.Execute());
+		}
+
 		private class TestClass
 		{
 			public int GetValue() => -1;
