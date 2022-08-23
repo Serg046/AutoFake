@@ -36,24 +36,25 @@ namespace AutoFake.Expression
 			if (methodInfo.IsGenericMethod)
 			{
 				var contract = methodInfo.GetGenericMethodDefinition().ToString()!;
-				method = GetMethod(methodCandidates, contract);
+				method = GetMethod(methodCandidates, contract, methodInfo.Name);
 				method = method.MakeGenericMethod(methodInfo.GetGenericArguments());
 			}
 			else
 			{
 				var contract = methodInfo.ToString()!;
-				method = GetMethod(methodCandidates, contract);
+				method = GetMethod(methodCandidates, contract, methodInfo.Name);
 			}
 
 			_requestedVisitor.Visit(methodExpression, method);
 		}
 
-		private MethodInfo GetMethod(IEnumerable<MethodInfo> methodCandidates, string contract)
+		private MethodInfo GetMethod(IEnumerable<MethodInfo> methodCandidates, string contract, string methodName)
 		{
 			var methods = methodCandidates.Where(m => m.ToString() == contract).ToList();
 			return methods.Count == 1
 				? methods[0]
-				: methods.Single(m => m.DeclaringType == _targetType);
+				: methods.SingleOrDefault(m => m.DeclaringType == _targetType)
+				?? throw new MissingMethodException(_targetType.FullName, methodName);
 		}
 
 		public void Visit(PropertyInfo propertyInfo)

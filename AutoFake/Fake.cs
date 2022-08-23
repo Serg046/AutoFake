@@ -19,9 +19,17 @@ namespace AutoFake
 		{
 		}
 
-		public IFuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression) => base.Rewrite(expression);
+		public IFuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression)
+		{
+			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			return scope.Resolve<IFuncMockConfiguration<T, TReturn>>();
+		}
 
-		public IActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression) => base.Rewrite(expression);
+		public IActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression)
+		{
+			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			return scope.Resolve<IActionMockConfiguration<T>>();
+		}
 
 		public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> expression) => base.Execute(expression);
 
@@ -52,16 +60,16 @@ namespace AutoFake
 
 		public IFakeOptions Options { get; }
 
-		public IFuncMockConfiguration<TInput, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
+		public IFuncMockConfiguration<object, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
 		{
 			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-			return scope.Resolve<IFuncMockConfiguration<TInput, TReturn>>();
+			return scope.Resolve<IFuncMockConfiguration<object, TReturn>>();
 		}
 
-		public IActionMockConfiguration<TInput> Rewrite<TInput>(Expression<Action<TInput>> expression)
+		public IActionMockConfiguration<object> Rewrite<TInput>(Expression<Action<TInput>> expression)
 		{
 			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
-			return scope.Resolve<IActionMockConfiguration<TInput>>();
+			return scope.Resolve<IActionMockConfiguration<object>>();
 		}
 
 		public IFuncMockConfiguration<object, TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
