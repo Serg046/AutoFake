@@ -78,6 +78,15 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
+		public void When_debug_mode_disable_without_symbols_Should_not_fail()
+		{
+			var fake = new Fake<SystemUnderTest>();
+			fake.Options.Debug = DebugMode.Disabled;
+
+			fake.Execute(f => f.ConditionalReturn(1)).Should().Be(1);
+		}
+
+		[Fact]
 		public void When_auto_debug_mode_without_symbols_Should_not_fail()
 		{
 			var fake = new Fake<SystemUnderTest>();

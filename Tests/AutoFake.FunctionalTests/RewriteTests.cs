@@ -52,7 +52,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(1, sut1.Execute());
 			Assert.Equal(3, sut2.Execute());
 		}
-
+		
 		[Fact]
 		public void When_no_body_Should_fail()
 		{
@@ -61,6 +61,16 @@ namespace AutoFake.FunctionalTests
 			Action act = () => fake.Rewrite(() => TestClass.NoBodyMethod()).Execute();
 
 			act.Should().Throw<NotSupportedException>();
+		}
+
+		[Fact]
+		public void When_no_method_Should_fail()
+		{
+			var fake = new Fake<RewriteTests>();
+
+			Action act = () => fake.Rewrite(() => TestClass.NoBodyMethod()).Execute();
+
+			act.Should().Throw<MissingMethodException>();
 		}
 
 		private class TestClass
