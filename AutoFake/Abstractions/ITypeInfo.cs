@@ -23,7 +23,5 @@ namespace AutoFake.Abstractions
 		TypeReference ImportToSourceAsm(TypeReference type);
 		MethodReference ImportToSourceAsm(MethodReference method);
 		TypeReference ImportToFieldsAsm(Type type);
-		FieldReference ImportToFieldsAsm(FieldInfo field);
-		MethodReference ImportToFieldsAsm(MethodBase method);
 	}
 }

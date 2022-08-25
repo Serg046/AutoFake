@@ -9,7 +9,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
-	public class ExternalAssemblySutTests
+	public class AnalysisLevelTests
 	{
 		[Fact]
 		public void When_SimpleLambda_Should_Pass()
@@ -93,6 +93,37 @@ namespace AutoFake.FunctionalTests
 			sut.Replace(() => DateTime.Now).Return(DateTime.MinValue);
 
 			sut.Execute().Should().Be(DateTime.MaxValue - DateTime.MinValue);
+		}
+
+		[Theory]
+		[InlineData(AnalysisLevels.Type, false)]
+		[InlineData(AnalysisLevels.Assembly, true)]
+		public void When_type_analysis_level_Should_skip_other_types(AnalysisLevels level, bool success)
+		{
+			var fake = new Fake<TestClass>();
+			fake.Options.AnalysisLevel = level;
+			var sut = fake.Rewrite(f => f.Throw());
+			sut.Remove((TestClass.Nested.Nested2 n) => n.Throw());
+
+			Action act = () => sut.Execute();
+
+			if (success) act.Should().NotThrow<NotImplementedException>();
+			else act.Should().Throw<NotImplementedException>();
+		}
+
+		private class TestClass
+		{
+			public void Throw() => new Nested().Throw();
+
+			public class Nested
+			{
+				public void Throw() => new Nested2().Throw();
+
+				public class Nested2
+				{
+					public void Throw() => throw new NotImplementedException();
+				}
+			}
 		}
 	}
 }

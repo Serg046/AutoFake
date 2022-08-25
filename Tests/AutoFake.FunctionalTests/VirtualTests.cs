@@ -17,6 +17,19 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
+		public void When_disabled_virtual_members_Should_execute_base_method()
+		{
+			var fake = new Fake<TestClass>();
+			fake.Options.AllowedVirtualMembers.Add(m => m.Name == nameof(TestClass.GetNumber));
+			fake.Options.DisableVirtualMembers = true;
+
+			var sut = fake.Rewrite(f => f.GetVirtualNumberByMethod());
+			sut.Replace(() => NumberFactory.Get()).Return(2);
+
+			Assert.Equal(10, sut.Execute());
+		}
+
+		[Fact]
 		public void When_virtual_method_with_everything_configured_Should_execute_overriden_method()
 		{
 			var fake = new Fake<TestClass>();

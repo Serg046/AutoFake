@@ -41,9 +41,6 @@ namespace AutoFake
 		public TypeDefinition GetTypeDefinition(Type type) =>
 			_assemblyReader.SourceTypeDefinition.Module.GetType(type.FullName, runtimeName: true).ToTypeDefinition();
 
-		public FieldDefinition? GetField(Predicate<FieldDefinition> fieldPredicate)
-			=> _assemblyReader.SourceTypeDefinition.Fields.SingleOrDefault(f => fieldPredicate(f));
-
 		public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate)
 			=> _assemblyReader.SourceTypeDefinition.Methods.Where(m => methodPredicate(m));
 
@@ -88,8 +85,6 @@ namespace AutoFake
 
 		public TypeReference ImportToSourceAsm(TypeReference type)
 		{
-			if (type.IsGenericParameter) return type;
-
 			var result = CreateTypeReference(type);
 			var newType = result;
 			while (type.DeclaringType != null)
@@ -153,11 +148,5 @@ namespace AutoFake
 
 		public TypeReference ImportToFieldsAsm(Type type)
 			=> _assemblyReader.FieldsTypeDefinition.Module.ImportReference(type);
-
-		public FieldReference ImportToFieldsAsm(FieldInfo field)
-			=> _assemblyReader.FieldsTypeDefinition.Module.ImportReference(field);
-
-		public MethodReference ImportToFieldsAsm(MethodBase method)
-			=> _assemblyReader.FieldsTypeDefinition.Module.ImportReference(method);
 	}
 }
