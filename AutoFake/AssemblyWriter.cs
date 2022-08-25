@@ -69,7 +69,7 @@ namespace AutoFake
 			}
 
 			var instance = !_assemblyReader.SourceType.IsStatic() ? CreateInstance(sourceType, dependencies) : null;
-			return _createFakeObjectInfo(sourceType, loader.Item2, instance);
+			return _createFakeObjectInfo(sourceType, instance);
 		}
 
 		private static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');

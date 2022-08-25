@@ -77,7 +77,7 @@ namespace AutoFake
 			invocationExpression.AcceptMemberVisitor(visitor);
 			var executeFuncRef = _typeInfo.ImportToSourceAsm(visitor.Method);
 			var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
-			if (executeFuncDef?.Body == null) throw new InvalidOperationException("Methods without body are not supported");
+			if (executeFuncDef?.Body == null) throw new NotSupportedException("Methods without body are not supported");
 
 			return executeFuncDef;
 		}

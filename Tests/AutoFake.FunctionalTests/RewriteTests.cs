@@ -1,5 +1,6 @@
 using FluentAssertions;
 using System;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -52,6 +53,16 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(3, sut2.Execute());
 		}
 
+		[Fact]
+		public void When_no_body_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+
+			Action act = () => fake.Rewrite(() => TestClass.NoBodyMethod()).Execute();
+
+			act.Should().Throw<NotSupportedException>();
+		}
+
 		private class TestClass
 		{
 			public int GetValue() => -1;
@@ -62,6 +73,8 @@ namespace AutoFake.FunctionalTests
 
 			public int FirstMethod(int arg) => GetValue() + arg;
 
+			[DllImport("no.dll")]
+			public static extern void NoBodyMethod();
 		}
 	}
 }

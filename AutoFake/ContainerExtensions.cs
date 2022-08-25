@@ -54,7 +54,7 @@ namespace AutoFake
 			container.Register<SourceMethod>(made: FactoryMethod.ConstructorWithResolvableArguments);
 			container.Register<SourceField>();
 			container.Register<ITypeMap, TypeMap>();
-			container.RegisterInstance<FakeObjectInfo.Create>((srcType, fieldsType, instance) => new FakeObjectInfo(srcType, fieldsType, instance));
+			container.RegisterInstance<FakeObjectInfo.Create>((srcType, instance) => new FakeObjectInfo(srcType, instance));
 			container.Register<IContractProcessor, ContractProcessor>();
 			container.Register<Emitter>();
 			container.Register<IEmitterPool, EmitterPool>(setup: DryIoc.Setup.With(allowDisposableTransient: true));
