@@ -111,6 +111,17 @@ namespace AutoFake.FunctionalTests
 			else act.Should().Throw<NotImplementedException>();
 		}
 
+		[Fact]
+		public void When_invalid_analysis_level_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+			fake.Options.AnalysisLevel = (AnalysisLevels)101;
+
+			Action act = () => fake.Rewrite(f => f.Throw()).Execute();
+
+			act.Should().Throw<NotSupportedException>();
+		}
+
 		private class TestClass
 		{
 			public void Throw() => new Nested().Throw();
