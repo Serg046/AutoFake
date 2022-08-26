@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -53,7 +52,6 @@ namespace AutoFake.Expression
 		public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
 			=> _arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
 
-		[ExcludeFromCodeCoverage]
 		private IFakeArgument TryGetArgument(LinqExpression expression)
 		{
 			return expression switch
