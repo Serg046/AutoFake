@@ -26,6 +26,7 @@ namespace AutoFake
 		[ExcludeFromCodeCoverage]
 		public static T Is<T>(Func<T, bool> checkArgumentFunc) => IsAny<T>();
 
+		[ExcludeFromCodeCoverage]
 		public static T Is<T>(T argument, IFakeArgumentChecker.Comparer<T> comparer) => IsAny<T>();
 
 		public static T IsAny<T>() => default!;
