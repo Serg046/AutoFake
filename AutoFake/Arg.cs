@@ -31,7 +31,6 @@ namespace AutoFake
 
 		public static T IsAny<T>() => default!;
 
-		[ExcludeFromCodeCoverage]
 		internal class TypeWrapper
 		{
 			public TypeWrapper(Type type) => Type = type;
