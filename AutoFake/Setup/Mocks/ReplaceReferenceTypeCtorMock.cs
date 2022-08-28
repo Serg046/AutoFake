@@ -23,7 +23,6 @@ namespace AutoFake.Setup.Mocks
 			=> instruction.OpCode == OpCodes.Newobj && instruction.Operand is MethodReference mRef &&
 			   mRef.DeclaringType.GetElementType().FullName == _typeReference.FullName;
 
-		[ExcludeFromCodeCoverage]
 		public void BeforeInjection(MethodDefinition method)
 		{
 		}
@@ -34,7 +33,6 @@ namespace AutoFake.Setup.Mocks
 			instruction.Operand = _typeInfo.ImportToSourceAsm(method);
 		}
 
-		[ExcludeFromCodeCoverage]
 		public void AfterInjection(IEmitter emitter)
 		{
 		}

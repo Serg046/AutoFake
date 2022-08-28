@@ -26,7 +26,6 @@ namespace AutoFake.Setup.Mocks
 		private static bool IsValidOpCode(OpCode opCode)
 			=> opCode == OpCodes.Initobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
 
-		[ExcludeFromCodeCoverage]
 		public void BeforeInjection(MethodDefinition method)
 		{
 		}
@@ -37,7 +36,6 @@ namespace AutoFake.Setup.Mocks
 			instruction.Operand = _typeInfo.ImportToSourceAsm(typeRef);
 		}
 
-		[ExcludeFromCodeCoverage]
 		public void AfterInjection(IEmitter emitter)
 		{
 		}

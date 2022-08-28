@@ -28,7 +28,6 @@ namespace AutoFake.Setup.Mocks
 
 		public Action Closure { get; }
 
-		[ExcludeFromCodeCoverage]
 		public void AfterInjection(IEmitter emitter)
 		{
 		}
