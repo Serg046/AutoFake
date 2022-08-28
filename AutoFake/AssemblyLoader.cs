@@ -116,8 +116,7 @@ namespace AutoFake
 
 		private class SymbolsWriterProvider : ISymbolWriterProvider
 		{
-			[ExcludeFromCodeCoverage]
-			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotImplementedException();
+			public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotSupportedException("Symbols should be added without files");
 
 			public ISymbolWriter? GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
 			{

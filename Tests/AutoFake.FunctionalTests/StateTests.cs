@@ -2,9 +2,11 @@ using AutoFake.Abstractions;
 using AutoFake.Exceptions;
 using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
 using MultipleReturnTest;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -97,6 +99,22 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
+		public void When_symbols_file_stream_Should_fail()
+		{
+			var fake = new Fake<StateTests>();
+			fake.Options.Debug = DebugMode.Enabled;
+			var cecilFactory = new FakeCecilFactory(fake.Services);
+			fake.Services.RegisterInstance<ICecilFactory>(cecilFactory, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			fake.Services.Resolve<IAssemblyLoader>().LoadAssemblies(fake.Options, false);
+
+			fake.Options.Debug = DebugMode.Disabled;
+			cecilFactory.WriterParameters.SymbolStream = null;
+			Action act = () => fake.Execute(f => f.GetType());
+
+			act.Should().Throw<NotSupportedException>().WithMessage("Symbols*without files");
+		}
+
+		[Fact]
 		public void When_incorrect_type_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -141,6 +159,22 @@ namespace AutoFake.FunctionalTests
 			sut.Replace((StateMachine m) => m.GetAug21()).Return(new DateTime(2022, 8, 20));
 
 			sut.Execute().Day.Should().Be(21);
+		}
+
+		private class FakeCecilFactory : CecilFactory, ICecilFactory
+		{
+			public FakeCecilFactory(IContainer serviceLocator) : base(serviceLocator)
+			{
+			}
+
+			public WriterParameters WriterParameters { get; private set; }
+
+			WriterParameters ICecilFactory.CreateWriterParameters()
+			{
+				var parameters = new WriterParameters();
+				WriterParameters ??= parameters;
+				return WriterParameters;
+			}
 		}
 
 		private class AmbiguousCtorTestClass
