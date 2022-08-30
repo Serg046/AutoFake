@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;

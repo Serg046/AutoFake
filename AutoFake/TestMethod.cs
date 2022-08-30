@@ -28,14 +28,14 @@ namespace AutoFake
 		}
 
 		public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IFakeOptions options,
-			IEnumerable<IMock> mocks, IEnumerable<GenericArgument> genericArgs)
+			IEnumerable<IMockInjector> mocks, IEnumerable<GenericArgument> genericArgs)
 		{
 			var state = new State(originalMethod, genericArgs, options);
 			Rewrite(mocks, originalMethod, state);
 			return state.Methods.ToReadOnlyList();
 		}
 
-		private void Rewrite(IEnumerable<IMock> mocks, MethodDefinition? currentMethod, State state)
+		private void Rewrite(IEnumerable<IMockInjector> mocks, MethodDefinition? currentMethod, State state)
 		{
 			if (currentMethod == null || Validate(currentMethod, state)) return;
 			state.Methods.Add(currentMethod);
@@ -67,7 +67,7 @@ namespace AutoFake
 				   !state.MethodContracts.Add(currentMethod.ToString());
 		}
 
-		private void ProcessInstructions(IEnumerable<IMock> mocks, MethodDefinition currentMethod, State state)
+		private void ProcessInstructions(IEnumerable<IMockInjector> mocks, MethodDefinition currentMethod, State state)
 		{
 			foreach (var instruction in currentMethod.Body.Instructions.ToList())
 			{
@@ -86,7 +86,7 @@ namespace AutoFake
 			}
 		}
 
-		private void ProcessMocks(MethodDefinition currentMethod, Instruction instruction, IEnumerable<IMock> mocks, State state)
+		private void ProcessMocks(MethodDefinition currentMethod, Instruction instruction, IEnumerable<IMockInjector> mocks, State state)
 		{
 			foreach (var mock in mocks)
 			{

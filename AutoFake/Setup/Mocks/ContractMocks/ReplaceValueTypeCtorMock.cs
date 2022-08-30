@@ -1,14 +1,12 @@
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using System;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
 
-namespace AutoFake.Setup.Mocks
+namespace AutoFake.Setup.Mocks.ContractMocks
 {
-	internal class ReplaceValueTypeCtorMock : IMock
+	internal class ReplaceValueTypeCtorMock : IMockInjector
 	{
 		private readonly TypeReference _typeReference;
 		private readonly ITypeInfo _typeInfo;
@@ -26,22 +24,10 @@ namespace AutoFake.Setup.Mocks
 		private static bool IsValidOpCode(OpCode opCode)
 			=> opCode == OpCodes.Initobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
 
-		public void BeforeInjection(MethodDefinition method)
-		{
-		}
-
 		public void Inject(IEmitter emitter, Instruction instruction)
 		{
 			var typeRef = (TypeReference)instruction.Operand;
 			instruction.Operand = _typeInfo.ImportToSourceAsm(typeRef);
-		}
-
-		public void AfterInjection(IEmitter emitter)
-		{
-		}
-
-		public void Initialize(Type? type)
-		{
 		}
 
 		public override int GetHashCode() => _typeReference.GetHashCode();

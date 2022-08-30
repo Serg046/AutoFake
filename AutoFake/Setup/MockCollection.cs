@@ -7,6 +7,6 @@ namespace AutoFake.Setup
 	internal class MockCollection : IMockCollection
 	{
 		public IList<IMock> Mocks { get; } = new List<IMock>();
-		public ISet<IMock> ContractMocks { get; } = new HashSet<IMock>();
+		public ISet<IMockInjector> ContractMocks { get; } = new HashSet<IMockInjector>();
 	}
 }

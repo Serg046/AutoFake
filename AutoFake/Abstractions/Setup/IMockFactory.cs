@@ -2,6 +2,7 @@ using System;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Setup.Mocks;
+using AutoFake.Setup.Mocks.ContractMocks;
 using Mono.Cecil;
 
 namespace AutoFake.Abstractions.Setup

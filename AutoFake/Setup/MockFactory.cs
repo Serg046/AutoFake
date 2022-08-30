@@ -3,6 +3,7 @@ using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Setup.Mocks;
+using AutoFake.Setup.Mocks.ContractMocks;
 using DryIoc;
 using Mono.Cecil;
 

@@ -8,6 +8,7 @@ using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
+using AutoFake.Setup.Mocks.ContractMocks;
 using DryIoc;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

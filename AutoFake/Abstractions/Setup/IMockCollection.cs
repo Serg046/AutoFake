@@ -6,6 +6,6 @@ namespace AutoFake.Abstractions.Setup
 	internal interface IMockCollection
 	{
 		IList<IMock> Mocks { get; }
-		ISet<IMock> ContractMocks { get; }
+		ISet<IMockInjector> ContractMocks { get; }
 	}
 }

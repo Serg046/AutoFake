@@ -1,14 +1,12 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace AutoFake.Setup.Mocks
+namespace AutoFake.Setup.Mocks.ContractMocks
 {
-	internal class ReplaceTypeCastMock : IMock
+	internal class ReplaceTypeCastMock : IMockInjector
 	{
 		private readonly TypeReference _typeReference;
 		private readonly ITypeInfo _typeInfo;
@@ -25,22 +23,10 @@ namespace AutoFake.Setup.Mocks
 			=> instruction.OpCode == _opCode && instruction.Operand is TypeReference typeRef &&
 			   typeRef.GetElementType().FullName == _typeReference.FullName;
 
-		public void BeforeInjection(MethodDefinition method)
-		{
-		}
-
 		public void Inject(IEmitter emitter, Instruction instruction)
 		{
 			var typeRef = (TypeReference)instruction.Operand;
 			instruction.Operand = _typeInfo.ImportToSourceAsm(typeRef);
-		}
-
-		public void AfterInjection(IEmitter emitter)
-		{
-		}
-
-		public void Initialize(Type? type)
-		{
 		}
 
 		public override int GetHashCode() => _typeReference.ToString().GetHashCode();
