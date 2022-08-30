@@ -107,7 +107,7 @@ namespace AutoFake
 			container.Register<IGetSourceMemberVisitor, GetSourceMemberVisitor>();
 			container.Register<GetTestMethodVisitor>();
 			container.Register<GetValueMemberVisitor>();
-			container.Register<TargetMemberVisitor>();
+			container.Register(typeof(TargetMemberVisitor<>));
 		}
 
 		private static void AddCecilFactory(IRegistrator container)

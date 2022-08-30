@@ -5,8 +5,8 @@ namespace AutoFake.Abstractions.Expression
 {
 	internal interface IMemberVisitorFactory
 	{
-		T GetMemberVisitor<T>() where T : IMemberVisitor;
+		T GetMemberVisitor<T>();
 		GetValueMemberVisitor GetValueMemberVisitor(object? instance);
-		TargetMemberVisitor GetTargetMemberVisitor(IMemberVisitor requestedVisitor, Type targetType);
+		TargetMemberVisitor<T> GetTargetMemberVisitor<T>(IMemberVisitor<T> requestedVisitor, Type targetType);
 	}
 }

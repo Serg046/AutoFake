@@ -7,26 +7,26 @@ using AutoFake.Abstractions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class TargetMemberVisitor : IMemberVisitor
+	internal class TargetMemberVisitor<T> : IMemberVisitor<T>
 	{
-		private readonly IMemberVisitor _requestedVisitor;
+		private readonly IMemberVisitor<T> _requestedVisitor;
 		private readonly Type _targetType;
 
-		public TargetMemberVisitor(IMemberVisitor requestedVisitor, Type targetType)
+		public TargetMemberVisitor(IMemberVisitor<T> requestedVisitor, Type targetType)
 		{
 			_requestedVisitor = requestedVisitor;
 			_targetType = targetType;
 		}
 
-		public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+		public T Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
 		{
 			var paramTypes = constructorInfo.GetParameters().Select(p => p.ParameterType).ToArray();
 			var constructor = _targetType.GetConstructor(paramTypes)
 				?? throw new InvalidOperationException("Cannot find a constructor");
-			_requestedVisitor.Visit(newExpression, constructor);
+			return _requestedVisitor.Visit(newExpression, constructor);
 		}
 
-		public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
+		public T Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
 		{
 			var flags = methodInfo.IsStatic ? BindingFlags.Static : BindingFlags.Instance;
 			flags |= methodInfo.IsPublic ? BindingFlags.Public : BindingFlags.NonPublic;
@@ -45,7 +45,7 @@ namespace AutoFake.Expression
 				method = GetMethod(methodCandidates, contract, methodInfo.Name);
 			}
 
-			_requestedVisitor.Visit(methodExpression, method);
+			return _requestedVisitor.Visit(methodExpression, method);
 		}
 
 		private MethodInfo GetMethod(IEnumerable<MethodInfo> methodCandidates, string contract, string methodName)
@@ -57,17 +57,17 @@ namespace AutoFake.Expression
 				?? throw new MissingMethodException(_targetType.FullName, methodName);
 		}
 
-		public void Visit(PropertyInfo propertyInfo)
+		public T Visit(PropertyInfo propertyInfo)
 		{
 			var property = _targetType.GetProperty(propertyInfo.Name)
 				?? throw new InvalidOperationException("Cannot find a property");
-			_requestedVisitor.Visit(property);
+			return _requestedVisitor.Visit(property);
 		}
 
-		public void Visit(FieldInfo fieldInfo)
+		public T Visit(FieldInfo fieldInfo)
 		{
 			var field = _targetType.GetField(fieldInfo.Name) ?? throw new InvalidOperationException("Cannot find a field");
-			_requestedVisitor.Visit(field);
+			return _requestedVisitor.Visit(field);
 		}
 	}
 }

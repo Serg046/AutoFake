@@ -2,8 +2,7 @@ using AutoFake.Abstractions.Setup;
 
 namespace AutoFake.Abstractions.Expression
 {
-	internal interface IGetSourceMemberVisitor : IMemberVisitor
+	internal interface IGetSourceMemberVisitor : IMemberVisitor<ISourceMember>
 	{
-		ISourceMember SourceMember { get; }
 	}
 }

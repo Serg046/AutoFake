@@ -29,46 +29,38 @@ namespace AutoFake.Expression
 
 		public bool ThrowWhenArgumentsAreNotMatched { get; set; }
 
-		void IInvocationExpression.AcceptMemberVisitor(IMemberVisitor visitor) => AcceptMemberVisitor(visitor);
-		internal void AcceptMemberVisitor(IMemberVisitor visitor)
+		T IInvocationExpression.AcceptMemberVisitor<T>(IMemberVisitor<T> visitor) => AcceptMemberVisitor(visitor);
+		internal T AcceptMemberVisitor<T>(IMemberVisitor<T> visitor)
 		{
-			var expressionVisitor = new ExpressionVisitor(visitor);
+			var expressionVisitor = new ExpressionVisitor<T>(visitor);
 			expressionVisitor.Visit(_expression);
-			if (!expressionVisitor.Visited)
+			if (!expressionVisitor.Result.Visited)
 			{
 				throw new NotSupportedException($"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
 			}
+			return expressionVisitor.Result.Value;
 		}
 
-		private class ExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
+		private class ExpressionVisitor<T> : ExpressionVisitor
 		{
-			private readonly IMemberVisitor _memberVisitorHelper;
+			private readonly IMemberVisitor<T> _memberVisitor;
 
-			public ExpressionVisitor(IMemberVisitor memberVisitor)
+			public ExpressionVisitor(IMemberVisitor<T> memberVisitor)
 			{
-				_memberVisitorHelper = memberVisitor;
+				_memberVisitor = memberVisitor;
 			}
 
-			private IMemberVisitor MemberVisitor
-			{
-				get
-				{
-					Visited = true;
-					return _memberVisitorHelper;
-				}
-			}
-
-			public bool Visited { get; private set; }
+			public (bool Visited, T Value) Result { get; private set; }
 
 			protected override LinqExpression VisitNew(NewExpression node)
 			{
-				MemberVisitor.Visit(node, node.Constructor);
+				Result = (true, _memberVisitor.Visit(node, node.Constructor));
 				return node;
 			}
 
 			protected override LinqExpression VisitMethodCall(MethodCallExpression node)
 			{
-				MemberVisitor.Visit(node, node.Method);
+				Result = (true, _memberVisitor.Visit(node, node.Method));
 				return node;
 			}
 
@@ -76,8 +68,8 @@ namespace AutoFake.Expression
 			{
 				switch (node.Member)
 				{
-					case FieldInfo field: MemberVisitor.Visit(field); break;
-					case PropertyInfo property: MemberVisitor.Visit(property); break;
+					case FieldInfo field: Result = (true, _memberVisitor.Visit(field)); break;
+					case PropertyInfo property: Result = (true, _memberVisitor.Visit(property)); break;
 					default: throw new NotSupportedException($"'{node.Member.GetType().FullName}' is not supported.");
 				}
 
@@ -91,8 +83,7 @@ namespace AutoFake.Expression
 		internal ISourceMember GetSourceMember()
 		{
 			var memberVisitor = _memberVisitorFactory.GetMemberVisitor<IGetSourceMemberVisitor>();
-			((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
-			return memberVisitor.SourceMember;
+			return ((IInvocationExpression)this).AcceptMemberVisitor(memberVisitor);
 		}
 
 		private IReadOnlyList<IFakeArgument> GetArguments()
@@ -100,8 +91,7 @@ namespace AutoFake.Expression
 			if (_arguments == null)
 			{
 				var visitor = _memberVisitorFactory.GetMemberVisitor<GetArgumentsMemberVisitor>();
-				((IInvocationExpression)this).AcceptMemberVisitor(visitor);
-				_arguments = visitor.Arguments;
+				_arguments = ((IInvocationExpression)this).AcceptMemberVisitor(visitor);
 			}
 
 			return _arguments;

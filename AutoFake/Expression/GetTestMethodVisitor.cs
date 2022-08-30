@@ -5,22 +5,15 @@ using AutoFake.Abstractions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetTestMethodVisitor : IMemberVisitor
+	internal class GetTestMethodVisitor : IMemberVisitor<MethodBase>
 	{
-		private MethodBase? _methodInfo;
+		public MethodBase Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => constructorInfo;
 
-		public MethodBase Method => _methodInfo
-			?? throw new InvalidOperationException($"{nameof(Method)} is not set. Please run {nameof(Visit)}() method.");
+		public MethodBase Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => methodInfo;
 
-		public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => _methodInfo = constructorInfo;
+		public MethodBase Visit(PropertyInfo propertyInfo) => propertyInfo.GetGetMethod(true)
+			?? throw new NotSupportedException("The property must contain the getter.");
 
-		public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => _methodInfo = methodInfo;
-
-		public void Visit(PropertyInfo propertyInfo) => _methodInfo = propertyInfo.GetGetMethod(true);
-
-		public void Visit(FieldInfo fieldInfo)
-		{
-			throw new NotSupportedException("Cannot execute a field. The member must have a body.");
-		}
+		public MethodBase Visit(FieldInfo fieldInfo) => throw new NotSupportedException("Cannot execute a field. The member must have a body.");
 	}
 }

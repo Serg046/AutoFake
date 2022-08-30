@@ -9,7 +9,7 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetArgumentsMemberVisitor : IMemberVisitor
+	internal class GetArgumentsMemberVisitor : IMemberVisitor<IReadOnlyList<IFakeArgument>>
 	{
 		private static readonly MethodInfo _getComparerMethod;
 
@@ -26,7 +26,6 @@ namespace AutoFake.Expression
 		private readonly Func<IFakeArgumentChecker, FakeArgument> _getFakeArg;
 		private readonly Func<SuccessfulArgumentChecker> _getSuccessfulArgumentChecker;
 		private readonly Func<object, IFakeArgumentChecker.Comparer?, EqualityArgumentChecker> _getEqualityArgumentChecker;
-		private List<IFakeArgument>? _arguments;
 
 		public GetArgumentsMemberVisitor(
 			Func<Delegate, LambdaArgumentChecker> getLambdaArgChecker,
@@ -40,17 +39,15 @@ namespace AutoFake.Expression
 			_getEqualityArgumentChecker = getEqualityArgumentChecker;
 		}
 
-		public IReadOnlyList<IFakeArgument> Arguments => _arguments?.ToReadOnlyList() ?? throw new InvalidOperationException($"{nameof(Arguments)} property is not set. Please run {nameof(Visit)}() method.");
+		public IReadOnlyList<IFakeArgument> Visit(PropertyInfo propertyInfo) => new List<IFakeArgument>();
 
-		public void Visit(PropertyInfo propertyInfo) => _arguments = new List<IFakeArgument>();
+		public IReadOnlyList<IFakeArgument> Visit(FieldInfo fieldInfo) => new List<IFakeArgument>();
 
-		public void Visit(FieldInfo fieldInfo) => _arguments = new List<IFakeArgument>();
+		public IReadOnlyList<IFakeArgument> Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+			=> newExpression.Arguments.Select(TryGetArgument).ToList();
 
-		public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
-			=> _arguments = newExpression.Arguments.Select(TryGetArgument).ToList();
-
-		public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
-			=> _arguments = methodExpression.Arguments.Select(TryGetArgument).ToList();
+		public IReadOnlyList<IFakeArgument> Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
+			=> methodExpression.Arguments.Select(TryGetArgument).ToList();
 
 		private IFakeArgument TryGetArgument(LinqExpression expression)
 		{

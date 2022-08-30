@@ -33,7 +33,7 @@ namespace AutoFake.FunctionalTests
 
 			Action act = () => fake.Execute(f => f.GetNewReference(7));
 
-			act.Should().Throw<InvalidCastException>().WithMessage("*must be processed by Rewrite*");
+			act.Should().Throw<InvalidCastException>();
 		}
 
 		[Fact]

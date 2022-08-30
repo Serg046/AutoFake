@@ -1,6 +1,6 @@
+using System;
 using System.Reflection;
 using AutoFake.Abstractions.Expression;
-using AutoFake.Expression;
 
 namespace AutoFake
 {
@@ -17,14 +17,13 @@ namespace AutoFake
 			_memberVisitorFactory = memberVisitorFactory;
 		}
 
-		public GetValueMemberVisitor Execute()
+		public (Type Type, object? Value) Execute()
 		{
 			var fakeObject = _fake.GetFakeObject();
 			var visitor = _memberVisitorFactory.GetValueMemberVisitor(fakeObject.Instance);
 			try
 			{
-				_invocationExpression.AcceptMemberVisitor(_memberVisitorFactory.GetTargetMemberVisitor(visitor, fakeObject.SourceType));
-				return visitor;
+				return _invocationExpression.AcceptMemberVisitor(_memberVisitorFactory.GetTargetMemberVisitor(visitor, fakeObject.SourceType));
 			}
 			catch (TargetInvocationException ex) when (ex.InnerException != null)
 			{

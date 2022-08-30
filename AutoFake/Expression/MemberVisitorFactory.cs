@@ -10,12 +10,12 @@ namespace AutoFake.Expression
 
 		public MemberVisitorFactory(IContainer serviceLocator) => _serviceLocator = serviceLocator;
 
-		public T GetMemberVisitor<T>() where T : IMemberVisitor => _serviceLocator.Resolve<T>();
+		public T GetMemberVisitor<T>() => _serviceLocator.Resolve<T>();
 
 		public GetValueMemberVisitor GetValueMemberVisitor(object? instance)
 			=> _serviceLocator.Resolve<Func<object?, GetValueMemberVisitor>>().Invoke(instance);
 
-		public TargetMemberVisitor GetTargetMemberVisitor(IMemberVisitor requestedVisitor, Type targetType)
-			=> _serviceLocator.Resolve<Func<IMemberVisitor, Type, TargetMemberVisitor>>().Invoke(requestedVisitor, targetType);
+		public TargetMemberVisitor<T> GetTargetMemberVisitor<T>(IMemberVisitor<T> requestedVisitor, Type targetType)
+			=> _serviceLocator.Resolve<Func<IMemberVisitor<T>, Type, TargetMemberVisitor<T>>>().Invoke(requestedVisitor, targetType);
 	}
 }

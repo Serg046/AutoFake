@@ -5,7 +5,7 @@ namespace AutoFake.Abstractions.Expression
 	internal interface IInvocationExpression
 	{
 		bool ThrowWhenArgumentsAreNotMatched { get; set; }
-		void AcceptMemberVisitor(IMemberVisitor visitor);
+		T AcceptMemberVisitor<T>(IMemberVisitor<T> visitor);
 		ISourceMember GetSourceMember();
 	}
 }

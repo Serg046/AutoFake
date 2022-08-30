@@ -6,54 +6,39 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetValueMemberVisitor : IMemberVisitor
+	internal class GetValueMemberVisitor : IMemberVisitor<(Type Type, object? Value)>
 	{
 		private readonly object? _instance;
-		private object? _runtimeValue;
-		private Type? _type;
-		private bool _isRuntimeValueSet;
 
 		public GetValueMemberVisitor(object? instance)
 		{
 			_instance = instance;
 		}
 
-		public object? RuntimeValue
-		{
-			get => _isRuntimeValueSet ? _runtimeValue : throw new InvalidOperationException($"{nameof(RuntimeValue)} is not set. Please run {nameof(Visit)}() method.");
-			private set
-			{
-				_runtimeValue = value;
-				_isRuntimeValueSet = true;
-			}
-		}
-
-		public Type Type => _type ?? throw new InvalidOperationException($"Type is not set. Please run {nameof(Visit)}() method.");
-
-		public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
+		public (Type, object?) Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
 		{
 			throw new NotSupportedException("Cannot execute constructor because the instance has been already built.");
 		}
 
-		public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
+		public (Type, object?) Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
 		{
 			var instanceExpr = _instance == null || methodInfo.IsStatic ? null : LinqExpression.Constant(_instance);
 			var callExpression = LinqExpression.Call(instanceExpr, methodInfo, methodExpression.Arguments);
 			var lambda = LinqExpression.Lambda(callExpression).Compile();
-			_type = methodInfo.ReturnType;
-			RuntimeValue = lambda.DynamicInvoke();
+			var type = methodInfo.ReturnType;
+			return (type, lambda.DynamicInvoke());
 		}
 
-		public void Visit(PropertyInfo propertyInfo)
+		public (Type, object?) Visit(PropertyInfo propertyInfo)
 		{
-			_type = propertyInfo.PropertyType;
-			RuntimeValue = propertyInfo.GetValue(_instance, null);
+			var type = propertyInfo.PropertyType;
+			return (type, propertyInfo.GetValue(_instance, null));
 		}
 
-		public void Visit(FieldInfo fieldInfo)
+		public (Type, object?) Visit(FieldInfo fieldInfo)
 		{
-			_type = fieldInfo.FieldType;
-			RuntimeValue = fieldInfo.GetValue(_instance);
+			var type = fieldInfo.FieldType;
+			return (type, fieldInfo.GetValue(_instance));
 		}
 	}
 }
