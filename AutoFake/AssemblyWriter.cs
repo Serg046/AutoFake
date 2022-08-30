@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Exceptions;
 using Mono.Cecil;
 
 namespace AutoFake
@@ -91,7 +90,7 @@ namespace AutoFake
 			if (noTypeWrapper) return ExecuteViaActivator(type, instances);
 
 			FillDependencyTypes(dependencies.Length, instances, types);
-			var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new InitializationException("Constructor is not found");
+			var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new MissingMethodException("Constructor is not found");
 			return constructor.Invoke(instances);
 		}
 
@@ -106,7 +105,7 @@ namespace AutoFake
 				}
 				else
 				{
-					types[i] = dependencies[i]?.GetType() ?? throw new InitializationException(
+					types[i] = dependencies[i]?.GetType() ?? throw new AmbiguousMatchException(
 						$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
 				}
 			}
@@ -120,7 +119,7 @@ namespace AutoFake
 			}
 			catch (AmbiguousMatchException)
 			{
-				throw new InitializationException(
+				throw new AmbiguousMatchException(
 					$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
 			}
 		}

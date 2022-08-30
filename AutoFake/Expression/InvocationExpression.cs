@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
-using AutoFake.Exceptions;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
@@ -37,8 +36,7 @@ namespace AutoFake.Expression
 			expressionVisitor.Visit(_expression);
 			if (!expressionVisitor.Visited)
 			{
-				throw new NotSupportedExpressionException(
-					$"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
+				throw new NotSupportedException($"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
 			}
 		}
 
@@ -123,7 +121,7 @@ namespace AutoFake.Expression
 				if (!fakeArgument.Check(currentArguments[i]))
 				{
 					return ThrowWhenArgumentsAreNotMatched
-						? throw new VerifyException(
+						? throw new ArgumentException(
 							$"Setup and actual arguments are not matched. Expected - {fakeArgument}, actual - {EqualityArgumentChecker.ToString(currentArguments[i])}.")
 						: false;
 				}
@@ -150,7 +148,7 @@ namespace AutoFake.Expression
 		{
 			if (executionContext.CallsChecker != null && !executionContext.CallsChecker(executionContext.ActualCallsNumber))
 			{
-				throw new ExpectedCallsException($"Setup and actual calls are not matched. Actual value - {executionContext.ActualCallsNumber}.");
+				throw new MethodAccessException($"Setup and actual calls are not matched. Actual value - {executionContext.ActualCallsNumber}.");
 			}
 		}
 	}

@@ -1,13 +1,12 @@
 using AutoFake.Abstractions;
-using AutoFake.Exceptions;
 using DryIoc;
 using FluentAssertions;
 using Mono.Cecil;
 using MultipleReturnTest;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -50,7 +49,7 @@ namespace AutoFake.FunctionalTests
 		public void When_ambiguous_ctor_arg_Should_throw()
 		{
 			new Action(() => new Fake<AmbiguousCtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()))
-				.Should().Throw<InitializationException>().WithMessage("*use Arg.IsNull<T>()*");
+				.Should().Throw<AmbiguousMatchException>().WithMessage("*use Arg.IsNull<T>()*");
 			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<CtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
 				.Execute().Should().Be(2);
 			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<AmbiguousCtorTestClass>()).Rewrite(f => f.ReturnCtorArg())

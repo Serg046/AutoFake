@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -47,7 +46,7 @@ namespace AutoFake.Setup.Mocks
 			if (type != null && closureField != null)
 			{
 				var field = type.GetField(closureField.Name, BindingFlags.Public | BindingFlags.Static)
-							?? throw new InitializationException($"'{closureField.Name}' is not found in the generated object"); ;
+							?? throw new MissingFieldException($"'{closureField.Name}' is not found"); ;
 				field.SetValue(null, closure);
 			}
 		}

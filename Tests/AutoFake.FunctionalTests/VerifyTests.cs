@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoFake.Abstractions;
-using AutoFake.Exceptions;
 using FluentAssertions;
 using MultipleReturnTest;
 using Xunit;
@@ -31,7 +30,7 @@ namespace AutoFake.FunctionalTests
 
 			if (throws)
 			{
-				Assert.Throws<VerifyException>(() => sut.Execute());
+				Assert.Throws<ArgumentException>(() => sut.Execute());
 			}
 			else
 			{
@@ -64,7 +63,7 @@ namespace AutoFake.FunctionalTests
 
 			if (throws)
 			{
-				Assert.Throws<ExpectedCallsException>(() => sut.Execute());
+				Assert.Throws<MethodAccessException>(() => sut.Execute());
 			}
 			else
 			{
@@ -165,7 +164,7 @@ namespace AutoFake.FunctionalTests
 			sut.Verify(s => s.PrintAndReturn(arg, expected));
 			Action act = () => sut.Execute();
 
-			act.Should().Throw<VerifyException>();
+			act.Should().Throw<ArgumentException>();
 		}
 
 		[Fact]
@@ -177,7 +176,7 @@ namespace AutoFake.FunctionalTests
 			sut.Verify(s => s.Append("incorrect default"));
 			Action act = () => sut.Execute();
 
-			act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
+			act.Should().Throw<ArgumentException>().WithMessage("*\"default\"*");
 		}
 
 		[Fact]
@@ -189,7 +188,7 @@ namespace AutoFake.FunctionalTests
 			sut.Verify(s => s.Append(null));
 			Action act = () => sut.Execute();
 
-			act.Should().Throw<VerifyException>().WithMessage("*\"default\"*");
+			act.Should().Throw<ArgumentException>().WithMessage("*\"default\"*");
 		}
 
 		private class TestClass

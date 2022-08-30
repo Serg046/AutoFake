@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using AnotherSut;
 using AutoFake.Abstractions;
-using AutoFake.Exceptions;
 using FluentAssertions;
 using Sut;
 using Xunit;
@@ -44,7 +43,7 @@ namespace AutoFake.FunctionalTests
 
 			if (throws)
 			{
-				Assert.Throws<ExpectedCallsException>(() => sut.Execute());
+				Assert.Throws<MethodAccessException>(() => sut.Execute());
 			}
 			else
 			{

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AnotherSut;
-using AutoFake.Exceptions;
 using FluentAssertions;
 using Sut;
 using Xunit;
@@ -94,7 +93,7 @@ namespace AutoFake.FunctionalTests
 			}
 			else
 			{
-				act.Should().Throw<ExpectedCallsException>();
+				act.Should().Throw<MethodAccessException>();
 			}
 		}
 

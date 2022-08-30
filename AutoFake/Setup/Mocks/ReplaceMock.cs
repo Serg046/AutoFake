@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -83,7 +82,7 @@ namespace AutoFake.Setup.Mocks
 			if (type != null && ReturnObject != null && _retValueField != null)
 			{
 				var field = SourceMemberMetaData.GetField(type, _retValueField.Name)
-							?? throw new InitializationException($"'{_retValueField.Name}' is not found in the generated object");
+							?? throw new MissingFieldException($"'{_retValueField.Name}' is not found");
 				field.SetValue(null, ReturnObject);
 			}
 		}

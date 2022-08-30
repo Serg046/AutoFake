@@ -9,6 +9,11 @@ trim_trailing_whitespace = false
 insert_final_newline = true
 
 [*.cs]
+dotnet_diagnostic.DI0002.excluded_namespaces=System
+dotnet_diagnostic.DI0002.excluded_files=AutoFake/ContainerExtensions.cs
+dotnet_diagnostic.DI0002.exclude_private_types=True
+dotnet_diagnostic.DI0003.allowed_number_of_dependencies=5
+
 dotnet_naming_rule.private_members_with_underscore.symbols  = private_fields
 dotnet_naming_rule.private_members_with_underscore.style    = prefix_underscore
 dotnet_naming_rule.private_members_with_underscore.severity = suggestion

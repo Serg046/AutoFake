@@ -1,6 +1,6 @@
-using AutoFake.Exceptions;
 using FluentAssertions;
 using System;
+using System.Reflection;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -14,7 +14,7 @@ namespace AutoFake.FunctionalTests
 
 			Action act = () => fake.Execute(f => f.GetType());
 
-			act.Should().Throw<InitializationException>().WithMessage("Constructor is not found");
+			act.Should().Throw<MissingMethodException>().WithMessage("Constructor is not found");
 		}
 
 		[Fact]
@@ -24,7 +24,7 @@ namespace AutoFake.FunctionalTests
 
 			Action act = () => fake.Execute(f => f.GetType());
 
-			act.Should().Throw<InitializationException>().WithMessage("Ambiguous null-invocation*");
+			act.Should().Throw<AmbiguousMatchException>().WithMessage("Ambiguous null-invocation*");
 		}
 
 		private class TestClass

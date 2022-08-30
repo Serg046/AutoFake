@@ -6,7 +6,6 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoFake.Exceptions;
 using FluentAssertions;
 using Xunit;
 
@@ -139,7 +138,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 
 			if (throws)
 			{
-				Assert.Throws<VerifyException>(() => sut.Execute());
+				Assert.Throws<ArgumentException>(() => sut.Execute());
 			}
 			else
 			{

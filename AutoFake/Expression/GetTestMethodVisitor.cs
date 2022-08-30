@@ -2,7 +2,6 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Abstractions.Expression;
-using AutoFake.Exceptions;
 
 namespace AutoFake.Expression
 {
@@ -21,7 +20,7 @@ namespace AutoFake.Expression
 
 		public void Visit(FieldInfo fieldInfo)
 		{
-			throw new NotSupportedExpressionException("Cannot execute a field. The member must have a body.");
+			throw new NotSupportedException("Cannot execute a field. The member must have a body.");
 		}
 	}
 }

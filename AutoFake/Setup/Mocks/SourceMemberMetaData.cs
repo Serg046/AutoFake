@@ -6,7 +6,6 @@ using System.Text;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
-using AutoFake.Exceptions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -49,18 +48,14 @@ namespace AutoFake.Setup.Mocks
 		{
 			if (type != null)
 			{
-				var field = GetField(type, SetupBodyField.Name)
-							?? throw new InitializationException($"'{SetupBodyField.Name}' is not found in the generated object");
+				var field = GetField(type, SetupBodyField.Name) ?? throw new MissingFieldException($"'{SetupBodyField.Name}' is not found");
 				field.SetValue(null, InvocationExpression);
-
-				var ctxField = GetField(type, ExecutionContext.Name)
-							   ?? throw new InitializationException($"'{ExecutionContext.Name}' is not found in the generated object");
+				var ctxField = GetField(type, ExecutionContext.Name) ?? throw new MissingFieldException($"'{ExecutionContext.Name}' is not found");
 				ctxField.SetValue(null, _getExecutionContext(ExpectedCalls, WhenFunc));
 			}
 		}
 
-		public FieldInfo? GetField(Type type, string fieldName)
-			=> type.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
+		public FieldInfo? GetField(Type type, string fieldName) => type.GetField(fieldName, BindingFlags.Public | BindingFlags.Static);
 
 		public string GetFieldName(string prefix, string suffix)
 		{

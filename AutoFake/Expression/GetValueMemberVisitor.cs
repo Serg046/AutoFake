@@ -2,7 +2,6 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Abstractions.Expression;
-using AutoFake.Exceptions;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
@@ -33,7 +32,7 @@ namespace AutoFake.Expression
 
 		public void Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
 		{
-			throw new NotSupportedExpressionException("Cannot execute constructor because the instance has been already built.");
+			throw new NotSupportedException("Cannot execute constructor because the instance has been already built.");
 		}
 
 		public void Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
