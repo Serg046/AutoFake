@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
+using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.FunctionalTests
 {
@@ -106,8 +107,19 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Date).Should().Be(date);
 		}
 
+		[Fact]
+		public void When_rewrite_field_Should_fail()
+		{
+			var fake = new Fake<RewriteTests>();
+
+			Action act = () => fake.Rewrite(() => TextReader.Null).Execute();
+
+			act.Should().Throw<NotSupportedException>();
+		}
+
 		private class TestClass
 		{
+			public DateTime PropSetter { set { } }
 			public DateTime Date { get; } = DateTime.Now;
 
 			public int GetValue() => -1;
