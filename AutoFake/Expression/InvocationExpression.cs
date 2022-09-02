@@ -29,38 +29,42 @@ namespace AutoFake.Expression
 
 		public bool ThrowWhenArgumentsAreNotMatched { get; set; }
 
+		T IInvocationExpression.AcceptMemberVisitor<T>(IExecutableMemberVisitor<T> visitor) => AcceptMemberVisitor(visitor);
+		internal T AcceptMemberVisitor<T>(IExecutableMemberVisitor<T> visitor)
+		{
+			var expressionVisitor = new ExecutableExpressionVisitor<T>(visitor);
+			expressionVisitor.Visit(_expression);
+			return AcceptMemberVisitor(expressionVisitor.Result);
+		}
+
 		T IInvocationExpression.AcceptMemberVisitor<T>(IMemberVisitor<T> visitor) => AcceptMemberVisitor(visitor);
 		internal T AcceptMemberVisitor<T>(IMemberVisitor<T> visitor)
 		{
 			var expressionVisitor = new ExpressionVisitor<T>(visitor);
 			expressionVisitor.Visit(_expression);
-			if (!expressionVisitor.Result.Visited)
-			{
-				throw new NotSupportedException($"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
-			}
-			return expressionVisitor.Result.Value;
+			return AcceptMemberVisitor(expressionVisitor.Result);
 		}
 
-		private class ExpressionVisitor<T> : ExpressionVisitor
+		internal T AcceptMemberVisitor<T>(KeyValuePair<bool, T> visitorResult)
 		{
-			private readonly IMemberVisitor<T> _memberVisitor;
+			return visitorResult.Key ? visitorResult.Value
+				: throw new NotSupportedException($"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
+		}
 
-			public ExpressionVisitor(IMemberVisitor<T> memberVisitor)
+		private class ExecutableExpressionVisitor<T> : ExpressionVisitor
+		{
+			private readonly IExecutableMemberVisitor<T> _memberVisitor;
+
+			public KeyValuePair<bool, T> Result { get; protected set; }
+
+			public ExecutableExpressionVisitor(IExecutableMemberVisitor<T> memberVisitor)
 			{
 				_memberVisitor = memberVisitor;
 			}
 
-			public (bool Visited, T Value) Result { get; private set; }
-
-			protected override LinqExpression VisitNew(NewExpression node)
-			{
-				Result = (true, _memberVisitor.Visit(node, node.Constructor));
-				return node;
-			}
-
 			protected override LinqExpression VisitMethodCall(MethodCallExpression node)
 			{
-				Result = (true, _memberVisitor.Visit(node, node.Method));
+				Result = new(true, _memberVisitor.Visit(node, node.Method));
 				return node;
 			}
 
@@ -68,11 +72,27 @@ namespace AutoFake.Expression
 			{
 				switch (node.Member)
 				{
-					case FieldInfo field: Result = (true, _memberVisitor.Visit(field)); break;
-					case PropertyInfo property: Result = (true, _memberVisitor.Visit(property)); break;
+					case FieldInfo field: Result = new(true, _memberVisitor.Visit(field)); break;
+					case PropertyInfo property: Result = new(true, _memberVisitor.Visit(property)); break;
 					default: throw new NotSupportedException($"'{node.Member.GetType().FullName}' is not supported.");
 				}
 
+				return node;
+			}
+		}
+
+		private class ExpressionVisitor<T> : ExecutableExpressionVisitor<T>
+		{
+			private readonly IMemberVisitor<T> _memberVisitor;
+
+			public ExpressionVisitor(IMemberVisitor<T> memberVisitor) : base(memberVisitor)
+			{
+				_memberVisitor = memberVisitor;
+			}
+
+			protected override LinqExpression VisitNew(NewExpression node)
+			{
+				Result = new(true, _memberVisitor.Visit(node, node.Constructor));
 				return node;
 			}
 		}

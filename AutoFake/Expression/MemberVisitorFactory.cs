@@ -15,7 +15,7 @@ namespace AutoFake.Expression
 		public GetValueMemberVisitor GetValueMemberVisitor(object? instance)
 			=> _serviceLocator.Resolve<Func<object?, GetValueMemberVisitor>>().Invoke(instance);
 
-		public TargetMemberVisitor<T> GetTargetMemberVisitor<T>(IMemberVisitor<T> requestedVisitor, Type targetType)
-			=> _serviceLocator.Resolve<Func<IMemberVisitor<T>, Type, TargetMemberVisitor<T>>>().Invoke(requestedVisitor, targetType);
+		public TargetMemberVisitor<T> GetTargetMemberVisitor<T>(IExecutableMemberVisitor<T> requestedVisitor, Type targetType)
+			=> _serviceLocator.Resolve<Func<IExecutableMemberVisitor<T>, Type, TargetMemberVisitor<T>>>().Invoke(requestedVisitor, targetType);
 	}
 }

@@ -3,11 +3,9 @@ using System.Reflection;
 
 namespace AutoFake.Abstractions.Expression
 {
-	internal interface IMemberVisitor<T>
+	internal interface IMemberVisitor<T> : IExecutableMemberVisitor<T>
 	{
 		T Visit(NewExpression newExpression, ConstructorInfo constructorInfo);
-		T Visit(MethodCallExpression methodExpression, MethodInfo methodInfo);
-		T Visit(PropertyInfo propertyInfo);
-		T Visit(FieldInfo fieldInfo);
+		
 	}
 }

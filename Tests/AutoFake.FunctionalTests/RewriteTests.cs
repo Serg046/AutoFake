@@ -1,5 +1,6 @@
 using FluentAssertions;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -73,8 +74,42 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingMethodException>();
 		}
 
+		[Fact]
+		public void When_no_property_Should_fail()
+		{
+			var fake = new Fake<RewriteTests>();
+
+			Action act = () => fake.Execute((TestClass f) => f.Date);
+
+			act.Should().Throw<MissingMemberException>();
+		}
+
+		[Fact]
+		public void When_no_field_Should_fail()
+		{
+			var fake = new Fake<RewriteTests>();
+
+			Action act = () => fake.Execute(() => TextReader.Null);
+
+			act.Should().Throw<MissingMemberException>();
+		}
+
+		[Fact]
+		public void When_rewrite_ctor_Should_succeed()
+		{
+			var fake = new Fake<TestClass>();
+			var date = new DateTime(2022, 9, 3);
+
+			var sut = fake.Rewrite(() => new TestClass());
+			sut.Replace(() => DateTime.Now).Return(date);
+
+			fake.Execute(f => f.Date).Should().Be(date);
+		}
+
 		private class TestClass
 		{
+			public DateTime Date { get; } = DateTime.Now;
+
 			public int GetValue() => -1;
 
 			public int FirstMethod() => GetValue();

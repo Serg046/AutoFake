@@ -7,6 +7,6 @@ namespace AutoFake.Abstractions.Expression
 	{
 		T GetMemberVisitor<T>();
 		GetValueMemberVisitor GetValueMemberVisitor(object? instance);
-		TargetMemberVisitor<T> GetTargetMemberVisitor<T>(IMemberVisitor<T> requestedVisitor, Type targetType);
+		TargetMemberVisitor<T> GetTargetMemberVisitor<T>(IExecutableMemberVisitor<T> requestedVisitor, Type targetType);
 	}
 }

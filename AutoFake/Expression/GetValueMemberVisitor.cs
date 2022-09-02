@@ -6,18 +6,13 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetValueMemberVisitor : IMemberVisitor<(Type Type, object? Value)>
+	internal class GetValueMemberVisitor : IExecutableMemberVisitor<(Type Type, object? Value)>
 	{
 		private readonly object? _instance;
 
 		public GetValueMemberVisitor(object? instance)
 		{
 			_instance = instance;
-		}
-
-		public (Type, object?) Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
-		{
-			throw new NotSupportedException("Cannot execute constructor because the instance has been already built.");
 		}
 
 		public (Type, object?) Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)

@@ -7,23 +7,15 @@ using AutoFake.Abstractions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class TargetMemberVisitor<T> : IMemberVisitor<T>
+	internal class TargetMemberVisitor<T> : IExecutableMemberVisitor<T>
 	{
-		private readonly IMemberVisitor<T> _requestedVisitor;
+		private readonly IExecutableMemberVisitor<T> _requestedVisitor;
 		private readonly Type _targetType;
 
-		public TargetMemberVisitor(IMemberVisitor<T> requestedVisitor, Type targetType)
+		public TargetMemberVisitor(IExecutableMemberVisitor<T> requestedVisitor, Type targetType)
 		{
 			_requestedVisitor = requestedVisitor;
 			_targetType = targetType;
-		}
-
-		public T Visit(NewExpression newExpression, ConstructorInfo constructorInfo)
-		{
-			var paramTypes = constructorInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-			var constructor = _targetType.GetConstructor(paramTypes)
-				?? throw new InvalidOperationException("Cannot find a constructor");
-			return _requestedVisitor.Visit(newExpression, constructor);
 		}
 
 		public T Visit(MethodCallExpression methodExpression, MethodInfo methodInfo)
@@ -48,25 +40,20 @@ namespace AutoFake.Expression
 			return _requestedVisitor.Visit(methodExpression, method);
 		}
 
-		private MethodInfo GetMethod(IEnumerable<MethodInfo> methodCandidates, string contract, string methodName)
+		private MethodInfo GetMethod(IEnumerable<MethodInfo> methods, string contract, string methodName)
 		{
-			var methods = methodCandidates.Where(m => m.ToString() == contract).ToList();
-			return methods.Count == 1
-				? methods[0]
-				: methods.SingleOrDefault(m => m.DeclaringType == _targetType)
-				?? throw new MissingMethodException(_targetType.FullName, methodName);
+			return methods.SingleOrDefault(m => m.ToString() == contract) ?? throw new MissingMethodException(_targetType.FullName, methodName);
 		}
 
 		public T Visit(PropertyInfo propertyInfo)
 		{
-			var property = _targetType.GetProperty(propertyInfo.Name)
-				?? throw new InvalidOperationException("Cannot find a property");
+			var property = _targetType.GetProperty(propertyInfo.Name) ?? throw new MissingMemberException("Cannot find a property");
 			return _requestedVisitor.Visit(property);
 		}
 
 		public T Visit(FieldInfo fieldInfo)
 		{
-			var field = _targetType.GetField(fieldInfo.Name) ?? throw new InvalidOperationException("Cannot find a field");
+			var field = _targetType.GetField(fieldInfo.Name) ?? throw new MissingMemberException("Cannot find a field");
 			return _requestedVisitor.Visit(field);
 		}
 	}
