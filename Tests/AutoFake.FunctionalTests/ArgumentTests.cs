@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
-	public class FakeArgsTests
+	public class ArgumentTests
 	{
 		[Fact]
 		public void When_incorrect_args_Should_fail()
@@ -27,8 +27,25 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<AmbiguousMatchException>().WithMessage("Ambiguous null-invocation*");
 		}
 
+		[Fact]
+		public void When_method_call_as_arg_Should_Succeed()
+		{
+			var fake = new Fake<TestClass>();
+			var testClass = new TestClass();
+
+			var sut = fake.Rewrite(f => f.GetNumber(1));
+			sut.Verify(f => f.SomeMethod(GetOne()));
+
+			sut.Execute();
+
+		}
+
+		int GetOne() => 1;
+
 		private class TestClass
 		{
+			public int GetNumber(int arg) => SomeMethod(arg);
+			public int SomeMethod(int arg) => arg;
 		}
 	}
 }

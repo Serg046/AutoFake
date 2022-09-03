@@ -25,7 +25,7 @@ namespace AutoFake.Expression
 		public ISourceMember Visit(MethodCallExpression methodExpression, MethodInfo methodInfo) => _getSourceMethod(methodInfo);
 
 		public ISourceMember Visit(PropertyInfo propertyInfo)
-			=> _getSourceMethod(propertyInfo.GetGetMethod(true) ?? throw new InvalidOperationException("Cannot find a getter"));
+			=> _getSourceMethod(propertyInfo.GetGetMethod(true) ?? throw new NotSupportedException("Cannot find a getter"));
 
 		public ISourceMember Visit(FieldInfo fieldInfo) => _getSourceField(fieldInfo);
 	}
