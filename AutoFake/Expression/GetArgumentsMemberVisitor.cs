@@ -11,17 +11,6 @@ namespace AutoFake.Expression
 {
 	internal class GetArgumentsMemberVisitor : IMemberVisitor<IReadOnlyList<IFakeArgument>>
 	{
-		private static readonly MethodInfo _getComparerMethod;
-
-#pragma warning disable CS8601 // Possible null reference assignment.
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-		static GetArgumentsMemberVisitor()
-		{
-			_getComparerMethod = typeof(GetArgumentsMemberVisitor).GetMethod(nameof(GetComparer), BindingFlags.Static | BindingFlags.NonPublic);
-		}
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-#pragma warning restore CS8601 // Possible null reference assignment.
-
 		private readonly Func<Delegate, LambdaArgumentChecker> _getLambdaArgChecker;
 		private readonly Func<IFakeArgumentChecker, FakeArgument> _getFakeArg;
 		private readonly Func<SuccessfulArgumentChecker> _getSuccessfulArgumentChecker;
@@ -96,23 +85,10 @@ namespace AutoFake.Expression
 			return CreateFakeArgument(expression);
 		}
 
-		private IFakeArgument CreateEqualityComparerArgument(MethodCallExpression expression)
-		{
-			var instance = GetArgumentInstance(expression.Arguments[0]);
-			var genericType = expression.Arguments[1].Type.GenericTypeArguments.Single();
-			var closedMethod = _getComparerMethod.MakeGenericMethod(genericType);
-			var comparer = LinqExpression.Lambda<Func<IFakeArgumentChecker.Comparer>>(
-				LinqExpression.Call(closedMethod, expression.Arguments[1])).Compile().Invoke();
-			return _getFakeArg(_getEqualityArgumentChecker(instance, comparer));
-		}
-
 		private IFakeArgument CreateFakeArgument(object arg)
 		{
 			var checker = _getEqualityArgumentChecker(arg, null);
 			return _getFakeArg(checker);
 		}
-
-		private static IFakeArgumentChecker.Comparer GetComparer<T>(IFakeArgumentChecker.Comparer<T> comparer)
-			=> (x, y) => x is T xT && y is T yT && comparer(xT, yT);
 	}
 }

@@ -117,6 +117,16 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<NotSupportedException>();
 		}
 
+		[Fact]
+		public void When_unsupported_expression_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+
+			Action act = () => fake.Execute(() => 1);
+
+			act.Should().Throw<NotSupportedException>();
+		}
+
 		private class TestClass
 		{
 			public DateTime PropSetter { set { } }

@@ -32,22 +32,19 @@ namespace AutoFake.Expression
 		T IInvocationExpression.AcceptMemberVisitor<T>(IExecutableMemberVisitor<T> visitor) => AcceptMemberVisitor(visitor);
 		internal T AcceptMemberVisitor<T>(IExecutableMemberVisitor<T> visitor)
 		{
-			var expressionVisitor = new ExecutableExpressionVisitor<T>(visitor);
-			expressionVisitor.Visit(_expression);
-			return AcceptMemberVisitor(expressionVisitor.Result);
+			return AcceptMemberVisitor(new ExecutableExpressionVisitor<T>(visitor));
 		}
 
 		T IInvocationExpression.AcceptMemberVisitor<T>(IMemberVisitor<T> visitor) => AcceptMemberVisitor(visitor);
 		internal T AcceptMemberVisitor<T>(IMemberVisitor<T> visitor)
 		{
-			var expressionVisitor = new ExpressionVisitor<T>(visitor);
-			expressionVisitor.Visit(_expression);
-			return AcceptMemberVisitor(expressionVisitor.Result);
+			return AcceptMemberVisitor(new ExpressionVisitor<T>(visitor));
 		}
 
-		internal T AcceptMemberVisitor<T>(KeyValuePair<bool, T> visitorResult)
+		private T AcceptMemberVisitor<T>(ExecutableExpressionVisitor<T> visitor)
 		{
-			return visitorResult.Key ? visitorResult.Value
+			visitor.Visit(_expression);
+			return visitor.Result.Key ? visitor.Result.Value
 				: throw new NotSupportedException($"Invalid expression format. Type '{_expression.GetType().FullName}'. Source: {_expression}.");
 		}
 
