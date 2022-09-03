@@ -33,19 +33,30 @@ namespace AutoFake.FunctionalTests
 			var fake = new Fake<TestClass>();
 			var testClass = new TestClass();
 
-			var sut = fake.Rewrite(f => f.GetNumber(1));
+			var sut = fake.Rewrite(f => f.GetNumber("1"));
 			sut.Verify(f => f.SomeMethod(GetOne()));
 
 			sut.Execute();
-
 		}
 
-		int GetOne() => 1;
+		[Fact]
+		public void When_is_arg_with_different_type_Should_Succeed()
+		{
+			var fake = new Fake<TestClass>();
+			var testClass = new TestClass();
+
+			var sut = fake.Rewrite(f => f.GetNumber("1"));
+			sut.Verify(f => f.SomeMethod(Arg.Is<string>(x => x == "1")));
+
+			sut.Execute();
+		}
+
+		string GetOne() => "1";
 
 		private class TestClass
 		{
-			public int GetNumber(int arg) => SomeMethod(arg);
-			public int SomeMethod(int arg) => arg;
+			public string GetNumber(string arg) => SomeMethod(arg);
+			public string SomeMethod(object arg) => (string)arg;
 		}
 	}
 }

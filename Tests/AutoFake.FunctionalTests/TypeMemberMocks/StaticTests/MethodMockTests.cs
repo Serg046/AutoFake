@@ -113,8 +113,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			var fake = new Fake(typeof(ParamsTestClass));
 
 			var sut = fake.Rewrite(() => ParamsTestClass.Test());
-			sut.Replace(() => ParamsTestClass.GetValue(Arg.Is(new[] { 1, 2, 3 }, (x, y) => x.SequenceEqual(y))))
-				.Return(-1);
+			sut.Replace(() => ParamsTestClass.GetValue(Arg.Is<int[]>(x => x.SequenceEqual(new[] { 1, 2, 3 })))).Return(-1);
 
 			Assert.Equal(-1, sut.Execute());
 		}

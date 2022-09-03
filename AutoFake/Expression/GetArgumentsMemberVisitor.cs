@@ -90,10 +90,6 @@ namespace AutoFake.Expression
 						var checker = _getLambdaArgChecker(@delegate);
 						return _getFakeArg(checker);
 					}
-					else if (expression.Arguments.Count == 2 && expression.Arguments[1].Type.GenericTypeArguments.Length == 1)
-					{
-						return CreateEqualityComparerArgument(expression);
-					}
 				}
 				return _getFakeArg(_getSuccessfulArgumentChecker());
 			}

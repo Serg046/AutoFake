@@ -17,11 +17,6 @@ namespace AutoFake
 
 		public override string ToString() => ToString(_value);
 
-		public static string ToString(object value)
-		{
-			return value is string str
-				? $"\"{str}\""
-				: value?.ToString() ?? "null";
-		}
+		public static string ToString(object value) => value is string str ? $"\"{str}\"" : value?.ToString() ?? "null";
 	}
 }
