@@ -54,10 +54,10 @@ namespace AutoFake.Setup
 		private IEnumerable<GenericArgument> GetGenericArgumentsImpl()
 		{
 			var declaringType = GetMethod().DeclaringType.ToString();
-			if (_methodDeclaringType.IsGenericType == true)
+			if (_methodDeclaringType.IsGenericType)
 			{
-				var types = _method.DeclaringType.GetGenericArguments();
-				var names = _method.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
+				var types = _methodDeclaringType.GetGenericArguments();
+				var names = _methodDeclaringType.GetGenericTypeDefinition().GetGenericArguments();
 				foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
 				{
 					yield return genericArgument;
