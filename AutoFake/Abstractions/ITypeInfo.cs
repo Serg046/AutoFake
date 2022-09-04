@@ -12,6 +12,7 @@ namespace AutoFake.Abstractions
 		ITypeMap TypeMap { get; }
 		bool IsInFakeModule(TypeReference type);
 		IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate);
+		IEnumerable<MethodDefinition> GetMethods(TypeDefinition type, Predicate<MethodDefinition> methodPredicate);
 		MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false);
 		MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false);
 		TypeDefinition GetTypeDefinition(Type type);

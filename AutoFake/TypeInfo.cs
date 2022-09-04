@@ -42,7 +42,10 @@ namespace AutoFake
 			_assemblyReader.SourceTypeDefinition.Module.GetType(type.FullName, runtimeName: true).ToTypeDefinition();
 
 		public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate)
-			=> _assemblyReader.SourceTypeDefinition.Methods.Where(m => methodPredicate(m));
+			=> GetMethods(_assemblyReader.SourceTypeDefinition, methodPredicate);
+
+		public IEnumerable<MethodDefinition> GetMethods(TypeDefinition type, Predicate<MethodDefinition> methodPredicate)
+			=> type.Methods.Where(m => methodPredicate(m));
 
 		public MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false) =>
 			GetMethod(_assemblyReader.SourceTypeDefinition, methodReference, searchInBaseType);
@@ -65,8 +68,10 @@ namespace AutoFake
 			if (includeAffectedAssemblies) typeMaps = typeMaps.Concat(_assemblyPool.GetTypeMaps());
 			foreach (var typeDef in typeMaps.SelectMany(m => m.GetAllParentsAndDescendants(method.DeclaringType)))
 			{
-				var methodDef = GetMethod(typeDef, method);
-				if (methodDef != null) methods.Add(methodDef);
+				foreach (var methodDef in GetMethods(typeDef, m => m.EquivalentTo(method, includeExlicitInterfaceImplementations: true)))
+				{
+					methods.Add(methodDef);
+				}
 			}
 
 			return methods;

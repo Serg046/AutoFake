@@ -261,6 +261,17 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().BeOfType<GenericStructHelper<int>>();
 		}
 
+		[Fact]
+		public void When_explicit_interface_member_Should_succeed()
+		{
+			var fake = new Fake<TestClassWithExplicitInterface>();
+
+			var sut = fake.Rewrite(f => f.GetFive(new HelperClass()));
+			sut.Replace((IHelper helper) => helper.GetFive()).Return(7);
+
+			sut.Execute().Should().Be(7);
+		}
+
 		private bool IsHelperClass(IHelper helper) => helper is HelperClass { Prop: 4 };
 
 		public interface IGenericHelper<T>
@@ -502,6 +513,18 @@ namespace AutoFake.FunctionalTests
 			{
 				return helper.GetFive();
 			}
+		}
+
+		public interface ITestClassWithExplicitInterface
+		{
+			int GetFive(IHelper helper);
+		}
+
+		public class TestClassWithExplicitInterface : ITestClassWithExplicitInterface
+		{
+			int ITestClassWithExplicitInterface.GetFive(IHelper helper) => GetFive(helper);
+			public int GetFive(IHelper helper) => helper.GetFive();
+			//public static int GetFive(ITestClassWithExplicitInterface testClass, IHelper helper) => testClass.GetFive(helper);
 		}
 	}
 }
