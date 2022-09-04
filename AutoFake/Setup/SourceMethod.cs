@@ -11,6 +11,7 @@ namespace AutoFake.Setup
 	internal class SourceMethod : ISourceMember
 	{
 		private readonly MethodBase _method;
+		private readonly Type _methodDeclaringType;
 		private readonly SourceMember _sourceMember;
 		private MethodDefinition? _monoCecilMethodDef;
 		private IReadOnlyList<GenericArgument>? _genericArguments;
@@ -18,6 +19,7 @@ namespace AutoFake.Setup
 		public SourceMethod(MethodInfo sourceMethod, SourceMember sourceMember)
 		{
 			_method = sourceMethod;
+			_methodDeclaringType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
 			_sourceMember = sourceMember;
 			Name = sourceMethod.Name;
 			ReturnType = sourceMethod.ReturnType;
@@ -29,7 +31,7 @@ namespace AutoFake.Setup
 			_method = sourceMethod;
 			_sourceMember = sourceMember;
 			Name = sourceMethod.Name;
-			ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type should be set");
+			_methodDeclaringType = ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
 			HasStackInstance = false;
 		}
 
@@ -52,7 +54,7 @@ namespace AutoFake.Setup
 		private IEnumerable<GenericArgument> GetGenericArgumentsImpl()
 		{
 			var declaringType = GetMethod().DeclaringType.ToString();
-			if (_method.DeclaringType?.IsGenericType == true)
+			if (_methodDeclaringType.IsGenericType == true)
 			{
 				var types = _method.DeclaringType.GetGenericArguments();
 				var names = _method.DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
@@ -103,12 +105,5 @@ namespace AutoFake.Setup
 		}
 
 		public ParameterInfo[] GetParameters() => _method.GetParameters();
-
-		public override bool Equals(object? obj)
-			=> obj is SourceMethod method && _method.Equals(method._method);
-
-		public override int GetHashCode() => _method.GetHashCode();
-
-		public override string? ToString() => _method.ToString();
 	}
 }

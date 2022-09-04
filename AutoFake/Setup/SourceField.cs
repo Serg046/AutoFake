@@ -12,6 +12,7 @@ namespace AutoFake.Setup
 	{
 		private static readonly OpCode[] _fieldOpCodes = { OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda };
 		private readonly FieldInfo _field;
+		private readonly Type _fieldDeclaringType;
 		private readonly SourceMember _sourceMember;
 		private FieldDefinition? _monoCecilField;
 		private IReadOnlyList<GenericArgument>? _genericArguments;
@@ -19,6 +20,7 @@ namespace AutoFake.Setup
 		public SourceField(FieldInfo field, SourceMember sourceMember)
 		{
 			_field = field;
+			_fieldDeclaringType = field.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
 			_sourceMember = sourceMember;
 			Name = field.Name;
 			ReturnType = field.FieldType;
@@ -41,7 +43,7 @@ namespace AutoFake.Setup
 			if (_genericArguments == null)
 			{
 				var genericArguments = new List<GenericArgument>();
-				if (_field.DeclaringType?.IsGenericType == true)
+				if (_fieldDeclaringType.IsGenericType == true)
 				{
 					var declaringType = GetField().DeclaringType.ToString();
 					var types = _field.DeclaringType.GetGenericArguments();
@@ -88,12 +90,5 @@ namespace AutoFake.Setup
 		}
 
 		public ParameterInfo[] GetParameters() => new ParameterInfo[0];
-
-		public override bool Equals(object? obj)
-			=> obj is SourceField field && _field.Equals(field._field);
-
-		public override int GetHashCode() => _field.GetHashCode();
-
-		public override string? ToString() => _field.ToString();
 	}
 }
