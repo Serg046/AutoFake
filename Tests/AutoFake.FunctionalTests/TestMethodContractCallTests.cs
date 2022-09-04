@@ -524,7 +524,6 @@ namespace AutoFake.FunctionalTests
 		{
 			int ITestClassWithExplicitInterface.GetFive(IHelper helper) => GetFive(helper);
 			public int GetFive(IHelper helper) => helper.GetFive();
-			//public static int GetFive(ITestClassWithExplicitInterface testClass, IHelper helper) => testClass.GetFive(helper);
 		}
 	}
 }

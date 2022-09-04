@@ -71,7 +71,6 @@ namespace AutoFake.Expression
 				{
 					case FieldInfo field: Result = new(true, _memberVisitor.Visit(field)); break;
 					case PropertyInfo property: Result = new(true, _memberVisitor.Visit(property)); break;
-					default: throw new NotSupportedException($"'{node.Member.GetType().FullName}' is not supported.");
 				}
 
 				return node;
