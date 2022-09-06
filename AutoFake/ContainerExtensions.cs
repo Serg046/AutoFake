@@ -51,7 +51,6 @@ namespace AutoFake
 			container.Register<FakeArgument>();
 			container.Register<SuccessfulArgumentChecker>();
 			container.Register<EqualityArgumentChecker>();
-			container.Register<SourceMember>();
 			container.Register<SourceMethod>(made: FactoryMethod.ConstructorWithResolvableArguments);
 			container.Register<SourceField>();
 			container.Register<ITypeMap, TypeMap>();

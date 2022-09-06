@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using AutoFake.Abstractions;
 using Mono.Cecil;
 
@@ -10,13 +11,19 @@ namespace AutoFake.Setup
 	{
 		private readonly GenericArgument.Create _createGenericArgument;
 
-		public SourceMember(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument)
+		public SourceMember(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, MemberInfo memberInfo)
 		{
 			TypeInfo = typeInfo;
 			_createGenericArgument = createGenericArgument;
+			Name = memberInfo.Name;
+			DeclaringType = memberInfo.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
 		}
 
-		public ITypeInfo TypeInfo { get; }
+		public string Name { get; }
+
+		protected Type DeclaringType { get; }
+
+		protected ITypeInfo TypeInfo { get; }
 
 		public bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
 		{

@@ -2,40 +2,34 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-	internal class SourceMethod : ISourceMember
+	internal class SourceMethod : SourceMember, ISourceMember
 	{
 		private readonly MethodBase _method;
-		private readonly Type _methodDeclaringType;
-		private readonly SourceMember _sourceMember;
 		private MethodDefinition? _monoCecilMethodDef;
 		private IReadOnlyList<GenericArgument>? _genericArguments;
 
-		public SourceMethod(MethodInfo sourceMethod, SourceMember sourceMember)
+		public SourceMethod(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, MethodInfo method)
+			: base(typeInfo, createGenericArgument, method)
 		{
-			_method = sourceMethod;
-			_methodDeclaringType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
-			_sourceMember = sourceMember;
-			Name = sourceMethod.Name;
-			ReturnType = sourceMethod.ReturnType;
-			HasStackInstance = !sourceMethod.IsStatic;
+			_method = method;
+			ReturnType = method.ReturnType;
+			HasStackInstance = !method.IsStatic;
 		}
 
-		public SourceMethod(ConstructorInfo sourceMethod, SourceMember sourceMember)
+		public SourceMethod(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, ConstructorInfo ctor)
+			: base(typeInfo, createGenericArgument, ctor)
 		{
-			_method = sourceMethod;
-			_sourceMember = sourceMember;
-			Name = sourceMethod.Name;
-			_methodDeclaringType = ReturnType = sourceMethod.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
+			_method = ctor;
+			ReturnType = DeclaringType;
 			HasStackInstance = false;
 		}
-
-		public string Name { get; }
 
 		public Type ReturnType { get; }
 
@@ -44,7 +38,7 @@ namespace AutoFake.Setup
 		public MemberInfo OriginalMember => _method;
 
 		public MethodDefinition GetMethod()
-			=> _monoCecilMethodDef ??= _sourceMember.TypeInfo.ImportToSourceAsm(_method).Resolve();
+			=> _monoCecilMethodDef ??= TypeInfo.ImportToSourceAsm(_method).Resolve();
 
 		public IReadOnlyList<GenericArgument> GetGenericArguments()
 		{
@@ -54,11 +48,11 @@ namespace AutoFake.Setup
 		private IEnumerable<GenericArgument> GetGenericArgumentsImpl()
 		{
 			var declaringType = GetMethod().DeclaringType.ToString();
-			if (_methodDeclaringType.IsGenericType)
+			if (DeclaringType.IsGenericType)
 			{
-				var types = _methodDeclaringType.GetGenericArguments();
-				var names = _methodDeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-				foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
+				var types = DeclaringType.GetGenericArguments();
+				var names = DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
+				foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
 				{
 					yield return genericArgument;
 				}
@@ -68,7 +62,7 @@ namespace AutoFake.Setup
 			{
 				var types = method.GetGenericArguments();
 				var names = method.GetGenericMethodDefinition().GetGenericArguments();
-				foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
+				foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
 				{
 					yield return genericArgument;
 				}
@@ -94,7 +88,7 @@ namespace AutoFake.Setup
 				var sourceArguments = GetGenericArguments();
 				foreach (var genericParameter in visitedMethod.GenericParameters.Concat(visitedMethod.DeclaringType.GenericParameters))
 				{
-					if (!_sourceMember.CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
+					if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
 					{
 						return false;
 					}

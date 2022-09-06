@@ -2,32 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup
 {
-	internal class SourceField : ISourceMember
+	internal class SourceField : SourceMember, ISourceMember
 	{
 		private static readonly OpCode[] _fieldOpCodes = { OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda };
 		private readonly FieldInfo _field;
-		private readonly Type _fieldDeclaringType;
-		private readonly SourceMember _sourceMember;
 		private FieldDefinition? _monoCecilField;
 		private IReadOnlyList<GenericArgument>? _genericArguments;
 
-		public SourceField(FieldInfo field, SourceMember sourceMember)
+		public SourceField(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, FieldInfo field)
+			: base(typeInfo, createGenericArgument, field)
 		{
 			_field = field;
-			_fieldDeclaringType = field.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
-			_sourceMember = sourceMember;
-			Name = field.Name;
 			ReturnType = field.FieldType;
 			HasStackInstance = !field.IsStatic;
 		}
-
-		public string Name { get; }
 
 		public Type ReturnType { get; }
 
@@ -36,19 +31,19 @@ namespace AutoFake.Setup
 		public MemberInfo OriginalMember => _field;
 
 		private FieldDefinition GetField()
-			=> _monoCecilField ??= _sourceMember.TypeInfo.ImportToSourceAsm(_field).Resolve();
+			=> _monoCecilField ??= TypeInfo.ImportToSourceAsm(_field).Resolve();
 
 		public IReadOnlyList<GenericArgument> GetGenericArguments()
 		{
 			if (_genericArguments == null)
 			{
 				var genericArguments = new List<GenericArgument>();
-				if (_fieldDeclaringType.IsGenericType)
+				if (DeclaringType.IsGenericType)
 				{
 					var declaringType = GetField().DeclaringType.ToString();
-					var types = _fieldDeclaringType.GetGenericArguments();
-					var names = _fieldDeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-					foreach (var genericArgument in _sourceMember.GetGenericArguments(types, names, declaringType))
+					var types = DeclaringType.GetGenericArguments();
+					var names = DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
+					foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
 					{
 						genericArguments.Add(genericArgument);
 					}
@@ -79,7 +74,7 @@ namespace AutoFake.Setup
 				var sourceArguments = GetGenericArguments();
 				foreach (var genericParameter in visitedField.DeclaringType.GenericParameters)
 				{
-					if (!_sourceMember.CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
+					if (!CompareGenericArguments(genericParameter, sourceArguments, genericArguments))
 					{
 						return false;
 					}
