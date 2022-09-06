@@ -15,8 +15,8 @@ namespace AutoFake.Setup
 		{
 			TypeInfo = typeInfo;
 			_createGenericArgument = createGenericArgument;
-			Name = memberInfo.Name;
 			DeclaringType = memberInfo.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
+			Name = memberInfo.Name;
 		}
 
 		public string Name { get; }

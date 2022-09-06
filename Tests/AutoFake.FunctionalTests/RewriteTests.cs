@@ -1,6 +1,8 @@
 using FluentAssertions;
 using System;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Xunit;
 using LinqExpression = System.Linq.Expressions.Expression;
@@ -127,6 +129,19 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<NotSupportedException>();
 		}
 
+		[Fact]
+		public void When_member_declaring_type_is_null_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+			var member = LinqExpression.MakeMemberAccess(null, new FakeFieldInfo<int>());
+			var lambda = LinqExpression.Lambda<Func<int>>(member);
+			var sut = fake.Rewrite(() => DateTime.Now);
+
+			Action act = () => sut.Replace(lambda);
+
+			act.Should().Throw<InvalidOperationException>();
+		}
+
 		private class TestClass
 		{
 			public DateTime PropSetter { set { } }
@@ -142,6 +157,21 @@ namespace AutoFake.FunctionalTests
 
 			[DllImport("no.dll")]
 			public static extern void NoBodyMethod();
+		}
+
+		private class FakeFieldInfo<T> : FieldInfo
+		{
+			public override Type DeclaringType => null;
+			public override FieldAttributes Attributes => FieldAttributes.Public | FieldAttributes.Static;
+			public override Type FieldType => typeof(T);
+			public override string Name => "Field1";
+			public override RuntimeFieldHandle FieldHandle => throw new NotImplementedException();
+			public override Type ReflectedType => throw new NotImplementedException();
+			public override object[] GetCustomAttributes(bool inherit) => throw new NotImplementedException();
+			public override object[] GetCustomAttributes(Type attributeType, bool inherit) => throw new NotImplementedException();
+			public override object GetValue(object obj) => throw new NotImplementedException();
+			public override bool IsDefined(Type attributeType, bool inherit) => throw new NotImplementedException();
+			public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, CultureInfo culture) => throw new NotImplementedException();
 		}
 	}
 }
