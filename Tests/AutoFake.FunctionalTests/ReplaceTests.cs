@@ -108,6 +108,32 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(cl2, sut.Execute());
 		}
 
+		[Fact]
+		public void When_different_generic_args_Should_not_replace()
+		{
+			var fake = new Fake<TestClass<int>>(5);
+			var sut = fake.Rewrite(f => f.GetValue());
+			sut.Replace(t => t.Value).Return(7);
+			sut.Execute().Should().Be(7);
+
+			fake = new Fake<TestClass<int>>(5);
+			sut = fake.Rewrite(f => f.GetValue());
+			sut.Replace((TestClass<double> t) => t.Value).Return(7);
+			sut.Execute().Should().Be(5);
+		}
+
+		private class TestClass<T>
+		{
+			public TestClass(T value)
+			{
+				Value = value;
+			}
+
+			public T Value { get; }
+
+			public T GetValue() => Value;
+		}
+
 		public class TestClass
 		{
 			public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
