@@ -124,12 +124,12 @@ namespace AutoFake.FunctionalTests
 
 		private class TestClass<T>
 		{
+			public T Value;
+
 			public TestClass(T value)
 			{
 				Value = value;
 			}
-
-			public T Value { get; }
 
 			public T GetValue() => Value;
 		}
