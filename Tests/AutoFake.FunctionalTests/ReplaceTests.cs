@@ -113,25 +113,37 @@ namespace AutoFake.FunctionalTests
 		{
 			var fake = new Fake<TestClass<int>>(5);
 			var sut = fake.Rewrite(f => f.GetValue());
-			sut.Replace(t => t.Value).Return(7);
+			sut.Replace(t => t.Field).Return(7);
 			sut.Execute().Should().Be(7);
 
 			fake = new Fake<TestClass<int>>(5);
 			sut = fake.Rewrite(f => f.GetValue());
-			sut.Replace((TestClass<double> t) => t.Value).Return(7);
+			sut.Replace((TestClass<double> t) => t.Field).Return(7);
+			sut.Execute().Should().Be(5);
+		}
+
+		[Fact]
+		public void When_different_fields_Should_not_replace()
+		{
+			var fake = new Fake<TestClass<int>>(5);
+			
+			var sut = fake.Rewrite(f => f.GetValue());
+			sut.Replace((TestClass<double> t) => t.AnotherField).Return(7);
+			
 			sut.Execute().Should().Be(5);
 		}
 
 		private class TestClass<T>
 		{
-			public T Value;
+			public T Field;
+			public T AnotherField;
 
 			public TestClass(T value)
 			{
-				Value = value;
+				AnotherField = Field = value;
 			}
 
-			public T GetValue() => Value;
+			public T GetValue() => Field;
 		}
 
 		public class TestClass
