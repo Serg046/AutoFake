@@ -50,9 +50,7 @@ namespace AutoFake.Setup
 			var declaringType = GetMethod().DeclaringType.ToString();
 			if (DeclaringType.IsGenericType)
 			{
-				var types = DeclaringType.GetGenericArguments();
-				var names = DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-				foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
+				foreach (var genericArgument in GetGenericArguments(DeclaringType, declaringType))
 				{
 					yield return genericArgument;
 				}
@@ -60,9 +58,7 @@ namespace AutoFake.Setup
 
 			if (_method.IsGenericMethod && _method is MethodInfo method)
 			{
-				var types = method.GetGenericArguments();
-				var names = method.GetGenericMethodDefinition().GetGenericArguments();
-				foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
+				foreach (var genericArgument in GetGenericArguments(method, declaringType))
 				{
 					yield return genericArgument;
 				}

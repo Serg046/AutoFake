@@ -25,7 +25,7 @@ namespace AutoFake.Setup
 
 		protected ITypeInfo TypeInfo { get; }
 
-		public bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
+		protected bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
 		{
 			var source = sourceArguments.SingleOrDefault(a => a.Name == genericParameter.Name);
 			var visited = stackArguments.FindGenericTypeOrDefault(genericParameter.Name);
@@ -37,7 +37,14 @@ namespace AutoFake.Setup
 			return true;
 		}
 
-		public IEnumerable<GenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
+		protected IEnumerable<GenericArgument> GetGenericArguments(Type type, string declaringType)
+			=> GetGenericArguments(type.GetGenericArguments(), type.GetGenericTypeDefinition().GetGenericArguments(), declaringType);
+
+		protected IEnumerable<GenericArgument> GetGenericArguments(MethodInfo method, string declaringType)
+			=> GetGenericArguments(method.GetGenericArguments(), method.GetGenericMethodDefinition().GetGenericArguments(), declaringType);
+
+
+		private IEnumerable<GenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
 		{
 			for (int i = 0; i < genericArguments.Length; i++)
 			{

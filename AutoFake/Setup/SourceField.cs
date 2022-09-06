@@ -41,9 +41,7 @@ namespace AutoFake.Setup
 				if (DeclaringType.IsGenericType)
 				{
 					var declaringType = GetField().DeclaringType.ToString();
-					var types = DeclaringType.GetGenericArguments();
-					var names = DeclaringType.GetGenericTypeDefinition().GetGenericArguments();
-					foreach (var genericArgument in GetGenericArguments(types, names, declaringType))
+					foreach (var genericArgument in GetGenericArguments(DeclaringType, declaringType))
 					{
 						genericArguments.Add(genericArgument);
 					}
