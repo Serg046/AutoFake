@@ -133,6 +133,17 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(5);
 		}
 
+		[Fact]
+		public void When_different_fields_but_same_field_name_Should_not_replace()
+		{
+			var fake = new Fake<TestClass<int>>(5);
+
+			var sut = fake.Rewrite(f => f.GetValue());
+			sut.Replace((TestClass t) => t.Field).Return(7);
+
+			sut.Execute().Should().Be(5);
+		}
+
 		private class TestClass<T>
 		{
 			public T Field;
@@ -148,6 +159,8 @@ namespace AutoFake.FunctionalTests
 
 		public class TestClass
 		{
+			public int Field;
+
 			public DateTime GetValueByArguments(DateTime dateTime, TimeZoneInfo zone)
 			{
 				Debug.WriteLine("Started");
