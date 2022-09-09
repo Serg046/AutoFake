@@ -1,3 +1,5 @@
+using AutoFake.Abstractions;
+using DryIoc;
 using FluentAssertions;
 using System;
 using System.Reflection;
@@ -5,7 +7,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests
 {
-	public class ArgumentTests
+	public class InitializationTests
 	{
 		[Fact]
 		public void When_incorrect_args_Should_fail()
@@ -53,10 +55,38 @@ namespace AutoFake.FunctionalTests
 
 		string GetOne() => "1";
 
+		[Fact]
+		public void When_no_closure_field_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+			var type = typeof(TestClass);
+			fake.Services.RegisterInstance<IAssemblyLoader>(new FakeAsseblyLoader(type.Assembly, type), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.GetNumber("test"));
+			sut.Append(() => { });
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<MissingFieldException>();
+		}
+
 		private class TestClass
 		{
 			public string GetNumber(string arg) => SomeMethod(arg);
 			public string SomeMethod(object arg) => (string)arg;
+		}
+
+		private class FakeAsseblyLoader : IAssemblyLoader
+		{
+			private readonly Assembly _assembly;
+			private readonly Type _type;
+
+			public FakeAsseblyLoader(Assembly assembly, Type type)
+			{
+				_assembly = assembly;
+				_type = type;
+			}
+
+			public Tuple<Assembly, Type> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm) => new(_assembly, _type);
 		}
 	}
 }
