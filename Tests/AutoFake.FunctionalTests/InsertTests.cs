@@ -1,4 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup;
+using AutoFake.Setup.Mocks;
+using DryIoc;
 using FluentAssertions;
 using Xunit;
 
@@ -131,6 +136,35 @@ namespace AutoFake.FunctionalTests
 
 			sut.Execute();
 			numbers.Should().ContainInOrder(3, -1, 0, 5, 7, -2, 0);
+		}
+
+		[Fact]
+		public void When_unsupported_location_Should_return_false()
+		{
+			var fake = new Fake<TestClass>();
+			var method = fake.Services.Resolve<ITypeInfo>().GetMethods(m => true).First();
+			var mockFactory = fake.Services.Resolve<IMockFactory>();
+			var firstInstruction = method.Body.Instructions.First();
+			var lastInstruction = method.Body.Instructions.Last();
+
+			var validPrependMock = mockFactory.GetInsertMock(() => { }, InsertMock.Location.Before);
+			var validApppendMock = mockFactory.GetInsertMock(() => { }, InsertMock.Location.After);
+			var invalidInsertMock = mockFactory.GetInsertMock(() => { }, (InsertMock.Location)100);
+
+			validPrependMock
+				.IsSourceInstruction(method, firstInstruction, Enumerable.Empty<GenericArgument>())
+				.Should().BeTrue();
+
+			validApppendMock
+				.IsSourceInstruction(method, lastInstruction, Enumerable.Empty<GenericArgument>())
+				.Should().BeTrue();
+
+			invalidInsertMock
+				.IsSourceInstruction(method, firstInstruction, Enumerable.Empty<GenericArgument>())
+				.Should().BeFalse();
+			invalidInsertMock
+				.IsSourceInstruction(method, lastInstruction, Enumerable.Empty<GenericArgument>())
+				.Should().BeFalse();
 		}
 
 		private class TestClass
