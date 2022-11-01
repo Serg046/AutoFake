@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Abstractions;
@@ -5,6 +6,7 @@ using AutoFake.Abstractions.Setup;
 using AutoFake.Setup.Mocks;
 using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -167,6 +169,19 @@ namespace AutoFake.FunctionalTests
 				.Should().BeFalse();
 		}
 
+		[Fact]
+		public void When_no_closure_field_during_injection_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+			fake.Services.RegisterInstance<IPrePostProcessor>(new FakePrePostProcessor(), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.SomeMethod(new List<int>()));
+			sut.Append(() => { }).After(t => t.AnotherMethod());
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<InvalidOperationException>();
+		}
+
 		private class TestClass
 		{
 			public int Prop { get; private set; }
@@ -182,6 +197,15 @@ namespace AutoFake.FunctionalTests
 			public void AnotherMethod()
 			{
 				Prop = 1;
+			}
+		}
+
+		private class FakePrePostProcessor : IPrePostProcessor
+		{
+			public FieldDefinition GenerateField(string name, Type returnType) => null;
+
+			public void InjectVerification(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext)
+			{
 			}
 		}
 	}

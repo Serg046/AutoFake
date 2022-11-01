@@ -46,7 +46,7 @@ namespace AutoFake.Setup.Mocks
 			if (type != null && closureField != null)
 			{
 				var field = type.GetField(closureField.Name, BindingFlags.Public | BindingFlags.Static)
-							?? throw new MissingFieldException($"'{closureField.Name}' is not found"); ;
+							?? throw new MissingFieldException($"'{closureField.Name}' is not found");
 				field.SetValue(null, closure);
 			}
 		}

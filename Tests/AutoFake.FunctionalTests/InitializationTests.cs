@@ -1,6 +1,7 @@
 using AutoFake.Abstractions;
 using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
 using System;
 using System.Reflection;
 using Xunit;
@@ -64,6 +65,20 @@ namespace AutoFake.FunctionalTests
 
 			var sut = fake.Rewrite(f => f.GetNumber("test"));
 			sut.Append(() => { });
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<MissingFieldException>();
+		}
+
+		[Fact]
+		public void When_no_return_field_Should_fail()
+		{
+			var fake = new Fake<TestClass>();
+			var type = typeof(TestClass);
+			fake.Services.RegisterInstance<IAssemblyLoader>(new FakeAsseblyLoader(type.Assembly, type), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.GetNumber("test"));
+			sut.Replace(t => t.GetNumber(Arg.IsAny<string>())).Return("str");
 			Action act = () => sut.Execute();
 
 			act.Should().Throw<MissingFieldException>();
