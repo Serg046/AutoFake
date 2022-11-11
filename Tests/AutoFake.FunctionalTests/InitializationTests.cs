@@ -1,7 +1,7 @@
 using AutoFake.Abstractions;
+using AutoFake.Abstractions.Expression;
 using DryIoc;
 using FluentAssertions;
-using Mono.Cecil;
 using System;
 using System.Reflection;
 using Xunit;
@@ -86,6 +86,8 @@ namespace AutoFake.FunctionalTests
 
 		private class TestClass
 		{
+			public static IInvocationExpression GetNumberSystemString_GetNumber_SystemString_SetupBodyField;
+			public static IExecutionContext GetNumberSystemString_GetNumber_SystemString_ExecutionContext;
 			public string GetNumber(string arg) => SomeMethod(arg);
 			public string SomeMethod(object arg) => (string)arg;
 		}

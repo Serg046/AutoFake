@@ -14,7 +14,7 @@ namespace AutoFake.Setup.Mocks
 		private FieldDefinition? _retValueField;
 
 		public ReplaceMock(
-			SourceMemberMetaData sourceMemberMetaData,
+			ISourceMemberMetaData sourceMemberMetaData,
 			Func<IEmitter, Instruction, IProcessor> createProcessor,
 			ITypeInfo typeInfo)
 		{
@@ -23,7 +23,7 @@ namespace AutoFake.Setup.Mocks
 			_typeInfo = typeInfo;
 		}
 
-		public SourceMemberMetaData SourceMemberMetaData { get; }
+		public ISourceMemberMetaData SourceMemberMetaData { get; }
 		public Type? ReturnType { get; set; }
 		public object? ReturnObject { get; set; }
 

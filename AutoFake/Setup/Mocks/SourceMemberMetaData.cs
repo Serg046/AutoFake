@@ -6,12 +6,13 @@ using System.Text;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
+using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-	internal class SourceMemberMetaData
+	internal class SourceMemberMetaData : ISourceMemberMetaData
 	{
 		private readonly IExecutionContext.Create _getExecutionContext;
 		private FieldDefinition? _setupBodyField;

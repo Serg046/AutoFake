@@ -88,7 +88,7 @@ namespace AutoFake
 
 		private static void AddMocks(IRegistrator container)
 		{
-			container.Register<SourceMemberMetaData>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
+			container.Register<ISourceMemberMetaData, SourceMemberMetaData>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<ISourceMemberInsertMockInjector, SourceMemberInsertMockInjector>();
 			container.Register<InsertMock>();
 			container.Register<VerifyMock>();

@@ -9,14 +9,14 @@ namespace AutoFake.Setup.Mocks
 {
 	internal class SourceMemberInsertMock : ISourceMemberMock
 	{
-		private readonly Func<SourceMemberMetaData, ISourceMemberInsertMockInjector> _createInjector;
+		private readonly Func<ISourceMemberMetaData, ISourceMemberInsertMockInjector> _createInjector;
 		private readonly InsertMock.Location _location;
 		private readonly ITypeInfo _typeInfo;
 		private FieldDefinition? _closureField;
 
 		public SourceMemberInsertMock(
-			SourceMemberMetaData sourceMemberMetaData,
-			Func<SourceMemberMetaData, ISourceMemberInsertMockInjector> createInjector,
+			ISourceMemberMetaData sourceMemberMetaData,
+			Func<ISourceMemberMetaData, ISourceMemberInsertMockInjector> createInjector,
 			Action closure, InsertMock.Location location,
 			ITypeInfo typeInfo)
 		{
@@ -27,7 +27,7 @@ namespace AutoFake.Setup.Mocks
 			Closure = closure;
 		}
 
-		public SourceMemberMetaData SourceMemberMetaData { get; }
+		public ISourceMemberMetaData SourceMemberMetaData { get; }
 		public Action Closure { get; }
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)

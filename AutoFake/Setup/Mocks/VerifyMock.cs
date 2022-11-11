@@ -12,14 +12,14 @@ namespace AutoFake.Setup.Mocks
 		private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 
 		public VerifyMock(
-			SourceMemberMetaData sourceMemberMetaData,
+			ISourceMemberMetaData sourceMemberMetaData,
 			Func<IEmitter, Instruction, IProcessor> createProcessor)
 		{
 			SourceMemberMetaData = sourceMemberMetaData;
 			_createProcessor = createProcessor;
 		}
 
-		public SourceMemberMetaData SourceMemberMetaData { get; }
+		public ISourceMemberMetaData SourceMemberMetaData { get; }
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
 		{
