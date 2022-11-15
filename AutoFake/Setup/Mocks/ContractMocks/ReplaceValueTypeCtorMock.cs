@@ -30,7 +30,7 @@ namespace AutoFake.Setup.Mocks.ContractMocks
 			instruction.Operand = _typeInfo.ImportToSourceAsm(typeRef);
 		}
 
-		public override int GetHashCode() => _typeReference.GetHashCode();
+		public override int GetHashCode() => (_typeReference.ToString() + nameof(ReplaceValueTypeCtorMock)).GetHashCode();
 
 		public override bool Equals(object? obj) => obj is ReplaceValueTypeCtorMock mock && mock._typeReference == _typeReference;
 	}

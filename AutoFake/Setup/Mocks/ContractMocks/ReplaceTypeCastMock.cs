@@ -29,7 +29,7 @@ namespace AutoFake.Setup.Mocks.ContractMocks
 			instruction.Operand = _typeInfo.ImportToSourceAsm(typeRef);
 		}
 
-		public override int GetHashCode() => _typeReference.ToString().GetHashCode();
+		public override int GetHashCode() => (_typeReference.ToString() + nameof(ReplaceTypeCastMock)).GetHashCode();
 
 		public override bool Equals(object? obj) => obj is ReplaceTypeCastMock mock && mock._typeReference.ToString() == _typeReference.ToString();
 	}
