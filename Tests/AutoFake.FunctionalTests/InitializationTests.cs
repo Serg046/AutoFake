@@ -84,6 +84,39 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingFieldException>();
 		}
 
+		[Fact]
+		public void When_no_setup_body_field_Should_fail()
+		{
+			var fake = new Fake<InitializationTests>();
+			var type = typeof(InitializationTests);
+			fake.Services.RegisterInstance<IAssemblyLoader>(new FakeAsseblyLoader(type.Assembly, type), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.When_no_setup_body_field_Should_fail());
+			sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<MissingFieldException>();
+		}
+
+		[Fact]
+		public void When_no_execution_context_field_Should_fail()
+		{
+			var fake = new Fake<TestClassWithSetupBodyField>();
+			var type = typeof(TestClassWithSetupBodyField);
+			fake.Services.RegisterInstance<IAssemblyLoader>(new FakeAsseblyLoader(type.Assembly, type), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.GetHashCode());
+			sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<MissingFieldException>();
+		}
+
+		private class TestClassWithSetupBodyField
+		{
+			public static IInvocationExpression GetHashCodeSystemDateTime_get_Now_SetupBodyField;
+		}
+
 		private class TestClass
 		{
 			public static IInvocationExpression GetNumberSystemString_GetNumber_SystemString_SetupBodyField;
