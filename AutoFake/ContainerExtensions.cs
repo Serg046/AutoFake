@@ -137,9 +137,9 @@ namespace AutoFake
 
 			if (addMocks)
 			{
-				var mocks = OnScopedService(fake, new MockCollection());
-				scope.Use<IMockCollection>(_ => mocks);
-				fake.Services.RegisterInstance<IMockCollection>(mocks, serviceKey: invocationExpression);
+				var mocks = OnScopedService<IMockCollection>(fake, new MockCollection());
+				scope.Use(_ => mocks);
+				fake.Services.RegisterInstance(mocks, serviceKey: invocationExpression);
 			}
 
 			return scope;
@@ -148,7 +148,7 @@ namespace AutoFake
 		private static T OnScopedService<T>(Fake fake, T service)
 		{
 			// The first check is to avoid hash calculation and typeof call without a need
-			return fake.OnScopedService.Count > 0 && fake.OnScopedService.TryGetValue(typeof(T), out var transform) && service != null
+			return fake.OnScopedServiceRegistration.Count > 0 && fake.OnScopedServiceRegistration.TryGetValue(typeof(T), out var transform) && service != null
 				? (T)transform(service)
 				: service;
 		}

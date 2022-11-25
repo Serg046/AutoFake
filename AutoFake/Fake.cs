@@ -56,7 +56,7 @@ namespace AutoFake
 			Options = Services.Resolve<IFakeOptions>();
 		}
 
-		public Dictionary<Type, Func<object, object>> OnScopedService { get; } = new();
+		public Dictionary<Type, Func<object, object>> OnScopedServiceRegistration { get; } = new();
 
 		public Container Services { get; }
 

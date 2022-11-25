@@ -1,6 +1,10 @@
 using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup;
+using AutoFake.Abstractions.Setup.Mocks;
 using FluentAssertions;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -112,6 +116,20 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
+		[Fact]
+		public void When_scoped_service_overriden_Should_apply()
+		{
+			var fake = new Fake<TestClass>();
+			fake.OnScopedServiceRegistration.Add(typeof(IMockCollection), m => new FakeMockCollection(new EmptyList<IMock>()));
+
+			var sut = fake.Rewrite(f => f.SetProp());
+			sut.Replace(f => f.GetFive()).Return(7);
+
+			sut.Execute();
+			fake.Execute(f => f.Prop).Should().Be(5);
+			//fake.Execute(f => f.Prop).Should().Be(7);
+		}
+
 		private static void ThrowNotImplementedException(object obj) => throw new NotImplementedException();
 
 		private class TestClass
@@ -126,6 +144,33 @@ namespace AutoFake.FunctionalTests
 			public static void SetStaticProp(int prop) => StaticProp = prop;
 			public int GetFive() => 5;
 			public static int GetStaticFive() => 5;
+		}
+
+		private class FakeMockCollection : IMockCollection
+		{
+			private readonly IList<IMock> _mocks;
+			public FakeMockCollection(IList<IMock> mocks) => _mocks = mocks;
+			public IList<IMock> Mocks => _mocks;
+			public ISet<IMockInjector> ContractMocks { get; } = new HashSet<IMockInjector>();
+		}
+
+		private class EmptyList<T> : IList<T>
+		{
+			private readonly List<T> _list = new();
+			public T this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+			public int Count => throw new NotImplementedException();
+			public bool IsReadOnly => throw new NotImplementedException();
+			public void Clear() => _list.Clear();
+			public bool Contains(T item) => _list.Contains(item);
+			public void CopyTo(T[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
+			public int IndexOf(T item) => _list.IndexOf(item);
+			public void Insert(int index, T item) => _list.Insert(index, item);
+			public bool Remove(T item) => _list.Remove(item);
+			public void RemoveAt(int index) => _list.RemoveAt(index);
+			public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
+			IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
+
+			public void Add(T item) { }
 		}
 	}
 }
