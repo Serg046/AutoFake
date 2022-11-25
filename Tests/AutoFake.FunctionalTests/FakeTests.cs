@@ -127,7 +127,6 @@ namespace AutoFake.FunctionalTests
 
 			sut.Execute();
 			fake.Execute(f => f.Prop).Should().Be(5);
-			//fake.Execute(f => f.Prop).Should().Be(7);
 		}
 
 		private static void ThrowNotImplementedException(object obj) => throw new NotImplementedException();
