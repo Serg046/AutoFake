@@ -1,8 +1,14 @@
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
+using AutoFake.Abstractions.Setup;
+using AutoFake.Expression;
 using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Xunit;
 
@@ -85,6 +91,26 @@ namespace AutoFake.FunctionalTests
 		}
 
 		[Fact]
+		public void When_no_setup_body_field_definition_Should_fail()
+		{
+			var fake = new Fake<InitializationTests>();
+			var type = typeof(InitializationTests);
+			IPrePostProcessor prePostProc = new FakePrePostProcessor(new()
+			{
+				[typeof(IInvocationExpression)] = null,
+				[typeof(IExecutionContext)] = null
+			});
+			fake.Services.RegisterInstance(prePostProc, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			fake.Services.RegisterInstance<IAssemblyLoader>(new FakeAsseblyLoader(type.Assembly, type), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.When_no_setup_body_field_definition_Should_fail());
+			sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<InvalidOperationException>();
+		}
+
+		[Fact]
 		public void When_no_setup_body_field_Should_fail()
 		{
 			var fake = new Fake<InitializationTests>();
@@ -96,6 +122,26 @@ namespace AutoFake.FunctionalTests
 			Action act = () => sut.Execute();
 
 			act.Should().Throw<MissingFieldException>();
+		}
+
+		[Fact]
+		public void When_no_execution_context_field_definition_Should_fail()
+		{
+			var fake = new Fake<TestClassWithSetupBodyField>();
+			var type = typeof(TestClassWithSetupBodyField);
+			IPrePostProcessor prePostProc = new FakePrePostProcessor(new()
+			{
+				[typeof(IInvocationExpression)] = CreateFieldDefinition(),
+				[typeof(IExecutionContext)] = null
+			});
+			fake.Services.RegisterInstance(prePostProc, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			fake.Services.RegisterInstance<IAssemblyLoader>(new FakeAsseblyLoader(type.Assembly, type), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+
+			var sut = fake.Rewrite(f => f.GetHashCode());
+			sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<InvalidOperationException>();
 		}
 
 		[Fact]
@@ -111,6 +157,27 @@ namespace AutoFake.FunctionalTests
 
 			act.Should().Throw<MissingFieldException>();
 		}
+
+		[Fact]
+		public void When_no_parameter_full_name_Should_not_fail()
+		{
+			var fake = new Fake<TestClass>();
+			fake.Services.RegisterDelegate((Func<IResolverContext, InvocationExpression.Create>)(ctx =>
+				expr =>
+				{
+					var invExpr = new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr);
+					return new FakeInvocationExpression(invExpr, new FakeSourceMember(invExpr.GetSourceMember()));
+				}),
+				ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			
+			var sut = fake.Rewrite(f => f.GetHashCode());
+			sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+
+			sut.Execute();
+		}
+
+		private static FieldDefinition CreateFieldDefinition()
+			=> new ("test", Mono.Cecil.FieldAttributes.Static, new FunctionPointerType());
 
 		private class TestClassWithSetupBodyField
 		{
@@ -137,6 +204,64 @@ namespace AutoFake.FunctionalTests
 			}
 
 			public Tuple<Assembly, Type> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm) => new(_assembly, _type);
+		}
+
+		private class FakePrePostProcessor : IPrePostProcessor
+		{
+			private readonly Dictionary<Type, FieldDefinition> _fields;
+			public FakePrePostProcessor(Dictionary<Type, FieldDefinition> fields) => _fields = fields;
+			public FieldDefinition GenerateField(string name, Type returnType)
+				=> _fields.TryGetValue(returnType, out var field) ? field : CreateFieldDefinition();
+
+			public void InjectVerification(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext)
+			{
+			}
+		}
+
+		private class FakeInvocationExpression : IInvocationExpression
+		{
+			private readonly IInvocationExpression _expression;
+			private readonly ISourceMember _sourceMember;
+
+			public FakeInvocationExpression(IInvocationExpression expression, ISourceMember sourceMember)
+			{
+				_expression = expression;
+				_sourceMember = sourceMember;
+			}
+
+			public bool ThrowWhenArgumentsAreNotMatched
+			{
+				get => _expression.ThrowWhenArgumentsAreNotMatched;
+				set => _expression.ThrowWhenArgumentsAreNotMatched = value;
+			}
+
+			public ISourceMember GetSourceMember() => _sourceMember;
+			public T AcceptMemberVisitor<T>(IExecutableMemberVisitor<T> visitor) => _expression.AcceptMemberVisitor(visitor);
+			public T AcceptMemberVisitor<T>(IMemberVisitor<T> visitor) => _expression.AcceptMemberVisitor(visitor);
+		}
+
+		private class FakeSourceMember : ISourceMember
+		{
+			private readonly ISourceMember _sourceMember;
+			public FakeSourceMember(ISourceMember sourceMember) => _sourceMember = sourceMember;
+			public string Name => _sourceMember.Name;
+			public Type ReturnType => _sourceMember.ReturnType;
+			public MemberInfo OriginalMember => _sourceMember.OriginalMember;
+			public bool HasStackInstance => _sourceMember.HasStackInstance;
+			public IReadOnlyList<GenericArgument> GetGenericArguments() => _sourceMember.GetGenericArguments();
+			public bool IsSourceInstruction(Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+				=> _sourceMember.IsSourceInstruction(instruction, genericArguments);
+
+			public ParameterInfo[] GetParameters()
+			{
+				return new[] { new FakeParameterInfo() };
+			}
+
+			private class FakeParameterInfo : ParameterInfo
+			{
+				// Type.FullName is null
+				public override Type ParameterType => typeof(IEnumerable<>).GetGenericArguments().First();
+			}
 		}
 	}
 }

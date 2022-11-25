@@ -21,13 +21,13 @@ namespace AutoFake
 
 		public IFuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			using var scope = this.AddInvocationExpression(expression, addMocks: true);
 			return scope.Resolve<IFuncMockConfiguration<T, TReturn>>();
 		}
 
 		public IActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			using var scope = this.AddInvocationExpression(expression, addMocks: true);
 			return scope.Resolve<IActionMockConfiguration<T>>();
 		}
 
@@ -56,57 +56,59 @@ namespace AutoFake
 			Options = Services.Resolve<IFakeOptions>();
 		}
 
+		public Dictionary<Type, Func<object, object>> OnScopedService { get; } = new();
+
 		public Container Services { get; }
 
 		public IFakeOptions Options { get; }
 
 		public IFuncMockConfiguration<object, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			using var scope = this.AddInvocationExpression(expression, addMocks: true);
 			return scope.Resolve<IFuncMockConfiguration<object, TReturn>>();
 		}
 
 		public IActionMockConfiguration<object> Rewrite<TInput>(Expression<Action<TInput>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			using var scope = this.AddInvocationExpression(expression, addMocks: true);
 			return scope.Resolve<IActionMockConfiguration<object>>();
 		}
 
 		public IFuncMockConfiguration<object, TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			using var scope = this.AddInvocationExpression(expression, addMocks: true);
 			return scope.Resolve<IFuncMockConfiguration<object, TReturn>>();
 		}
 
 		public IActionMockConfiguration<object> Rewrite(Expression<Action> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression, addMocks: true);
+			using var scope = this.AddInvocationExpression(expression, addMocks: true);
 			return scope.Resolve<IActionMockConfiguration<object>>();
 		}
 
 		TReturn IExecutor<object>.Execute<TReturn>(Expression<Func<object, TReturn>> expression) => Execute(expression);
 		public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression);
+			using var scope = this.AddInvocationExpression(expression);
 			return scope.Resolve<ExpressionExecutor<TReturn>>().Execute();
 		}
 
 		void IExecutor<object>.Execute(Expression<Action<object>> expression) => Execute(expression);
 		public void Execute<TInput>(Expression<Action<TInput>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression);
+			using var scope = this.AddInvocationExpression(expression);
 			scope.Resolve<ExpressionExecutor>().Execute();
 		}
 
 		public TReturn Execute<TReturn>(Expression<Func<TReturn>> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression);
+			using var scope = this.AddInvocationExpression(expression);
 			return scope.Resolve<ExpressionExecutor<TReturn>>().Execute();
 		}
 
 		public void Execute(Expression<Action> expression)
 		{
-			using var scope = Services.AddInvocationExpression(expression);
+			using var scope = this.AddInvocationExpression(expression);
 			scope.Resolve<ExpressionExecutor>().Execute();
 		}
 

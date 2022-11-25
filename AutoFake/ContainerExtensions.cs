@@ -127,20 +127,30 @@ namespace AutoFake
 			container.Register<GenericInstanceType>();
 		}
 
-		public static IResolverContext AddInvocationExpression(this Container container, LinqExpression expression, bool addMocks = false)
+		public static IResolverContext AddInvocationExpression(this Fake fake, LinqExpression expression, bool addMocks = false)
 		{
-			var invocationExpression = new InvocationExpression(container.Resolve<IMemberVisitorFactory>(), expression ?? throw new ArgumentNullException(nameof(expression)));
-			var scope = container.OpenScope(invocationExpression);
-			scope.Use<IInvocationExpression>(_ => invocationExpression);
+			var invocationExpression = OnScopedService<IInvocationExpression>(fake,
+				new InvocationExpression(fake.Services.Resolve<IMemberVisitorFactory>(),
+				expression ?? throw new ArgumentNullException(nameof(expression))));
+			var scope = fake.Services.OpenScope(invocationExpression);
+			scope.Use(_ => invocationExpression);
 
 			if (addMocks)
 			{
-				var mocks = new MockCollection();
+				var mocks = OnScopedService(fake, new MockCollection());
 				scope.Use<IMockCollection>(_ => mocks);
-				container.RegisterInstance<IMockCollection>(mocks, serviceKey: invocationExpression);
+				fake.Services.RegisterInstance<IMockCollection>(mocks, serviceKey: invocationExpression);
 			}
 
 			return scope;
+		}
+
+		private static T OnScopedService<T>(Fake fake, T service)
+		{
+			// The first check is to avoid hash calculation and typeof call without a need
+			return fake.OnScopedService.Count > 0 && fake.OnScopedService.TryGetValue(typeof(T), out var transform) && service != null
+				? (T)transform(service)
+				: service;
 		}
 	}
 }
