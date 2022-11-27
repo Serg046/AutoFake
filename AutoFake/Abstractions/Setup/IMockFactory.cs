@@ -1,8 +1,8 @@
 using System;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 using AutoFake.Setup.Mocks;
-using AutoFake.Setup.Mocks.ContractMocks;
 using Mono.Cecil;
 
 namespace AutoFake.Abstractions.Setup
@@ -12,9 +12,9 @@ namespace AutoFake.Abstractions.Setup
 		InsertMock GetInsertMock(Action closure, InsertMock.Location location);
 		T GetExpressionBasedMock<T>(IInvocationExpression expression) where T : IMock;
 		SourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location);
-		ReplaceInterfaceCallMock GetReplaceInterfaceCallMock(TypeReference typeReference);
-		ReplaceValueTypeCtorMock GetReplaceValueTypeCtorMock(TypeReference typeReference);
-		ReplaceReferenceTypeCtorMock GetReplaceReferenceTypeCtorMock(TypeReference typeReference);
-		ReplaceTypeCastMock GetReplaceTypeCastMock(TypeReference typeReference);
+		IReplaceInterfaceCallMock GetReplaceInterfaceCallMock(TypeReference typeReference);
+		IReplaceValueTypeCtorMock GetReplaceValueTypeCtorMock(TypeReference typeReference);
+		IReplaceReferenceTypeCtorMock GetReplaceReferenceTypeCtorMock(TypeReference typeReference);
+		IReplaceTypeCastMock GetReplaceTypeCastMock(TypeReference typeReference);
 	}
 }

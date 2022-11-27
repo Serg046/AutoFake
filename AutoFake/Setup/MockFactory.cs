@@ -2,6 +2,7 @@ using System;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 using AutoFake.Setup.Mocks;
 using AutoFake.Setup.Mocks.ContractMocks;
 using DryIoc;
@@ -24,16 +25,16 @@ namespace AutoFake.Setup
 		public SourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location)
 			=> _serviceLocator.Resolve<Func<IInvocationExpression, Action, InsertMock.Location, SourceMemberInsertMock>>().Invoke(invocationExpression, closure, location);
 
-		public ReplaceInterfaceCallMock GetReplaceInterfaceCallMock(TypeReference typeReference)
-			=> _serviceLocator.Resolve<Func<TypeReference, ReplaceInterfaceCallMock>>().Invoke(typeReference);
+		public IReplaceInterfaceCallMock GetReplaceInterfaceCallMock(TypeReference typeReference)
+			=> _serviceLocator.Resolve<Func<TypeReference, IReplaceInterfaceCallMock>>().Invoke(typeReference);
 
-		public ReplaceValueTypeCtorMock GetReplaceValueTypeCtorMock(TypeReference typeReference)
-			=> _serviceLocator.Resolve<Func<TypeReference, ReplaceValueTypeCtorMock>>().Invoke(typeReference);
+		public IReplaceValueTypeCtorMock GetReplaceValueTypeCtorMock(TypeReference typeReference)
+			=> _serviceLocator.Resolve<Func<TypeReference, IReplaceValueTypeCtorMock>>().Invoke(typeReference);
 
-		public ReplaceReferenceTypeCtorMock GetReplaceReferenceTypeCtorMock(TypeReference typeReference)
-			=> _serviceLocator.Resolve<Func<TypeReference, ReplaceReferenceTypeCtorMock>>().Invoke(typeReference);
+		public IReplaceReferenceTypeCtorMock GetReplaceReferenceTypeCtorMock(TypeReference typeReference)
+			=> _serviceLocator.Resolve<Func<TypeReference, IReplaceReferenceTypeCtorMock>>().Invoke(typeReference);
 
-		public ReplaceTypeCastMock GetReplaceTypeCastMock(TypeReference typeReference)
-			=> _serviceLocator.Resolve<Func<TypeReference, ReplaceTypeCastMock>>().Invoke(typeReference);
+		public IReplaceTypeCastMock GetReplaceTypeCastMock(TypeReference typeReference)
+			=> _serviceLocator.Resolve<Func<TypeReference, IReplaceTypeCastMock>>().Invoke(typeReference);
 	}
 }

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using AutoFake.Abstractions;
-using AutoFake.Abstractions.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks.ContractMocks
 {
-	internal class ReplaceTypeCastMock : IMockInjector
+	internal class ReplaceTypeCastMock : IReplaceTypeCastMock
 	{
 		private readonly TypeReference _typeReference;
 		private readonly ITypeInfo _typeInfo;

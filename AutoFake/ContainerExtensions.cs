@@ -4,6 +4,7 @@ using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
@@ -94,10 +95,10 @@ namespace AutoFake
 			container.Register<VerifyMock>();
 			container.Register<ReplaceMock>();
 			container.Register<SourceMemberInsertMock>();
-			container.Register<ReplaceInterfaceCallMock>();
-			container.Register<ReplaceValueTypeCtorMock>();
-			container.Register<ReplaceReferenceTypeCtorMock>();
-			container.Register<ReplaceTypeCastMock>();
+			container.Register<IReplaceInterfaceCallMock, ReplaceInterfaceCallMock>();
+			container.Register<IReplaceValueTypeCtorMock, ReplaceValueTypeCtorMock>();
+			container.Register<IReplaceReferenceTypeCtorMock, ReplaceReferenceTypeCtorMock>();
+			container.Register<IReplaceTypeCastMock, ReplaceTypeCastMock>();
 		}
 
 		private static void AddMemberVisitors(IRegistrator container)
