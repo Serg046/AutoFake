@@ -1,5 +1,10 @@
 using System;
+using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
+using AutoFake.Setup.Mocks.ContractMocks;
+using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -272,6 +277,20 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(7);
 		}
 
+		[Fact]
+		public void When_same_hash_code_Should_still_work()
+		{
+			var fake = new Fake<TestClass>();
+			fake.Services.Register<IReplaceInterfaceCallMock, FakeReplaceInterfaceCallMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			fake.Services.Register<IReplaceReferenceTypeCtorMock, FakeReplaceReferenceTypeCtorMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			fake.Services.Register<IReplaceTypeCastMock, FakeReplaceTypeCastMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			fake.Services.Register<IReplaceValueTypeCtorMock, FakeReplaceValueTypeCtorMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			
+			var sut = fake.Rewrite(f => f.CallMethodThroughInterface(new HelperClass()));
+			
+			sut.Execute().Should().Be(5);
+		}
+
 		private bool IsHelperClass(IHelper helper) => helper is HelperClass { Prop: 4 };
 
 		public interface IGenericHelper<T>
@@ -524,6 +543,30 @@ namespace AutoFake.FunctionalTests
 		{
 			int ITestClassWithExplicitInterface.GetFive(IHelper helper) => GetFive(helper);
 			public int GetFive(IHelper helper) => helper.GetFive();
+		}
+
+		private class FakeReplaceInterfaceCallMock : ReplaceInterfaceCallMock
+		{
+			public FakeReplaceInterfaceCallMock(TypeReference typeReference, ITypeInfo typeInfo) : base(typeReference, typeInfo) { }
+			public override int GetHashCode() => 5;
+		}
+
+		private class FakeReplaceReferenceTypeCtorMock : ReplaceReferenceTypeCtorMock
+		{
+			public FakeReplaceReferenceTypeCtorMock(TypeReference typeReference, ITypeInfo typeInfo) : base(typeReference, typeInfo) { }
+			public override int GetHashCode() => 5;
+		}
+
+		private class FakeReplaceTypeCastMock : ReplaceTypeCastMock
+		{
+			public FakeReplaceTypeCastMock(TypeReference typeReference, ITypeInfo typeInfo) : base(typeReference, typeInfo) { }
+			public override int GetHashCode() => 5;
+		}
+
+		private class FakeReplaceValueTypeCtorMock : ReplaceValueTypeCtorMock
+		{
+			public FakeReplaceValueTypeCtorMock(TypeReference typeReference, ITypeInfo typeInfo) : base(typeReference, typeInfo) { }
+			public override int GetHashCode() => 5;
 		}
 	}
 }
