@@ -182,6 +182,84 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidOperationException>();
 		}
 
+		[Fact]
+		public void When_append_with_return_type_provided_Should_insert_after()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallGetProp());
+			sut.Append(() => throw new Exception()).After(f => f.SetPropAndReturn());
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<Exception>();
+			fake.Execute(f => f.Prop).Should().Be(1);
+		}
+
+		[Fact]
+		public void When_prepend_with_return_type_provided_Should_insert_before()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallGetProp());
+			sut.Prepend(() => throw new Exception()).Before(f => f.SetPropAndReturn());
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<Exception>();
+			fake.Execute(f => f.Prop).Should().Be(0);
+		}
+
+		[Fact]
+		public void When_append_with_input_and_return_type_provided_Should_insert_after()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallGetProp());
+			sut.Append(() => throw new Exception()).After((int prop) => prop.ToString());
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<Exception>();
+			fake.Execute(f => f.Prop).Should().Be(1);
+		}
+
+		[Fact]
+		public void When_prepend_with_input_and_return_type_provided_Should_insert_before()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallGetProp());
+			sut.Prepend(() => throw new Exception()).Before((int prop) => prop.GetHashCode());
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<Exception>();
+			fake.Execute(f => f.Prop).Should().Be(0);
+		}
+
+		[Fact]
+		public void When_append_after_static_void_Should_succeed()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallGetProp());
+			sut.Append(() => throw new Exception()).After(() => Console.WriteLine("end"));
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<Exception>();
+			fake.Execute(f => f.Prop).Should().Be(1);
+		}
+
+		[Fact]
+		public void When_prepend_before_static_void_Should_succeed()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.CallGetProp());
+			sut.Prepend(() => throw new Exception()).Before(() => Console.Write("start"));
+			Action act = () => sut.Execute();
+
+			act.Should().Throw<Exception>();
+			fake.Execute(f => f.Prop).Should().Be(0);
+		}
+
 		private class TestClass
 		{
 			public int Prop { get; private set; }
@@ -197,6 +275,22 @@ namespace AutoFake.FunctionalTests
 			public void AnotherMethod()
 			{
 				Prop = 1;
+			}
+
+			public int SetPropAndReturn()
+			{
+				AnotherMethod();
+				return Prop;
+			}
+
+			public int CallGetProp()
+			{
+				Console.Write("start");
+				Console.WriteLine(Prop.GetHashCode());
+				var prop = SetPropAndReturn();
+				Console.WriteLine(Prop.ToString());
+				Console.WriteLine("end");
+				return prop;
 			}
 		}
 
