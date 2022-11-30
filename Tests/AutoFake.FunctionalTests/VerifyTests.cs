@@ -191,6 +191,17 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<ArgumentException>().WithMessage("*\"default\"*");
 		}
 
+		[Fact]
+		public void When_input_type_provided_Should_pass()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.GetSubstring("some string", 5, 6));
+			sut.Verify((string str) => str.Substring(5, 6));
+
+			sut.Execute().Should().Be("string");
+		}
+
 		private class TestClass
 		{
 			public void Append() => Append("default");
@@ -234,6 +245,8 @@ namespace AutoFake.FunctionalTests
                 yield return Sum(1, 2);
             }
 #endif
+
+			public string GetSubstring(string str, int startIndex, int length) => str.Substring(startIndex, length);
 		}
 	}
 }
