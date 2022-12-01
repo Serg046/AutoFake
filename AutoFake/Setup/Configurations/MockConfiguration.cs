@@ -1,7 +1,6 @@
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Setup.Mocks;
-using System;
 using System.Linq.Expressions;
 
 namespace AutoFake.Setup.Configurations
@@ -23,7 +22,6 @@ namespace AutoFake.Setup.Configurations
 
 		public ReplaceMock GetReplaceMock(LambdaExpression expression)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
 			var invocationExpression = ExpressionFactory(expression);
 			var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
 			MockCollection.Mocks.Add(mock);
@@ -32,7 +30,6 @@ namespace AutoFake.Setup.Configurations
 
 		public ReplaceMock GetRemoveMock(LambdaExpression expression)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
 			var invocationExpression = ExpressionFactory(expression);
 			var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
 			MockCollection.Mocks.Add(mock);
@@ -41,7 +38,6 @@ namespace AutoFake.Setup.Configurations
 
 		public VerifyMock GetVerifyMock(LambdaExpression expression)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
 			var invocationExpression = ExpressionFactory(expression);
 			var mock = MockFactory.GetExpressionBasedMock<VerifyMock>(invocationExpression);
 			MockCollection.Mocks.Add(mock);
