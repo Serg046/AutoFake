@@ -144,7 +144,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact(Skip = "Support null values to be configured")]
+		[Fact]
 		public void When_return_value_is_null_Should_succeed()
 		{
 			var fake = new Fake<TestClass<string>>("test");

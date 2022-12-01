@@ -11,6 +11,7 @@ namespace AutoFake.Setup.Mocks
 	{
 		private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 		private readonly ITypeInfo _typeInfo;
+		private readonly Lazy<bool> _hasReturnType;
 		private FieldDefinition? _retValueField;
 
 		public ReplaceMock(
@@ -21,10 +22,10 @@ namespace AutoFake.Setup.Mocks
 			SourceMemberMetaData = sourceMemberMetaData;
 			_createProcessor = createProcessor;
 			_typeInfo = typeInfo;
+			_hasReturnType = new(() => SourceMemberMetaData.SourceMember.ReturnType != typeof(void));
 		}
 
 		public ISourceMemberMetaData SourceMemberMetaData { get; }
-		public Type? ReturnType { get; set; }
 		public object? ReturnObject { get; set; }
 
 		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
@@ -35,7 +36,7 @@ namespace AutoFake.Setup.Mocks
 		public void BeforeInjection(MethodDefinition method)
 		{
 			SourceMemberMetaData.BeforeInjection(method);
-			if (ReturnObject != null)
+			if (_hasReturnType.Value)
 			{
 				_retValueField = SourceMemberMetaData.PrePostProcessor.GenerateField(SourceMemberMetaData.GetFieldName(method.Name, "RetValue"),
 					SourceMemberMetaData.SourceMember.ReturnType);
@@ -60,7 +61,7 @@ namespace AutoFake.Setup.Mocks
 			var nop = Instruction.Create(OpCodes.Nop);
 			emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Brfalse, nop));
 			if (SourceMemberMetaData.SourceMember.HasStackInstance) processor.RemoveStackArgument();
-			if (ReturnObject != null)
+			if (_hasReturnType.Value)
 			{
 				var opCode = instruction.OpCode == OpCodes.Ldsflda || instruction.OpCode == OpCodes.Ldflda
 					? OpCodes.Ldsflda
@@ -79,7 +80,7 @@ namespace AutoFake.Setup.Mocks
 		public void Initialize(Type? type)
 		{
 			SourceMemberMetaData.Initialize(type);
-			if (type != null && ReturnObject != null && _retValueField != null)
+			if (type != null && _hasReturnType.Value && _retValueField != null)
 			{
 				var field = SourceMemberMetaData.GetField(type, _retValueField.Name)
 							?? throw new MissingFieldException($"'{_retValueField.Name}' is not found");
