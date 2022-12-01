@@ -35,23 +35,36 @@ namespace AutoFake
 		{
 			var module = ((MemberReference)_instruction.Operand).Module;
 			var variables = PushArgumentsToVariables(module, argumentTypes);
+			var arrVar = GetArgumentsArray(module, variables);
+			RecordMethodCall(variables, arrVar, argumentTypes);
+			VerifyArguments(setupBody, executionContext, module, arrVar);
+			IncActualCallsCounter(executionContext, module);
+			return variables;
+		}		
 
+		private VariableDefinition GetArgumentsArray(ModuleDefinition module, IReadOnlyList<VariableDefinition> variables)
+		{
 			var objRef = module.ImportReference(typeof(object));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldc_I4, variables.Count));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Newarr, objRef));
 			var arrVar = _cecilFactory.CreateVariable(module.ImportReference(typeof(object[])));
 			_emitter.Body.Variables.Add(arrVar);
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, arrVar));
+			return arrVar;
+		}
 
-			RecordMethodCall(variables, arrVar, argumentTypes);
-
+		private void VerifyArguments(FieldDefinition setupBody, FieldDefinition executionContext, ModuleDefinition module, VariableDefinition arrVar)
+		{
 			var verifyMethodInfo = typeof(InvocationExpression).GetMethod(nameof(InvocationExpression.VerifyArguments));
 			var verifyMethodRef = module.ImportReference(verifyMethodInfo);
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(setupBody)));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(executionContext)));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, verifyMethodRef));
+		}
 
+		private void IncActualCallsCounter(FieldDefinition executionContext, ModuleDefinition module)
+		{
 			var incMethodInfo = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.IncActualCalls));
 			var incMethodRef = module.ImportReference(incMethodInfo);
 			var nop = Instruction.Create(OpCodes.Nop);
@@ -60,8 +73,6 @@ namespace AutoFake
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(executionContext)));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Callvirt, incMethodRef));
 			_emitter.InsertBefore(_instruction, nop);
-
-			return variables;
 		}
 
 		private IReadOnlyList<VariableDefinition> PushArgumentsToVariables(ModuleDefinition module, IReadOnlyList<Type> argumentTypes)
