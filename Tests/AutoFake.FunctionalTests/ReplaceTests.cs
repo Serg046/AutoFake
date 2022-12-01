@@ -144,6 +144,29 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(5);
 		}
 
+		[Fact(Skip = "Support null values to be configured")]
+		public void When_return_value_is_null_Should_succeed()
+		{
+			var fake = new Fake<TestClass<string>>("test");
+
+			var sut = fake.Rewrite(f => f.GetValue());
+			sut.Replace(f => f.Field).Return(null);
+
+			sut.Execute().Should().BeNull();
+		}
+
+		[Fact]
+		public void When_arguments_are_matched_Should_replace()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.Sum(1, 2));
+			sut.Replace(f => f.CodeBranch(1, 3)).Return(4).WhenArgumentsAreMatched();
+			sut.Replace(f => f.CodeBranch(1, 2)).Return(5).WhenArgumentsAreMatched();
+
+			sut.Execute().Should().Be(10);
+		}
+
 		private class TestClass<T>
 		{
 			public T Field;

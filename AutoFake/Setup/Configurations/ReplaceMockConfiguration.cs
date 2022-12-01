@@ -18,7 +18,7 @@ namespace AutoFake.Setup.Configurations
 
 		public IReplaceMockConfiguration<TSut, TReturn> Return(TReturn returnObject)
 		{
-			_mock.ReturnObject = returnObject ?? throw new ArgumentNullException(nameof(returnObject));
+			_mock.ReturnObject = returnObject;
 			_mock.ReturnType = typeof(TReturn);
 			return this;
 		}
