@@ -260,6 +260,52 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(0);
 		}
 
+		[Fact]
+		public void When_expected_calls_provided_Should_check()
+		{
+			var fake = new Fake<TestClass>();
+			var list = new List<int>();
+
+			var sut = fake.Rewrite(f => f.SomeMethod(list));
+			sut.Append(() => list.Add(0)).After((List<int> l) => l.Add(Arg.IsAny<int>()))
+				.ExpectedCalls(2);
+
+			sut.Execute();
+			list.Should().ContainInOrder(3, 0, 5, 7, 0);
+		}
+
+		[Fact]
+		public void When_expected_calls_with_exact_param_provided_Should_check()
+		{
+			var fake = new Fake<TestClass>();
+			var list = new List<int>();
+
+			var sut = fake.Rewrite(f => f.SomeMethod(list));
+			sut.Append(() => list.Add(0)).After((List<int> l) => l.Add(3))
+				.WhenArgumentsAreMatched()
+				.ExpectedCalls(1);
+
+			sut.Execute();
+			list.Should().ContainInOrder(3, 0, 5, 7);
+		}
+
+		[Theory]
+		[InlineData(true, 3, 0, 5, 7)]
+		[InlineData(false, 3, 5, 7)]
+		public void When_condition_is_provided_Should_check(bool condition, params int[] result)
+		{
+			var fake = new Fake<TestClass>();
+			var list = new List<int>();
+
+			var sut = fake.Rewrite(f => f.SomeMethod(list));
+			sut.Append(() => list.Add(0)).After((List<int> l) => l.Add(3))
+				.WhenArgumentsAreMatched()
+				.When(() => condition);
+
+			sut.Execute();
+			list.Should().ContainInOrder(result);
+		}
+
 		private class TestClass
 		{
 			public int Prop { get; private set; }

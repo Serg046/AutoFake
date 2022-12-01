@@ -54,8 +54,12 @@ namespace AutoFake
 
 			var incMethodInfo = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.IncActualCalls));
 			var incMethodRef = module.ImportReference(incMethodInfo);
+			var nop = Instruction.Create(OpCodes.Nop);
+			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Dup));
+			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Brfalse, nop));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(executionContext)));
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Callvirt, incMethodRef));
+			_emitter.InsertBefore(_instruction, nop);
 
 			return variables;
 		}
