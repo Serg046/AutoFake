@@ -32,9 +32,11 @@ namespace Analyzers
 			context.RegisterSyntaxNodeAction(AnalyzeInterfaceDeclarationNode, SyntaxKind.InterfaceDeclaration);
 		}
 
+		private static Accessibility? GetAccessibility(SyntaxNodeAnalysisContext context) => context.ContainingSymbol?.DeclaredAccessibility;
+
 		private void AnalyzeTypeDeclarationNode(SyntaxNodeAnalysisContext context)
 		{
-			if (context.ContainingSymbol != null && context.ContainingSymbol.DeclaredAccessibility == Accessibility.Public)
+			if (GetAccessibility(context) == Accessibility.Public)
 			{
 				var typeSyntax = (TypeDeclarationSyntax)context.Node;
 				context.ReportDiagnostic(Diagnostic.Create(TypeAccessModifierRule, typeSyntax.Identifier.GetLocation()));
@@ -43,7 +45,7 @@ namespace Analyzers
 
 		private void AnalyzeInterfaceDeclarationNode(SyntaxNodeAnalysisContext context)
 		{
-			if (context.ContainingSymbol != null && context.ContainingSymbol.DeclaredAccessibility != Accessibility.Public)
+			if (GetAccessibility(context) != Accessibility.Public)
 			{
 				var syntax = (InterfaceDeclarationSyntax)context.Node;
 				context.ReportDiagnostic(Diagnostic.Create(InterfaceAccessModifierRule, syntax.Identifier.GetLocation()));
