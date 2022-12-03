@@ -44,6 +44,7 @@ checks:
 
 exclude_patterns:
   - "Tests/"
+  - "Analyzers"
   - "AutoFake/Abstractions/Setup/Configurations/"
   - "AutoFake/Setup/Configurations/"
   - "AutoFake/Fake.cs"
