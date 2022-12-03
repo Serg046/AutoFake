@@ -9,9 +9,9 @@ namespace AutoFake.Abstractions.Setup
 {
 	internal interface IMockFactory
 	{
-		InsertMock GetInsertMock(Action closure, InsertMock.Location location);
+		IInsertMock GetInsertMock(Action closure, InsertMock.Location location);
 		T GetExpressionBasedMock<T>(IInvocationExpression expression) where T : IMock;
-		SourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location);
+		ISourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location);
 		IReplaceInterfaceCallMock GetReplaceInterfaceCallMock(TypeReference typeReference);
 		IReplaceValueTypeCtorMock GetReplaceValueTypeCtorMock(TypeReference typeReference);
 		IReplaceReferenceTypeCtorMock GetReplaceReferenceTypeCtorMock(TypeReference typeReference);

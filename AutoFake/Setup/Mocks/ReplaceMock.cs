@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-	internal class ReplaceMock : ISourceMemberMock
+	internal class ReplaceMock : IReplaceMock
 	{
 		private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 		private readonly ITypeInfo _typeInfo;

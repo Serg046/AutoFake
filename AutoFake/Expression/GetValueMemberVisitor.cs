@@ -6,7 +6,7 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetValueMemberVisitor : IExecutableMemberVisitor<(Type Type, object? Value)>
+	internal class GetValueMemberVisitor : IGetValueMemberVisitor
 	{
 		private readonly object? _instance;
 

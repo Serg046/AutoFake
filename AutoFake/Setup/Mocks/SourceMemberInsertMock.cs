@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-	internal class SourceMemberInsertMock : ISourceMemberMock
+	internal class SourceMemberInsertMock : ISourceMemberInsertMock
 	{
 		private readonly Func<ISourceMemberMetaData, ISourceMemberInsertMockInjector> _createInjector;
 		private readonly InsertMock.Location _location;

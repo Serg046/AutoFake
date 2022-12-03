@@ -9,7 +9,7 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetArgumentsMemberVisitor : IMemberVisitor<IReadOnlyList<IFakeArgument>>
+	internal class GetArgumentsMemberVisitor : IGetArgumentsMemberVisitor
 	{
 		private readonly Func<Delegate, LambdaArgumentChecker> _getLambdaArgChecker;
 		private readonly Func<IFakeArgumentChecker, FakeArgument> _getFakeArg;

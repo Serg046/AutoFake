@@ -106,7 +106,7 @@ namespace AutoFake.Expression
 		{
 			if (_arguments == null)
 			{
-				var visitor = _memberVisitorFactory.GetMemberVisitor<GetArgumentsMemberVisitor>();
+				var visitor = _memberVisitorFactory.GetMemberVisitor<IGetArgumentsMemberVisitor>();
 				_arguments = ((IInvocationExpression)this).AcceptMemberVisitor(visitor);
 			}
 

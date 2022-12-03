@@ -7,7 +7,7 @@ using AutoFake.Abstractions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class TargetMemberVisitor<T> : IExecutableMemberVisitor<T>
+	internal class TargetMemberVisitor<T> : ITargetMemberVisitor<T>
 	{
 		private readonly IExecutableMemberVisitor<T> _requestedVisitor;
 		private readonly Type _targetType;

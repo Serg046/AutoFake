@@ -4,7 +4,6 @@ using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
 using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 using AutoFake.Setup.Mocks;
-using AutoFake.Setup.Mocks.ContractMocks;
 using DryIoc;
 using Mono.Cecil;
 
@@ -16,14 +15,14 @@ namespace AutoFake.Setup
 
 		public MockFactory(IContainer serviceLocator) => _serviceLocator = serviceLocator;
 
-		public InsertMock GetInsertMock(Action closure, InsertMock.Location location)
-			=> _serviceLocator.Resolve<Func<Action, InsertMock.Location, InsertMock>>().Invoke(closure, location);
+		public IInsertMock GetInsertMock(Action closure, InsertMock.Location location)
+			=> _serviceLocator.Resolve<Func<Action, InsertMock.Location, IInsertMock>>().Invoke(closure, location);
 
 		public T GetExpressionBasedMock<T>(IInvocationExpression expression) where T : IMock
 			=> _serviceLocator.Resolve<Func<IInvocationExpression, T>>().Invoke(expression);
 
-		public SourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location)
-			=> _serviceLocator.Resolve<Func<IInvocationExpression, Action, InsertMock.Location, SourceMemberInsertMock>>().Invoke(invocationExpression, closure, location);
+		public ISourceMemberInsertMock GetSourceMemberInsertMock(IInvocationExpression invocationExpression, Action closure, InsertMock.Location location)
+			=> _serviceLocator.Resolve<Func<IInvocationExpression, Action, InsertMock.Location, ISourceMemberInsertMock>>().Invoke(invocationExpression, closure, location);
 
 		public IReplaceInterfaceCallMock GetReplaceInterfaceCallMock(TypeReference typeReference)
 			=> _serviceLocator.Resolve<Func<TypeReference, IReplaceInterfaceCallMock>>().Invoke(typeReference);

@@ -9,7 +9,7 @@ using Mono.Cecil.Cil;
 
 namespace AutoFake.Setup.Mocks
 {
-	internal class InsertMock : IMock
+	internal class InsertMock : IInsertMock
 	{
 		private readonly Location _location;
 		private readonly IPrePostProcessor _prePostProcessor;

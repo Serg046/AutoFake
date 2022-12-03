@@ -1,8 +1,7 @@
 using AutoFake.Abstractions.Setup;
 
-namespace AutoFake.Abstractions.Expression
+namespace AutoFake.Abstractions.Expression;
+
+internal interface IGetSourceMemberVisitor : IMemberVisitor<ISourceMember>
 {
-	internal interface IGetSourceMemberVisitor : IMemberVisitor<ISourceMember>
-	{
-	}
 }

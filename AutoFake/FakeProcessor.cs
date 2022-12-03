@@ -73,7 +73,7 @@ namespace AutoFake
 
 		private MethodDefinition GetMethodDefinition(IInvocationExpression invocationExpression)
 		{
-			var visitor = _memberVisitorFactory.GetMemberVisitor<GetTestMethodVisitor>();
+			var visitor = _memberVisitorFactory.GetMemberVisitor<IGetTestMethodVisitor>();
 			var method = invocationExpression.AcceptMemberVisitor(visitor);
 			var executeFuncRef = _typeInfo.ImportToSourceAsm(method);
 			var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);

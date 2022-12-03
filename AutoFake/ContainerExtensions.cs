@@ -91,10 +91,10 @@ namespace AutoFake
 		{
 			container.Register<ISourceMemberMetaData, SourceMemberMetaData>(made: Made.Of(FactoryMethod.Constructor(includeNonPublic: true)));
 			container.Register<ISourceMemberInsertMockInjector, SourceMemberInsertMockInjector>();
-			container.Register<InsertMock>();
-			container.Register<VerifyMock>();
-			container.Register<ReplaceMock>();
-			container.Register<SourceMemberInsertMock>();
+			container.Register<IInsertMock, InsertMock>();
+			container.Register<IVerifyMock, VerifyMock>();
+			container.Register<IReplaceMock, ReplaceMock>();
+			container.Register<ISourceMemberInsertMock, SourceMemberInsertMock>();
 			container.Register<IReplaceInterfaceCallMock, ReplaceInterfaceCallMock>();
 			container.Register<IReplaceValueTypeCtorMock, ReplaceValueTypeCtorMock>();
 			container.Register<IReplaceReferenceTypeCtorMock, ReplaceReferenceTypeCtorMock>();
@@ -103,11 +103,11 @@ namespace AutoFake
 
 		private static void AddMemberVisitors(IRegistrator container)
 		{
-			container.Register<GetArgumentsMemberVisitor>();
+			container.Register<IGetArgumentsMemberVisitor, GetArgumentsMemberVisitor>();
 			container.Register<IGetSourceMemberVisitor, GetSourceMemberVisitor>();
-			container.Register<GetTestMethodVisitor>();
-			container.Register<GetValueMemberVisitor>();
-			container.Register(typeof(TargetMemberVisitor<>));
+			container.Register<IGetTestMethodVisitor, GetTestMethodVisitor>();
+			container.Register<IGetValueMemberVisitor, GetValueMemberVisitor>();
+			container.Register(typeof(ITargetMemberVisitor<>), typeof(TargetMemberVisitor<>));
 		}
 
 		private static void AddCecilFactory(IRegistrator container)

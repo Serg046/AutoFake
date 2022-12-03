@@ -1,6 +1,6 @@
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
-using AutoFake.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks;
 using System.Linq.Expressions;
 
 namespace AutoFake.Setup.Configurations
@@ -20,26 +20,26 @@ namespace AutoFake.Setup.Configurations
 			MockCollection = mockCollection;
 		}
 
-		public ReplaceMock GetReplaceMock(LambdaExpression expression)
+		public IReplaceMock GetReplaceMock(LambdaExpression expression)
 		{
 			var invocationExpression = ExpressionFactory(expression);
-			var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
+			var mock = MockFactory.GetExpressionBasedMock<IReplaceMock>(invocationExpression);
 			MockCollection.Mocks.Add(mock);
 			return mock;
 		}
 
-		public ReplaceMock GetRemoveMock(LambdaExpression expression)
+		public IReplaceMock GetRemoveMock(LambdaExpression expression)
 		{
 			var invocationExpression = ExpressionFactory(expression);
-			var mock = MockFactory.GetExpressionBasedMock<ReplaceMock>(invocationExpression);
+			var mock = MockFactory.GetExpressionBasedMock<IReplaceMock>(invocationExpression);
 			MockCollection.Mocks.Add(mock);
 			return mock;
 		}
 
-		public VerifyMock GetVerifyMock(LambdaExpression expression)
+		public IVerifyMock GetVerifyMock(LambdaExpression expression)
 		{
 			var invocationExpression = ExpressionFactory(expression);
-			var mock = MockFactory.GetExpressionBasedMock<VerifyMock>(invocationExpression);
+			var mock = MockFactory.GetExpressionBasedMock<IVerifyMock>(invocationExpression);
 			MockCollection.Mocks.Add(mock);
 			return mock;
 		}

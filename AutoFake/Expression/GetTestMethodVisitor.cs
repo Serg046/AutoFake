@@ -5,7 +5,7 @@ using AutoFake.Abstractions.Expression;
 
 namespace AutoFake.Expression
 {
-	internal class GetTestMethodVisitor : IMemberVisitor<MethodBase>
+	internal class GetTestMethodVisitor : IGetTestMethodVisitor
 	{
 		public MethodBase Visit(NewExpression newExpression, ConstructorInfo constructorInfo) => constructorInfo;
 
