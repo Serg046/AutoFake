@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using Mono.Cecil;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IGenericArgumentProcessor
 {
-	internal interface IGenericArgumentProcessor
-	{
-		IEnumerable<GenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef);
-		IEnumerable<GenericArgument> GetGenericArguments(FieldReference fieldRef);
-	}
+	IEnumerable<IGenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef);
+	IEnumerable<IGenericArgument> GetGenericArguments(FieldReference fieldRef);
 }

@@ -1,11 +1,10 @@
 using Mono.Cecil.Cil;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IEmitter
 {
-	internal interface IEmitter
-	{
-		MethodBody Body { get; }
-		void InsertBefore(Instruction target, Instruction instruction);
-		void InsertAfter(Instruction target, Instruction instruction);
-	}
+	MethodBody Body { get; }
+	void InsertBefore(Instruction target, Instruction instruction);
+	void InsertAfter(Instruction target, Instruction instruction);
 }

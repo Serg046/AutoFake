@@ -1,10 +1,9 @@
 using System;
 using System.Reflection;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IAssemblyLoader
 {
-	internal interface IAssemblyLoader
-	{
-		Tuple<Assembly, Type?> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm);
-	}
+	Tuple<Assembly, Type?> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm);
 }

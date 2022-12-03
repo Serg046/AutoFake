@@ -2,7 +2,13 @@ using System;
 
 namespace AutoFake.Abstractions.Setup.Mocks;
 
-internal interface IInsertMock : IMock
+public interface IInsertMock : IMock
 {
 	Action Closure { get; }
+
+	public enum Location
+	{
+		Before,
+		After
+	}
 }

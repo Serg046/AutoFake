@@ -6,14 +6,14 @@ namespace AutoFake
 {
 	internal class GenericArgumentProcessor : IGenericArgumentProcessor
 	{
-		private readonly GenericArgument.Create _createGenericArgument;
+		private readonly IGenericArgument.Create _createGenericArgument;
 
-		public GenericArgumentProcessor(GenericArgument.Create createGenericArgument)
+		public GenericArgumentProcessor(IGenericArgument.Create createGenericArgument)
 		{
 			_createGenericArgument = createGenericArgument;
 		}
 
-		public IEnumerable<GenericArgument> GetGenericArguments(FieldReference fieldRef)
+		public IEnumerable<IGenericArgument> GetGenericArguments(FieldReference fieldRef)
 		{
 			var fieldDef = fieldRef.ToFieldDefinition();
 			foreach (var arg in GetGenericArguments(fieldRef.DeclaringType, fieldDef.DeclaringType))
@@ -22,7 +22,7 @@ namespace AutoFake
 			}
 		}
 
-		public IEnumerable<GenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef)
+		public IEnumerable<IGenericArgument> GetGenericArguments(MethodReference methodRef, MethodDefinition methodDef)
 		{
 			if (methodRef is GenericInstanceMethod genericInstanceMethod)
 			{
@@ -44,7 +44,7 @@ namespace AutoFake
 			}
 		}
 
-		private IEnumerable<GenericArgument> GetGenericArguments(TypeReference typeRef, TypeDefinition typeDef)
+		private IEnumerable<IGenericArgument> GetGenericArguments(TypeReference typeRef, TypeDefinition typeDef)
 		{
 			if (typeRef is GenericInstanceType genericInstanceType)
 			{

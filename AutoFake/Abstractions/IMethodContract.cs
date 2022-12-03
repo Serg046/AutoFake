@@ -1,10 +1,9 @@
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IMethodContract
 {
-	public interface IMethodContract
-	{
-		string DeclaringType { get; }
-		string ReturnType { get; }
-		string Name { get; }
-		string[] ParameterTypes { get; }
-	}
+	string DeclaringType { get; }
+	string ReturnType { get; }
+	string Name { get; }
+	string[] ParameterTypes { get; }
 }

@@ -1,8 +1,7 @@
-namespace AutoFake.Abstractions.Setup.Configurations
+namespace AutoFake.Abstractions.Setup.Configurations;
+
+public interface IVerifyMockConfiguration
 {
-	public interface IVerifyMockConfiguration
-	{
-		IVerifyMockConfiguration ExpectedCalls(uint expectedCallsCount);
-		IVerifyMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
-	}
+	IVerifyMockConfiguration ExpectedCalls(uint expectedCallsCount);
+	IVerifyMockConfiguration ExpectedCalls(IExecutionContext.CallsCheckerFunc expectedCallsCountFunc);
 }

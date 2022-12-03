@@ -17,7 +17,7 @@ namespace AutoFake.Setup.Mocks.ContractMocks
 			_typeInfo = typeInfo;
 		}
 
-		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
 			=> instruction.OpCode.OperandType == OperandType.InlineMethod &&
 			   instruction.Operand is MethodReference m &&
 			   m.DeclaringType.GetElementType().FullName == _typeReference.FullName;

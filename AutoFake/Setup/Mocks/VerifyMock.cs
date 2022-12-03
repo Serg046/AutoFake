@@ -21,7 +21,7 @@ namespace AutoFake.Setup.Mocks
 
 		public ISourceMemberMetaData SourceMemberMetaData { get; }
 
-		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+		public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
 		{
 			return SourceMemberMetaData.SourceMember.IsSourceInstruction(instruction, genericArguments);
 		}

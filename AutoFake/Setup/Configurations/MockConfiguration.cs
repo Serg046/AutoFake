@@ -1,3 +1,4 @@
+using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions.Setup.Mocks;
@@ -7,12 +8,12 @@ namespace AutoFake.Setup.Configurations
 {
 	internal class MockConfiguration : IMockConfiguration
 	{
-		public Expression.InvocationExpression.Create ExpressionFactory { get; }
+		public IInvocationExpression.Create ExpressionFactory { get; }
 		public IMockConfigurationFactory ConfigurationFactory { get; }
 		public IMockFactory MockFactory { get; }
 		public IMockCollection MockCollection { get; }
 
-		public MockConfiguration(Expression.InvocationExpression.Create expressionFactory, IMockConfigurationFactory cfgFactory, IMockFactory mockFactory, IMockCollection mockCollection)
+		public MockConfiguration(IInvocationExpression.Create expressionFactory, IMockConfigurationFactory cfgFactory, IMockFactory mockFactory, IMockCollection mockCollection)
 		{
 			ExpressionFactory = expressionFactory;
 			ConfigurationFactory = cfgFactory;

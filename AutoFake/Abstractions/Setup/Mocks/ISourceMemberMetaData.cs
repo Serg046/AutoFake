@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace AutoFake.Abstractions.Setup.Mocks;
 
-internal interface ISourceMemberMetaData
+public interface ISourceMemberMetaData
 {
 	IExecutionContext.CallsCheckerFunc? ExpectedCalls { get; set; }
 	IInvocationExpression InvocationExpression { get; }

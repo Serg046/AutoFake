@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
-using AutoFake.Setup.Mocks;
+using AutoFake.Abstractions.Setup.Mocks;
 using DryIoc;
 using FluentAssertions;
 using Mono.Cecil;
@@ -149,9 +149,9 @@ namespace AutoFake.FunctionalTests
 			var firstInstruction = method.Body.Instructions.First();
 			var lastInstruction = method.Body.Instructions.Last();
 
-			var validPrependMock = mockFactory.GetInsertMock(() => { }, InsertMock.Location.Before);
-			var validApppendMock = mockFactory.GetInsertMock(() => { }, InsertMock.Location.After);
-			var invalidInsertMock = mockFactory.GetInsertMock(() => { }, (InsertMock.Location)100);
+			var validPrependMock = mockFactory.GetInsertMock(() => { }, IInsertMock.Location.Before);
+			var validApppendMock = mockFactory.GetInsertMock(() => { }, IInsertMock.Location.After);
+			var invalidInsertMock = mockFactory.GetInsertMock(() => { }, (IInsertMock.Location)100);
 
 			validPrependMock
 				.IsSourceInstruction(method, firstInstruction, Enumerable.Empty<GenericArgument>())

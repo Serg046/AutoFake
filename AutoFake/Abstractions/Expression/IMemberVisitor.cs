@@ -1,11 +1,9 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace AutoFake.Abstractions.Expression
+namespace AutoFake.Abstractions.Expression;
+
+public interface IMemberVisitor<T> : IExecutableMemberVisitor<T>
 {
-	internal interface IMemberVisitor<T> : IExecutableMemberVisitor<T>
-	{
-		T Visit(NewExpression newExpression, ConstructorInfo constructorInfo);
-		
-	}
+	T Visit(NewExpression newExpression, ConstructorInfo constructorInfo);
 }

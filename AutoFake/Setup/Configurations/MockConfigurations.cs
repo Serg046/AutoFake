@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions;
+using AutoFake.Abstractions.Setup.Mocks;
 
 namespace AutoFake.Setup.Configurations
 {
@@ -99,14 +100,14 @@ namespace AutoFake.Setup.Configurations
 		public IPrependMockConfiguration<TSut> Prepend(Action action)
 		{
 			var position = _cfg.MockCollection.Mocks.Count;
-			_cfg.MockCollection.Mocks.Add(_cfg.MockFactory.GetInsertMock(action, InsertMock.Location.Before));
+			_cfg.MockCollection.Mocks.Add(_cfg.MockFactory.GetInsertMock(action, IInsertMock.Location.Before));
 			return _cfg.ConfigurationFactory.GetInsertMockConfiguration<IPrependMockConfiguration<TSut>>(_cfg, mock => _cfg.MockCollection.Mocks[position] = mock, action);
 		}
 
 		public IAppendMockConfiguration<TSut> Append(Action action)
 		{
 			var position = _cfg.MockCollection.Mocks.Count;
-			_cfg.MockCollection.Mocks.Add(_cfg.MockFactory.GetInsertMock(action, InsertMock.Location.After));
+			_cfg.MockCollection.Mocks.Add(_cfg.MockFactory.GetInsertMock(action, IInsertMock.Location.After));
 			return _cfg.ConfigurationFactory.GetInsertMockConfiguration<IAppendMockConfiguration<TSut>>(_cfg, mock => _cfg.MockCollection.Mocks[position] = mock, action);
 		}
 

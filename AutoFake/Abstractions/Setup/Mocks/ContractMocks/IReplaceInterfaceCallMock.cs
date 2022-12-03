@@ -1,5 +1,5 @@
 namespace AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 
-internal interface IReplaceInterfaceCallMock : IMockInjector
+public interface IReplaceInterfaceCallMock : IMockInjector
 {
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,42 +9,45 @@ namespace Analyzers
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public class Analyzer : DiagnosticAnalyzer
 	{
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisReleaseTracking", "RS2008:Enable analyzer release tracking", Justification = "No need")]
-		internal static readonly DiagnosticDescriptor AccessModifierRule =
-			new("AF0001", "Access modifier break",
+		internal static readonly DiagnosticDescriptor TypeAccessModifierRule =
+			new("AF0001", "Type access modifier break",
 				"Please do not use public access modifier for classes, structs and records",
 				"Analyzers",
 				DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+		internal static readonly DiagnosticDescriptor InterfaceAccessModifierRule =
+			new("AF0002", "Interface access modifier break",
+				"Please use public access modifier for interfaces",
+				"Analyzers",
+				DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-			= ImmutableArray.Create(AccessModifierRule);
+			= ImmutableArray.Create(TypeAccessModifierRule, InterfaceAccessModifierRule);
 
 		public override void Initialize(AnalysisContext context)
 		{
 			context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
 			context.EnableConcurrentExecution();
 			context.RegisterSyntaxNodeAction(AnalyzeTypeDeclarationNode, SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.RecordDeclaration);
+			context.RegisterSyntaxNodeAction(AnalyzeInterfaceDeclarationNode, SyntaxKind.InterfaceDeclaration);
 		}
 
 		private void AnalyzeTypeDeclarationNode(SyntaxNodeAnalysisContext context)
 		{
-			if (context.ContainingSymbol is ITypeSymbol { DeclaredAccessibility: Accessibility.Public } typeSymbol
-				&& !IsInheritedFrom(typeSymbol, nameof(Exception)))
+			if (context.ContainingSymbol != null && context.ContainingSymbol.DeclaredAccessibility == Accessibility.Public)
 			{
 				var typeSyntax = (TypeDeclarationSyntax)context.Node;
-				context.ReportDiagnostic(Diagnostic.Create(AccessModifierRule, typeSyntax.Identifier.GetLocation()));
+				context.ReportDiagnostic(Diagnostic.Create(TypeAccessModifierRule, typeSyntax.Identifier.GetLocation()));
 			}
 		}
 
-		private bool IsInheritedFrom(ITypeSymbol type, string baseTypeName)
+		private void AnalyzeInterfaceDeclarationNode(SyntaxNodeAnalysisContext context)
 		{
-			while (type.BaseType != null)
+			if (context.ContainingSymbol != null && context.ContainingSymbol.DeclaredAccessibility != Accessibility.Public)
 			{
-				type = type.BaseType;
-				if (type.Name == baseTypeName) return true;
+				var syntax = (InterfaceDeclarationSyntax)context.Node;
+				context.ReportDiagnostic(Diagnostic.Create(InterfaceAccessModifierRule, syntax.Identifier.GetLocation()));
 			}
-
-			return false;
 		}
 	}
 }

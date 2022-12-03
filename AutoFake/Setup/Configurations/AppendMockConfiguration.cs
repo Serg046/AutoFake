@@ -33,7 +33,7 @@ namespace AutoFake.Setup.Configurations
 
 		protected ISourceMemberInsertMockConfiguration<TSut> AfterImpl(LambdaExpression expression)
 		{
-			var mock = _mockConfiguration.MockFactory.GetSourceMemberInsertMock(_mockConfiguration.ExpressionFactory(expression), _closure, InsertMock.Location.After);
+			var mock = _mockConfiguration.MockFactory.GetSourceMemberInsertMock(_mockConfiguration.ExpressionFactory(expression), _closure, IInsertMock.Location.After);
 			_setMock(mock);
 			return _mockConfiguration.ConfigurationFactory.GetSourceMemberInsertMockConfiguration<TSut>(mock);
 		}

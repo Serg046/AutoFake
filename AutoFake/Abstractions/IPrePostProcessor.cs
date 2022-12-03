@@ -1,11 +1,10 @@
 using System;
 using Mono.Cecil;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IPrePostProcessor
 {
-	internal interface IPrePostProcessor
-	{
-		FieldDefinition GenerateField(string name, Type returnType);
-		void InjectVerification(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext);
-	}
+	FieldDefinition GenerateField(string name, Type returnType);
+	void InjectVerification(IEmitter emitter, FieldDefinition setupBody, FieldDefinition executionContext);
 }

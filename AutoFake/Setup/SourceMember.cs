@@ -5,52 +5,51 @@ using System.Reflection;
 using AutoFake.Abstractions;
 using Mono.Cecil;
 
-namespace AutoFake.Setup
+namespace AutoFake.Setup;
+
+internal class SourceMember
 {
-	internal class SourceMember
+	private readonly IGenericArgument.Create _createGenericArgument;
+
+	public SourceMember(ITypeInfo typeInfo, IGenericArgument.Create createGenericArgument, MemberInfo memberInfo)
 	{
-		private readonly GenericArgument.Create _createGenericArgument;
+		TypeInfo = typeInfo;
+		_createGenericArgument = createGenericArgument;
+		DeclaringType = memberInfo.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
+		Name = memberInfo.Name;
+	}
 
-		public SourceMember(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, MemberInfo memberInfo)
+	public string Name { get; }
+
+	protected Type DeclaringType { get; }
+
+	protected ITypeInfo TypeInfo { get; }
+
+	protected bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<IGenericArgument> sourceArguments, IEnumerable<IGenericArgument> stackArguments)
+	{
+		var source = sourceArguments.SingleOrDefault(a => a.Name == genericParameter.Name);
+		var visited = stackArguments.FindGenericTypeOrDefault(genericParameter.Name);
+		if (source == null || visited == null || source.Type != visited.Type)
 		{
-			TypeInfo = typeInfo;
-			_createGenericArgument = createGenericArgument;
-			DeclaringType = memberInfo.DeclaringType ?? throw new InvalidOperationException("Declaring type must be set");
-			Name = memberInfo.Name;
+			return false;
 		}
 
-		public string Name { get; }
+		return true;
+	}
 
-		protected Type DeclaringType { get; }
+	protected IEnumerable<IGenericArgument> GetGenericArguments(Type type, string declaringType)
+		=> GetGenericArguments(type.GetGenericArguments(), type.GetGenericTypeDefinition().GetGenericArguments(), declaringType);
 
-		protected ITypeInfo TypeInfo { get; }
+	protected IEnumerable<IGenericArgument> GetGenericArguments(MethodInfo method, string declaringType)
+		=> GetGenericArguments(method.GetGenericArguments(), method.GetGenericMethodDefinition().GetGenericArguments(), declaringType);
 
-		protected bool CompareGenericArguments(GenericParameter genericParameter, IEnumerable<GenericArgument> sourceArguments, IEnumerable<GenericArgument> stackArguments)
+
+	private IEnumerable<IGenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
+	{
+		for (int i = 0; i < genericArguments.Length; i++)
 		{
-			var source = sourceArguments.SingleOrDefault(a => a.Name == genericParameter.Name);
-			var visited = stackArguments.FindGenericTypeOrDefault(genericParameter.Name);
-			if (source == null || visited == null || source.Type != visited.Type)
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		protected IEnumerable<GenericArgument> GetGenericArguments(Type type, string declaringType)
-			=> GetGenericArguments(type.GetGenericArguments(), type.GetGenericTypeDefinition().GetGenericArguments(), declaringType);
-
-		protected IEnumerable<GenericArgument> GetGenericArguments(MethodInfo method, string declaringType)
-			=> GetGenericArguments(method.GetGenericArguments(), method.GetGenericMethodDefinition().GetGenericArguments(), declaringType);
-
-
-		private IEnumerable<GenericArgument> GetGenericArguments(Type[] genericArguments, Type[] genericParameters, string declaringType)
-		{
-			for (int i = 0; i < genericArguments.Length; i++)
-			{
-				var typeRef = TypeInfo.ImportToSourceAsm(genericArguments[i]);
-				yield return _createGenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
-			}
+			var typeRef = TypeInfo.ImportToSourceAsm(genericArguments[i]);
+			yield return _createGenericArgument(genericParameters[i].ToString(), typeRef.ToString(), declaringType);
 		}
 	}
 }

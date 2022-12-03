@@ -14,9 +14,9 @@ namespace AutoFake.Setup
 		private static readonly OpCode[] _fieldOpCodes = { OpCodes.Ldfld, OpCodes.Ldsfld, OpCodes.Ldflda, OpCodes.Ldsflda };
 		private readonly FieldInfo _field;
 		private FieldDefinition? _monoCecilField;
-		private IReadOnlyList<GenericArgument>? _genericArguments;
+		private IReadOnlyList<IGenericArgument>? _genericArguments;
 
-		public SourceField(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, FieldInfo field)
+		public SourceField(ITypeInfo typeInfo, IGenericArgument.Create createGenericArgument, FieldInfo field)
 			: base(typeInfo, createGenericArgument, field)
 		{
 			_field = field;
@@ -33,11 +33,11 @@ namespace AutoFake.Setup
 		private FieldDefinition GetField()
 			=> _monoCecilField ??= TypeInfo.ImportToSourceAsm(_field).Resolve();
 
-		public IReadOnlyList<GenericArgument> GetGenericArguments()
+		public IReadOnlyList<IGenericArgument> GetGenericArguments()
 		{
 			if (_genericArguments == null)
 			{
-				var genericArguments = new List<GenericArgument>();
+				var genericArguments = new List<IGenericArgument>();
 				if (DeclaringType.IsGenericType)
 				{
 					var declaringType = GetField().DeclaringType.ToString();
@@ -53,7 +53,7 @@ namespace AutoFake.Setup
 			return _genericArguments;
 		}
 
-		public bool IsSourceInstruction(Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+		public bool IsSourceInstruction(Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
 		{
 			if (_fieldOpCodes.Contains(instruction.OpCode) &&
 				instruction.Operand is FieldReference field &&
@@ -65,7 +65,7 @@ namespace AutoFake.Setup
 			return false;
 		}
 
-		private bool CompareGenericArguments(FieldDefinition visitedField, IEnumerable<GenericArgument> genericArguments)
+		private bool CompareGenericArguments(FieldDefinition visitedField, IEnumerable<IGenericArgument> genericArguments)
 		{
 			if (visitedField.ContainsGenericParameter)
 			{

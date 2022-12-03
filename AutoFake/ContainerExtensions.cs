@@ -40,7 +40,7 @@ namespace AutoFake
 			container.Register<ExpressionExecutor>();
 			container.Register(typeof(ExpressionExecutor<>));
 			container.RegisterInstance<IExecutionContext.Create>((callsChecker, whenFunc) => new ExecutionContext(callsChecker, whenFunc));
-			container.RegisterDelegate<InvocationExpression.Create>(ctx =>
+			container.RegisterDelegate<IInvocationExpression.Create>(ctx =>
 				expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
 
 			//todo: shouldn't be a singleton, there is an issue with scopes 
@@ -63,7 +63,7 @@ namespace AutoFake
 			container.Register<IPrePostProcessor, PrePostProcessor>();
 			container.Register<IProcessor, Processor>();
 			container.Register<IGenericArgumentProcessor, GenericArgumentProcessor>();
-			container.RegisterInstance<GenericArgument.Create>((name, type, declaringType, genericDeclaringType) =>
+			container.RegisterInstance<IGenericArgument.Create>((name, type, declaringType, genericDeclaringType) =>
 				new GenericArgument(name, type, declaringType, genericDeclaringType));
 			container.Register<IMethodContract, MethodContract>();
 

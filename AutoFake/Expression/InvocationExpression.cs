@@ -14,8 +14,6 @@ namespace AutoFake.Expression
 	public class InvocationExpression : IInvocationExpression
 #pragma warning restore AF0001
 	{
-		internal delegate IInvocationExpression Create(LinqExpression expression);
-
 		private readonly IMemberVisitorFactory _memberVisitorFactory;
 		private readonly LinqExpression _expression;
 		private IReadOnlyList<IFakeArgument>? _arguments;

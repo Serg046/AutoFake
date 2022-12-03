@@ -162,7 +162,7 @@ namespace AutoFake.FunctionalTests
 		public void When_no_parameter_full_name_Should_not_fail()
 		{
 			var fake = new Fake<TestClass>();
-			fake.Services.RegisterDelegate((Func<IResolverContext, InvocationExpression.Create>)(ctx =>
+			fake.Services.RegisterDelegate((Func<IResolverContext, IInvocationExpression.Create>)(ctx =>
 				expr =>
 				{
 					var invExpr = new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr);
@@ -248,8 +248,8 @@ namespace AutoFake.FunctionalTests
 			public Type ReturnType => _sourceMember.ReturnType;
 			public MemberInfo OriginalMember => _sourceMember.OriginalMember;
 			public bool HasStackInstance => _sourceMember.HasStackInstance;
-			public IReadOnlyList<GenericArgument> GetGenericArguments() => _sourceMember.GetGenericArguments();
-			public bool IsSourceInstruction(Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+			public IReadOnlyList<IGenericArgument> GetGenericArguments() => _sourceMember.GetGenericArguments();
+			public bool IsSourceInstruction(Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
 				=> _sourceMember.IsSourceInstruction(instruction, genericArguments);
 
 			public ParameterInfo[] GetParameters()

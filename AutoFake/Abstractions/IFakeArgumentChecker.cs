@@ -1,8 +1,7 @@
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IFakeArgumentChecker
 {
-	public interface IFakeArgumentChecker
-	{
-		bool Check(object argument);
-		public delegate bool Comparer(object? left, object? right);
-	}
+	bool Check(object argument);
+	public delegate bool Comparer(object? left, object? right);
 }

@@ -59,7 +59,7 @@ namespace AutoFake
 			return copy;
 		}
 
-		public static GenericArgument? FindGenericTypeOrDefault(this IEnumerable<GenericArgument> genericArguments, string genericParamName)
+		public static IGenericArgument? FindGenericTypeOrDefault(this IEnumerable<IGenericArgument> genericArguments, string genericParamName)
 		{
 			string? prevType = null;
 			foreach (var genericArgument in genericArguments)

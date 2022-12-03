@@ -1,5 +1,5 @@
 namespace AutoFake.Abstractions.Setup.Mocks;
 
-internal interface IVerifyMock : ISourceMemberMock
+public interface IVerifyMock : ISourceMemberMock
 {
 }

@@ -13,9 +13,9 @@ namespace AutoFake.Setup
 	{
 		private readonly MethodBase _method;
 		private MethodDefinition? _monoCecilMethodDef;
-		private IReadOnlyList<GenericArgument>? _genericArguments;
+		private IReadOnlyList<IGenericArgument>? _genericArguments;
 
-		public SourceMethod(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, MethodInfo method)
+		public SourceMethod(ITypeInfo typeInfo, IGenericArgument.Create createGenericArgument, MethodInfo method)
 			: base(typeInfo, createGenericArgument, method)
 		{
 			_method = method;
@@ -23,7 +23,7 @@ namespace AutoFake.Setup
 			HasStackInstance = !method.IsStatic;
 		}
 
-		public SourceMethod(ITypeInfo typeInfo, GenericArgument.Create createGenericArgument, ConstructorInfo ctor)
+		public SourceMethod(ITypeInfo typeInfo, IGenericArgument.Create createGenericArgument, ConstructorInfo ctor)
 			: base(typeInfo, createGenericArgument, ctor)
 		{
 			_method = ctor;
@@ -40,12 +40,12 @@ namespace AutoFake.Setup
 		public MethodDefinition GetMethod()
 			=> _monoCecilMethodDef ??= TypeInfo.ImportToSourceAsm(_method).Resolve();
 
-		public IReadOnlyList<GenericArgument> GetGenericArguments()
+		public IReadOnlyList<IGenericArgument> GetGenericArguments()
 		{
 			return _genericArguments ??= GetGenericArgumentsImpl().ToReadOnlyList();
 		}
 
-		private IEnumerable<GenericArgument> GetGenericArgumentsImpl()
+		private IEnumerable<IGenericArgument> GetGenericArgumentsImpl()
 		{
 			var declaringType = GetMethod().DeclaringType.ToString();
 			if (DeclaringType.IsGenericType)
@@ -65,7 +65,7 @@ namespace AutoFake.Setup
 			}
 		}
 
-		public bool IsSourceInstruction(Instruction instruction, IEnumerable<GenericArgument> genericArguments)
+		public bool IsSourceInstruction(Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
 		{
 			if (instruction.OpCode.OperandType == OperandType.InlineMethod &&
 				instruction.Operand is MethodReference method &&
@@ -77,7 +77,7 @@ namespace AutoFake.Setup
 			return false;
 		}
 
-		private bool CompareGenericArguments(MethodDefinition visitedMethod, IEnumerable<GenericArgument> genericArguments)
+		private bool CompareGenericArguments(MethodDefinition visitedMethod, IEnumerable<IGenericArgument> genericArguments)
 		{
 			if (visitedMethod.HasGenericParameters || visitedMethod.DeclaringType.HasGenericParameters)
 			{

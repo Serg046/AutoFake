@@ -41,7 +41,7 @@ namespace AutoFake
 #pragma warning restore AF0001
 	{
 		private readonly object?[] _dependencies;
-		private FakeObjectInfo? _fakeObjectInfo;
+		private IFakeObjectInfo? _fakeObjectInfo;
 
 		public Fake(Type type, params object?[] constructorArgs)
 			: this(type, constructorArgs, typeof(Fake), typeof(IExecutor<object>))
@@ -112,7 +112,7 @@ namespace AutoFake
 			scope.Resolve<ExpressionExecutor>().Execute();
 		}
 
-		internal FakeObjectInfo GetFakeObject()
+		internal IFakeObjectInfo GetFakeObject()
 		{
 			if (_fakeObjectInfo == null)
 			{

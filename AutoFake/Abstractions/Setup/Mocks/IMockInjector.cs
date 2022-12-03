@@ -2,11 +2,10 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 
-namespace AutoFake.Abstractions.Setup.Mocks
+namespace AutoFake.Abstractions.Setup.Mocks;
+
+public interface IMockInjector
 {
-	internal interface IMockInjector
-	{
-		bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<GenericArgument> genericArguments);
-		void Inject(IEmitter emitter, Instruction instruction);
-	}
+	bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<IGenericArgument> genericArguments);
+	void Inject(IEmitter emitter, Instruction instruction);
 }

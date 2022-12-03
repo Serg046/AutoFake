@@ -22,7 +22,7 @@ namespace AutoFake.Setup.Mocks
 			_createProcessor = createProcessor;
 		}
 
-		public void Inject(IEmitter emitter, Instruction instruction, FieldReference closureField, InsertMock.Location location)
+		public void Inject(IEmitter emitter, Instruction instruction, FieldReference closureField, IInsertMock.Location location)
 		{
 			var module = emitter.Body.Method.Module;
 			var processor = _createProcessor(emitter, instruction);
@@ -30,7 +30,7 @@ namespace AutoFake.Setup.Mocks
 			var verifyVar = _cecilFactory.CreateVariable(module.TypeSystem.Boolean);
 			emitter.Body.Variables.Add(verifyVar);
 			emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Stloc, verifyVar));
-			if (location == InsertMock.Location.Before)
+			if (location == IInsertMock.Location.Before)
 			{
 				emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Ldloc, verifyVar));
 				InjectBefore(emitter, instruction, module, closureField);

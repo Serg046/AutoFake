@@ -1,10 +1,9 @@
 using System;
 using Mono.Cecil.Cil;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IEmitterPool : IDisposable
 {
-	internal interface IEmitterPool : IDisposable
-	{
-		IEmitter GetEmitter(MethodBody methodBody);
-	}
+	IEmitter GetEmitter(MethodBody methodBody);
 }

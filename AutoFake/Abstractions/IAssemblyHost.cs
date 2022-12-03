@@ -1,10 +1,9 @@
 using System.IO;
 using System.Reflection;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface IAssemblyHost
 {
-	internal interface IAssemblyHost
-	{
-		Assembly Load(MemoryStream asmStream, MemoryStream symbolsStream);
-	}
+	Assembly Load(MemoryStream asmStream, MemoryStream symbolsStream);
 }

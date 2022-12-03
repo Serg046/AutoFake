@@ -28,7 +28,7 @@ namespace AutoFake
 		}
 
 		public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IFakeOptions options,
-			IEnumerable<IMockInjector> mocks, IEnumerable<GenericArgument> genericArgs)
+			IEnumerable<IMockInjector> mocks, IEnumerable<IGenericArgument> genericArgs)
 		{
 			var state = new State(originalMethod, genericArgs, options);
 			Rewrite(mocks, originalMethod, state);
@@ -161,7 +161,7 @@ namespace AutoFake
 
 		private class State
 		{
-			public State(MethodDefinition originalMethod, IEnumerable<GenericArgument> genericArgs, IFakeOptions options)
+			public State(MethodDefinition originalMethod, IEnumerable<IGenericArgument> genericArgs, IFakeOptions options)
 			{
 				OriginalMethod = originalMethod;
 				GenericArgs = genericArgs;
@@ -174,7 +174,7 @@ namespace AutoFake
 			}
 
 			public MethodDefinition OriginalMethod { get; }
-			public IEnumerable<GenericArgument> GenericArgs { get; set; }
+			public IEnumerable<IGenericArgument> GenericArgs { get; set; }
 			public IFakeOptions Options { get; }
 			public IEnumerable<MethodDefinition> Parents { get; set; }
 			public IList<MethodDefinition> Methods { get; }

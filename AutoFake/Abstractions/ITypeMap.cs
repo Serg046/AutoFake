@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using Mono.Cecil;
 
-namespace AutoFake.Abstractions
+namespace AutoFake.Abstractions;
+
+public interface ITypeMap
 {
-	internal interface ITypeMap
-	{
-		ICollection<TypeDefinition> GetAllParentsAndDescendants(TypeDefinition typeDef);
-	}
+	ICollection<TypeDefinition> GetAllParentsAndDescendants(TypeDefinition typeDef);
 }
