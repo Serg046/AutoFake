@@ -90,7 +90,7 @@ internal class Processor : IProcessor
 			_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Stloc, variable));
 		}
 
-		return variables.ToReadOnlyList();
+		return variables;
 	}
 
 	private void RecordMethodCall(IReadOnlyList<VariableDefinition> variables, VariableDefinition array, IReadOnlyList<Type> argumentTypes)

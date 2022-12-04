@@ -42,7 +42,7 @@ internal class SourceMethod : SourceMember, ISourceMethod
 
 	public IReadOnlyList<IGenericArgument> GetGenericArguments()
 	{
-		return _genericArguments ??= GetGenericArgumentsImpl().ToReadOnlyList();
+		return _genericArguments ??= GetGenericArgumentsImpl().ToList();
 	}
 
 	private IEnumerable<IGenericArgument> GetGenericArgumentsImpl()

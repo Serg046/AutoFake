@@ -77,6 +77,6 @@ internal class SourceMemberMetaData : ISourceMemberMetaData
 
 	public IReadOnlyList<VariableDefinition> RecordMethodCall(IProcessor processor)
 	{
-		return processor.RecordMethodCall(SetupBodyField, ExecutionContext, SourceMember.GetParameters().Select(p => p.ParameterType).ToReadOnlyList());
+		return processor.RecordMethodCall(SetupBodyField, ExecutionContext, SourceMember.GetParameters().Select(p => p.ParameterType).ToList());
 	}
 }

@@ -47,7 +47,7 @@ internal class SourceField : SourceMember, ISourceField
 				}
 			}
 
-			_genericArguments = genericArguments.ToReadOnlyList();
+			_genericArguments = genericArguments;
 		}
 
 		return _genericArguments;

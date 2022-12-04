@@ -32,7 +32,7 @@ internal class TestMethod : ITestMethod
 	{
 		var state = new State(originalMethod, genericArgs, options);
 		Rewrite(mocks, originalMethod, state);
-		return state.Methods.ToReadOnlyList();
+		return state.Methods.ToList();
 	}
 
 	private void Rewrite(IEnumerable<IMockInjector> mocks, MethodDefinition? currentMethod, State state)
