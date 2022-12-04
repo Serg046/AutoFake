@@ -23,7 +23,6 @@ internal static class ContainerExtensions
 	{
 		var container = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
 		fakeRegistration(container);
-		RegisterSingltones(container, sourceType);
 		container.Register<IFakeProcessor, FakeProcessor>();
 		container.Register<IExpressionExecutorEngine, ExpressionExecutorEngine>();
 		container.Register<IExpressionExecutor, ExpressionExecutor>();
@@ -31,7 +30,6 @@ internal static class ContainerExtensions
 		container.RegisterInstance<IExecutionContext.Create>((callsChecker, whenFunc) => new ExecutionContext(callsChecker, whenFunc));
 		container.RegisterDelegate<IInvocationExpression.Create>(ctx =>
 			expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
-
 		container.Register<IMockConfigurationFactory, MockConfigurationFactory>();
 		container.Register<IMockFactory, MockFactory>();
 		container.Register<IMemberVisitorFactory, MemberVisitorFactory>();
@@ -54,6 +52,7 @@ internal static class ContainerExtensions
 			new GenericArgument(name, type, declaringType, genericDeclaringType));
 		container.Register<IMethodContract, MethodContract>();
 
+		RegisterSingltones(container, sourceType);
 		AddConfigurations(container);
 		AddMocks(container);
 		AddMemberVisitors(container);

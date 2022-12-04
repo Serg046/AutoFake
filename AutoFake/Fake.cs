@@ -11,11 +11,11 @@ using DryIoc;
 namespace AutoFake;
 
 #pragma warning disable AF0001 // Public by design
-public class Fake<T> : Fake, IExecutor<T>
+public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
 	public Fake(params object[] constructorArgs)
-		: base(typeof(T), constructorArgs, typeof(Fake), typeof(IExecutor<T>), typeof(IExecutor<object>))
+		: base(typeof(T), constructorArgs, typeof(IFakeObjectInfoSource), typeof(IExecutor<T>), typeof(IExecutor<object>))
 	{
 	}
 
@@ -37,14 +37,14 @@ public class Fake<T> : Fake, IExecutor<T>
 }
 
 #pragma warning disable AF0001 // Public by design
-public class Fake : IExecutor<object>
+public class Fake : IExecutor<object>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
 	private readonly object?[] _dependencies;
 	private IFakeObjectInfo? _fakeObjectInfo;
 
 	public Fake(Type type, params object?[] constructorArgs)
-		: this(type, constructorArgs, typeof(Fake), typeof(IExecutor<object>))
+		: this(type, constructorArgs, typeof(IFakeObjectInfoSource), typeof(IExecutor<object>))
 	{
 	}
 
@@ -112,6 +112,7 @@ public class Fake : IExecutor<object>
 		scope.Resolve<IExpressionExecutor>().Execute();
 	}
 
+	IFakeObjectInfo IFakeObjectInfoSource.GetFakeObject() => GetFakeObject();
 	internal IFakeObjectInfo GetFakeObject()
 	{
 		if (_fakeObjectInfo == null)

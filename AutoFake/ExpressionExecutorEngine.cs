@@ -7,20 +7,20 @@ namespace AutoFake;
 
 internal class ExpressionExecutorEngine : IExpressionExecutorEngine
 {
-	private readonly Fake _fake;
+	private readonly IFakeObjectInfoSource _fakeObjInfoSource;
 	private readonly IInvocationExpression _invocationExpression;
 	private readonly IMemberVisitorFactory _memberVisitorFactory;
 
-	public ExpressionExecutorEngine(Fake fake, IInvocationExpression invocationExpression, IMemberVisitorFactory memberVisitorFactory)
+	public ExpressionExecutorEngine(IFakeObjectInfoSource fakeObjectInfoSource, IInvocationExpression invocationExpression, IMemberVisitorFactory memberVisitorFactory)
 	{
-		_fake = fake;
+		_fakeObjInfoSource = fakeObjectInfoSource;
 		_invocationExpression = invocationExpression;
 		_memberVisitorFactory = memberVisitorFactory;
 	}
 
 	public (Type Type, object? Value) Execute()
 	{
-		var fakeObject = _fake.GetFakeObject();
+		var fakeObject = _fakeObjInfoSource.GetFakeObject();
 		var visitor = _memberVisitorFactory.GetValueMemberVisitor(fakeObject.Instance);
 		try
 		{
