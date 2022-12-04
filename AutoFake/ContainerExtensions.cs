@@ -23,17 +23,7 @@ internal static class ContainerExtensions
 	{
 		var container = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
 		fakeRegistration(container);
-		var fakeOptions = new FakeOptions();
-		container.RegisterInstance<IFakeOptions>(fakeOptions);
-		container.Register<IAssemblyReader, AssemblyReader>(Reuse.Singleton,
-			Parameters.Of.Type<Type>(defaultValue: sourceType)
-				.OverrideWith(Parameters.Of.Type<IFakeOptions>(defaultValue: fakeOptions)));
-
-		container.Register<ITypeInfo, TypeInfo>(Reuse.Singleton);
-		container.Register<IAssemblyWriter, AssemblyWriter>(Reuse.Singleton);
-		container.Register<IAssemblyLoader, AssemblyLoader>(Reuse.Singleton);
-		container.Register<IAssemblyHost, AssemblyHost>(Reuse.Singleton);
-		container.Register<IAssemblyPool, AssemblyPool>(Reuse.Singleton);
+		RegisterSingltones(container, sourceType);
 		container.Register<IFakeProcessor, FakeProcessor>();
 		container.Register<IExpressionExecutorEngine, ExpressionExecutorEngine>();
 		container.Register<IExpressionExecutor, ExpressionExecutor>();
@@ -42,11 +32,9 @@ internal static class ContainerExtensions
 		container.RegisterDelegate<IInvocationExpression.Create>(ctx =>
 			expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
 
-		//todo: shouldn't be a singleton, there is an issue with scopes 
-		container.Register<IMockConfigurationFactory, MockConfigurationFactory>(Reuse.Singleton);
-		container.Register<IMockFactory, MockFactory>(Reuse.Singleton);
-		container.Register<IMemberVisitorFactory, MemberVisitorFactory>(Reuse.Singleton);
-
+		container.Register<IMockConfigurationFactory, MockConfigurationFactory>();
+		container.Register<IMockFactory, MockFactory>();
+		container.Register<IMemberVisitorFactory, MemberVisitorFactory>();
 		container.Register<ILambdaArgumentChecker, LambdaArgumentChecker>();
 		container.Register<IFakeArgument, FakeArgument>();
 		container.Register<ISuccessfulArgumentChecker, SuccessfulArgumentChecker>();
@@ -71,6 +59,21 @@ internal static class ContainerExtensions
 		AddMemberVisitors(container);
 		AddCecilFactory(container);
 		return container;
+	}
+
+	private static void RegisterSingltones(Container container, Type sourceType)
+	{
+		var fakeOptions = new FakeOptions();
+		container.RegisterInstance<IFakeOptions>(fakeOptions);
+		container.Register<IAssemblyReader, AssemblyReader>(Reuse.Singleton,
+					Parameters.Of.Type<Type>(defaultValue: sourceType)
+						.OverrideWith(Parameters.Of.Type<IFakeOptions>(defaultValue: fakeOptions)));
+
+		container.Register<ITypeInfo, TypeInfo>(Reuse.Singleton);
+		container.Register<IAssemblyWriter, AssemblyWriter>(Reuse.Singleton);
+		container.Register<IAssemblyLoader, AssemblyLoader>(Reuse.Singleton);
+		container.Register<IAssemblyHost, AssemblyHost>(Reuse.Singleton);
+		container.Register<IAssemblyPool, AssemblyPool>(Reuse.Singleton);
 	}
 
 	private static void AddConfigurations(IRegistrator container)
