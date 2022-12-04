@@ -1,9 +1,8 @@
-namespace AutoFake
+namespace AutoFake;
+
+public enum AnalysisLevels
 {
-	public enum AnalysisLevels
-	{
-		Type,
-		Assembly,
-		AllExceptSystemAndMicrosoft
-	}
+	Type,
+	Assembly,
+	AllExceptSystemAndMicrosoft
 }

@@ -1,9 +1,8 @@
-namespace AutoFake
+namespace AutoFake;
+
+public enum DebugMode
 {
-	public enum DebugMode
-	{
-		Auto,
-		Disabled,
-		Enabled
-	}
+	Auto,
+	Disabled,
+	Enabled
 }

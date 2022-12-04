@@ -27,8 +27,14 @@ namespace Analyzers
 				"Analyzers",
 				DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+		internal static readonly DiagnosticDescriptor NamespaceRule =
+			new("AF0004", "Namespace style violation",
+				"Use file-scoped namespace declaration",
+				"Analyzers",
+				DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-			= ImmutableArray.Create(TypeAccessModifierRule, InterfaceAccessModifierRule, DIRule);
+			= ImmutableArray.Create(TypeAccessModifierRule, InterfaceAccessModifierRule, DIRule, NamespaceRule);
 
 		public override void Initialize(AnalysisContext context)
 		{
@@ -37,6 +43,7 @@ namespace Analyzers
 			context.RegisterSyntaxNodeAction(AnalyzeTypeDeclarationNode, SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.RecordDeclaration);
 			context.RegisterSyntaxNodeAction(AnalyzeInterfaceDeclarationNode, SyntaxKind.InterfaceDeclaration);
 			context.RegisterSyntaxNodeAction(AnalyzeInvocationNode, SyntaxKind.InvocationExpression);
+			context.RegisterSyntaxNodeAction(AnalyzeNamespaceNode, SyntaxKind.NamespaceDeclaration);
 		}
 
 		private static Accessibility? GetAccessibility(SyntaxNodeAnalysisContext context) => context.ContainingSymbol?.DeclaredAccessibility;
@@ -95,6 +102,14 @@ namespace Analyzers
 			{
 				var syntax = invocation.FirstAncestorOrSelf<ExpressionStatementSyntax>() ?? (CSharpSyntaxNode)invocation;
 				context.ReportDiagnostic(Diagnostic.Create(DIRule, syntax.GetLocation()));
+			}
+		}
+
+		private void AnalyzeNamespaceNode(SyntaxNodeAnalysisContext context)
+		{
+			if (context.Node is not FileScopedNamespaceDeclarationSyntax)
+			{
+				context.ReportDiagnostic(Diagnostic.Create(NamespaceRule, context.Node.GetLocation()));
 			}
 		}
 	}

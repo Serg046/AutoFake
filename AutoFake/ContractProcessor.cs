@@ -6,111 +6,110 @@ using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 
-namespace AutoFake
+namespace AutoFake;
+
+internal class ContractProcessor : IContractProcessor
 {
-	internal class ContractProcessor : IContractProcessor
+	private readonly ITypeInfo _typeInfo;
+	private readonly IMockFactory _mockFactory;
+	private readonly IMockCollection _mockCollection;
+	private readonly Dictionary<string, TypeReference> _importedTypes;
+
+	public ContractProcessor(ITypeInfo typeInfo, IMockFactory mockFactory, IMockCollection mockCollection)
 	{
-		private readonly ITypeInfo _typeInfo;
-		private readonly IMockFactory _mockFactory;
-		private readonly IMockCollection _mockCollection;
-		private readonly Dictionary<string, TypeReference> _importedTypes;
+		_typeInfo = typeInfo;
+		_mockFactory = mockFactory;
+		_mockCollection = mockCollection;
+		_importedTypes = new Dictionary<string, TypeReference>();
+	}
 
-		public ContractProcessor(ITypeInfo typeInfo, IMockFactory mockFactory, IMockCollection mockCollection)
+	public void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef)
+	{
+		foreach (var method in _typeInfo.GetAllImplementations(methodDef))
 		{
-			_typeInfo = typeInfo;
-			_mockFactory = mockFactory;
-			_mockCollection = mockCollection;
-			_importedTypes = new Dictionary<string, TypeReference>();
+			ProcessOriginalMethodContractWithMocks(method);
+		}
+	}
+
+	public void ProcessOriginalMethodContract(MethodDefinition methodDef)
+	{
+		if (_importedTypes.TryGetValue(methodDef.ReturnType.ToString(), out var importedType))
+		{
+			methodDef.ReturnType = importedType;
 		}
 
-		public void ProcessAllOriginalMethodContractsWithMocks(MethodDefinition methodDef)
+		foreach (var parameterDef in methodDef.Parameters)
 		{
-			foreach (var method in _typeInfo.GetAllImplementations(methodDef))
+			if (_importedTypes.TryGetValue(parameterDef.ParameterType.ToString(), out importedType))
 			{
-				ProcessOriginalMethodContractWithMocks(method);
+				parameterDef.ParameterType = importedType;
 			}
 		}
+	}
 
-		public void ProcessOriginalMethodContract(MethodDefinition methodDef)
+	public void ProcessCommonOriginalContracts(IEnumerable<ISourceMemberMock> sourceMemberMocks)
+	{
+		foreach (var mock in sourceMemberMocks)
 		{
-			if (_importedTypes.TryGetValue(methodDef.ReturnType.ToString(), out var importedType))
+			if (mock.SourceMemberMetaData.SourceMember.ReturnType != typeof(void) && mock.SourceMemberMetaData.SourceMember.ReturnType.Module == _typeInfo.SourceType.Module)
 			{
-				methodDef.ReturnType = importedType;
+				AddReplaceContractMocks(_typeInfo.GetTypeDefinition(mock.SourceMemberMetaData.SourceMember.ReturnType));
 			}
 
-			foreach (var parameterDef in methodDef.Parameters)
+			if (mock.SourceMemberMetaData.SourceMember.OriginalMember is MethodBase method &&
+				method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
 			{
-				if (_importedTypes.TryGetValue(parameterDef.ParameterType.ToString(), out importedType))
+				var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
+				var methodRef = _typeInfo.ImportToSourceAsm(method);
+				var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
+				if (methodDef != null)
 				{
-					parameterDef.ParameterType = importedType;
+					ProcessAllOriginalMethodContractsWithMocks(methodDef);
 				}
 			}
 		}
+	}
 
-		public void ProcessCommonOriginalContracts(IEnumerable<ISourceMemberMock> sourceMemberMocks)
+	private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef)
+	{
+		if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
 		{
-			foreach (var mock in sourceMemberMocks)
-			{
-				if (mock.SourceMemberMetaData.SourceMember.ReturnType != typeof(void) && mock.SourceMemberMetaData.SourceMember.ReturnType.Module == _typeInfo.SourceType.Module)
-				{
-					AddReplaceContractMocks(_typeInfo.GetTypeDefinition(mock.SourceMemberMetaData.SourceMember.ReturnType));
-				}
-
-				if (mock.SourceMemberMetaData.SourceMember.OriginalMember is MethodBase method &&
-					method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
-				{
-					var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
-					var methodRef = _typeInfo.ImportToSourceAsm(method);
-					var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
-					if (methodDef != null)
-					{
-						ProcessAllOriginalMethodContractsWithMocks(methodDef);
-					}
-				}
-			}
+			AddReplaceContractMocks(methodDef.ReturnType.ToTypeDefinition());
+			methodDef.ReturnType = _typeInfo.ImportToSourceAsm(methodDef.ReturnType);
 		}
 
-		private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef)
+		foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _typeInfo.IsInFakeModule(parameterDef.ParameterType)))
 		{
-			if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
+			var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
+			AddReplaceContractMocks(typeDefinition);
+			parameterDef.ParameterType = _typeInfo.ImportToSourceAsm(parameterDef.ParameterType);
+		}
+	}
+
+	public void AddReplaceContractMocks(TypeDefinition typeDef)
+	{
+		foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
+		{
+			var importedTypeRef = _typeInfo.ImportToSourceAsm(mockTypeDef);
+			if (mockTypeDef.IsInterface)
 			{
-				AddReplaceContractMocks(methodDef.ReturnType.ToTypeDefinition());
-				methodDef.ReturnType = _typeInfo.ImportToSourceAsm(methodDef.ReturnType);
+				_mockCollection.ContractMocks.Add(_mockFactory.GetReplaceInterfaceCallMock(importedTypeRef));
+			}
+			else
+			{
+				_mockCollection.ContractMocks.Add(mockTypeDef.IsValueType ?
+					_mockFactory.GetReplaceValueTypeCtorMock(importedTypeRef)
+					: _mockFactory.GetReplaceReferenceTypeCtorMock(importedTypeRef));
 			}
 
-			foreach (var parameterDef in methodDef.Parameters.Where(parameterDef => _typeInfo.IsInFakeModule(parameterDef.ParameterType)))
-			{
-				var typeDefinition = parameterDef.ParameterType.ToTypeDefinition();
-				AddReplaceContractMocks(typeDefinition);
-				parameterDef.ParameterType = _typeInfo.ImportToSourceAsm(parameterDef.ParameterType);
-			}
+			_mockCollection.ContractMocks.Add(_mockFactory.GetReplaceTypeCastMock(importedTypeRef));
+			TryAddImportedType(mockTypeDef, importedTypeRef);
 		}
+	}
 
-		public void AddReplaceContractMocks(TypeDefinition typeDef)
-		{
-			foreach (var mockTypeDef in _typeInfo.TypeMap.GetAllParentsAndDescendants(typeDef))
-			{
-				var importedTypeRef = _typeInfo.ImportToSourceAsm(mockTypeDef);
-				if (mockTypeDef.IsInterface)
-				{
-					_mockCollection.ContractMocks.Add(_mockFactory.GetReplaceInterfaceCallMock(importedTypeRef));
-				}
-				else
-				{
-					_mockCollection.ContractMocks.Add(mockTypeDef.IsValueType ?
-						_mockFactory.GetReplaceValueTypeCtorMock(importedTypeRef)
-						: _mockFactory.GetReplaceReferenceTypeCtorMock(importedTypeRef));
-				}
-
-				_mockCollection.ContractMocks.Add(_mockFactory.GetReplaceTypeCastMock(importedTypeRef));
-				TryAddImportedType(mockTypeDef, importedTypeRef);
-			}
-		}
-
-		private void TryAddImportedType(TypeDefinition typeDef, TypeReference typeRef)
-		{
-			var contract = typeDef.ToString();
-			if (!_importedTypes.ContainsKey(contract)) _importedTypes.Add(contract, typeRef);
-		}
+	private void TryAddImportedType(TypeDefinition typeDef, TypeReference typeRef)
+	{
+		var contract = typeDef.ToString();
+		if (!_importedTypes.ContainsKey(contract)) _importedTypes.Add(contract, typeRef);
 	}
 }

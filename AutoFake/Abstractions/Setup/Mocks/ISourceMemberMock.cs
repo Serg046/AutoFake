@@ -1,7 +1,6 @@
-namespace AutoFake.Abstractions.Setup.Mocks
+namespace AutoFake.Abstractions.Setup.Mocks;
+
+public interface ISourceMemberMock : IMock
 {
-	public interface ISourceMemberMock : IMock
-	{
-		ISourceMemberMetaData SourceMemberMetaData { get; }
-	}
+	ISourceMemberMetaData SourceMemberMetaData { get; }
 }

@@ -4,83 +4,82 @@ using DryIoc;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace AutoFake
+namespace AutoFake;
+
+internal class CecilFactory : ICecilFactory
 {
-	internal class CecilFactory : ICecilFactory
+	private readonly IContainer _serviceLocator;
+
+	public CecilFactory(IContainer serviceLocator) => _serviceLocator = serviceLocator;
+
+	public VariableDefinition CreateVariable(TypeReference variableType)
 	{
-		private readonly IContainer _serviceLocator;
+		return _serviceLocator.Resolve<Func<TypeReference, VariableDefinition>>().Invoke(variableType);
+	}
 
-		public CecilFactory(IContainer serviceLocator) => _serviceLocator = serviceLocator;
+	public ReaderParameters CreateReaderParameters()
+	{
+		return _serviceLocator.Resolve<ReaderParameters>();
+	}
 
-		public VariableDefinition CreateVariable(TypeReference variableType)
-		{
-			return _serviceLocator.Resolve<Func<TypeReference, VariableDefinition>>().Invoke(variableType);
-		}
+	public WriterParameters CreateWriterParameters()
+	{
+		return _serviceLocator.Resolve<WriterParameters>();
+	}
 
-		public ReaderParameters CreateReaderParameters()
-		{
-			return _serviceLocator.Resolve<ReaderParameters>();
-		}
+	public ISymbolReaderProvider CreateSymbolReaderProvider(bool throwIfNoSymbol)
+	{
+		return _serviceLocator.Resolve<Func<bool, ISymbolReaderProvider>>().Invoke(throwIfNoSymbol);
+	}
 
-		public WriterParameters CreateWriterParameters()
-		{
-			return _serviceLocator.Resolve<WriterParameters>();
-		}
+	public AssemblyNameDefinition CreateAssemblyNameDefinition(string name, Version version)
+	{
+		return _serviceLocator.Resolve<Func<string, Version, AssemblyNameDefinition>>().Invoke(name, version);
+	}
 
-		public ISymbolReaderProvider CreateSymbolReaderProvider(bool throwIfNoSymbol)
-		{
-			return _serviceLocator.Resolve<Func<bool, ISymbolReaderProvider>>().Invoke(throwIfNoSymbol);
-		}
+	public TypeDefinition CreateTypeDefinition(string @namespace, string name, TypeAttributes attributes, TypeReference baseType)
+	{
+		return _serviceLocator.Resolve<Func<string, string, TypeAttributes, TypeReference, TypeDefinition>>()
+			.Invoke(@namespace, @namespace, attributes, baseType);
+	}
 
-		public AssemblyNameDefinition CreateAssemblyNameDefinition(string name, Version version)
-		{
-			return _serviceLocator.Resolve<Func<string, Version, AssemblyNameDefinition>>().Invoke(name, version);
-		}
+	public MethodReference CreateMethodReference(string name, TypeReference returnType, TypeReference declaringType)
+	{
+		return _serviceLocator.Resolve<Func<string, TypeReference, TypeReference, MethodReference>>()
+			.Invoke(name, returnType, declaringType);
+	}
 
-		public TypeDefinition CreateTypeDefinition(string @namespace, string name, TypeAttributes attributes, TypeReference baseType)
-		{
-			return _serviceLocator.Resolve<Func<string, string, TypeAttributes, TypeReference, TypeDefinition>>()
-				.Invoke(@namespace, @namespace, attributes, baseType);
-		}
+	public ParameterDefinition CreateParameterDefinition(string name, ParameterAttributes attributes, TypeReference parameterType)
+	{
+		return _serviceLocator.Resolve<Func<string, ParameterAttributes, TypeReference, ParameterDefinition>>()
+			.Invoke(name, attributes, parameterType);
+	}
 
-		public MethodReference CreateMethodReference(string name, TypeReference returnType, TypeReference declaringType)
-		{
-			return _serviceLocator.Resolve<Func<string, TypeReference, TypeReference, MethodReference>>()
-				.Invoke(name, returnType, declaringType);
-		}
+	public GenericParameter CreateGenericParameter(string name, IGenericParameterProvider owner)
+	{
+		return _serviceLocator.Resolve<Func<string, IGenericParameterProvider, GenericParameter>>()
+			.Invoke(name, owner);
+	}
 
-		public ParameterDefinition CreateParameterDefinition(string name, ParameterAttributes attributes, TypeReference parameterType)
-		{
-			return _serviceLocator.Resolve<Func<string, ParameterAttributes, TypeReference, ParameterDefinition>>()
-				.Invoke(name, attributes, parameterType);
-		}
+	public FieldDefinition CreateFieldDefinition(string name, FieldAttributes attributes, TypeReference fieldType)
+	{
+		return _serviceLocator.Resolve<Func<string, FieldAttributes, TypeReference, FieldDefinition>>()
+			.Invoke(name, attributes, fieldType);
+	}
 
-		public GenericParameter CreateGenericParameter(string name, IGenericParameterProvider owner)
-		{
-			return _serviceLocator.Resolve<Func<string, IGenericParameterProvider, GenericParameter>>()
-				.Invoke(name, owner);
-		}
+	public GenericInstanceMethod CreateGenericInstanceMethod(MethodReference method)
+	{
+		return _serviceLocator.Resolve<Func<MethodReference, GenericInstanceMethod>>().Invoke(method);
+	}
 
-		public FieldDefinition CreateFieldDefinition(string name, FieldAttributes attributes, TypeReference fieldType)
-		{
-			return _serviceLocator.Resolve<Func<string, FieldAttributes, TypeReference, FieldDefinition>>()
-				.Invoke(name, attributes, fieldType);
-		}
+	public TypeReference CreateTypeReference(string @namespace, string name, ModuleDefinition module, IMetadataScope scope, bool valueType)
+	{
+		return _serviceLocator.Resolve<Func<string, string, ModuleDefinition, IMetadataScope, bool, TypeReference>>()
+			.Invoke(@namespace, name, module, scope, valueType);
+	}
 
-		public GenericInstanceMethod CreateGenericInstanceMethod(MethodReference method)
-		{
-			return _serviceLocator.Resolve<Func<MethodReference, GenericInstanceMethod>>().Invoke(method);
-		}
-
-		public TypeReference CreateTypeReference(string @namespace, string name, ModuleDefinition module, IMetadataScope scope, bool valueType)
-		{
-			return _serviceLocator.Resolve<Func<string, string, ModuleDefinition, IMetadataScope, bool, TypeReference>>()
-				.Invoke(@namespace, name, module, scope, valueType);
-		}
-
-		public GenericInstanceType CreateGenericInstanceType(TypeReference type)
-		{
-			return _serviceLocator.Resolve<Func<TypeReference, GenericInstanceType>>().Invoke(type);
-		}
+	public GenericInstanceType CreateGenericInstanceType(TypeReference type)
+	{
+		return _serviceLocator.Resolve<Func<TypeReference, GenericInstanceType>>().Invoke(type);
 	}
 }

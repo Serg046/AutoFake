@@ -2,11 +2,10 @@ using System.Collections.Generic;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Mocks;
 
-namespace AutoFake.Setup
+namespace AutoFake.Setup;
+
+internal class MockCollection : IMockCollection
 {
-	internal class MockCollection : IMockCollection
-	{
-		public IList<IMock> Mocks { get; } = new List<IMock>();
-		public ISet<IMockInjector> ContractMocks { get; } = new HashSet<IMockInjector>();
-	}
+	public IList<IMock> Mocks { get; } = new List<IMock>();
+	public ISet<IMockInjector> ContractMocks { get; } = new HashSet<IMockInjector>();
 }

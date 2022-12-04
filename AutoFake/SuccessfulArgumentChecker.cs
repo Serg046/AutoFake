@@ -1,9 +1,8 @@
 using AutoFake.Abstractions;
 
-namespace AutoFake
+namespace AutoFake;
+
+internal class SuccessfulArgumentChecker : ISuccessfulArgumentChecker
 {
-	internal class SuccessfulArgumentChecker : ISuccessfulArgumentChecker
-	{
-		public bool Check(object argument) => true;
-	}
+	public bool Check(object argument) => true;
 }
