@@ -3,18 +3,17 @@ using System.Linq.Expressions;
 using System.Reflection;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
-using AutoFake.Setup;
 
 namespace AutoFake.Expression
 {
 	internal class GetSourceMemberVisitor : IGetSourceMemberVisitor
 	{
-		private readonly Func<MethodBase, SourceMethod> _getSourceMethod;
-		private readonly Func<FieldInfo, SourceField> _getSourceField;
+		private readonly Func<MethodBase, ISourceMethod> _getSourceMethod;
+		private readonly Func<FieldInfo, ISourceField> _getSourceField;
 
 		public GetSourceMemberVisitor(
-			Func<MethodBase, SourceMethod> getSourceMethod,
-			Func<FieldInfo, SourceField> getSourceField)
+			Func<MethodBase, ISourceMethod> getSourceMethod,
+			Func<FieldInfo, ISourceField> getSourceField)
 		{
 			_getSourceMethod = getSourceMethod;
 			_getSourceField = getSourceField;

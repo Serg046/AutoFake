@@ -16,11 +16,11 @@ namespace AutoFake
 		private readonly IMemberVisitorFactory _memberVisitorFactory;
 		private readonly Func<IMockCollection, IContractProcessor> _createContractProcessor;
 		private readonly Func<IEmitterPool> _createEmitterPool;
-		private readonly Func<IEmitterPool, TestMethod> _createTestMethod;
+		private readonly Func<IEmitterPool, ITestMethod> _createTestMethod;
 
 		public FakeProcessor(ITypeInfo typeInfo, IMemberVisitorFactory memberVisitorFactory,
 			Func<IMockCollection, IContractProcessor> createContractProcessor,
-			Func<IEmitterPool> createEmitterPool, Func<IEmitterPool, TestMethod> createTestMethod)
+			Func<IEmitterPool> createEmitterPool, Func<IEmitterPool, ITestMethod> createTestMethod)
 		{
 			_typeInfo = typeInfo;
 			_memberVisitorFactory = memberVisitorFactory;
@@ -33,7 +33,7 @@ namespace AutoFake
 		{
 			var contractProcessor = _createContractProcessor(mockCollection);
 			var executeFuncDef = GetMethodDefinition(invocationExpression);
-			var testMethods = new List<Tuple<TestMethod, MethodDefinition>>();
+			var testMethods = new List<Tuple<ITestMethod, MethodDefinition>>();
 			using var emitterPool = _createEmitterPool();
 			foreach (var mock in mockCollection.Mocks) mock.BeforeInjection(executeFuncDef);
 			contractProcessor.ProcessCommonOriginalContracts(mockCollection.Mocks.OfType<ISourceMemberMock>());
@@ -51,7 +51,7 @@ namespace AutoFake
 		}
 
 		private void ProcessConstructors(IEmitterPool emitterPool, IFakeOptions options,
-			IContractProcessor contractProcessor, ICollection<Tuple<TestMethod, MethodDefinition>> testMethods)
+			IContractProcessor contractProcessor, ICollection<Tuple<ITestMethod, MethodDefinition>> testMethods)
 		{
 			foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
 			{

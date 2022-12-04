@@ -1,4 +1,3 @@
-using AutoFake.Setup.Mocks;
 using System;
 using System.Linq.Expressions;
 using AutoFake.Abstractions.Setup;
@@ -10,9 +9,9 @@ namespace AutoFake.Setup.Configurations
 {
 	internal class FuncMockConfiguration<TSut, TReturn> : MockConfigurations<TSut>, IFuncMockConfiguration<TSut, TReturn>
 	{
-		private readonly ExpressionExecutor<TReturn> _executor;
+		private readonly IExpressionExecutor<TReturn> _executor;
 
-		internal FuncMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, ExpressionExecutor<TReturn> executor,
+		internal FuncMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor<TReturn> executor,
 			Func<IMockCollection, IContractProcessor> createContractProcessor)
 			: base(mockConfiguration, typeInfo, createContractProcessor)
 		{
@@ -24,9 +23,9 @@ namespace AutoFake.Setup.Configurations
 
 	internal class ActionMockConfiguration<TSut> : MockConfigurations<TSut>, IActionMockConfiguration<TSut>
 	{
-		private readonly ExpressionExecutor _executor;
+		private readonly IExpressionExecutor _executor;
 
-		internal ActionMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, ExpressionExecutor executor,
+		internal ActionMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor executor,
 			Func<IMockCollection, IContractProcessor> createContractProcessor)
 			: base(mockConfiguration, typeInfo, createContractProcessor)
 		{

@@ -8,10 +8,10 @@ namespace AutoFake
 {
 	internal class EmitterPool : IEmitterPool
 	{
-		private readonly Func<MethodBody, Emitter> _createEmitter;
+		private readonly Func<MethodBody, IEmitter> _createEmitter;
 		private readonly Dictionary<MethodBody, IEmitter> _emitters = new();
 
-		public EmitterPool(Func<MethodBody, Emitter> createEmitter)
+		public EmitterPool(Func<MethodBody, IEmitter> createEmitter)
 		{
 			_createEmitter = createEmitter;
 		}
