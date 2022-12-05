@@ -116,6 +116,30 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			sut.Execute().Should().OnlyContain(i => i == 7);
 		}
 
+		[Fact]
+		public void PropertySetterInstanceTest()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.SetReadWriteProperty(7));
+			sut.Remove(Property.Of<TestClass>(nameof(TestClass.ReadWriteProperty)).Set(() => 7));
+			sut.Execute();
+
+			fake.Execute(f => f.ReadWriteProperty).Should().Be(5);
+		}
+
+		[Fact]
+		public void PropertySetterStaticTest()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(() => TestClass.SetReadWriteStaticProperty(7));
+			sut.Remove(Property.Of<TestClass>(nameof(TestClass.ReadWriteStaticProperty)).Set(() => 7));
+			sut.Execute();
+
+			fake.Execute(() => TestClass.ReadWriteStaticProperty).Should().Be(5);
+		}
+
 #if NETCOREAPP3_0
 		[Fact]
 		public async Task AsyncEnumerableMethodTest()
@@ -178,6 +202,18 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 		{
 			public int DynamicValue => 5;
 			public static int DynamicStaticValue => 5;
+			public int ReadWriteProperty { get; set; } = 5;
+			public static int ReadWriteStaticProperty { get; set; } = 5;
+
+			public void SetReadWriteProperty(int value)
+			{
+				ReadWriteProperty = value;
+			}
+
+			public static void SetReadWriteStaticProperty(int value)
+			{
+				ReadWriteStaticProperty = value;
+			}
 
 			public int GetDynamicValue()
 			{

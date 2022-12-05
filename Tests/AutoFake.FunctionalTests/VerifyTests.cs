@@ -202,8 +202,26 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be("string");
 		}
 
+		[Theory]
+		[InlineData(7, 5, false)]
+		[InlineData(7, 8, true)]
+		public void When_verify_prop_setter_Should_succeed(int argument, int minValue, bool fails)
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.SetReadWriteProperty(argument));
+			sut.Verify(Property.Of<TestClass>(nameof(TestClass.ReadWriteProperty)).Set(() => Arg.Is<int>(i => i > minValue)));
+			Action act = () => sut.Execute();
+
+			if (fails) act.Should().Throw<ArgumentException>(); else act.Should().NotThrow();
+		}
+
 		private class TestClass
 		{
+			public int ReadWriteProperty { get; set; }
+
+			public void SetReadWriteProperty(int value) => ReadWriteProperty = value;
+
 			public void Append() => Append("default");
 			public void Append(string value) { }
 

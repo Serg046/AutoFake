@@ -94,6 +94,18 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			sut.Execute().Should().OnlyContain(i => i == 7);
 		}
 
+		[Fact]
+		public void PropertySetterTest()
+		{
+			var fake = new Fake(typeof(TestClass));
+
+			var sut = fake.Rewrite(() => TestClass.SetReadWriteStaticProperty(7));
+			sut.Remove(Property.Of(typeof(TestClass), nameof(TestClass.ReadWriteStaticProperty)).Set(() => Arg.IsAny<int>()));
+			sut.Execute();
+
+			fake.Execute(() => TestClass.ReadWriteStaticProperty).Should().Be(5);
+		}
+
 #if NETCOREAPP3_0
 		[Fact]
 		public async Task AsyncEnumerableMethodTest()
@@ -155,6 +167,12 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 		private static class TestClass
 		{
 			public static int DynamicStaticValue => 5;
+			public static int ReadWriteStaticProperty { get; set; } = 5;
+
+			public static void SetReadWriteStaticProperty(int value)
+			{
+				ReadWriteStaticProperty = value;
+			}
 
 			public static int GetDynamicStaticValue()
 			{

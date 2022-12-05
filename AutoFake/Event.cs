@@ -30,8 +30,7 @@ public static class Event
 			var type = typeof(TSut);
 			var method = type.GetMethod(methodName) ?? throw new MissingMethodException(type.FullName, methodName);
 			var sut = LinqExpression.Parameter(type);
-			var argument = (MethodCallExpression)handler.Body;
-			return LinqExpression.Lambda<Action<TSut>>(LinqExpression.Call(sut, method, argument), sut);
+			return LinqExpression.Lambda<Action<TSut>>(LinqExpression.Call(sut, method, handler.Body), sut);
 		}
 	}
 
@@ -55,9 +54,8 @@ public static class Event
 		private Expression<Action> ProcessHandler<TEventHandler>(Expression<Func<TEventHandler>> handler, string methodName)
 		{
 			var method = _sutType.GetMethod(methodName) ?? throw new MissingMethodException(_sutType.FullName, methodName);
-			var argument = (MethodCallExpression)handler.Body;
 			var sut = _sutType.IsStatic() ? null : LinqExpression.Parameter(_sutType);
-			return LinqExpression.Lambda<Action>(LinqExpression.Call(sut, method, argument));
+			return LinqExpression.Lambda<Action>(LinqExpression.Call(sut, method, handler.Body));
 		}
 	}
 }
