@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 {
-	public class EventTests
+	public class EventMockTests
 	{
 		[Fact]
 		public void When_add_event_handler_Should_be_intercepted()
@@ -15,6 +15,18 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			var sut = fake.Rewrite(f => f.AddHandler(x => Console.WriteLine(x)));
 			sut.Verify(Event.Of<TestClass>(nameof(TestClass.Event)).Add(() => Arg.IsAny<Action<int>>()));
 			sut.Verify(Event.Of<TestClass>(nameof(TestClass.Event)).Remove(() => Arg.IsAny<Action<int>>())).ExpectedCalls(0);
+
+			sut.Execute();
+		}
+
+		[Fact]
+		public void When_add_static_event_handler_Should_be_intercepted()
+		{
+			var fake = new Fake<TestClass>();
+
+			var sut = fake.Rewrite(f => f.AddHandler(x => Console.WriteLine(x)));
+			sut.Verify(Event.Of<TestClass>(nameof(TestClass.StaticEvent)).Add(() => Arg.IsAny<Action<int>>()));
+			sut.Verify(Event.Of<TestClass>(nameof(TestClass.StaticEvent)).Remove(() => Arg.IsAny<Action<int>>())).ExpectedCalls(0);
 
 			sut.Execute();
 		}
@@ -61,15 +73,11 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 		}
 
 		[Fact]
-		public void When_add_event_handler_through_runtime_type_Should_be_intercepted()
+		public void When_non_static_type_Should_require_generic_version()
 		{
-			var fake = new Fake(typeof(TestClass));
+			Action act = () => Event.Of(typeof(TestClass), nameof(TestClass.Event)).Add(() => Arg.IsAny<Action<int>>());
 
-			var sut = fake.Rewrite((TestClass f) => f.AddHandler(x => Console.WriteLine(x)));
-			sut.Verify(Event.Of(typeof(TestClass), nameof(TestClass.Event)).Add(() => Arg.IsAny<Action<int>>()));
-			sut.Verify(Event.Of(typeof(TestClass), nameof(TestClass.Event)).Remove(() => Arg.IsAny<Action<int>>())).ExpectedCalls(0);
-
-			sut.Execute();
+			act.Should().Throw<ArgumentException>();
 		}
 
 		[Fact]
@@ -106,16 +114,19 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 		private class TestClass
 		{
 			public event Action<int> Event;
+			public static event Action<int> StaticEvent;
 			public (object Sender, EventArgs EventArgs) ExitedData;
 
 			public void AddHandler(Action<int> action)
 			{
 				Event += action;
+				StaticEvent += action;
 			}
 
 			public void RemoveHandler(Action<int> action)
 			{
 				Event -= action;
+				StaticEvent -= action;
 			}
 
 			public void AddHandlerToExternalEvent(Process file)

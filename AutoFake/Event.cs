@@ -1,5 +1,6 @@
 using System;
 using System.Linq.Expressions;
+using static AutoFake.Property;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake;
@@ -30,7 +31,7 @@ public static class Event
 			var type = typeof(TSut);
 			var method = type.GetMethod(methodName) ?? throw new MissingMethodException(type.FullName, methodName);
 			var sut = LinqExpression.Parameter(type);
-			return LinqExpression.Lambda<Action<TSut>>(LinqExpression.Call(sut, method, handler.Body), sut);
+			return LinqExpression.Lambda<Action<TSut>>(LinqExpression.Call(method.IsStatic ? null : sut, method, handler.Body), sut);
 		}
 	}
 
@@ -43,6 +44,7 @@ public static class Event
 
 		public Handler(Type sutType, string eventName)
 		{
+			if (!sutType.IsStatic()) throw new ArgumentException("Use the generic version for non-static types");
 			_sutType = sutType;
 			_eventName = eventName;
 		}
@@ -54,8 +56,7 @@ public static class Event
 		private Expression<Action> ProcessHandler<TEventHandler>(Expression<Func<TEventHandler>> handler, string methodName)
 		{
 			var method = _sutType.GetMethod(methodName) ?? throw new MissingMethodException(_sutType.FullName, methodName);
-			var sut = _sutType.IsStatic() ? null : LinqExpression.Parameter(_sutType);
-			return LinqExpression.Lambda<Action>(LinqExpression.Call(sut, method, handler.Body));
+			return LinqExpression.Lambda<Action>(LinqExpression.Call(null, method, handler.Body));
 		}
 	}
 }

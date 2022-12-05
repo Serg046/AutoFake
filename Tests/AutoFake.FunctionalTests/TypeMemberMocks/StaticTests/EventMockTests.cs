@@ -4,7 +4,7 @@ using Xunit;
 
 namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 {
-	public class EventTests
+	public class EventMockTests
 	{
 		[Fact]
 		public void When_add_event_handler_Should_be_intercepted()
