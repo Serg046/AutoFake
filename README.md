@@ -1,3 +1,4 @@
+# AutoFake
 [![Build](https://img.shields.io/appveyor/build/Serg046/AutoFake)](https://ci.appveyor.com/project/Serg046/autofake/branch/master)
 [![NuGet](https://img.shields.io/nuget/v/AutoFake)](https://www.nuget.org/packages/AutoFake)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/AutoFake.svg?label=downloads)](https://www.nuget.org/packages/AutoFake)
@@ -9,6 +10,7 @@
 [![Code Climate](https://img.shields.io/codeclimate/issues/Serg046/AutoFake?label=code%20smells)](https://codeclimate.com/github/Serg046/AutoFake)
 [![Code Climate](https://img.shields.io/codeclimate/tech-debt/Serg046/AutoFake)](https://codeclimate.com/github/Serg046/AutoFake)
 
+Imagine you have the following `Calendar` class and you want to replace some members which are not overridable via classic mocking libraries...
 ```csharp
 public class Calendar
 {
@@ -16,7 +18,9 @@ public class Calendar
     internal Task<DateTime> AddSomeMinutesAsync(DateTime date) => Task.Run(() => AddSomeMinutes(date));
     public static DateTime AddSomeMinutes(DateTime date) => date.AddMinutes(new Random().Next(1, 10));
 }
-
+```
+Static `DateTime.Now` property (run it on [.NET Fiddle](https://dotnetfiddle.net/0YHkD8)):
+```csharp
 [Fact]
 public void Yesterday_SomeDay_ThePrevDay()
 {
@@ -27,7 +31,9 @@ public void Yesterday_SomeDay_ThePrevDay()
 
     Assert.Equal(new DateTime(2016, 8, 7), sut.Execute());
 }
-
+```
+Non-static and virtual `Random.Next(int, int)` method but instantiated right inside the `AddSomeMinutes` method (run it on [.NET Fiddle](https://dotnetfiddle.net/mTcg95)):
+```csharp
 [Fact]
 public async Task AddSomeMinutesAsync_SomeDay_MinutesAdded()
 {
@@ -43,7 +49,9 @@ public async Task AddSomeMinutesAsync_SomeDay_MinutesAdded()
 
     Assert.Equal(date.AddMinutes(randomValue), await sut.Execute());
 }
-
+```
+You can also add additional statements at specific places that could be helpful for non-trivial scenarios like race-condition testing (run it on [.NET Fiddle](https://dotnetfiddle.net/F44Xv0)):
+```csharp
 [Fact]
 public void AddSomeMinutes_SomeDay_EventsRecorded()
 {
