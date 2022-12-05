@@ -47,10 +47,10 @@ internal class SourceMethod : SourceMember, ISourceMethod
 
 	private IEnumerable<IGenericArgument> GetGenericArgumentsImpl()
 	{
-		var declaringType = GetMethod().DeclaringType.ToString();
+		string? declaringTypeCache = null;
 		if (DeclaringType.IsGenericType)
 		{
-			foreach (var genericArgument in GetGenericArguments(DeclaringType, declaringType))
+			foreach (var genericArgument in GetGenericArguments(DeclaringType, GetDeclaringType()))
 			{
 				yield return genericArgument;
 			}
@@ -58,11 +58,13 @@ internal class SourceMethod : SourceMember, ISourceMethod
 
 		if (_method.IsGenericMethod && _method is MethodInfo method)
 		{
-			foreach (var genericArgument in GetGenericArguments(method, declaringType))
+			foreach (var genericArgument in GetGenericArguments(method, GetDeclaringType()))
 			{
 				yield return genericArgument;
 			}
 		}
+
+		string GetDeclaringType() => declaringTypeCache ??= GetMethod().DeclaringType.ToString();
 	}
 
 	public bool IsSourceInstruction(Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
