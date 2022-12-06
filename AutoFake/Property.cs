@@ -1,5 +1,6 @@
 using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake;
@@ -8,49 +9,71 @@ namespace AutoFake;
 public static class Property
 #pragma warning restore AF0001
 {
+	public static Setter<TSut, TReturn> Of<TSut, TReturn>(Expression<Func<TSut, TReturn>> property)
+	{
+		var visitor = new PropertyExpressionVisitor();
+		visitor.Visit(property);
 #pragma warning disable DI0002 // There is no way to invert control here as it is called from the client side
-	public static Setter<TSut> Of<TSut>(string propertyName) => new(propertyName);
-	public static Setter Of(Type sutType, string propertyName) => new(sutType, propertyName);
+		return new(visitor.Property?.GetSetMethod() ?? throw new MissingMemberException("Cannot find a property setter"));
 #pragma warning restore DI0002
+	}
+
+	public static Setter<TReturn> Of<TReturn>(Expression<Func<TReturn>> property)
+	{
+		var visitor = new PropertyExpressionVisitor();
+		visitor.Visit(property);
+#pragma warning disable DI0002 // There is no way to invert control here as it is called from the client side
+		return new(visitor.Property?.GetSetMethod() ?? throw new MissingMemberException("Cannot find a property setter"));
+#pragma warning restore DI0002
+	}
 
 #pragma warning disable AF0001 // Public by design
-	public class Setter<TSut>
+	public class Setter<TSut, TReturn>
 #pragma warning restore AF0001
 	{
-		private readonly string _propertyName;
+		private readonly MethodInfo _setterMethodInfo;
 
-		public Setter(string propertyName)
+		public Setter(MethodInfo setterMethodInfo)
 		{
-			_propertyName = propertyName;
+			_setterMethodInfo = setterMethodInfo;
 		}
 
-		public Expression<Action<TSut>> Set<TPropertyType>(Expression<Func<TPropertyType>> value)
+		public Expression<Action<TSut>> Set(Expression<Func<TReturn>> value)
 		{
-			var type = typeof(TSut);
-			var setter = type.GetProperty(_propertyName)?.GetSetMethod() ?? throw new MissingMemberException(type.FullName, _propertyName);
-			var sut = LinqExpression.Parameter(type);
-			return LinqExpression.Lambda<Action<TSut>>(LinqExpression.Call(setter.IsStatic ? null : sut, setter, value.Body), sut);
+			var sut = LinqExpression.Parameter(typeof(TSut));
+			return LinqExpression.Lambda<Action<TSut>>(LinqExpression.Call(sut, _setterMethodInfo, value.Body), sut);
 		}
 	}
 
 #pragma warning disable AF0001 // Public by design
-	public class Setter
+	public class Setter<TReturn>
 #pragma warning restore AF0001
 	{
-		private readonly Type _sutType;
-		private readonly string _propertyName;
+		private readonly MethodInfo _setterMethodInfo;
 
-		public Setter(Type sutType, string propertyName)
+		public Setter(MethodInfo setterMethodInfo)
 		{
-			if (!sutType.IsStatic()) throw new ArgumentException("Use the generic version for non-static types");
-			_sutType = sutType;
-			_propertyName = propertyName;
+			_setterMethodInfo = setterMethodInfo;
 		}
 
-		public Expression<Action> Set<TPropertyType>(Expression<Func<TPropertyType>> value)
+		public Expression<Action> Set(Expression<Func<TReturn>> value)
 		{
-			var setter = _sutType.GetProperty(_propertyName)?.GetSetMethod() ?? throw new MissingMemberException(_sutType.FullName, _propertyName);
-			return LinqExpression.Lambda<Action>(LinqExpression.Call(null, setter, value.Body));
+			return LinqExpression.Lambda<Action>(LinqExpression.Call(null, _setterMethodInfo, value.Body));
+		}
+	}
+
+	private class PropertyExpressionVisitor : ExpressionVisitor
+	{
+		public PropertyInfo? Property { get; private set; }
+
+		protected override LinqExpression VisitMember(MemberExpression node)
+		{
+			if (node.Member is PropertyInfo property)
+			{
+				Property = property;
+			}
+
+			return node;
 		}
 	}
 }

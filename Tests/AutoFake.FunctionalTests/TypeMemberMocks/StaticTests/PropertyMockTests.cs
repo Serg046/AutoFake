@@ -100,10 +100,20 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			var fake = new Fake(typeof(TestClass));
 
 			var sut = fake.Rewrite(() => TestClass.SetReadWriteStaticProperty(7));
-			sut.Remove(Property.Of(typeof(TestClass), nameof(TestClass.ReadWriteStaticProperty)).Set(() => Arg.IsAny<int>()));
+			sut.Remove(Property.Of(() => TestClass.ReadWriteStaticProperty).Set(() => Arg.IsAny<int>()));
 			sut.Execute();
 
 			fake.Execute(() => TestClass.ReadWriteStaticProperty).Should().Be(5);
+		}
+
+		[Fact]
+		public void NoPropertyTest()
+		{
+			Action act1 = () => Property.Of(() => TestClass.DynamicStaticValue).Set(() => 5);
+			Action act2 = () => Property.Of(() => TestClass.GetDynamicStaticValue()).Set(() => 5);
+
+			act1.Should().Throw<MissingMemberException>();
+			act2.Should().Throw<MissingMemberException>();
 		}
 
 #if NETCOREAPP3_0

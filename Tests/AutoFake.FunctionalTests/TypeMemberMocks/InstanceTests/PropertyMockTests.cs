@@ -122,7 +122,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.SetReadWriteProperty(7));
-			sut.Remove(Property.Of<TestClass>(nameof(TestClass.ReadWriteProperty)).Set(() => 7));
+			sut.Remove(Property.Of((TestClass t) => t.ReadWriteProperty).Set(() => 7));
 			sut.Execute();
 
 			fake.Execute(f => f.ReadWriteProperty).Should().Be(5);
@@ -134,10 +134,22 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(() => TestClass.SetReadWriteStaticProperty(7));
-			sut.Remove(Property.Of<TestClass>(nameof(TestClass.ReadWriteStaticProperty)).Set(() => 7));
+			sut.Remove(Property.Of(() => TestClass.ReadWriteStaticProperty).Set(() => 7));
 			sut.Execute();
 
 			fake.Execute(() => TestClass.ReadWriteStaticProperty).Should().Be(5);
+		}
+
+		[Fact]
+		public void NoPropertyTest()
+		{
+			Action act1 = () => Property.Of((TestClass t) => t.DynamicValue).Set(() => 5);
+			Action act2 = () => Property.Of(() => TestClass.DynamicStaticValue).Set(() => 5);
+			Action act3 = () => Property.Of((TestClass t) => t.GetDynamicValue()).Set(() => 5);
+
+			act1.Should().Throw<MissingMemberException>();
+			act2.Should().Throw<MissingMemberException>();
+			act3.Should().Throw<MissingMemberException>();
 		}
 
 #if NETCOREAPP3_0

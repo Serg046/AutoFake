@@ -1,6 +1,5 @@
 using System;
 using System.Linq.Expressions;
-using static AutoFake.Property;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace AutoFake;

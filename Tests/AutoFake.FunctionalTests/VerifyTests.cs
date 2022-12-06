@@ -210,7 +210,7 @@ namespace AutoFake.FunctionalTests
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.SetReadWriteProperty(argument));
-			sut.Verify(Property.Of<TestClass>(nameof(TestClass.ReadWriteProperty)).Set(() => Arg.Is<int>(i => i > minValue)));
+			sut.Verify(Property.Of((TestClass t) => t.ReadWriteProperty).Set(() => Arg.Is<int>(i => i > minValue)));
 			Action act = () => sut.Execute();
 
 			if (fails) act.Should().Throw<ArgumentException>(); else act.Should().NotThrow();
