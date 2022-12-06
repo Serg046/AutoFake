@@ -9,22 +9,17 @@ namespace AutoFake;
 public static class Property
 #pragma warning restore AF0001
 {
-	public static Setter<TSut, TReturn> Of<TSut, TReturn>(Expression<Func<TSut, TReturn>> property)
-	{
-		var visitor = new PropertyExpressionVisitor();
-		visitor.Visit(property);
 #pragma warning disable DI0002 // There is no way to invert control here as it is called from the client side
-		return new(visitor.Property?.GetSetMethod() ?? throw new MissingMemberException("Cannot find a property setter"));
+	public static Setter<TSut, TReturn> Of<TSut, TReturn>(Expression<Func<TSut, TReturn>> property) => new(GetPropertySetter(property));
+	public static Setter<TReturn> Of<TReturn>(Expression<Func<TReturn>> property) => new(GetPropertySetter(property));
 #pragma warning restore DI0002
-	}
 
-	public static Setter<TReturn> Of<TReturn>(Expression<Func<TReturn>> property)
+
+	private static MethodInfo GetPropertySetter(LambdaExpression property)
 	{
 		var visitor = new PropertyExpressionVisitor();
 		visitor.Visit(property);
-#pragma warning disable DI0002 // There is no way to invert control here as it is called from the client side
-		return new(visitor.Property?.GetSetMethod() ?? throw new MissingMemberException("Cannot find a property setter"));
-#pragma warning restore DI0002
+		return visitor.Property?.GetSetMethod() ?? throw new MissingMemberException("Cannot find a property setter");
 	}
 
 #pragma warning disable AF0001 // Public by design
