@@ -14,7 +14,6 @@ public static class Property
 	public static Setter<TReturn> Of<TReturn>(Expression<Func<TReturn>> property) => new(GetPropertySetter(property));
 #pragma warning restore DI0002
 
-
 	private static MethodInfo GetPropertySetter(LambdaExpression property)
 	{
 		var visitor = new PropertyExpressionVisitor();
