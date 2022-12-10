@@ -22,7 +22,7 @@ internal class ReplaceValueTypeCtorMock : IReplaceValueTypeCtorMock
 		   typeRef.GetElementType().FullName == _typeReference.FullName;
 
 	private static bool IsValidOpCode(OpCode opCode)
-		=> opCode == OpCodes.Initobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
+		=> opCode == OpCodes.Initobj || opCode == OpCodes.Newobj || opCode == OpCodes.Box || opCode == OpCodes.Unbox || opCode == OpCodes.Unbox_Any;
 
 	public void Inject(IEmitter emitter, Instruction instruction)
 	{
