@@ -1,5 +1,10 @@
+using AutoFake.Abstractions;
+using DryIoc;
 using FluentAssertions;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace AutoFake.FunctionalTests
@@ -100,11 +105,36 @@ namespace AutoFake.FunctionalTests
 				.Subject.Value.Prop.Should().Be(5);
 		}
 
+		[Fact]
+		public void When_unbox_instruction_Should_succeed()
+		{
+			var fake = new Fake<TestClass>();
+			var typeInfo = fake.Services.Resolve<ITypeInfo>();
+			var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.CreateAndCastToHelperStruct)).Single();
+			var proc = method.Body.GetILProcessor();
+			foreach (var cmd in method.Body.Instructions.Where(i => i.OpCode == OpCodes.Unbox_Any).ToList())
+			{
+				var operand = (TypeReference)cmd.Operand;
+				proc.InsertAfter(cmd, Instruction.Create(OpCodes.Ldobj, operand));
+				proc.Replace(cmd, Instruction.Create(OpCodes.Unbox, operand));
+			}
+
+			var sut = fake.Rewrite(f => f.CreateAndCastToHelperStruct(5));
+
+			sut.Execute().Should().BeOfType<HelperStruct>().Subject.Prop.Should().Be(5);
+		}
+
 		private class TestClass
 		{
 			public HelperClass CastToHelperClass(object helper)
 			{
 				return (HelperClass)helper;
+			}
+
+			public HelperStruct CreateAndCastToHelperStruct(int prop)
+			{
+				object helper = new HelperStruct { Prop = prop };
+				return (HelperStruct)helper;
 			}
 
 			public HelperStruct CastToHelperStruct(object helper)
@@ -156,6 +186,7 @@ namespace AutoFake.FunctionalTests
 
 		public struct HelperStruct : IHelper
 		{
+			public int Prop { get; set; }
 			public int GetFive() => 5;
 		}
 
