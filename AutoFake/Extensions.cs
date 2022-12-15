@@ -95,12 +95,12 @@ internal static class Extensions
 
 	public static string GetFullMethodName(this MethodBase method)
 		=> method.DeclaringType?.IsInterface == true
-		? GetInterfaceName(method) + "." + method.Name
+		? GetInterfaceName(method.DeclaringType) + "." + method.Name
 		: method.Name;
 
-	private static string GetInterfaceName(MethodBase method)
+	private static string GetInterfaceName(Type type)
 	{
-		var type = method.DeclaringType.IsConstructedGenericType ? method.DeclaringType.GetGenericTypeDefinition() : method.DeclaringType;
+		if (type.IsConstructedGenericType) type = type.GetGenericTypeDefinition();
 		var typeName = type.ToString().Replace('+', '.').Replace('[', '<').Replace(']', '>');
 		typeName = Regex.Replace(typeName, @"(.*)(`\d+)(<.*>)", match => match.Groups[1].Value + match.Groups[3].Value);
 		return typeName;
