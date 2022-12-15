@@ -96,7 +96,7 @@ internal class TypeInfo : ITypeInfo
 		if (includeAffectedAssemblies) typeMaps = typeMaps.Concat(_assemblyPool.GetTypeMaps());
 		foreach (var typeDef in typeMaps.SelectMany(m => m.GetAllParentsAndDescendants(method.DeclaringType)))
 		{
-			foreach (var methodDef in typeDef.Methods.Where(m => m.EquivalentTo(method, includeExlicitInterfaceImplementations: true)))
+			foreach (var methodDef in typeDef.Methods.Where(m => Equivalent(m, method)))
 			{
 				methods.Add(methodDef);
 			}
@@ -104,6 +104,12 @@ internal class TypeInfo : ITypeInfo
 
 		return methods;
 	}
+
+	private static bool Equivalent(MethodReference methodReference, MethodReference method)
+		=> (methodReference.Name == method.Name || methodReference.Name.EndsWith($".{method.Name}")) &&
+		   methodReference.Parameters.Select(p => p.ParameterType.FullName)
+		   .SequenceEqual(method.Parameters.Select(p => p.ParameterType.FullName)) &&
+		   methodReference.ReturnType.FullName == method.ReturnType.FullName;
 
 	public bool IsInReferencedAssembly(AssemblyDefinition assembly) => _assemblyPool.HasModule(assembly.MainModule);
 

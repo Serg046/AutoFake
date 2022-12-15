@@ -26,14 +26,6 @@ internal static class Extensions
 			LinqExpression.New(ctor, opCode, operand), opCode, operand).Compile();
 	}
 
-	public static bool EquivalentTo(this MethodReference methodReference, MethodReference method, bool includeExlicitInterfaceImplementations = false)
-		=> EquivalentNames(methodReference.Name, method.Name, includeExlicitInterfaceImplementations) &&
-		   methodReference.Parameters.Select(p => p.ParameterType.FullName)
-		   .SequenceEqual(method.Parameters.Select(p => p.ParameterType.FullName)) &&
-		   methodReference.ReturnType.FullName == method.ReturnType.FullName;
-
-	private static bool EquivalentNames(string nameLeft, string nameRight, bool exlicit) => nameLeft == nameRight || (exlicit && nameLeft.EndsWith($".{nameRight}"));
-
 	public static TypeDefinition ToTypeDefinition(this TypeReference type)
 		=> type as TypeDefinition ?? type.Resolve();
 
