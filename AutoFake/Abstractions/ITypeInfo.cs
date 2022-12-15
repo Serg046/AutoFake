@@ -11,11 +11,9 @@ public interface ITypeInfo
 	Type SourceType { get; }
 	ITypeMap TypeMap { get; }
 	bool IsInFakeModule(TypeReference type);
-	IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate);
-	IEnumerable<MethodDefinition> GetMethods(TypeDefinition type, Predicate<MethodDefinition> methodPredicate);
+	IEnumerable<MethodDefinition> GetConstructors();
 	MethodDefinition? GetMethod(MethodBase method, bool searchInBaseType = false);
-	MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false);
-	MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false);
+	MethodDefinition? GetMethod(TypeDefinition type, MethodBase method, bool searchInBaseType = false);
 	TypeDefinition GetTypeDefinition(Type type);
 	ICollection<MethodDefinition> GetAllImplementations(MethodDefinition method, bool includeAffectedAssemblies = false);
 	bool IsInReferencedAssembly(AssemblyDefinition assembly);

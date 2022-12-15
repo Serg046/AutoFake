@@ -41,13 +41,15 @@ internal class TypeInfo : ITypeInfo
 	public TypeDefinition GetTypeDefinition(Type type) =>
 		_assemblyReader.SourceTypeDefinition.Module.GetType(type.FullName, runtimeName: true).ToTypeDefinition();
 
-	public IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate)
-		=> GetMethods(_assemblyReader.SourceTypeDefinition, methodPredicate);
-
-	public IEnumerable<MethodDefinition> GetMethods(TypeDefinition type, Predicate<MethodDefinition> methodPredicate)
-		=> type.Methods.Where(m => methodPredicate(m));
+	public IEnumerable<MethodDefinition> GetConstructors()
+		=> _assemblyReader.SourceTypeDefinition.Methods.Where(m => m.Name is ".ctor" or ".cctor");
 
 	public MethodDefinition? GetMethod(MethodBase method, bool searchInBaseType = false)
+	{
+		return GetMethod(_assemblyReader.SourceTypeDefinition, method, searchInBaseType);
+	}
+
+	public MethodDefinition? GetMethod(TypeDefinition type, MethodBase method, bool searchInBaseType = false)
 	{
 		var methodRef = ImportToSourceAsm(method);
 		if (method.DeclaringType?.IsInterface == true)
@@ -57,13 +59,10 @@ internal class TypeInfo : ITypeInfo
 			methodRef.DeclaringType = _assemblyReader.SourceTypeDefinition;
 		}
 
-		return GetMethod(methodRef, searchInBaseType);
+		return GetMethod(type, methodRef, searchInBaseType);
 	}
 
-	public MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false)
-		=> GetMethod(_assemblyReader.SourceTypeDefinition, methodReference, searchInBaseType);
-
-	public MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false)
+	private MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false)
 	{
 		methodReference = FilterGenericArguments(methodReference);
 		var method = type.Methods.SingleOrDefault(m => m.ToString() == methodReference.ToString());
@@ -97,7 +96,7 @@ internal class TypeInfo : ITypeInfo
 		if (includeAffectedAssemblies) typeMaps = typeMaps.Concat(_assemblyPool.GetTypeMaps());
 		foreach (var typeDef in typeMaps.SelectMany(m => m.GetAllParentsAndDescendants(method.DeclaringType)))
 		{
-			foreach (var methodDef in GetMethods(typeDef, m => m.EquivalentTo(method, includeExlicitInterfaceImplementations: true)))
+			foreach (var methodDef in typeDef.Methods.Where(m => m.EquivalentTo(method, includeExlicitInterfaceImplementations: true)))
 			{
 				methods.Add(methodDef);
 			}

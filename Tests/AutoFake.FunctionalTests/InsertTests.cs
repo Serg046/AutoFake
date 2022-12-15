@@ -144,7 +144,7 @@ namespace AutoFake.FunctionalTests
 		public void When_unsupported_location_Should_return_false()
 		{
 			var fake = new Fake<TestClass>();
-			var method = fake.Services.Resolve<ITypeInfo>().GetMethods(m => true).First();
+			var method = fake.Services.Resolve<IAssemblyReader>().SourceTypeDefinition.Methods.First();
 			var mockFactory = fake.Services.Resolve<IMockFactory>();
 			var firstInstruction = method.Body.Instructions.First();
 			var lastInstruction = method.Body.Instructions.Last();

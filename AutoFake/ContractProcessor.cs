@@ -60,8 +60,7 @@ internal class ContractProcessor : IContractProcessor
 				method.Module == _typeInfo.SourceType.Module && method.DeclaringType != null)
 			{
 				var typeDef = _typeInfo.GetTypeDefinition(method.DeclaringType);
-				var methodRef = _typeInfo.ImportToSourceAsm(method);
-				var methodDef = _typeInfo.GetMethod(typeDef, methodRef);
+				var methodDef = _typeInfo.GetMethod(typeDef, method);
 				if (methodDef != null)
 				{
 					ProcessAllOriginalMethodContractsWithMocks(methodDef);

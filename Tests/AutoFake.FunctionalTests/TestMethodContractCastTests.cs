@@ -109,8 +109,8 @@ namespace AutoFake.FunctionalTests
 		public void When_unbox_instruction_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
-			var typeInfo = fake.Services.Resolve<ITypeInfo>();
-			var method = typeInfo.GetMethods(m => m.Name == nameof(TestClass.CreateAndCastToHelperStruct)).Single();
+			var asmReader = fake.Services.Resolve<IAssemblyReader>();
+			var method = asmReader.SourceTypeDefinition.Methods.Single(m => m.Name == nameof(TestClass.CreateAndCastToHelperStruct));
 			var proc = method.Body.GetILProcessor();
 			foreach (var cmd in method.Body.Instructions.Where(i => i.OpCode == OpCodes.Unbox_Any).ToList())
 			{

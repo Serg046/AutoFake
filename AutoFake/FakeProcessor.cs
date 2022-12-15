@@ -52,7 +52,7 @@ internal class FakeProcessor : IFakeProcessor
 	private void ProcessConstructors(IEmitterPool emitterPool, IFakeOptions options,
 		IContractProcessor contractProcessor, ICollection<Tuple<ITestMethod, MethodDefinition>> testMethods)
 	{
-		foreach (var ctor in _typeInfo.GetMethods(m => m.Name is ".ctor" or ".cctor"))
+		foreach (var ctor in _typeInfo.GetConstructors())
 		{
 			var testCtor = _createTestMethod(emitterPool);
 			var methods = testCtor.Rewrite(ctor, options, Enumerable.Empty<IMock>(), Enumerable.Empty<GenericArgument>());
