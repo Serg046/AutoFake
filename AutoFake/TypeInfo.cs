@@ -47,15 +47,44 @@ internal class TypeInfo : ITypeInfo
 	public IEnumerable<MethodDefinition> GetMethods(TypeDefinition type, Predicate<MethodDefinition> methodPredicate)
 		=> type.Methods.Where(m => methodPredicate(m));
 
-	public MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false) =>
-		GetMethod(_assemblyReader.SourceTypeDefinition, methodReference, searchInBaseType);
+	public MethodDefinition? GetMethod(MethodBase method, bool searchInBaseType = false)
+	{
+		var methodRef = ImportToSourceAsm(method);
+		if (method.DeclaringType?.IsInterface == true)
+		{
+			methodRef = FilterGenericArguments(methodRef);
+			methodRef.Name = method.GetFullMethodName();
+			methodRef.DeclaringType = _assemblyReader.SourceTypeDefinition;
+		}
+
+		return GetMethod(methodRef, searchInBaseType);
+	}
+
+	public MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false)
+		=> GetMethod(_assemblyReader.SourceTypeDefinition, methodReference, searchInBaseType);
 
 	public MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false)
 	{
-		var method = type.Methods.SingleOrDefault(m => m.EquivalentTo(methodReference));
+		methodReference = FilterGenericArguments(methodReference);
+		var method = type.Methods.SingleOrDefault(m => m.ToString() == methodReference.ToString());
 		if (searchInBaseType && method == null && type.BaseType != null)
 		{
 			return GetMethod(type.BaseType.ToTypeDefinition(), methodReference, searchInBaseType);
+		}
+
+		return method;
+	}
+
+	private MethodReference FilterGenericArguments(MethodReference method)
+	{
+		if (method is GenericInstanceMethod genericMethod)
+		{
+			method = genericMethod.GetElementMethod();
+		}
+
+		if (method.DeclaringType is GenericInstanceType genericType)
+		{
+			method.DeclaringType = genericType.GetElementType();
 		}
 
 		return method;

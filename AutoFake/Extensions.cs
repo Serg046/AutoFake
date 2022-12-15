@@ -7,6 +7,7 @@ using Mono.Cecil.Cil;
 using LinqExpression = System.Linq.Expressions.Expression;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace AutoFake;
 
@@ -91,4 +92,17 @@ internal static class Extensions
 	}
 
 	public static bool IsStatic(this Type type) => type.IsAbstract && type.IsSealed;
+
+	public static string GetFullMethodName(this MethodBase method)
+		=> method.DeclaringType?.IsInterface == true
+		? GetInterfaceName(method) + "." + method.Name
+		: method.Name;
+
+	private static string GetInterfaceName(MethodBase method)
+	{
+		var type = method.DeclaringType.IsConstructedGenericType ? method.DeclaringType.GetGenericTypeDefinition() : method.DeclaringType;
+		var typeName = type.ToString().Replace('+', '.').Replace('[', '<').Replace(']', '>');
+		typeName = Regex.Replace(typeName, @"(.*)(`\d+)(<.*>)", match => match.Groups[1].Value + match.Groups[3].Value);
+		return typeName;
+	}
 }

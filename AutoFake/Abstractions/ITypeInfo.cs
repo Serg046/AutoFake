@@ -13,6 +13,7 @@ public interface ITypeInfo
 	bool IsInFakeModule(TypeReference type);
 	IEnumerable<MethodDefinition> GetMethods(Predicate<MethodDefinition> methodPredicate);
 	IEnumerable<MethodDefinition> GetMethods(TypeDefinition type, Predicate<MethodDefinition> methodPredicate);
+	MethodDefinition? GetMethod(MethodBase method, bool searchInBaseType = false);
 	MethodDefinition? GetMethod(MethodReference methodReference, bool searchInBaseType = false);
 	MethodDefinition? GetMethod(TypeDefinition type, MethodReference methodReference, bool searchInBaseType = false);
 	TypeDefinition GetTypeDefinition(Type type);

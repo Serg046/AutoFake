@@ -74,9 +74,8 @@ internal class FakeProcessor : IFakeProcessor
 	{
 		var visitor = _memberVisitorFactory.GetMemberVisitor<IGetTestMethodVisitor>();
 		var method = invocationExpression.AcceptMemberVisitor(visitor);
-		var executeFuncRef = _typeInfo.ImportToSourceAsm(method);
-		var executeFuncDef = _typeInfo.GetMethod(executeFuncRef, searchInBaseType: true);
-		if (executeFuncDef == null) throw new MissingMethodException(method.DeclaringType!.FullName, method.Name);
+		var executeFuncDef = _typeInfo.GetMethod(method, searchInBaseType: true);
+		if (executeFuncDef == null) throw new MissingMethodException(method.DeclaringType?.FullName, method.Name);
 		if (executeFuncDef.Body == null) throw new NotSupportedException("Methods without body are not supported");
 
 		return executeFuncDef;
