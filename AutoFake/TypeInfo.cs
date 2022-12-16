@@ -176,7 +176,7 @@ internal class TypeInfo : ITypeInfo
 			var newGenericInstanceMethod = _cecilFactory.CreateGenericInstanceMethod(newMethodRef);
 			foreach (var arg in genericInstanceMethod.GenericArguments)
 			{
-				newGenericInstanceMethod.GenericArguments.Add(arg);
+				newGenericInstanceMethod.GenericArguments.Add(IsInFakeModule(arg) ? ImportToSourceAsm(arg) : arg);
 			}
 
 			return newGenericInstanceMethod;
