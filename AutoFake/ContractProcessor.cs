@@ -71,6 +71,14 @@ internal class ContractProcessor : IContractProcessor
 
 	private void ProcessOriginalMethodContractWithMocks(MethodDefinition methodDef)
 	{
+		if (methodDef.ReturnType.Name.StartsWith("ValueTuple"))
+		{
+			if (methodDef.ReturnType is GenericInstanceType generic)
+			{
+				generic.GenericArguments[0] = _typeInfo.ImportToSourceAsm(generic.GenericArguments[0]);
+			}
+		}
+
 		if (methodDef.ReturnType != null && methodDef.ReturnType.FullName != "System.Void" && _typeInfo.IsInFakeModule(methodDef.ReturnType))
 		{
 			AddReplaceContractMocks(methodDef.ReturnType.ToTypeDefinition());
@@ -103,6 +111,10 @@ internal class ContractProcessor : IContractProcessor
 
 			_mockCollection.ContractMocks.Add(_mockFactory.GetReplaceTypeCastMock(importedTypeRef));
 			TryAddImportedType(mockTypeDef, importedTypeRef);
+		}
+		if (typeDef.BaseType is GenericInstanceType generic)
+		{
+			typeDef.BaseType = _typeInfo.ImportToSourceAsm(generic);
 		}
 	}
 

@@ -54,7 +54,7 @@ public class ExplicitInterfaceImplementationTests
 		sut.Execute().Should().Be((expected, 5));
 	}
 
-	[Fact(Skip = "Not working yet")]
+	[Fact]
 	public void When_rewrite_base_interface_contract_through_another_type_Should_process_base_class()
 	{
 		var fake = new Fake<AnotherTestClass>();

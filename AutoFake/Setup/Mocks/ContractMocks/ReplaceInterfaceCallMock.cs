@@ -18,13 +18,23 @@ internal class ReplaceInterfaceCallMock : IReplaceInterfaceCallMock
 	}
 
 	public bool IsSourceInstruction(MethodDefinition method, Instruction instruction, IEnumerable<IGenericArgument> genericArguments)
-		=> instruction.OpCode.OperandType == OperandType.InlineMethod &&
+		=> true;
+		/*=> instruction.OpCode.OperandType == OperandType.InlineMethod &&
 		   instruction.Operand is MethodReference m &&
-		   m.DeclaringType.GetElementType().FullName == _typeReference.FullName;
+		   m.DeclaringType.GetElementType().FullName == _typeReference.FullName;*/
 
 
 	public void Inject(IEmitter emitter, Instruction instruction)
 	{
+		if (instruction.Operand is GenericInstanceMethod generic && generic.Name == "CallGetValue")
+		{
+			//if (generic.DeclaringType is GenericInstanceType gt)
+			{
+				//gt.GenericArguments[0] = _typeInfo.ImportToSourceAsm(gt.GenericArguments[0]);
+			}
+			instruction.Operand = _typeInfo.ImportToSourceAsm(generic);
+		}
+		return;
 		var method = (MethodReference)instruction.Operand;
 		instruction.Operand = _typeInfo.ImportToSourceAsm(method);
 	}
