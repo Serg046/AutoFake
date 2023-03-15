@@ -7,9 +7,9 @@ using FluentAssertions;
 using Mono.Cecil;
 using Xunit;
 
-namespace AutoFake.FunctionalTests
+namespace AutoFake.FunctionalTests.Contract.NonGeneric
 {
-	public class TestMethodContractCallTests
+	public class CallTests
 	{
 		[Theory]
 		[InlineData(typeof(HelperClass))]
@@ -184,88 +184,6 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(88);
 		}
 
-		[Theory]
-		[InlineData(typeof(GenericClassHelper<int>))]
-		[InlineData(typeof(GenericStructHelper<int>))]
-		public void When_method_call_through_generic_interface_Should_succeed(Type type)
-		{
-			var helper = Activator.CreateInstance(type, 5) as IGenericHelper<int>;
-
-			var fake = new Fake<TestClass>();
-			var sut = fake.Rewrite(f => f.CallMethodThroughGenericInterface(helper));
-
-			sut.Execute().Should().Be(5);
-		}
-
-		[Theory]
-		[InlineData(typeof(GenericClassHelper<int>))]
-		[InlineData(typeof(GenericStructHelper<int>))]
-		public void When_method_call_through_inferred_generic_interface_Should_succeed(Type type)
-		{
-			var helper = Activator.CreateInstance(type, 5) as IGenericHelper<int>;
-
-			var fake = new Fake<GenericTestClass<int>>();
-			var sut = fake.Rewrite(f => f.CallMethodThroughGenericInterface(helper));
-
-			sut.Execute().Should().Be(5);
-		}
-
-		[Theory]
-		[InlineData(typeof(GenericClassHelper<int>))]
-		[InlineData(typeof(GenericStructHelper<int>))]
-		public void When_generic_method_call_through_generic_interface_Should_succeed(Type type)
-		{
-			var helper = Activator.CreateInstance(type, 5) as IGenericHelper<int>;
-
-			var fake = new Fake<TestClass>();
-			var sut = fake.Rewrite(f => f.CallGenericMethodThroughGenericInterface(helper));
-
-			sut.Execute().Prop.Should().Be(5);
-		}
-
-		[Theory]
-		[InlineData(typeof(GenericClassHelper<TestClass>))]
-		[InlineData(typeof(GenericStructHelper<TestClass>))]
-		public void When_generic_method_call_through_internal_generic_interface_Should_succeed(Type type)
-		{
-			var helper = Activator.CreateInstance(type, new TestClass { Prop = 5 }) as IGenericHelper<TestClass>;
-
-			var fake = new Fake<TestClass>();
-			var sut = fake.Rewrite(f => f.CallGenericMethodThroughGenericInterface(helper));
-
-			sut.Execute().Should().Be(helper.Value);
-		}
-
-		[Fact]
-		public void When_generic_type_inside_Should_succeed()
-		{
-			var fake = new Fake<TestClass>();
-			var sut = fake.Rewrite(f => f.CallGenericMethodThroughGenericInterface<TestClass>());
-
-			sut.Execute().Should().BeOfType<TestClass>();
-			sut.Execute().Prop.Should().Be(5);
-		}
-
-		[Fact]
-		public void When_generic_class_creation_Should_succeed()
-		{
-			var fake = new Fake<TestClass>();
-
-			var sut = fake.Rewrite(f => f.CreateGenericHelperClass());
-
-			sut.Execute().Should().BeOfType<GenericClassHelper<int>>();
-		}
-
-		[Fact]
-		public void When_generic_struct_creation_Should_succeed()
-		{
-			var fake = new Fake<TestClass>();
-
-			var sut = fake.Rewrite(f => f.CreateGenericHelperStruct());
-
-			sut.Execute().Should().BeOfType<GenericStructHelper<int>>();
-		}
-
 		[Fact]
 		public void When_explicit_interface_member_Should_succeed()
 		{
@@ -285,36 +203,13 @@ namespace AutoFake.FunctionalTests
 			fake.Services.Register<IReplaceReferenceTypeCtorMock, FakeReplaceReferenceTypeCtorMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 			fake.Services.Register<IReplaceTypeCastMock, FakeReplaceTypeCastMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 			fake.Services.Register<IReplaceValueTypeCtorMock, FakeReplaceValueTypeCtorMock>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
-			
+
 			var sut = fake.Rewrite(f => f.CallMethodThroughInterface(new HelperClass()));
-			
+
 			sut.Execute().Should().Be(5);
 		}
 
 		private bool IsHelperClass(IHelper helper) => helper is HelperClass { Prop: 4 };
-
-		public interface IGenericHelper<T>
-		{
-			T Value { get; }
-			double GetValue(Func<T, double> functor);
-			TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor);
-		}
-
-		public class GenericClassHelper<T> : IGenericHelper<T>
-		{
-			public GenericClassHelper(T value) => Value = value;
-			public T Value { get; }
-			public double GetValue(Func<T, double> functor) => functor(Value);
-			public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(Value);
-		}
-
-		public struct GenericStructHelper<T> : IGenericHelper<T>
-		{
-			public GenericStructHelper(T value) => Value = value;
-			public T Value { get; }
-			public double GetValue(Func<T, double> functor) => functor(Value);
-			public TReturn GetValueGeneric<TReturn>(Func<T, TReturn> functor) => functor(Value);
-		}
 
 		public interface IHelper : IHelper2 { }
 		public interface IHelper2 : IHelper3 { }
@@ -350,14 +245,6 @@ namespace AutoFake.FunctionalTests
 			public int GetFive() => 5;
 		}
 
-		private class GenericTestClass<T>
-		{
-			public double CallMethodThroughGenericInterface(IGenericHelper<T> helper)
-			{
-				return helper.GetValue(v => 5);
-			}
-		}
-
 		public class TestClass
 		{
 			public int Prop { get; set; }
@@ -370,26 +257,6 @@ namespace AutoFake.FunctionalTests
 			public virtual int CallMethodThroughInterface(IHelper helper)
 			{
 				return helper.GetFive();
-			}
-
-			public double CallMethodThroughGenericInterface(IGenericHelper<int> helper)
-			{
-				return helper.GetValue(v => v);
-			}
-
-			public TestClass CallGenericMethodThroughGenericInterface(IGenericHelper<int> helper)
-			{
-				return helper.GetValueGeneric<TestClass>(v => new TestClass { Prop = v });
-			}
-
-			public T CallGenericMethodThroughGenericInterface<T>(IGenericHelper<T> helper)
-			{
-				return helper.Value;
-			}
-
-			public TestClass CallGenericMethodThroughGenericInterface<T>()
-			{
-				return new GenericClassHelper<TestClass>(new TestClass { Prop = 5 }).Value;
 			}
 
 			public int CallMethodThroughImplClass(HelperClassBase helper)
@@ -415,16 +282,6 @@ namespace AutoFake.FunctionalTests
 			public IHelper CreateHelperStruct()
 			{
 				return new HelperStruct();
-			}
-
-			public IGenericHelper<int> CreateGenericHelperClass()
-			{
-				return new GenericClassHelper<int>(5);
-			}
-
-			public IGenericHelper<int> CreateGenericHelperStruct()
-			{
-				return new GenericStructHelper<int>(5);
 			}
 
 			public object ReturnBoxedHelperStruct(HelperStruct helperStruct)

@@ -1,9 +1,9 @@
 using FluentAssertions;
 using Xunit;
 
-namespace AutoFake.FunctionalTests
+namespace AutoFake.FunctionalTests.Contract
 {
-	public class ArgLambdaContractTests
+	public class ArgLambdaTests
 	{
 		[Fact]
 		public void When_arg_is_custom_type_Should_succeed()
