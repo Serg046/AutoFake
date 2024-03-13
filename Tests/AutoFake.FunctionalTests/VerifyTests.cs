@@ -13,7 +13,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class VerifyTests
 	{
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(false, false, true)]
 		[InlineData(true, false, true)]
 		[InlineData(false, true, true)]
@@ -38,7 +38,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData("==", 2, true)]
 		[InlineData("==", 1, false)]
 		[InlineData("<", 1, true)]
@@ -71,7 +71,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_there_are_branches_Should_pass()
 		{
 			var fake = new Fake<TestClass>();
@@ -89,7 +89,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(0, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public async Task When_async_method_Should_verify()
 		{
 			var fake = new Fake<TestClass>();
@@ -100,7 +100,7 @@ namespace AutoFake.FunctionalTests
 			await sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_enumerable_Should_verify()
 		{
 			var fake = new Fake<TestClass>();
@@ -111,7 +111,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Cast<int>().Sum().Should().Be(6);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_typed_enumerable_Should_verify()
 		{
 			var fake = new Fake<TestClass>();
@@ -123,7 +123,7 @@ namespace AutoFake.FunctionalTests
 		}
 
 #if NETCOREAPP3_0
-        [Fact]
+        [ExcludedFact]
         public async Task When_async_enumerable_Should_verify()
         {
             var fake = new Fake<TestClass>();
@@ -138,7 +138,7 @@ namespace AutoFake.FunctionalTests
         }
 #endif
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(-10, -1)]
 		[InlineData(0, 0)]
 		[InlineData(10, 1)]
@@ -152,7 +152,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(expected);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(-10, 1)]
 		[InlineData(0, 123)]
 		[InlineData(10, -1)]
@@ -167,7 +167,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<ArgumentException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_incorrect_string_arg_Should_add_quotes_to_output()
 		{
 			var fake = new Fake<TestClass>();
@@ -179,7 +179,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<ArgumentException>().WithMessage("*\"default\"*");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_incorrect_null_string_arg_Should_add_quotes_to_output()
 		{
 			var fake = new Fake<TestClass>();
@@ -191,7 +191,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<ArgumentException>().WithMessage("*\"default\"*");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_input_type_provided_Should_pass()
 		{
 			var fake = new Fake<TestClass>();
@@ -202,7 +202,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be("string");
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(7, 5, false)]
 		[InlineData(7, 8, true)]
 		public void When_verify_prop_setter_Should_succeed(int argument, int minValue, bool fails)

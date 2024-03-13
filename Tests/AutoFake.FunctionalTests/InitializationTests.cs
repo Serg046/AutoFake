@@ -16,7 +16,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class InitializationTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_incorrect_args_Should_fail()
 		{
 			var fake = new Fake<TestClass>(Arg.IsNull<object>());
@@ -26,7 +26,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingMethodException>().WithMessage("Constructor is not found");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_ambiguous_null_arg_Should_fail()
 		{
 			var fake = new Fake<TestClass>(Arg.IsNull<object>(), null);
@@ -36,7 +36,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<AmbiguousMatchException>().WithMessage("Ambiguous null-invocation*");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_method_call_as_arg_Should_Succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -48,7 +48,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_is_arg_with_different_type_Should_Succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -62,7 +62,7 @@ namespace AutoFake.FunctionalTests
 
 		string GetOne() => "1";
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_closure_field_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -76,7 +76,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingFieldException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_return_field_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -90,7 +90,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingFieldException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_setup_body_field_definition_Should_fail()
 		{
 			var fake = new Fake<InitializationTests>();
@@ -110,7 +110,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidOperationException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_setup_body_field_Should_fail()
 		{
 			var fake = new Fake<InitializationTests>();
@@ -124,7 +124,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingFieldException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_execution_context_field_definition_Should_fail()
 		{
 			var fake = new Fake<TestClassWithSetupBodyField>();
@@ -144,7 +144,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidOperationException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_execution_context_field_Should_fail()
 		{
 			var fake = new Fake<TestClassWithSetupBodyField>();
@@ -158,7 +158,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingFieldException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_parameter_full_name_Should_not_fail()
 		{
 			var fake = new Fake<TestClass>();

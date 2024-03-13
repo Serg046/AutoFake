@@ -8,7 +8,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class ReplaceTests
 	{
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(false, false, true)]
 		[InlineData(true, false, true)]
 		[InlineData(false, true, true)]
@@ -34,7 +34,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(true, 2, true)]
 		[InlineData(true, 1, false)]
 		[InlineData(false, 0, false)]
@@ -60,7 +60,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_there_are_branches_Should_pass()
 		{
 			var fake = new Fake<TestClass>();
@@ -80,7 +80,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(6, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_source_assembly_instance_Should_succeed()
 		{
 			var date = new DateTime(2020, 5, 23);
@@ -93,7 +93,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(date, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_replace_some_instance_Should_succeed()
 		{
 			const int mutator = 4;
@@ -108,7 +108,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(cl2, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_different_generic_args_Should_not_replace()
 		{
 			var fake = new Fake<TestClass<int>>(5);
@@ -122,7 +122,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_different_fields_Should_not_replace()
 		{
 			var fake = new Fake<TestClass<int>>(5);
@@ -133,7 +133,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_different_fields_but_same_field_name_Should_not_replace()
 		{
 			var fake = new Fake<TestClass<int>>(5);
@@ -144,7 +144,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_return_value_is_null_Should_succeed()
 		{
 			var fake = new Fake<TestClass<string>>("test");
@@ -155,7 +155,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().BeNull();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_arguments_are_matched_Should_replace()
 		{
 			var fake = new Fake<TestClass>();

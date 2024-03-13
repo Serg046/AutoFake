@@ -11,7 +11,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class FakeTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_null_as_fake_type_Should_fail()
 		{
 			Action act = () => new Fake(null);
@@ -19,7 +19,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<ArgumentNullException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_generic_instance_void_action_Should_execute()
 		{
 			var fake = new Fake<TestClass>();
@@ -29,7 +29,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_instance_void_action_Should_execute()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -39,7 +39,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute((TestClass f) => f.Prop).Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_static_void_action_Should_execute()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -49,7 +49,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(() => TestClass.StaticProp).Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_instance_void_action_executor_Should_execute()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -67,7 +67,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_static_void_action_executor_Should_execute()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -85,7 +85,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_object_func_executor_Should_execute()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -98,7 +98,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute((TestClass f) => f.Prop).Should().Be(6);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_object_action_executor_Should_execute()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -116,7 +116,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_scoped_service_overriden_Should_apply()
 		{
 			var fake = new Fake<TestClass>();

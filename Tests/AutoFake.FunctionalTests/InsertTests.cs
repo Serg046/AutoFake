@@ -13,7 +13,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class InsertTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_append_Should_add_number_in_the_end()
 		{
 			var fake = new Fake<TestClass>();
@@ -26,7 +26,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { 3, 5, 7, -1 }, numbers);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_prepend_Should_add_number_in_the_beginning()
 		{
 			var fake = new Fake<TestClass>();
@@ -39,7 +39,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { -1, 3, 5, 7 }, numbers);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_append_with_source_member_Should_add_number_after_cmd()
 		{
 			var fake = new Fake<TestClass>();
@@ -53,7 +53,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { 3, 5, -1, 7 }, numbers);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_multiple_callbacks_Should_add_both_number()
 		{
 			var fake = new Fake<TestClass>();
@@ -67,7 +67,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { -1, 3, 5, 7, -2 }, numbers);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_prepend_with_source_member_Should_add_number_before_cmd()
 		{
 			var fake = new Fake<TestClass>();
@@ -81,7 +81,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { 3, -1, 5, 7 }, numbers);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_append_Should_add_number_to_local_val()
 		{
 			var numbers = new List<int>();
@@ -94,7 +94,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { -1 }, numbers);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_generic_insert_mocks_Should_add_numbers_to_the_appropriate_places()
 		{
 			var numbers = new List<int>();
@@ -108,7 +108,7 @@ namespace AutoFake.FunctionalTests
 			numbers.Should().ContainInOrder(3, 5, -6, 6, 7);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_arguments_are_matched_Should_add_numbers()
 		{
 			var numbers = new List<int>();
@@ -123,7 +123,7 @@ namespace AutoFake.FunctionalTests
 			numbers.Should().ContainInOrder(3, -1, 0, 5, 7, -2, 0);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_invariants_are_matched_Should_add_numbers()
 		{
 			var numbers = new List<int>();
@@ -140,7 +140,7 @@ namespace AutoFake.FunctionalTests
 			numbers.Should().ContainInOrder(3, -1, 0, 5, 7, -2, 0);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_unsupported_location_Should_return_false()
 		{
 			var fake = new Fake<TestClass>();
@@ -169,7 +169,7 @@ namespace AutoFake.FunctionalTests
 				.Should().BeFalse();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_closure_field_during_injection_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -182,7 +182,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidOperationException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_append_with_return_type_provided_Should_insert_after()
 		{
 			var fake = new Fake<TestClass>();
@@ -195,7 +195,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(1);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_prepend_with_return_type_provided_Should_insert_before()
 		{
 			var fake = new Fake<TestClass>();
@@ -208,7 +208,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(0);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_append_with_input_and_return_type_provided_Should_insert_after()
 		{
 			var fake = new Fake<TestClass>();
@@ -221,7 +221,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(1);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_prepend_with_input_and_return_type_provided_Should_insert_before()
 		{
 			var fake = new Fake<TestClass>();
@@ -234,7 +234,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(0);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_append_after_static_void_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -247,7 +247,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(1);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_prepend_before_static_void_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -260,7 +260,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Prop).Should().Be(0);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_expected_calls_provided_Should_check()
 		{
 			var fake = new Fake<TestClass>();
@@ -274,7 +274,7 @@ namespace AutoFake.FunctionalTests
 			list.Should().ContainInOrder(3, 0, 5, 7, 0);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_expected_calls_with_exact_param_provided_Should_check()
 		{
 			var fake = new Fake<TestClass>();
@@ -289,7 +289,7 @@ namespace AutoFake.FunctionalTests
 			list.Should().ContainInOrder(3, 0, 5, 7);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(true, 3, 0, 5, 7)]
 		[InlineData(false, 3, 5, 7)]
 		public void When_condition_is_provided_Should_check(bool condition, params int[] result)

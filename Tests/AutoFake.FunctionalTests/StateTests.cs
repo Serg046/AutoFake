@@ -13,7 +13,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class StateTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_multiple_mocks_Should_apply_all()
 		{
 			var enumerable = Enumerable.Range(1, 100);
@@ -27,7 +27,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(3);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_null_ctor_arg_Should_be_passed()
 		{
 			new Fake<CtorTestClass>("someObj").Execute(f => f.ReturnCtorArg()).Should().Be("someObj");
@@ -35,7 +35,7 @@ namespace AutoFake.FunctionalTests
 			new Fake<CtorTestClass>(null).Execute(f => f.ReturnCtorArg()).Should().BeNull();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_value_type_ctor_arg_Should_be_passed()
 		{
 			new Fake<CtorTestClass>(1, 1).Execute(f => f.ReturnCtorArg()).Should().Be(2);
@@ -45,7 +45,7 @@ namespace AutoFake.FunctionalTests
 				.Should().Throw<InvalidOperationException>().WithMessage("*cannot be null*");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_ambiguous_ctor_arg_Should_throw()
 		{
 			new Action(() => new Fake<AmbiguousCtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()))
@@ -56,7 +56,7 @@ namespace AutoFake.FunctionalTests
 				.Execute().Should().Be(3);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_debug_mode_with_symbols_Should_load_symbols()
 		{
 			var fake = new Fake<StateTests>();
@@ -67,7 +67,7 @@ namespace AutoFake.FunctionalTests
 			type.Should().NotBeNull();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_debug_mode_without_symbols_Should_fail()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -78,7 +78,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidOperationException>().WithMessage("No symbols found");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_debug_mode_disable_without_symbols_Should_not_fail()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -87,7 +87,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.ConditionalReturn(1)).Should().Be(1);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_auto_debug_mode_without_symbols_Should_not_fail()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -97,7 +97,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.ConditionalReturn(-1)).Should().Be(-1);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_symbols_file_stream_Should_fail()
 		{
 			var fake = new Fake<StateTests>();
@@ -113,7 +113,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<NotSupportedException>().WithMessage("Symbols*without files");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_incorrect_type_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -127,7 +127,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidOperationException>().WithMessage("Cannot find a type");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_valid_state_machine_attribute_Should_skip()
 		{
 			var fake = new Fake<TestClass>();
@@ -138,7 +138,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Day.Should().Be(20);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_invalid_state_machine_attribute_Should_skip()
 		{
 			var fake = new Fake<TestClass>();
@@ -149,7 +149,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Day.Should().Be(21);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_invalid_attribute_Should_skip()
 		{
 			var fake = new Fake<TestClass>();

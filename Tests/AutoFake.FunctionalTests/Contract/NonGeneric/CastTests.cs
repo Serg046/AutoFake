@@ -11,7 +11,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 {
 	public class CastTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_class_cast_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -22,7 +22,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(helper);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_struct_cast_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -33,7 +33,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(helper);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(HelperClass))]
 		[InlineData(typeof(HelperStruct))]
 		public void When_interface_cast_Should_succeed(Type type)
@@ -46,7 +46,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(helper);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_unbox_instruction_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();

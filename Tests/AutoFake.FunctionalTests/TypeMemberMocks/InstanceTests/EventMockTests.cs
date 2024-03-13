@@ -7,7 +7,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 {
 	public class EventMockTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_add_event_handler_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();
@@ -19,7 +19,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_add_static_event_handler_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();
@@ -31,7 +31,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_incorrect_event_name_Should_fail()
 		{
 			Action act = () => Event.Of<TestClass>("IncorrectEvent").Add(() => Arg.IsAny<Action>());
@@ -39,7 +39,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			act.Should().Throw<MissingMethodException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_remove_event_handler_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();
@@ -51,7 +51,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_check_event_arg_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();
@@ -72,7 +72,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			return true;
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_non_static_type_Should_require_generic_version()
 		{
 			Action act = () => Event.Of(typeof(TestClass), nameof(TestClass.Event)).Add(() => Arg.IsAny<Action<int>>());
@@ -80,7 +80,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			act.Should().Throw<ArgumentException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_add_event_handler_to_external_event_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();
@@ -100,7 +100,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			return true;
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_event_called_Should_be_intercepted()
 		{
 			var fake = new Fake<TestClass>();

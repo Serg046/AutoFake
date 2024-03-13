@@ -11,7 +11,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 {
 	public class FieldMockTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void OwnStaticTest()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -22,7 +22,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			Assert.Equal(7, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void ExternalStaticTest()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -33,7 +33,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			Assert.Equal(7, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void FrameworkInstanceTest()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -45,7 +45,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			Assert.Equal(cmd, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void FrameworkStaticTest()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -59,7 +59,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			Assert.NotEqual(TextReader.Null, actual);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void StaticStructFieldByAddress()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -72,7 +72,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			Assert.Equal(value, sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void GenericTest()
 		{
 			var fake = new Fake(typeof(GenericTestClass<int>));
@@ -85,7 +85,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			Assert.Equal("1", actual.Value);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void AnotherGenericTest()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -99,7 +99,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			sut.Execute().Should().Be(stringValue + intValue);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void WhenTest()
 		{
 			var fake = new Fake(typeof(WhenTestClass));
@@ -113,7 +113,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			sut.Execute().Should().Be(3);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void EnumerableMethodTest()
 		{
 			var fake = new Fake(typeof(EnumerableTestClass));
@@ -125,7 +125,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 		}
 
 #if NETCOREAPP3_0
-		[Fact]
+		[ExcludedFact]
 		public async Task AsyncEnumerableMethodTest()
 		{
 			var fake = new Fake(typeof(AsyncEnumerableTestClass));

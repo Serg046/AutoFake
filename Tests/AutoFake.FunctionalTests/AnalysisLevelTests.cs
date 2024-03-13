@@ -10,7 +10,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class AnalysisLevelTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_SimpleLambda_Should_Pass()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -18,7 +18,7 @@ namespace AutoFake.FunctionalTests
 			fake.Rewrite(f => f.SimpleMethod()).Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_InternalSut_Should_Pass()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -26,7 +26,7 @@ namespace AutoFake.FunctionalTests
 			fake.Rewrite(f => f.InternalMethod()).Execute();
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(true, 2, true)]
 		[InlineData(false, 0, false)]
 		public void When_ExpectedCallsFunc_Should_Pass(bool equalOp, int arg, bool throws)
@@ -51,7 +51,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_ActionToInsert_Should_Pass()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -68,7 +68,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new[] { 0, 1, 2, 3 }, events);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_virtual_implementation_in_another_lib_Should_pass()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -81,7 +81,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(DateTime.MaxValue - DateTime.MinValue);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_virtual_implementation_in_another_lib_with_all_assemblies_Should_pass()
 		{
 			var fake = new Fake<SystemUnderTest>();
@@ -94,7 +94,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(DateTime.MaxValue - DateTime.MinValue);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(AnalysisLevels.Type, false)]
 		[InlineData(AnalysisLevels.Assembly, true)]
 		public void When_type_analysis_level_Should_skip_other_types(AnalysisLevels level, bool success)
@@ -110,7 +110,7 @@ namespace AutoFake.FunctionalTests
 			else act.Should().Throw<NotImplementedException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_invalid_analysis_level_Should_fail()
 		{
 			var fake = new Fake<TestClass>();

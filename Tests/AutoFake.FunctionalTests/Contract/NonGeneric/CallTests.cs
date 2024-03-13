@@ -11,7 +11,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 {
 	public class CallTests
 	{
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(HelperClass))]
 		[InlineData(typeof(HelperStruct))]
 		public void When_method_call_through_interface_Should_succeed(Type type)
@@ -24,7 +24,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_method_call_through_base_class_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -33,7 +33,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(HelperClass))]
 		[InlineData(typeof(HelperStruct))]
 		public void When_method_call_through_interface_from_ctor_Should_succeed(Type type)
@@ -46,7 +46,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_method_call_through_base_class_from_ctor_Should_succeed()
 		{
 			var fake = new Fake<TestClassWithBaseClassCtor>(new HelperClass());
@@ -55,7 +55,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(HelperClass))]
 		[InlineData(typeof(HelperStruct))]
 		public void When_method_call_through_interface_from_field_Should_succeed(Type type)
@@ -69,7 +69,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_method_call_through_base_class_from_field_Should_succeed()
 		{
 			var fake = new Fake<TestClassWithFields>();
@@ -79,7 +79,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(HelperClass))]
 		[InlineData(typeof(HelperStruct))]
 		public void When_interface_contract_Should_succeed(Type type)
@@ -92,7 +92,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_interface_contract_through_impl_class_Should_succeed()
 		{
 			var helper = new HelperClass();
@@ -103,7 +103,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(7);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_interface_contract_through_impl_class_interface_Should_succeed()
 		{
 			var helper = new HelperClass();
@@ -114,7 +114,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(7);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_base_class_contract_Should_succeed()
 		{
 			var fake = new Fake<InheritedTestClass>();
@@ -123,7 +123,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_interface_contract_through_another_type_Should_succeed()
 		{
 			var fake = new Fake<InheritedTestClassWithInterface>();
@@ -133,7 +133,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(10);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_class_creation_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -143,7 +143,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().BeOfType<HelperClass>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_struct_creation_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -153,7 +153,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().BeOfType<HelperStruct>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_boxing_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -163,7 +163,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().BeOfType<HelperStruct>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_unboxing_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -173,7 +173,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().BeOfType<HelperStruct>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_replace_mock_args_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -184,7 +184,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(88);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_explicit_interface_member_Should_succeed()
 		{
 			var fake = new Fake<TestClassWithExplicitInterface>();
@@ -195,7 +195,7 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 			sut.Execute().Should().Be(7);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_same_hash_code_Should_still_work()
 		{
 			var fake = new Fake<TestClass>();

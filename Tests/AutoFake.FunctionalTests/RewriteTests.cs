@@ -11,7 +11,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class RewriteTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_null_expression_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -21,7 +21,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<ArgumentNullException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_multiple_suts_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -33,7 +33,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(1, sut2.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_overloaded_methods_Should_choose_the_right()
 		{
 			var fake = new Fake<TestClass>();
@@ -45,7 +45,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(3, sut2.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_rewrite_func_with_input_Should_succeed()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -57,7 +57,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(3, sut2.Execute());
 		}
 		
-		[Fact]
+		[ExcludedFact]
 		public void When_no_body_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -67,7 +67,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<NotSupportedException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_method_Should_fail()
 		{
 			var fake = new Fake<RewriteTests>();
@@ -77,7 +77,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingMethodException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_property_Should_fail()
 		{
 			var fake = new Fake<RewriteTests>();
@@ -87,7 +87,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingMemberException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_no_field_Should_fail()
 		{
 			var fake = new Fake<RewriteTests>();
@@ -97,7 +97,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<MissingMemberException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_rewrite_ctor_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -109,7 +109,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.Date).Should().Be(date);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_rewrite_field_Should_fail()
 		{
 			var fake = new Fake<RewriteTests>();
@@ -119,7 +119,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<NotSupportedException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_unsupported_expression_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -129,7 +129,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<NotSupportedException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_member_declaring_type_is_null_Should_fail()
 		{
 			var fake = new Fake<TestClass>();

@@ -5,7 +5,7 @@ namespace AutoFake.FunctionalTests;
 
 public class ExplicitInterfaceImplementationTests
 {
-	[Fact]
+	[ExcludedFact]
 	public void When_rewrite_method_Should_succeed()
 	{
 		var fake = new Fake<TestClass>();
@@ -13,7 +13,7 @@ public class ExplicitInterfaceImplementationTests
 		fake.Rewrite((ITest f) => f.GetFive()).Execute().Should().Be(5);
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void When_rewrite_generic_method_Should_succeed()
 	{
 		var fake = new Fake<TestClass<int>>();
@@ -21,7 +21,7 @@ public class ExplicitInterfaceImplementationTests
 		fake.Rewrite((ITest<int> f) => f.GetValue<double>(1, 1.0)).Execute().Should().Be((1, 1.0));
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void When_replace_method_Should_succeed()
 	{
 		var fake = new Fake<TestClass>();
@@ -32,7 +32,7 @@ public class ExplicitInterfaceImplementationTests
 		sut.Execute().Should().Be(7);
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void When_replace_generic_method_Should_succeed()
 	{
 		var fake = new Fake<TestClass<int>>();

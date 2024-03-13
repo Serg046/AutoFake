@@ -9,7 +9,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests;
 
 public class IndexerMockTests
 {
-	[Fact]
+	[ExcludedFact]
 	public void GetterTest()
 	{
 		var fake = new Fake<TestClass>();
@@ -20,7 +20,7 @@ public class IndexerMockTests
 		sut.Execute().Should().Be("newTestValue");
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void SetterTest()
 	{
 		var fake = new Fake<TestClass>();
@@ -31,7 +31,7 @@ public class IndexerMockTests
 		sut.Execute().Should().Be("0False");
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void NoIndexerTest()
 	{
 		Action act1 = () => Indexer.Of((TestClass t) => t.ReadOnlyProperty).Set(() => "test");
@@ -41,7 +41,7 @@ public class IndexerMockTests
 		act2.Should().Throw<MissingMemberException>();
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void NoIndexerDeclaringTypeTest()
 	{
 		var member = LinqExpression.Call(null, new MethodInfoFake<string>());

@@ -6,7 +6,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 {
 	public class EventMockTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_add_event_handler_Should_be_intercepted()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -18,7 +18,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_incorrect_event_name_Should_fail()
 		{
 			Action act = () => Event.Of(typeof(TestClass), "IncorrectEvent").Add(() => Arg.IsAny<Action>());
@@ -26,7 +26,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			act.Should().Throw<MissingMethodException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_remove_event_handler_Should_be_intercepted()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -38,7 +38,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			sut.Execute();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_check_event_arg_Should_be_intercepted()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -59,7 +59,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			return true;
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_add_event_handler_to_external_event_Should_be_intercepted()
 		{
 			var fake = new Fake(typeof(TestClass));
@@ -79,7 +79,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			return true;
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_event_called_Should_be_intercepted()
 		{
 			var fake = new Fake(typeof(TestClass));

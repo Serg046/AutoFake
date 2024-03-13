@@ -5,7 +5,7 @@ namespace AutoFake.FunctionalTests.Contract
 {
 	public class ArgLambdaTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_arg_is_custom_type_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -16,7 +16,7 @@ namespace AutoFake.FunctionalTests.Contract
 			sut.Execute().Should().Be(2);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_int_is_captured_Should_pass()
 		{
 			var fake = new Fake<TestClass>();
@@ -28,7 +28,7 @@ namespace AutoFake.FunctionalTests.Contract
 			sut.Execute().Should().Be(2);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_custom_type_is_captured_Should_pass()
 		{
 			var fake = new Fake<TestClass>();
@@ -40,7 +40,7 @@ namespace AutoFake.FunctionalTests.Contract
 			sut.Execute().Should().Be(2);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_custom_interface_is_captured_Should_pass()
 		{
 			var fake = new Fake<TestClass>();
@@ -52,7 +52,7 @@ namespace AutoFake.FunctionalTests.Contract
 			sut.Execute().Should().Be(2);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_custom_is_captured_and_compared_Should_pass()
 		{
 			var fake = new Fake<TestClass>();

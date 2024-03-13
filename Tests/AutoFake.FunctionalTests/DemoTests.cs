@@ -8,7 +8,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class DemoTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void Yesterday_SomeDay_ThePrevDay()
 		{
 			var fake = new Fake<Calendar>();
@@ -19,7 +19,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(new DateTime(2016, 8, 7), sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public async Task AddSomeMinutesAsync_SomeDay_MinutesAdded()
 		{
 			var randomValue = 7;
@@ -35,7 +35,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(date.AddMinutes(randomValue), await sut.Execute());
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void AddSomeMinutes_SomeDay_EventsRecorded()
 		{
 			var events = new List<string>();

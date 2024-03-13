@@ -6,7 +6,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class SelfReferenceTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_assert_instance_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -16,7 +16,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidCastException>().WithMessage("*Cannot cast \"this\" reference to*");
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_assert_instance_member_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -26,7 +26,7 @@ namespace AutoFake.FunctionalTests
 			fake.Execute(f => f.GetReference().Prop).Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_assert_new_instance_without_rewriting_Should_fail()
 		{
 			var fake = new Fake<TestClass>();
@@ -36,7 +36,7 @@ namespace AutoFake.FunctionalTests
 			act.Should().Throw<InvalidCastException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_assert_new_instance_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -47,7 +47,7 @@ namespace AutoFake.FunctionalTests
 			actual.Prop.Should().Be(7);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_assert_replaced_instance_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();

@@ -7,7 +7,7 @@ namespace AutoFake.FunctionalTests.Units
 {
 	public class ExpressionTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_GetTestMethodVisitor_without_property_getter_Should_fail()
 		{
 			var visitor = new GetTestMethodVisitor();
@@ -18,7 +18,7 @@ namespace AutoFake.FunctionalTests.Units
 			act.Should().Throw<NotSupportedException>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_GetSourceMemberVisitor_without_property_getter_Should_fail()
 		{
 			var visitor = new GetSourceMemberVisitor(m => null, m => null);

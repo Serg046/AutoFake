@@ -8,7 +8,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 {
 	public class CallTests
 	{
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(GenericClassHelper<int>))]
 		[InlineData(typeof(GenericStructHelper<int>))]
 		public void When_method_call_through_generic_interface_Should_succeed(Type type)
@@ -21,7 +21,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			sut.Execute().Should().Be(5);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(GenericClassHelper<int>))]
 		[InlineData(typeof(GenericStructHelper<int>))]
 		public void When_method_call_through_inferred_generic_interface_Should_succeed(Type type)
@@ -34,7 +34,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			sut.Execute().Should().Be(5);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(GenericClassHelper<int>))]
 		[InlineData(typeof(GenericStructHelper<int>))]
 		public void When_generic_method_call_through_generic_interface_Should_succeed(Type type)
@@ -47,7 +47,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			sut.Execute().Prop.Should().Be(5);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(typeof(GenericClassHelper<TestClass>))]
 		[InlineData(typeof(GenericStructHelper<TestClass>))]
 		public void When_generic_method_call_through_internal_generic_interface_Should_succeed(Type type)
@@ -60,7 +60,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			sut.Execute().Should().Be(helper.Value);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_generic_type_inside_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -70,7 +70,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			sut.Execute().Prop.Should().Be(5);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_generic_class_creation_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -80,7 +80,7 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			sut.Execute().Should().BeOfType<GenericClassHelper<int>>();
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_generic_struct_creation_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();

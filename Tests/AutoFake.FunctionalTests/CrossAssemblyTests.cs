@@ -9,7 +9,7 @@ namespace AutoFake.FunctionalTests
 {
 	public class CrossAssemblyTests
 	{
-		[Fact]
+		[ExcludedFact]
 		public void When_class_ctor_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -19,7 +19,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(7, sut.Execute().Prop);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_struct_ctor_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -29,7 +29,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(7, sut.Execute().Prop);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_class_ctor_with_args_Should_succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -39,7 +39,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(7, sut.Execute().Prop);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_class_field_Should_be_returned()
 		{
 			var fake = new Fake<TestClass>();
@@ -49,7 +49,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(7, sut.Execute().Prop);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_struct_field_Should_be_returned()
 		{
 			var fake = new Fake<TestClass>();
@@ -59,7 +59,7 @@ namespace AutoFake.FunctionalTests
 			Assert.Equal(7, sut.Execute().Prop);
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_mock_another_assembly_member_Should_be_replaced()
 		{
 			var fake = new Fake<TestClass>();
@@ -72,7 +72,7 @@ namespace AutoFake.FunctionalTests
 			sut.Execute().Should().Be(DateTime.MaxValue);
 		}
 
-		[Theory]
+		[ExcludedTheory]
 		[InlineData(0, false)]
 		[InlineData(1, true)]
 		[InlineData(2, false)]
@@ -97,7 +97,7 @@ namespace AutoFake.FunctionalTests
 			}
 		}
 
-		[Fact]
+		[ExcludedFact]
 		public void When_mock_another_assembly_member_Should_be_inserted()
 		{
 			var list = new List<int>();

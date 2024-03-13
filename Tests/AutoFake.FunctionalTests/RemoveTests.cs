@@ -6,7 +6,7 @@ namespace AutoFake.FunctionalTests;
 
 public class RemoveTests
 {
-	[Theory]
+	[ExcludedTheory]
 	[InlineData(0, 0, 1, false)]
 	[InlineData(1, 2, 2, false)]
 	[InlineData(0, 0, 2, true)]
@@ -22,7 +22,7 @@ public class RemoveTests
 		if (fails) act.Should().Throw<MethodAccessException>(); else act.Should().NotThrow();
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void When_arguments_are_matched_Should_remove()
 	{
 		var fake = new Fake<TestClass>();
@@ -34,7 +34,7 @@ public class RemoveTests
 		fake.Execute(f => f.Field).Should().Be(0);
 	}
 
-	[Fact]
+	[ExcludedFact]
 	public void When_arguments_are_not_matched_Should_not_remove()
 	{
 		var fake = new Fake<TestClass>();
@@ -46,7 +46,7 @@ public class RemoveTests
 		fake.Execute(f => f.Field).Should().Be(6);
 	}
 
-	[Theory]
+	[ExcludedTheory]
 	[InlineData(true, 0)]
 	[InlineData(false, 6)]
 	public void When_condition_is_provided_Should_check(bool condition, int result)
@@ -60,7 +60,7 @@ public class RemoveTests
 		fake.Execute(f => f.Field).Should().Be(result);
 	}
 
-	[Theory]
+	[ExcludedTheory]
 	[InlineData(0, 0)]
 	[InlineData(1, 7)]
 	public void When__fake_condition_is_provided_Should_check(int initValue, int result)
