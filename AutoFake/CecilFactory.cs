@@ -40,7 +40,7 @@ internal class CecilFactory : ICecilFactory
 	public TypeDefinition CreateTypeDefinition(string @namespace, string name, TypeAttributes attributes, TypeReference baseType)
 	{
 		return _serviceLocator.Resolve<Func<string, string, TypeAttributes, TypeReference, TypeDefinition>>()
-			.Invoke(@namespace, @namespace, attributes, baseType);
+			.Invoke(@namespace, name, attributes, baseType);
 	}
 
 	public MethodReference CreateMethodReference(string name, TypeReference returnType, TypeReference declaringType)

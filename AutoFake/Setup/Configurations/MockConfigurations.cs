@@ -1,6 +1,5 @@
 using System;
 using System.Linq.Expressions;
-using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup.Mocks;
@@ -11,9 +10,8 @@ internal class FuncMockConfiguration<TSut, TReturn> : MockConfigurations<TSut>, 
 {
 	private readonly IExpressionExecutor<TReturn> _executor;
 
-	internal FuncMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor<TReturn> executor,
-		Func<IMockCollection, IContractProcessor> createContractProcessor)
-		: base(mockConfiguration, typeInfo, createContractProcessor)
+	internal FuncMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor<TReturn> executor)
+		: base(mockConfiguration, typeInfo)
 	{
 		_executor = executor;
 	}
@@ -25,9 +23,8 @@ internal class ActionMockConfiguration<TSut> : MockConfigurations<TSut>, IAction
 {
 	private readonly IExpressionExecutor _executor;
 
-	internal ActionMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor executor,
-		Func<IMockCollection, IContractProcessor> createContractProcessor)
-		: base(mockConfiguration, typeInfo, createContractProcessor)
+	internal ActionMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor executor)
+		: base(mockConfiguration, typeInfo)
 	{
 		_executor = executor;
 	}
@@ -39,13 +36,11 @@ internal abstract class MockConfigurations<TSut>
 {
 	private readonly IMockConfiguration _cfg;
 	private readonly ITypeInfo _typeInfo;
-	private readonly Func<IMockCollection, IContractProcessor> _createContractProcessor;
 
-	internal MockConfigurations(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, Func<IMockCollection, IContractProcessor> createContractProcessor)
+	internal MockConfigurations(IMockConfiguration mockConfiguration, ITypeInfo typeInfo)
 	{
 		_cfg = mockConfiguration;
 		_typeInfo = typeInfo;
-		_createContractProcessor = createContractProcessor;
 	}
 
 	public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TSut, TReturn>> instanceSetupFunc) => ReplaceImpl<TReturn>(instanceSetupFunc);
@@ -108,15 +103,5 @@ internal abstract class MockConfigurations<TSut>
 		var position = _cfg.MockCollection.Mocks.Count;
 		_cfg.MockCollection.Mocks.Add(_cfg.MockFactory.GetInsertMock(action, IInsertMock.Location.After));
 		return _cfg.ConfigurationFactory.GetInsertMockConfiguration<IAppendMockConfiguration<TSut>>(_cfg, mock => _cfg.MockCollection.Mocks[position] = mock, action);
-	}
-
-	public void Import<T>()
-	{
-		var type = typeof(T);
-		if (_typeInfo.SourceType.Assembly == type.Assembly)
-		{
-			var contractProcessor = _createContractProcessor(_cfg.MockCollection);
-			contractProcessor.AddReplaceContractMocks(_typeInfo.GetTypeDefinition(type));
-		}
 	}
 }

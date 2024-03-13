@@ -19,6 +19,8 @@ namespace Sut
 
 		public TimeSpan GetDateVirtual() => GetDate(new DerivedAnotherSystemUnderTest()) - GetDate(new AnotherSystemUnderTest());
 
+		public AnotherSystemUnderTest GetAnotherSystemUnderTest() => new AnotherSystemUnderTest();
+
 		private DateTime GetDate(AnotherSystemUnderTest x) => x.GetCurrentDateVirtual();
 
 		private class DerivedAnotherSystemUnderTest : AnotherSystemUnderTest

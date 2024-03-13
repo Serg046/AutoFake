@@ -20,5 +20,4 @@ public interface IFuncMockConfiguration<TSut, TExecuteReturn>
 	IVerifyMockConfiguration Verify(Expression<Action<TSut>> voidInstanceSetupFunc);
 	IPrependMockConfiguration<TSut> Prepend(Action action);
 	IAppendMockConfiguration<TSut> Append(Action action);
-	void Import<T>();
 }

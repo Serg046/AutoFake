@@ -4,12 +4,10 @@ using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions.Setup.Mocks;
-using AutoFake.Abstractions.Setup.Mocks.ContractMocks;
 using AutoFake.Expression;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Mocks;
-using AutoFake.Setup.Mocks.ContractMocks;
 using DryIoc;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -41,7 +39,6 @@ internal static class ContainerExtensions
 		container.Register<ISourceField, SourceField>();
 		container.Register<ITypeMap, TypeMap>();
 		container.RegisterInstance<FakeObjectInfo.Create>((srcType, instance) => new FakeObjectInfo(srcType, instance));
-		container.Register<IContractProcessor, ContractProcessor>();
 		container.Register<IEmitter, Emitter>();
 		container.Register<IEmitterPool, EmitterPool>(setup: DryIoc.Setup.With(allowDisposableTransient: true));
 		container.Register<ITestMethod, TestMethod>();
@@ -96,10 +93,6 @@ internal static class ContainerExtensions
 		container.Register<IVerifyMock, VerifyMock>();
 		container.Register<IReplaceMock, ReplaceMock>();
 		container.Register<ISourceMemberInsertMock, SourceMemberInsertMock>();
-		container.Register<IReplaceInterfaceCallMock, ReplaceInterfaceCallMock>();
-		container.Register<IReplaceValueTypeCtorMock, ReplaceValueTypeCtorMock>();
-		container.Register<IReplaceReferenceTypeCtorMock, ReplaceReferenceTypeCtorMock>();
-		container.Register<IReplaceTypeCastMock, ReplaceTypeCastMock>();
 	}
 
 	private static void AddMemberVisitors(IRegistrator container)

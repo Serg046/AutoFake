@@ -47,7 +47,6 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.CreateAndCastToObject());
-			sut.Import<HelperStruct<int>>();
 
 			sut.Execute().Should().BeOfType<HelperStruct<int>>()
 				.Subject.Value.Should().Be(5);
@@ -59,7 +58,6 @@ namespace AutoFake.FunctionalTests.Contract.Generic
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.CreateGenericAndCastToObject());
-			sut.Import<HelperStruct<HelperClass>>();
 
 			sut.Execute().Should().BeOfType<HelperStruct<HelperClass>>()
 				.Subject.Value.Prop.Should().Be(5);

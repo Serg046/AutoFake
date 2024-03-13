@@ -34,7 +34,6 @@ internal class AssemblyReader : IAssemblyReader
 		}
 		var assemblyDef = AssemblyDefinition.ReadAssembly(sourceType.Module.FullyQualifiedName, readerParameters);
 		if (fakeOptions.Debug == DebugMode.Enabled && !assemblyDef.MainModule.HasSymbols) throw new InvalidOperationException("No symbols found");
-		assemblyDef.Name.Name += "Fake";
 		assemblyDef.MainModule.ImportReference(sourceType);
 		return assemblyDef.MainModule.GetType(sourceType.FullName, runtimeName: true).ToTypeDefinition();
 	}
