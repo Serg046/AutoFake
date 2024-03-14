@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.Loader;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
@@ -40,6 +41,7 @@ public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
 public class Fake : IExecutor<object>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
+	private readonly Type _sourceType;
 	private readonly object?[] _dependencies;
 	private IFakeObjectInfo? _fakeObjectInfo;
 
@@ -50,8 +52,8 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 
 	protected Fake(Type type, object?[] constructorArgs, params Type[] fakeServiceTypes)
 	{
-		if (type == null) throw new ArgumentNullException(nameof(type));
-		_dependencies = constructorArgs ?? new object?[] { null };
+		_sourceType = type ?? throw new ArgumentNullException(nameof(type));
+		_dependencies = constructorArgs ?? [null];
 		Services = ContainerExtensions.CreateContainer(type, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
 		Options = Services.Resolve<IFakeOptions>();
 	}
@@ -117,16 +119,32 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 	{
 		if (_fakeObjectInfo == null)
 		{
-			var fakeProcessor = Services.Resolve<IFakeProcessor>();
-			var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
-			foreach (var mocks in setups)
+			if (AssemblyLoadContext.CurrentContextualReflectionContext is AssemblyLoadContext and { Name: "FakeContext" } host)
 			{
-				fakeProcessor.ProcessMethod(mocks.Value, mocks.Key, Options);
+				// todo: should be an extension
+				var assembly = host.Assemblies.Single(a => a.FullName == _sourceType.Assembly.FullName);
+				var type = assembly.GetType(_sourceType.FullName);
+				var instance = Activator.CreateInstance(type);
+				_fakeObjectInfo = new FakeObjectInfo(type, instance);
 			}
-
-			var asmWriter = Services.Resolve<IAssemblyWriter>();
-			_fakeObjectInfo = asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value.Mocks), _dependencies);
+			else
+			{
+				_fakeObjectInfo = BuildFakeObject();
+			}
 		}
 		return _fakeObjectInfo;
+	}
+
+	private IFakeObjectInfo BuildFakeObject()
+	{
+		var fakeProcessor = Services.Resolve<IFakeProcessor>();
+		var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
+		foreach (var mocks in setups)
+		{
+			fakeProcessor.ProcessMethod(mocks.Value, mocks.Key, Options);
+		}
+
+		var asmWriter = Services.Resolve<IAssemblyWriter>();
+		return asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value.Mocks), _dependencies);
 	}
 }

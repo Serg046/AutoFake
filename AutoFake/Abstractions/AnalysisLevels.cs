@@ -1,4 +1,4 @@
-namespace AutoFake;
+namespace AutoFake.Abstractions;
 
 public enum AnalysisLevels
 {

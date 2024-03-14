@@ -10,8 +10,8 @@ internal class FuncMockConfiguration<TSut, TReturn> : MockConfigurations<TSut>, 
 {
 	private readonly IExpressionExecutor<TReturn> _executor;
 
-	internal FuncMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor<TReturn> executor)
-		: base(mockConfiguration, typeInfo)
+	internal FuncMockConfiguration(IMockConfiguration mockConfiguration, IExpressionExecutor<TReturn> executor)
+		: base(mockConfiguration)
 	{
 		_executor = executor;
 	}
@@ -23,8 +23,8 @@ internal class ActionMockConfiguration<TSut> : MockConfigurations<TSut>, IAction
 {
 	private readonly IExpressionExecutor _executor;
 
-	internal ActionMockConfiguration(IMockConfiguration mockConfiguration, ITypeInfo typeInfo, IExpressionExecutor executor)
-		: base(mockConfiguration, typeInfo)
+	internal ActionMockConfiguration(IMockConfiguration mockConfiguration, IExpressionExecutor executor)
+		: base(mockConfiguration)
 	{
 		_executor = executor;
 	}
@@ -35,19 +35,17 @@ internal class ActionMockConfiguration<TSut> : MockConfigurations<TSut>, IAction
 internal abstract class MockConfigurations<TSut>
 {
 	private readonly IMockConfiguration _cfg;
-	private readonly ITypeInfo _typeInfo;
 
-	internal MockConfigurations(IMockConfiguration mockConfiguration, ITypeInfo typeInfo)
+	internal MockConfigurations(IMockConfiguration mockConfiguration)
 	{
 		_cfg = mockConfiguration;
-		_typeInfo = typeInfo;
 	}
 
 	public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TSut, TReturn>> instanceSetupFunc) => ReplaceImpl<TReturn>(instanceSetupFunc);
 
 	public IReplaceMockConfiguration<TSut, TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc) => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-	public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc) => ReplaceImpl<TReturn>(staticSetupFunc);
+	public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc, string path, int num) => ReplaceImpl<TReturn>(staticSetupFunc);
 
 	protected IReplaceMockConfiguration<TSut, TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
 	{

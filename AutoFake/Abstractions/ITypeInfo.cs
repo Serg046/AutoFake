@@ -20,7 +20,5 @@ public interface ITypeInfo
 	TypeReference ImportToSourceAsm(Type type);
 	FieldReference ImportToSourceAsm(FieldInfo field);
 	MethodReference ImportToSourceAsm(MethodBase method);
-	TypeReference ImportToSourceAsm(TypeReference type);
-	MethodReference ImportToSourceAsm(MethodReference method);
 	TypeReference ImportToFieldsAsm(Type type);
 }

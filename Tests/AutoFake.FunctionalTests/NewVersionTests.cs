@@ -1,19 +1,13 @@
 using AutoFake.Abstractions;
-using AutoFake.Abstractions.Expression;
-using AutoFake.Abstractions.Setup;
-using AutoFake.Abstractions.Setup.Configurations;
-using AutoFake.Abstractions.Setup.Mocks;
 using DryIoc;
 using FluentAssertions;
 using Sut;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using Xunit;
-using static System.Collections.Specialized.BitVector32;
 
 namespace AutoFake.FunctionalTests;
 
@@ -22,16 +16,17 @@ public class NewVersionTests
 	[Fact]
 	public void Test()
 	{
-		var fake = new Fake<SystemUnderTest>();
-
-		var sut = fake.Rewrite(f => f.GetCurrentDate());
-		sut.Replace(() => DateTime.Now).Return(new DateTime(2024, 3, 13));
-		sut.Execute();
-
 		FakeContext.Run(() =>
 		{
+			var date = new DateTime(2024, 3, 13);
+			var fake = new Fake<SystemUnderTest>();
+
+			var sut = fake.Rewrite(f => f.GetCurrentDate());
+			sut.Replace(() => DateTime.Now).Return(date);
+			sut.Execute().Should().Be(date);
+
 			var sys = new SystemUnderTest();
-			sys.GetCurrentDate().Should().Be(new DateTime(2024, 3, 13));
+			sys.GetCurrentDate().Should().Be(date);
 		});
 	}
 
@@ -51,22 +46,23 @@ public class NewVersionTests
 
 			var sut = fake.Rewrite(f => f.GetCurrentDate());
 			sut.Replace(() => DateTime.Now).Return(date);
+			fake.Rewrite(f => f.GetDateVirtual()).Replace(() => DateTime.Now).Return(date);
 			sut.Execute();
 		}
 
 		public static void Run(Action action)
 		{
 			var actType = action.Target.GetType();
-			var type = Resolve(actType);
+			var assembly = _host.Assemblies.Single(a => a.FullName == actType.Assembly.FullName);
+			var type = assembly.GetType(actType.FullName);
 			var instance = Activator.CreateInstance(type);
 			var method = type.GetMethod(action.Method.Name, BindingFlags.Instance | BindingFlags.NonPublic);
-			method.Invoke(instance, null);
-		}
 
-		private static Type Resolve(Type originalType)
-		{
-			var assembly = _host.Assemblies.Single(a => a.FullName == originalType.Assembly.FullName);
-			return assembly.GetType(originalType.FullName);
+			// todo: get rid of that
+			using (_host.EnterContextualReflection())
+			{
+				method.Invoke(instance, null);
+			}
 		}
 
 		private class CustomAssemblyHost : IAssemblyHost
