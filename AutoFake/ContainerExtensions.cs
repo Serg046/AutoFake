@@ -17,7 +17,7 @@ namespace AutoFake;
 
 internal static class ContainerExtensions
 {
-	public static Container CreateContainer(Type sourceType, Action<Container> fakeRegistration)
+	public static Container CreateContainer(Type sourceType, string key, Action<Container> fakeRegistration)
 	{
 		var container = new Container(rules => rules.WithFuncAndLazyWithoutRegistration());
 		fakeRegistration(container);
@@ -27,7 +27,7 @@ internal static class ContainerExtensions
 		container.Register(typeof(IExpressionExecutor<>), typeof(ExpressionExecutor<>));
 		container.RegisterInstance<IExecutionContext.Create>((callsChecker, whenFunc) => new ExecutionContext(callsChecker, whenFunc));
 		container.RegisterDelegate<IInvocationExpression.Create>(ctx =>
-			expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr));
+			expr => new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr, ctx.Resolve<IOptions>()));
 		container.Register<IMockConfigurationFactory, MockConfigurationFactory>();
 		container.Register<IMockFactory, MockFactory>();
 		container.Register<IMemberVisitorFactory, MemberVisitorFactory>();
@@ -49,7 +49,7 @@ internal static class ContainerExtensions
 			new GenericArgument(name, type, declaringType, genericDeclaringType));
 		container.Register<IMethodContract, MethodContract>();
 
-		RegisterSingltones(container, sourceType);
+		RegisterSingltones(container, sourceType, key);
 		AddConfigurations(container);
 		AddMocks(container);
 		AddMemberVisitors(container);
@@ -57,14 +57,10 @@ internal static class ContainerExtensions
 		return container;
 	}
 
-	private static void RegisterSingltones(Container container, Type sourceType)
+	private static void RegisterSingltones(Container container, Type sourceType, string key)
 	{
-		var fakeOptions = new FakeOptions();
-		container.RegisterInstance<IFakeOptions>(fakeOptions);
-		container.Register<IAssemblyReader, AssemblyReader>(Reuse.Singleton,
-					Parameters.Of.Type<Type>(defaultValue: sourceType)
-						.OverrideWith(Parameters.Of.Type<IFakeOptions>(defaultValue: fakeOptions)));
-
+		container.RegisterInstance<IOptions>(new Options(key));
+		container.Register<IAssemblyReader, AssemblyReader>(Reuse.Singleton, Parameters.Of.Type<Type>(defaultValue: sourceType));
 		container.Register<ITypeInfo, TypeInfo>(Reuse.Singleton);
 		container.Register<IAssemblyWriter, AssemblyWriter>(Reuse.Singleton);
 		container.Register<IAssemblyLoader, AssemblyLoader>(Reuse.Singleton);
@@ -127,8 +123,10 @@ internal static class ContainerExtensions
 	public static IResolverContext AddInvocationExpression(this Fake fake, LinqExpression expression, bool addMocks = false)
 	{
 		var invocationExpression = OnScopedService<IInvocationExpression>(fake,
-			new InvocationExpression(fake.Services.Resolve<IMemberVisitorFactory>(),
-			expression ?? throw new ArgumentNullException(nameof(expression))));
+			new InvocationExpression(
+				fake.Services.Resolve<IMemberVisitorFactory>(),
+				expression ?? throw new ArgumentNullException(nameof(expression)),
+				fake.Services.Resolve<IOptions>()));
 		var scope = fake.Services.OpenScope(invocationExpression);
 		scope.Use(_ => invocationExpression);
 

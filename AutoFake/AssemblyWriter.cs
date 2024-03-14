@@ -1,35 +1,31 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using AutoFake.Abstractions;
-using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 
 namespace AutoFake;
 
 internal class AssemblyWriter : IAssemblyWriter
 {
-	private const BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
 	private readonly IAssemblyReader _assemblyReader;
 	private readonly Dictionary<string, ushort> _addedFields;
-	private readonly IFakeOptions _fakeOptions;
+	private readonly IOptions _options;
 	private readonly IAssemblyPool _assemblyPool;
 	private readonly IAssemblyLoader _assemblyLoader;
 	private readonly FakeObjectInfo.Create _createFakeObjectInfo;
 
-	public AssemblyWriter(IAssemblyReader assemblyReader, IFakeOptions fakeOptions,
+	public AssemblyWriter(IAssemblyReader assemblyReader, IOptions options,
 		IAssemblyPool assemblyPool, IAssemblyLoader assemblyLoader, FakeObjectInfo.Create createFakeObjectInfo)
 	{
 		_assemblyReader = assemblyReader;
-		_fakeOptions = fakeOptions;
+		_options = options;
 		_assemblyPool = assemblyPool;
 		_assemblyLoader = assemblyLoader;
 		_createFakeObjectInfo = createFakeObjectInfo;
 
 		_addedFields = new Dictionary<string, ushort>();
 
-		foreach (var referencedType in _fakeOptions.ReferencedTypes)
+		foreach (var referencedType in _options.ReferencedTypes)
 		{
 			var typeRef = _assemblyReader.SourceTypeDefinition.Module.ImportReference(referencedType);
 			TryAddAffectedAssembly(typeRef.Resolve().Module.Assembly);
@@ -53,69 +49,16 @@ internal class AssemblyWriter : IAssemblyWriter
 
 	public bool TryAddAffectedAssembly(AssemblyDefinition assembly) => _assemblyPool.TryAdd(assembly.MainModule);
 
-	public IFakeObjectInfo CreateFakeObject(IEnumerable<IMock> mocks, object?[] dependencies)
+	public IFakeObjectInfo CreateFakeObject()
 	{
-		var loader = _assemblyLoader.LoadAssemblies(_fakeOptions, loadFieldsAsm: _addedFields.Count > 0);
-		var sourceType = loader.Item1.GetType(GetClrName(_assemblyReader.SourceTypeDefinition.FullName)) ?? throw new InvalidOperationException("Cannot find a type");
+		var loader = _assemblyLoader.LoadAssemblies(_options, loadFieldsAsm: _addedFields.Count > 0);
+		var sourceType = loader.Item1.GetType(_assemblyReader.SourceType.FullName) ?? throw new InvalidOperationException("Cannot find a type");
 		if (_assemblyReader.SourceType.IsGenericType)
 		{
 			sourceType = sourceType.MakeGenericType(_assemblyReader.SourceType.GetGenericArguments());
 		}
 
-		var instance = !_assemblyReader.SourceType.IsStatic() ? CreateInstance(sourceType, dependencies) : null;
+		var instance = !_assemblyReader.SourceType.IsStatic() ? Activator.CreateInstance(sourceType) : null;
 		return _createFakeObjectInfo(sourceType, instance);
-	}
-
-	private static string GetClrName(string monoCecilTypeName) => monoCecilTypeName.Replace('/', '+');
-
-	private object CreateInstance(Type type, object?[] dependencies)
-	{
-		var types = new Type[dependencies.Length];
-		var instances = new object?[dependencies.Length];
-		var noTypeWrapper = true;
-		for (var i = 0; i < dependencies.Length; i++)
-		{
-			instances[i] = dependencies[i];
-			if (instances[i] is Arg.TypeWrapper)
-			{
-				noTypeWrapper = false;
-			}
-		}
-
-		if (noTypeWrapper) return ExecuteViaActivator(type, instances);
-
-		FillDependencyTypes(dependencies.Length, instances, types);
-		var constructor = type.GetConstructor(ConstructorFlags, null, types, null) ?? throw new MissingMethodException("Constructor is not found");
-		return constructor.Invoke(instances);
-	}
-
-	private static void FillDependencyTypes(int numberOfDependencies, object?[] dependencies, Type[] types)
-	{
-		for (var i = 0; i < numberOfDependencies; i++)
-		{
-			if (dependencies[i] is Arg.TypeWrapper w)
-			{
-				types[i] = w.Type;
-				dependencies[i] = null;
-			}
-			else
-			{
-				types[i] = dependencies[i]?.GetType() ?? throw new AmbiguousMatchException(
-					$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
-			}
-		}
-	}
-
-	private static object ExecuteViaActivator(Type type, object?[] dependencies)
-	{
-		try
-		{
-			return Activator.CreateInstance(type, ConstructorFlags, null, dependencies, null)!;
-		}
-		catch (AmbiguousMatchException)
-		{
-			throw new AmbiguousMatchException(
-				$"Ambiguous null-invocation. Please use {nameof(Arg)}.{nameof(Arg.IsNull)}<T>() instead of null.");
-		}
 	}
 }

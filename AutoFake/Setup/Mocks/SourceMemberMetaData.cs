@@ -15,18 +15,21 @@ namespace AutoFake.Setup.Mocks;
 internal class SourceMemberMetaData : ISourceMemberMetaData
 {
 	private readonly IExecutionContext.Create _getExecutionContext;
+	private readonly IOptions _options;
 	private FieldDefinition? _setupBodyField;
 	private FieldDefinition? _executionContext;
 
 	protected SourceMemberMetaData(
 		IExecutionContext.Create getExecutionContext,
 		IInvocationExpression invocationExpression,
-		IPrePostProcessor prePostProcessor)
+		IPrePostProcessor prePostProcessor,
+		IOptions options)
 	{
 		_getExecutionContext = getExecutionContext;
 		InvocationExpression = invocationExpression;
 		SourceMember = invocationExpression.GetSourceMember();
 		PrePostProcessor = prePostProcessor;
+		_options = options;
 	}
 
 	public IPrePostProcessor PrePostProcessor { get; }
@@ -70,7 +73,7 @@ internal class SourceMemberMetaData : ISourceMemberMetaData
 		{
 			fieldName.Append("_").Append(parameter.ParameterType.FullName?.Replace(".", ""));
 		}
-		return fieldName.Append("_").Append(suffix).ToString();
+		return fieldName.Append("_").Append(suffix).Append("_").Append(_options.Key).ToString();
 	}
 
 	public void AfterInjection(IEmitter emitter)

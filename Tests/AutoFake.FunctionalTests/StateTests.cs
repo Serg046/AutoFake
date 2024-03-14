@@ -30,30 +30,33 @@ namespace AutoFake.FunctionalTests
 		[ExcludedFact]
 		public void When_null_ctor_arg_Should_be_passed()
 		{
-			new Fake<CtorTestClass>("someObj").Execute(f => f.ReturnCtorArg()).Should().Be("someObj");
-			new Fake<CtorTestClass>(Arg.IsNull<object>()).Execute(f => f.ReturnCtorArg()).Should().BeNull();
-			new Fake<CtorTestClass>(null).Execute(f => f.ReturnCtorArg()).Should().BeNull();
+			throw new Exception();
+			//new Fake<CtorTestClass>("someObj").Execute(f => f.ReturnCtorArg()).Should().Be("someObj");
+			//new Fake<CtorTestClass>(Arg.IsNull<object>()).Execute(f => f.ReturnCtorArg()).Should().BeNull();
+			//new Fake<CtorTestClass>(null).Execute(f => f.ReturnCtorArg()).Should().BeNull();
 		}
 
 		[ExcludedFact]
 		public void When_value_type_ctor_arg_Should_be_passed()
 		{
-			new Fake<CtorTestClass>(1, 1).Execute(f => f.ReturnCtorArg()).Should().Be(2);
-			new Fake<CtorTestClass>(1, Arg.IsNull<int?>()).Execute(f => f.ReturnCtorArg()).Should().Be(1);
-			new Fake<CtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()).Should().Be(1);
-			new Action(() => new Fake<CtorTestClass>(Arg.IsNull<int>(), 1).Execute(f => f.ReturnCtorArg()))
-				.Should().Throw<InvalidOperationException>().WithMessage("*cannot be null*");
+			throw new Exception();
+			//new Fake<CtorTestClass>(1, 1).Execute(f => f.ReturnCtorArg()).Should().Be(2);
+			//new Fake<CtorTestClass>(1, Arg.IsNull<int?>()).Execute(f => f.ReturnCtorArg()).Should().Be(1);
+			//new Fake<CtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()).Should().Be(1);
+			//new Action(() => new Fake<CtorTestClass>(Arg.IsNull<int>(), 1).Execute(f => f.ReturnCtorArg()))
+			//	.Should().Throw<InvalidOperationException>().WithMessage("*cannot be null*");
 		}
 
 		[ExcludedFact]
 		public void When_ambiguous_ctor_arg_Should_throw()
 		{
-			new Action(() => new Fake<AmbiguousCtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()))
-				.Should().Throw<AmbiguousMatchException>().WithMessage("*use Arg.IsNull<T>()*");
-			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<CtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
-				.Execute().Should().Be(2);
-			new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<AmbiguousCtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
-				.Execute().Should().Be(3);
+			throw new Exception();
+			//new Action(() => new Fake<AmbiguousCtorTestClass>(1, null).Execute(f => f.ReturnCtorArg()))
+			//	.Should().Throw<AmbiguousMatchException>().WithMessage("*use Arg.IsNull<T>()*");
+			//new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<CtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
+			//	.Execute().Should().Be(2);
+			//new Fake<AmbiguousCtorTestClass>(1, Arg.IsNull<AmbiguousCtorTestClass>()).Rewrite(f => f.ReturnCtorArg())
+			//	.Execute().Should().Be(3);
 		}
 
 		[ExcludedFact]

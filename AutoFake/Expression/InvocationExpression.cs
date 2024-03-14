@@ -16,12 +16,14 @@ public class InvocationExpression : IInvocationExpression
 {
 	private readonly IMemberVisitorFactory _memberVisitorFactory;
 	private readonly LinqExpression _expression;
+	private readonly IOptions _options;
 	private IReadOnlyList<IFakeArgument>? _arguments;
 
-	internal InvocationExpression(IMemberVisitorFactory memberVisitorFactory, LinqExpression expression)
+	internal InvocationExpression(IMemberVisitorFactory memberVisitorFactory, LinqExpression expression, IOptions options)
 	{
 		_memberVisitorFactory = memberVisitorFactory;
 		_expression = expression;
+		_options = options;
 		ThrowWhenArgumentsAreNotMatched = true;
 	}
 
@@ -111,9 +113,9 @@ public class InvocationExpression : IInvocationExpression
 		return _arguments;
 	}
 
-	public bool VerifyArguments(object[] currentArguments, IExecutionContext executionContext)
+	public bool VerifyArguments(object[] currentArguments, IExecutionContext executionContext, string fakeKey)
 	{
-		if (executionContext.WhenFunc != null && !executionContext.WhenFunc())
+		if (_options.Key != fakeKey || (executionContext.WhenFunc != null && !executionContext.WhenFunc()))
 		{
 			return false;
 		}
@@ -134,22 +136,24 @@ public class InvocationExpression : IInvocationExpression
 		return true;
 	}
 
-	public Task VerifyExpectedCallsAsync(Task task, IExecutionContext executionContext)
+	public Task VerifyExpectedCallsAsync(Task task, IExecutionContext executionContext, string fakeKey)
 	{
-		return task.ContinueWith(t => VerifyExpectedCalls(executionContext));
+		return task.ContinueWith(t => VerifyExpectedCalls(executionContext, fakeKey));
 	}
 
-	public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, IExecutionContext executionContext)
+	public Task<T> VerifyExpectedCallsTypedAsync<T>(Task<T> task, IExecutionContext executionContext, string fakeKey)
 	{
 		return task.ContinueWith(t =>
 		{
-			VerifyExpectedCalls(executionContext);
+			VerifyExpectedCalls(executionContext, fakeKey);
 			return t.Result;
 		});
 	}
 
-	public void VerifyExpectedCalls(IExecutionContext executionContext)
+	public void VerifyExpectedCalls(IExecutionContext executionContext, string fakeKey)
 	{
+		if (_options.Key != fakeKey) return;
+
 		if (executionContext.CallsChecker != null && !executionContext.CallsChecker(executionContext.ActualCallsNumber))
 		{
 			throw new MethodAccessException($"Setup and actual calls are not matched. Actual value - {executionContext.ActualCallsNumber}.");

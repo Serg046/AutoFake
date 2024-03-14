@@ -7,7 +7,6 @@ namespace AutoFake.Abstractions;
 
 public interface ITypeInfo
 {
-	bool IsMultipleAssembliesMode { get; }
 	Type SourceType { get; }
 	ITypeMap TypeMap { get; }
 	bool IsInFakeModule(TypeReference type);

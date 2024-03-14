@@ -10,12 +10,12 @@ internal class AssemblyReader : IAssemblyReader
 	private readonly Lazy<TypeDefinition> _sourceTypeDefinition;
 	private readonly Lazy<TypeDefinition> _fieldsTypeDefinition;
 
-	public AssemblyReader(Type sourceType, IFakeOptions fakeOptions, ICecilFactory cecilFactory)
+	public AssemblyReader(Type sourceType, IOptions options, ICecilFactory cecilFactory)
 	{
 		_cecilFactory = cecilFactory;
 		SourceType = sourceType;
-		_sourceTypeDefinition = new Lazy<TypeDefinition>(() => GetSourceTypeDefinition(sourceType, fakeOptions));
-		_fieldsTypeDefinition = new Lazy<TypeDefinition>(() => GetFieldsTypeDef(SourceTypeDefinition, fakeOptions));
+		_sourceTypeDefinition = new Lazy<TypeDefinition>(() => GetSourceTypeDefinition(sourceType, options));
+		_fieldsTypeDefinition = new Lazy<TypeDefinition>(() => GetFieldsTypeDef(SourceTypeDefinition, options));
 	}
 
 	public Type SourceType { get; }
@@ -24,21 +24,21 @@ internal class AssemblyReader : IAssemblyReader
 
 	public TypeDefinition FieldsTypeDefinition => _fieldsTypeDefinition.Value;
 
-	private TypeDefinition GetSourceTypeDefinition(Type sourceType, IFakeOptions fakeOptions)
+	private TypeDefinition GetSourceTypeDefinition(Type sourceType, IOptions options)
 	{
 		var readerParameters = _cecilFactory.CreateReaderParameters();
-		readerParameters.ReadSymbols = fakeOptions.IsDebugEnabled;
+		readerParameters.ReadSymbols = options.IsDebugEnabled;
 		if (readerParameters.ReadSymbols)
 		{
 			readerParameters.SymbolReaderProvider = _cecilFactory.CreateSymbolReaderProvider(throwIfNoSymbol: false);
 		}
 		var assemblyDef = AssemblyDefinition.ReadAssembly(sourceType.Module.FullyQualifiedName, readerParameters);
-		if (fakeOptions.Debug == DebugMode.Enabled && !assemblyDef.MainModule.HasSymbols) throw new InvalidOperationException("No symbols found");
+		if (options.Debug == DebugMode.Enabled && !assemblyDef.MainModule.HasSymbols) throw new InvalidOperationException("No symbols found");
 		assemblyDef.MainModule.ImportReference(sourceType);
 		return assemblyDef.MainModule.GetType(sourceType.FullName, runtimeName: true).ToTypeDefinition();
 	}
 
-	private TypeDefinition GetFieldsTypeDef(TypeDefinition sourceTypeDef, IFakeOptions options)
+	private TypeDefinition GetFieldsTypeDef(TypeDefinition sourceTypeDef, IOptions options)
 	{
 		if (!options.IsMultipleAssembliesMode) return sourceTypeDef;
 

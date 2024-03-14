@@ -27,7 +27,7 @@ internal class TestMethod : ITestMethod
 		_createMethodContract = createMethodContract;
 	}
 
-	public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IFakeOptions options,
+	public IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IOptions options,
 		IEnumerable<IMockInjector> mocks, IEnumerable<IGenericArgument> genericArgs)
 	{
 		var state = new State(originalMethod, genericArgs, options);
@@ -161,7 +161,7 @@ internal class TestMethod : ITestMethod
 
 	private class State
 	{
-		public State(MethodDefinition originalMethod, IEnumerable<IGenericArgument> genericArgs, IFakeOptions options)
+		public State(MethodDefinition originalMethod, IEnumerable<IGenericArgument> genericArgs, IOptions options)
 		{
 			OriginalMethod = originalMethod;
 			GenericArgs = genericArgs;
@@ -175,7 +175,7 @@ internal class TestMethod : ITestMethod
 
 		public MethodDefinition OriginalMethod { get; }
 		public IEnumerable<IGenericArgument> GenericArgs { get; set; }
-		public IFakeOptions Options { get; }
+		public IOptions Options { get; }
 		public IEnumerable<MethodDefinition> Parents { get; set; }
 		public IList<MethodDefinition> Methods { get; }
 		public HashSet<string> MethodContracts { get; }

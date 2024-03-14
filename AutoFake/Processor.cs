@@ -13,12 +13,14 @@ internal class Processor : IProcessor
 	private readonly IEmitter _emitter;
 	private readonly Instruction _instruction;
 	private readonly ICecilFactory _cecilFactory;
+	private readonly IOptions _options;
 
-	public Processor(IEmitter emitter, Instruction instruction, ICecilFactory cecilFactory)
+	public Processor(IEmitter emitter, Instruction instruction, ICecilFactory cecilFactory, IOptions options)
 	{
 		_emitter = emitter;
 		_instruction = instruction;
 		_cecilFactory = cecilFactory;
+		_options = options;
 	}
 
 	public void RemoveStackArgument() => _emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Pop));
@@ -60,6 +62,7 @@ internal class Processor : IProcessor
 		_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(setupBody)));
 		_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldloc, arrVar));
 		_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldsfld, module.ImportReference(executionContext)));
+		_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Ldstr, _options.Key));
 		_emitter.InsertBefore(_instruction, Instruction.Create(OpCodes.Call, verifyMethodRef));
 	}
 

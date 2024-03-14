@@ -6,5 +6,5 @@ namespace AutoFake.Abstractions;
 
 public interface ITestMethod
 {
-	IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IFakeOptions options, IEnumerable<IMockInjector> mocks, IEnumerable<IGenericArgument> genericArgs);
+	IReadOnlyList<MethodDefinition> Rewrite(MethodDefinition originalMethod, IOptions options, IEnumerable<IMockInjector> mocks, IEnumerable<IGenericArgument> genericArgs);
 }

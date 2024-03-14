@@ -12,17 +12,20 @@ internal class ReplaceMock : IReplaceMock
 	private const string RET_VALUE_FIELD_SUFFIX = "RetValue";
 	private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 	private readonly ITypeInfo _typeInfo;
+	private readonly IOptions _options;
 	private readonly Lazy<bool> _hasReturnType;
 	private FieldDefinition? _retValueField;
 
 	public ReplaceMock(
 		ISourceMemberMetaData sourceMemberMetaData,
 		Func<IEmitter, Instruction, IProcessor> createProcessor,
-		ITypeInfo typeInfo)
+		ITypeInfo typeInfo,
+		IOptions options)
 	{
 		SourceMemberMetaData = sourceMemberMetaData;
 		_createProcessor = createProcessor;
 		_typeInfo = typeInfo;
+		_options = options;
 		_hasReturnType = new(() => SourceMemberMetaData.SourceMember.ReturnType != typeof(void));
 	}
 
@@ -67,7 +70,7 @@ internal class ReplaceMock : IReplaceMock
 			var opCode = instruction.OpCode == OpCodes.Ldsflda || instruction.OpCode == OpCodes.Ldflda
 				? OpCodes.Ldsflda
 				: OpCodes.Ldsfld;
-			var retValueFieldRef = _typeInfo.IsMultipleAssembliesMode
+			var retValueFieldRef = _options.IsMultipleAssembliesMode
 				? emitter.Body.Method.Module.ImportReference(_retValueField)
 				: _retValueField;
 			emitter.InsertBefore(instruction, Instruction.Create(opCode, retValueFieldRef));

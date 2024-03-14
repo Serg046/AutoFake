@@ -111,12 +111,13 @@ namespace AutoFake.FunctionalTests
 		[ExcludedFact]
 		public void When_different_generic_args_Should_not_replace()
 		{
-			var fake = new Fake<TestClass<int>>(5);
+			throw new Exception();
+			var fake = new Fake<TestClass<int>>();// 5);
 			var sut = fake.Rewrite(f => f.GetValue());
 			sut.Replace(t => t.Field).Return(7);
 			sut.Execute().Should().Be(7);
 
-			fake = new Fake<TestClass<int>>(5);
+			fake = new Fake<TestClass<int>>();// 5);
 			sut = fake.Rewrite(f => f.GetValue());
 			sut.Replace((TestClass<double> t) => t.Field).Return(7);
 			sut.Execute().Should().Be(5);
@@ -125,7 +126,8 @@ namespace AutoFake.FunctionalTests
 		[ExcludedFact]
 		public void When_different_fields_Should_not_replace()
 		{
-			var fake = new Fake<TestClass<int>>(5);
+			throw new Exception();
+			var fake = new Fake<TestClass<int>>();// 5);
 			
 			var sut = fake.Rewrite(f => f.GetValue());
 			sut.Replace((TestClass<double> t) => t.AnotherField).Return(7);
@@ -136,7 +138,8 @@ namespace AutoFake.FunctionalTests
 		[ExcludedFact]
 		public void When_different_fields_but_same_field_name_Should_not_replace()
 		{
-			var fake = new Fake<TestClass<int>>(5);
+			throw new Exception();
+			var fake = new Fake<TestClass<int>>();// 5);
 
 			var sut = fake.Rewrite(f => f.GetValue());
 			sut.Replace((TestClass t) => t.Field).Return(7);
@@ -147,7 +150,8 @@ namespace AutoFake.FunctionalTests
 		[ExcludedFact]
 		public void When_return_value_is_null_Should_succeed()
 		{
-			var fake = new Fake<TestClass<string>>("test");
+			throw new Exception();
+			var fake = new Fake<TestClass<string>>();// "test");
 
 			var sut = fake.Rewrite(f => f.GetValue());
 			sut.Replace(f => f.Field).Return(null);

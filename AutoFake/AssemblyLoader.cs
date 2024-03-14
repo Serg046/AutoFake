@@ -25,7 +25,7 @@ internal class AssemblyLoader : IAssemblyLoader
 		_cecilFactory = cecilFactory;
 	}
 
-	public Tuple<Assembly, Type?> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm)
+	public Tuple<Assembly, Type?> LoadAssemblies(IOptions options, bool loadFieldsAsm)
 	{
 		using var stream = new MemoryStream();
 		using var symbolsStream = new MemoryStream();
@@ -39,7 +39,7 @@ internal class AssemblyLoader : IAssemblyLoader
 		return new(assembly, fieldsType);
 	}
 
-	private void LoadAffectedAssemblies(IFakeOptions options)
+	private void LoadAffectedAssemblies(IOptions options)
 	{
 		var asmNames = new Dictionary<string, string>();
 		LoadAffectedAssembly(asmNames, _assemblyReader.SourceTypeDefinition.Module.Assembly);
@@ -88,7 +88,7 @@ internal class AssemblyLoader : IAssemblyLoader
 #endif
 	}
 
-	private WriterParameters GetWriterParameters(MemoryStream symbolsStream, IFakeOptions options)
+	private WriterParameters GetWriterParameters(MemoryStream symbolsStream, IOptions options)
 	{
 		var parameters = _cecilFactory.CreateWriterParameters();
 		if (options.IsDebugEnabled)
@@ -100,7 +100,7 @@ internal class AssemblyLoader : IAssemblyLoader
 		return parameters;
 	}
 
-	private Assembly GetFieldsAssembly(Assembly executingAsm, IFakeOptions options)
+	private Assembly GetFieldsAssembly(Assembly executingAsm, IOptions options)
 	{
 		if (_assemblyReader.FieldsTypeDefinition.Module.Assembly != _assemblyReader.SourceTypeDefinition.Module.Assembly)
 		{

@@ -17,26 +17,6 @@ namespace AutoFake.FunctionalTests
 	public class InitializationTests
 	{
 		[ExcludedFact]
-		public void When_incorrect_args_Should_fail()
-		{
-			var fake = new Fake<TestClass>(Arg.IsNull<object>());
-
-			Action act = () => fake.Execute(f => f.GetType());
-
-			act.Should().Throw<MissingMethodException>().WithMessage("Constructor is not found");
-		}
-
-		[ExcludedFact]
-		public void When_ambiguous_null_arg_Should_fail()
-		{
-			var fake = new Fake<TestClass>(Arg.IsNull<object>(), null);
-
-			Action act = () => fake.Execute(f => f.GetType());
-
-			act.Should().Throw<AmbiguousMatchException>().WithMessage("Ambiguous null-invocation*");
-		}
-
-		[ExcludedFact]
 		public void When_method_call_as_arg_Should_Succeed()
 		{
 			var fake = new Fake<TestClass>();
@@ -161,19 +141,20 @@ namespace AutoFake.FunctionalTests
 		[ExcludedFact]
 		public void When_no_parameter_full_name_Should_not_fail()
 		{
-			var fake = new Fake<TestClass>();
-			fake.Services.RegisterDelegate((Func<IResolverContext, IInvocationExpression.Create>)(ctx =>
-				expr =>
-				{
-					var invExpr = new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr);
-					return new FakeInvocationExpression(invExpr, new FakeSourceMember(invExpr.GetSourceMember()));
-				}),
-				ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+			throw new NotImplementedException();
+			//var fake = new Fake<TestClass>();
+			//fake.Services.RegisterDelegate((Func<IResolverContext, IInvocationExpression.Create>)(ctx =>
+			//	expr =>
+			//	{
+			//		var invExpr = new InvocationExpression(ctx.Resolve<IMemberVisitorFactory>(), expr);
+			//		return new FakeInvocationExpression(invExpr, new FakeSourceMember(invExpr.GetSourceMember()));
+			//	}),
+			//	ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 			
-			var sut = fake.Rewrite(f => f.GetHashCode());
-			sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
+			//var sut = fake.Rewrite(f => f.GetHashCode());
+			//sut.Replace(() => DateTime.Now).Return(DateTime.MaxValue);
 
-			sut.Execute();
+			//sut.Execute();
 		}
 
 		private static FieldDefinition CreateFieldDefinition()
@@ -203,7 +184,7 @@ namespace AutoFake.FunctionalTests
 				_type = type;
 			}
 
-			public Tuple<Assembly, Type> LoadAssemblies(IFakeOptions options, bool loadFieldsAsm) => new(_assembly, _type);
+			public Tuple<Assembly, Type> LoadAssemblies(IOptions options, bool loadFieldsAsm) => new(_assembly, _type);
 		}
 
 		private class FakePrePostProcessor : IPrePostProcessor

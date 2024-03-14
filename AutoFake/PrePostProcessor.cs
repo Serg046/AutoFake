@@ -16,13 +16,15 @@ internal class PrePostProcessor : IPrePostProcessor
 	private readonly IAssemblyWriter _assemblyWriter;
 	private readonly ICecilFactory _cecilFactory;
 	private readonly IEmitterPool _emitterPool;
+	private readonly IOptions _options;
 
-	public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, ICecilFactory cecilFactory, IEmitterPool emitterPool)
+	public PrePostProcessor(ITypeInfo typeInfo, IAssemblyWriter assemblyWriter, ICecilFactory cecilFactory, IEmitterPool emitterPool, IOptions options)
 	{
 		_typeInfo = typeInfo;
 		_assemblyWriter = assemblyWriter;
 		_cecilFactory = cecilFactory;
 		_emitterPool = emitterPool;
+		_options = options;
 	}
 
 	public FieldDefinition GenerateField(string name, Type returnType)
@@ -59,7 +61,7 @@ internal class PrePostProcessor : IPrePostProcessor
 	{
 		FieldReference setupBodyRef = setupBody;
 		FieldReference executionContextRef = executionContext;
-		if (_typeInfo.IsMultipleAssembliesMode)
+		if (_options.IsMultipleAssembliesMode)
 		{
 			setupBodyRef = emitter.Body.Method.Module.ImportReference(setupBody);
 			executionContextRef = emitter.Body.Method.Module.ImportReference(executionContext);
@@ -77,6 +79,7 @@ internal class PrePostProcessor : IPrePostProcessor
 		emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, setupBodyRef));
 		if (retValue != null) emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldloc, retValue));
 		emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldsfld, executionContextRef));
+		emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Ldstr, _options.Key));
 		emitter.InsertBefore(retInstruction, Instruction.Create(OpCodes.Call, verificator));
 	}
 

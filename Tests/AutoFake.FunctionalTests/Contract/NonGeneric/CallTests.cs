@@ -34,28 +34,6 @@ namespace AutoFake.FunctionalTests.Contract.NonGeneric
 		[ExcludedTheory]
 		[InlineData(typeof(HelperClass))]
 		[InlineData(typeof(HelperStruct))]
-		public void When_method_call_through_interface_from_ctor_Should_succeed(Type type)
-		{
-			var helper = Activator.CreateInstance(type) as IHelper;
-
-			var fake = new Fake<TestClassWithInterfaceCtor>(helper);
-			var sut = fake.Rewrite(f => f.CallMethodThroughInterface());
-
-			sut.Execute().Should().Be(5);
-		}
-
-		[ExcludedFact]
-		public void When_method_call_through_base_class_from_ctor_Should_succeed()
-		{
-			var fake = new Fake<TestClassWithBaseClassCtor>(new HelperClass());
-			var sut = fake.Rewrite(f => f.CallMethodThroughBaseClass());
-
-			sut.Execute().Should().Be(5);
-		}
-
-		[ExcludedTheory]
-		[InlineData(typeof(HelperClass))]
-		[InlineData(typeof(HelperStruct))]
 		public void When_method_call_through_interface_from_field_Should_succeed(Type type)
 		{
 			var helper = Activator.CreateInstance(type) as IHelper;

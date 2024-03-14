@@ -5,5 +5,5 @@ namespace AutoFake.Abstractions;
 
 public interface IFakeProcessor
 {
-	void ProcessMethod(IMockCollection mockCollection, IInvocationExpression invocationExpression, IFakeOptions options);
+	void ProcessMethod(IMockCollection mockCollection, IInvocationExpression invocationExpression, IOptions options);
 }

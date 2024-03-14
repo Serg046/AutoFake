@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
-using AutoFake.Abstractions.Setup.Mocks;
 using Mono.Cecil;
 
 namespace AutoFake;
@@ -25,7 +23,7 @@ internal class FakeProcessor : IFakeProcessor
 		_createTestMethod = createTestMethod;
 	}
 
-	public void ProcessMethod(IMockCollection mockCollection, IInvocationExpression invocationExpression, IFakeOptions options)
+	public void ProcessMethod(IMockCollection mockCollection, IInvocationExpression invocationExpression, IOptions options)
 	{
 		var executeFuncDef = GetMethodDefinition(invocationExpression);
 		var testMethods = new List<Tuple<ITestMethod, MethodDefinition>>();
@@ -38,7 +36,7 @@ internal class FakeProcessor : IFakeProcessor
 		ProcessConstructors(emitterPool, options, testMethods);
 	}
 
-	private void ProcessConstructors(IEmitterPool emitterPool, IFakeOptions options, ICollection<Tuple<ITestMethod, MethodDefinition>> testMethods)
+	private void ProcessConstructors(IEmitterPool emitterPool, IOptions options, ICollection<Tuple<ITestMethod, MethodDefinition>> testMethods)
 	{
 		foreach (var ctor in _typeInfo.GetConstructors())
 		{

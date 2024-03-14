@@ -63,9 +63,10 @@ public class RemoveTests
 	[ExcludedTheory]
 	[InlineData(0, 0)]
 	[InlineData(1, 7)]
-	public void When__fake_condition_is_provided_Should_check(int initValue, int result)
+	public void When_fake_condition_is_provided_Should_check(int initValue, int result)
 	{
-		var fake = new Fake<TestClass>(initValue);
+		throw new Exception();
+		var fake = new Fake<TestClass>();//initValue);
 
 		var sut = fake.Rewrite(f => f.Sum(1, 2));
 		sut.Remove(f => f.CodeBranch(1, 2)).When(e => e.Execute(f => f.Field) == 0);

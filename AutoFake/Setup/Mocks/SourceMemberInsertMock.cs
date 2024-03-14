@@ -12,18 +12,21 @@ internal class SourceMemberInsertMock : ISourceMemberInsertMock
 	private readonly Func<ISourceMemberMetaData, ISourceMemberInsertMockInjector> _createInjector;
 	private readonly IInsertMock.Location _location;
 	private readonly ITypeInfo _typeInfo;
+	private readonly IOptions _options;
 	private FieldDefinition? _closureField;
 
 	public SourceMemberInsertMock(
 		ISourceMemberMetaData sourceMemberMetaData,
 		Func<ISourceMemberMetaData, ISourceMemberInsertMockInjector> createInjector,
 		Action closure, IInsertMock.Location location,
-		ITypeInfo typeInfo)
+		ITypeInfo typeInfo,
+		IOptions options)
 	{
 		SourceMemberMetaData = sourceMemberMetaData;
 		_createInjector = createInjector;
 		_location = location;
 		_typeInfo = typeInfo;
+		_options = options;
 		Closure = closure;
 	}
 
@@ -46,7 +49,7 @@ internal class SourceMemberInsertMock : ISourceMemberInsertMock
 	{
 		if (_closureField == null) throw new InvalidOperationException("Closure field should be set");
 		var module = emitter.Body.Method.Module;
-		var closureRef = _typeInfo.IsMultipleAssembliesMode
+		var closureRef = _options.IsMultipleAssembliesMode
 			? module.ImportReference(_closureField)
 			: _closureField;
 		var injector = _createInjector(SourceMemberMetaData);

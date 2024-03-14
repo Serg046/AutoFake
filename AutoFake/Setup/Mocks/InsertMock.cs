@@ -14,12 +14,14 @@ internal class InsertMock : IInsertMock
 	private readonly IInsertMock.Location _location;
 	private readonly IPrePostProcessor _prePostProcessor;
 	private readonly ITypeInfo _typeInfo;
+	private readonly IOptions _options;
 	private FieldDefinition? _closureField;
 
-	public InsertMock(Action closure, IInsertMock.Location location, IPrePostProcessor prePostProcessor, ITypeInfo typeInfo)
+	public InsertMock(Action closure, IInsertMock.Location location, IPrePostProcessor prePostProcessor, ITypeInfo typeInfo, IOptions options)
 	{
 		_prePostProcessor = prePostProcessor;
 		_typeInfo = typeInfo;
+		_options = options;
 		_location = location;
 		Closure = closure;
 	}
@@ -54,7 +56,7 @@ internal class InsertMock : IInsertMock
 	public void Inject(IEmitter emitter, Instruction instruction)
 	{
 		var module = emitter.Body.Method.Module;
-		var closure = _typeInfo.IsMultipleAssembliesMode
+		var closure = _options.IsMultipleAssembliesMode
 			? module.ImportReference(_closureField)
 			: _closureField;
 		emitter.InsertBefore(instruction, Instruction.Create(OpCodes.Ldsfld, closure));

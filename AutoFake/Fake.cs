@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
+using System.Text;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
-using AutoFake.Expression;
 using DryIoc;
 
 namespace AutoFake;
@@ -16,8 +17,8 @@ namespace AutoFake;
 public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
-	public Fake(params object[] constructorArgs)
-		: base(typeof(T), constructorArgs, typeof(IFakeObjectInfoSource), typeof(IExecutor<T>), typeof(IExecutor<object>))
+	public Fake([CallerFilePath] string path = "", [CallerLineNumber] int num = 0)
+		: base(typeof(T), GetKey(path, num), typeof(IFakeObjectInfoSource), typeof(IExecutor<T>), typeof(IExecutor<object>))
 	{
 	}
 
@@ -42,28 +43,31 @@ public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
 public class Fake : IExecutor<object>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
-	private readonly object?[] _dependencies;
 	private IFakeObjectInfo? _fakeObjectInfo;
 
-	public Fake(Type type, params object?[] constructorArgs)
-		: this(type, constructorArgs, typeof(IFakeObjectInfoSource), typeof(IExecutor<object>))
+	public Fake(Type type, [CallerFilePath] string path = "", [CallerLineNumber] int num = 0, params object?[] constructorArgs)
+		: this(type, GetKey(path, num), typeof(IFakeObjectInfoSource), typeof(IExecutor<object>))
 	{
 	}
 
-	protected Fake(Type type, object?[] constructorArgs, params Type[] fakeServiceTypes)
+	protected Fake(Type type, string key, params Type[] fakeServiceTypes)
 	{
 		if (type == null) throw new ArgumentNullException(nameof(type));
 
-		_dependencies = constructorArgs ?? [null];
-		Services = ContainerExtensions.CreateContainer(type, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
-		Options = Services.Resolve<IFakeOptions>();
+		Services = ContainerExtensions.CreateContainer(type, key, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
+		Options = Services.Resolve<IOptions>();
 	}
 
 	public Dictionary<Type, Func<object, object>> OnScopedServiceRegistration { get; } = new();
 
 	public Container Services { get; }
 
-	public IFakeOptions Options { get; }
+	public IOptions Options { get; }
+
+	protected static string GetKey(string filePath, int lineNumer)
+	{
+		return Convert.ToBase64String(Encoding.UTF8.GetBytes(filePath + lineNumer));
+	}
 
 	public IFuncMockConfiguration<object, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
 	{
@@ -167,6 +171,6 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 		}
 
 		var asmWriter = Services.Resolve<IAssemblyWriter>();
-		return asmWriter.CreateFakeObject(setups.SelectMany(s => s.Value.Mocks), _dependencies);
+		return asmWriter.CreateFakeObject();
 	}
 }

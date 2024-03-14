@@ -10,20 +10,15 @@ namespace AutoFake;
 internal class TypeInfo : ITypeInfo
 {
 	private readonly IAssemblyReader _assemblyReader;
-	private readonly IFakeOptions _fakeOptions;
 	private readonly IAssemblyPool _assemblyPool;
 	private readonly Lazy<ITypeMap> _typeMap;
 
-	public TypeInfo(IAssemblyReader assemblyReader, IFakeOptions fakeOptions, IAssemblyPool assemblyPool, Func<ModuleDefinition, ITypeMap> createTypeMap)
+	public TypeInfo(IAssemblyReader assemblyReader, IAssemblyPool assemblyPool, Func<ModuleDefinition, ITypeMap> createTypeMap)
 	{
 		_assemblyReader = assemblyReader;
-		_fakeOptions = fakeOptions;
 		_assemblyPool = assemblyPool;
 		_typeMap = new(() => createTypeMap(_assemblyReader.SourceTypeDefinition.Module));
 	}
-
-	public bool IsMultipleAssembliesMode
-		=> _fakeOptions.AnalysisLevel == AnalysisLevels.AllExceptSystemAndMicrosoft || _fakeOptions.ReferencedTypes.Count > 0;
 
 	public Type SourceType => _assemblyReader.SourceType;
 

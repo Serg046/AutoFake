@@ -37,11 +37,11 @@ public class NewVersionTests
 
 		static FakeContext()
 		{
-			_host = new AssemblyLoadContext("FakeContext", isCollectible: false);
+			_host = new AssemblyLoadContext("FakeContext", isCollectible: true);
 			_host.LoadFromAssemblyPath(Assembly.GetExecutingAssembly().Location);
 
 			var date = new DateTime(2024, 3, 13);
-			var fake = new Fake<SystemUnderTest>();
+			var fake = new Fake<SystemUnderTest>("C:\\Projects\\GitHub\\AutoFake\\Tests\\AutoFake.FunctionalTests\\NewVersionTests.cs", 22);
 			fake.Services.Register<IAssemblyHost, CustomAssemblyHost>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 
 			var sut = fake.Rewrite(f => f.GetCurrentDate());

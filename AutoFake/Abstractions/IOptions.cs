@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AutoFake.Abstractions;
 
-public interface IFakeOptions
+public interface IOptions
 {
 	IList<Predicate<IMethodContract>> AllowedVirtualMembers { get; }
 	bool DisableVirtualMembers { get; set; }
@@ -13,4 +13,5 @@ public interface IFakeOptions
 	void AddReference(Type type);
 	bool IsMultipleAssembliesMode { get; }
 	bool IsDebugEnabled { get; }
+	string Key { get; }
 }
