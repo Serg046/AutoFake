@@ -9,6 +9,7 @@ namespace AutoFake.Setup.Mocks;
 
 internal class ReplaceMock : IReplaceMock
 {
+	private const string RET_VALUE_FIELD_SUFFIX = "RetValue";
 	private readonly Func<IEmitter, Instruction, IProcessor> _createProcessor;
 	private readonly ITypeInfo _typeInfo;
 	private readonly Lazy<bool> _hasReturnType;
@@ -38,7 +39,7 @@ internal class ReplaceMock : IReplaceMock
 		SourceMemberMetaData.BeforeInjection(method);
 		if (_hasReturnType.Value)
 		{
-			_retValueField = SourceMemberMetaData.PrePostProcessor.GenerateField(SourceMemberMetaData.GetFieldName(method.Name, "RetValue"),
+			_retValueField = SourceMemberMetaData.PrePostProcessor.GenerateField(SourceMemberMetaData.GetFieldName(method.Name, RET_VALUE_FIELD_SUFFIX),
 				SourceMemberMetaData.SourceMember.ReturnType);
 		}
 	}
@@ -77,13 +78,14 @@ internal class ReplaceMock : IReplaceMock
 		processor.PushMethodArguments(variables);
 	}
 
-	public void Initialize(Type? type)
+	public void Initialize(Type? type, string rewriteMethodName)
 	{
-		SourceMemberMetaData.Initialize(type);
-		if (type != null && _hasReturnType.Value && _retValueField != null)
+		SourceMemberMetaData.Initialize(type, rewriteMethodName);
+		if (type != null && _hasReturnType.Value)
 		{
-			var field = SourceMemberMetaData.GetField(type, _retValueField.Name)
-						?? throw new MissingFieldException($"'{_retValueField.Name}' is not found");
+			var fieldName = SourceMemberMetaData.GetFieldName(rewriteMethodName, RET_VALUE_FIELD_SUFFIX);
+			var field = SourceMemberMetaData.GetField(type, fieldName)
+						?? throw new MissingFieldException($"'{fieldName}' is not found");
 			field.SetValue(null, ReturnObject);
 		}
 	}

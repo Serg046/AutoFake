@@ -62,11 +62,6 @@ internal class AssemblyWriter : IAssemblyWriter
 			sourceType = sourceType.MakeGenericType(_assemblyReader.SourceType.GetGenericArguments());
 		}
 
-		foreach (var mock in mocks)
-		{
-			mock.Initialize(loader.Item2);
-		}
-
 		var instance = !_assemblyReader.SourceType.IsStatic() ? CreateInstance(sourceType, dependencies) : null;
 		return _createFakeObjectInfo(sourceType, instance);
 	}

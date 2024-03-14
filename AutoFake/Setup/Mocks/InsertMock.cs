@@ -36,7 +36,7 @@ internal class InsertMock : IInsertMock
 			$"{method.Name}InsertCallback{Guid.NewGuid()}", Closure.GetType());
 	}
 
-	public void Initialize(Type? type)
+	public void Initialize(Type? type, string rewriteMethodName)
 	{
 		InitializeClosure(type, _closureField, Closure);
 	}

@@ -19,6 +19,6 @@ public interface ISourceMemberMetaData
 	void BeforeInjection(MethodDefinition method);
 	FieldInfo? GetField(Type type, string fieldName);
 	string GetFieldName(string prefix, string suffix);
-	void Initialize(Type? type);
+	void Initialize(Type? type, string rewriteMethodName);
 	IReadOnlyList<VariableDefinition> RecordMethodCall(IProcessor processor);
 }

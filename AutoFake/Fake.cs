@@ -7,6 +7,7 @@ using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
+using AutoFake.Expression;
 using DryIoc;
 
 namespace AutoFake;
@@ -41,7 +42,6 @@ public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
 public class Fake : IExecutor<object>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
-	private readonly Type _sourceType;
 	private readonly object?[] _dependencies;
 	private IFakeObjectInfo? _fakeObjectInfo;
 
@@ -52,7 +52,8 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 
 	protected Fake(Type type, object?[] constructorArgs, params Type[] fakeServiceTypes)
 	{
-		_sourceType = type ?? throw new ArgumentNullException(nameof(type));
+		if (type == null) throw new ArgumentNullException(nameof(type));
+
 		_dependencies = constructorArgs ?? [null];
 		Services = ContainerExtensions.CreateContainer(type, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
 		Options = Services.Resolve<IFakeOptions>();
@@ -114,6 +115,7 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 		scope.Resolve<IExpressionExecutor>().Execute();
 	}
 
+	// todo: extract into a separate type
 	IFakeObjectInfo IFakeObjectInfoSource.GetFakeObject() => GetFakeObject();
 	internal IFakeObjectInfo GetFakeObject()
 	{
@@ -121,18 +123,38 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 		{
 			if (AssemblyLoadContext.CurrentContextualReflectionContext is AssemblyLoadContext and { Name: "FakeContext" } host)
 			{
-				// todo: should be an extension
-				var assembly = host.Assemblies.Single(a => a.FullName == _sourceType.Assembly.FullName);
-				var type = assembly.GetType(_sourceType.FullName);
-				var instance = Activator.CreateInstance(type);
-				_fakeObjectInfo = new FakeObjectInfo(type, instance);
+				_fakeObjectInfo = GetFakeObject(host);
 			}
 			else
 			{
 				_fakeObjectInfo = BuildFakeObject();
 			}
 		}
+
 		return _fakeObjectInfo;
+	}
+
+	private IFakeObjectInfo GetFakeObject(AssemblyLoadContext host)
+	{
+		var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
+		var assemblyReader = Services.Resolve<IAssemblyReader>();
+		
+		// todo: should be an extension
+		var assembly = host.Assemblies.Single(a => a.FullName == assemblyReader.SourceType.Assembly.FullName);
+		var type = assembly.GetType(assemblyReader.SourceType.FullName);
+		var instance = Activator.CreateInstance(type);
+
+		foreach (var setup in setups)
+		{
+			var visitor = Services.Resolve<IMemberVisitorFactory>().GetMemberVisitor<IGetTestMethodVisitor>();
+			var method = setup.Key.AcceptMemberVisitor(visitor);
+			foreach (var mock in setup.Value.Mocks)
+			{
+				mock.Initialize(type, method.Name);
+			}
+		}
+
+		return new FakeObjectInfo(type, instance);
 	}
 
 	private IFakeObjectInfo BuildFakeObject()

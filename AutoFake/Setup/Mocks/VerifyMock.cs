@@ -44,8 +44,8 @@ internal class VerifyMock : IVerifyMock
 		SourceMemberMetaData.AfterInjection(emitter);
 	}
 
-	public void Initialize(Type? type)
+	public void Initialize(Type? type, string rewriteMethodName)
 	{
-		SourceMemberMetaData.Initialize(type);
+		SourceMemberMetaData.Initialize(type, rewriteMethodName);
 	}
 }

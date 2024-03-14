@@ -40,12 +40,10 @@ internal class AssemblyReader : IAssemblyReader
 
 	private TypeDefinition GetFieldsTypeDef(TypeDefinition sourceTypeDef, IFakeOptions options)
 	{
-		var module = sourceTypeDef.Module;
-		if (options.IsMultipleAssembliesMode)
-		{
-			var name = $"AutoFakeFields{Guid.NewGuid()}";
-			module = AssemblyDefinition.CreateAssembly(_cecilFactory.CreateAssemblyNameDefinition(name, new Version(1, 0)), name, ModuleKind.Dll).MainModule;
-		}
+		if (!options.IsMultipleAssembliesMode) return sourceTypeDef;
+
+		var name = $"AutoFakeFields{Guid.NewGuid()}";
+		var module = AssemblyDefinition.CreateAssembly(_cecilFactory.CreateAssemblyNameDefinition(name, new Version(1, 0)), name, ModuleKind.Dll).MainModule;
 		var typeDef = _cecilFactory.CreateTypeDefinition("AutoFake", "Fields", TypeAttributes.Class | TypeAttributes.Public, module.TypeSystem.Object);
 		module.Types.Add(typeDef);
 		return typeDef;

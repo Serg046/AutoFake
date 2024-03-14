@@ -16,11 +16,9 @@ internal class ExpressionExecutor<T> : IExpressionExecutor<T>
 	{
 		try
 		{
-#pragma warning disable 8603
-#pragma warning disable 8600
-			return (T)_executor.Execute().Value;
-#pragma warning restore 8600
-#pragma warning restore 8603
+			// todo: correct
+			var result = _executor.Execute();
+			return result.Value != null ? (T)result.Value : default;
 		}
 		catch (InvalidCastException)
 		{

@@ -7,5 +7,5 @@ public interface IMock : IMockInjector
 {
 	void BeforeInjection(MethodDefinition method);
 	void AfterInjection(IEmitter emitter);
-	void Initialize(Type? type);
+	void Initialize(Type? type, string rewriteMethodName);
 }

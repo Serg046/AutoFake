@@ -45,7 +45,7 @@ internal abstract class MockConfigurations<TSut>
 
 	public IReplaceMockConfiguration<TSut, TReturn> Replace<TInput, TReturn>(Expression<Func<TInput, TReturn>> instanceSetupFunc) => ReplaceImpl<TReturn>(instanceSetupFunc);
 
-	public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc, string path, int num) => ReplaceImpl<TReturn>(staticSetupFunc);
+	public IReplaceMockConfiguration<TSut, TReturn> Replace<TReturn>(Expression<Func<TReturn>> staticSetupFunc) => ReplaceImpl<TReturn>(staticSetupFunc);
 
 	protected IReplaceMockConfiguration<TSut, TReturn> ReplaceImpl<TReturn>(LambdaExpression expression)
 	{

@@ -45,13 +45,16 @@ internal class SourceMemberMetaData : ISourceMemberMetaData
 			GetFieldName(method.Name, nameof(ExecutionContext)), typeof(IExecutionContext));
 	}
 
-	public void Initialize(Type? type)
+	public void Initialize(Type? type, string rewriteMethodName)
 	{
 		if (type != null)
 		{
-			var field = GetField(type, SetupBodyField.Name) ?? throw new MissingFieldException($"'{SetupBodyField.Name}' is not found");
+			var setupFieldName = GetFieldName(rewriteMethodName, nameof(SetupBodyField));
+			var field = GetField(type, setupFieldName) ?? throw new MissingFieldException($"'{setupFieldName}' is not found");
 			field.SetValue(null, InvocationExpression);
-			var ctxField = GetField(type, ExecutionContext.Name) ?? throw new MissingFieldException($"'{ExecutionContext.Name}' is not found");
+
+			var ctxFieldName = GetFieldName(rewriteMethodName, nameof(ExecutionContext));
+			var ctxField = GetField(type, ctxFieldName) ?? throw new MissingFieldException($"'{ctxFieldName}' is not found");
 			ctxField.SetValue(null, _getExecutionContext(ExpectedCalls, WhenFunc));
 		}
 	}

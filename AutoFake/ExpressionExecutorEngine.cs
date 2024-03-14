@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.Loader;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Expression;
 
@@ -20,6 +21,12 @@ internal class ExpressionExecutorEngine : IExpressionExecutorEngine
 
 	public (Type Type, object? Value) Execute()
 	{
+		if (!(AssemblyLoadContext.CurrentContextualReflectionContext is AssemblyLoadContext and { Name: "FakeContext" } host))
+		{
+			_fakeObjInfoSource.GetFakeObject();
+			return (typeof(void), null);
+		}
+
 		var fakeObject = _fakeObjInfoSource.GetFakeObject();
 		var visitor = _memberVisitorFactory.GetValueMemberVisitor(fakeObject.Instance);
 		try
