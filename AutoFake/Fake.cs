@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -17,8 +18,8 @@ namespace AutoFake;
 public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
 #pragma warning restore AF0001
 {
-	public Fake([CallerFilePath] string path = "", [CallerLineNumber] int num = 0)
-		: base(typeof(T), GetKey(path, num), typeof(IFakeObjectInfoSource), typeof(IExecutor<T>), typeof(IExecutor<object>))
+	public Fake([CallerFilePath] string stringKey = "", [CallerLineNumber] int intKey = 0)
+		: base(typeof(T), GetKey(stringKey, intKey), typeof(IFakeObjectInfoSource), typeof(IExecutor<T>), typeof(IExecutor<object>))
 	{
 	}
 
@@ -45,8 +46,8 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 {
 	private IFakeObjectInfo? _fakeObjectInfo;
 
-	public Fake(Type type, [CallerFilePath] string path = "", [CallerLineNumber] int num = 0, params object?[] constructorArgs)
-		: this(type, GetKey(path, num), typeof(IFakeObjectInfoSource), typeof(IExecutor<object>))
+	public Fake(Type type, [CallerFilePath] string stringKey = "", [CallerLineNumber] int intKey = 0)
+		: this(type, GetKey(stringKey, intKey), typeof(IFakeObjectInfoSource), typeof(IExecutor<object>))
 	{
 	}
 
@@ -64,9 +65,17 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 
 	public IOptions Options { get; }
 
-	protected static string GetKey(string filePath, int lineNumer)
+	protected static string GetKey(string stringKey, int intKey)
 	{
-		return Convert.ToBase64String(Encoding.UTF8.GetBytes(filePath + lineNumer));
+		var dir = Directory.GetCurrentDirectory();
+		var i = 0;
+		for (; i < stringKey.Length; i++)
+		{
+			if (stringKey[i] != dir[i]) break;
+		}
+
+		stringKey = stringKey.Substring(i);
+		return Convert.ToBase64String(Encoding.UTF8.GetBytes(stringKey + intKey)).Replace("=", "");
 	}
 
 	public IFuncMockConfiguration<object, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
