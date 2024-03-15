@@ -69,13 +69,12 @@ public class Fake : IExecutor<object>, IFakeObjectInfoSource
 	{
 		var dir = Directory.GetCurrentDirectory();
 		var i = 0;
-		for (; i < stringKey.Length; i++)
+		for (; i < stringKey.Length && i < dir.Length; i++)
 		{
 			if (stringKey[i] != dir[i]) break;
 		}
 
-		stringKey = stringKey.Substring(i);
-		return Convert.ToBase64String(Encoding.UTF8.GetBytes(stringKey + intKey)).Replace("=", "");
+		return Convert.ToBase64String(Encoding.UTF8.GetBytes(stringKey[i..] + intKey)).Replace("=", "");
 	}
 
 	public IFuncMockConfiguration<object, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
