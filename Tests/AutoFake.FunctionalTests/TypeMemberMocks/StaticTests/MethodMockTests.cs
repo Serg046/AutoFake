@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
@@ -41,7 +41,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 			var fake = new Fake(typeof(TestClass));
 
 			var sut = fake.Rewrite(() => TestClass.GetFrameworkValue());
-			sut.Replace((SqlCommand c) => c.ExecuteScalar()).Return(7);
+			sut.Replace((Quaternion q) => q.LengthSquared()).Return(7);
 
 			Assert.Equal(7, sut.Execute());
 		}
@@ -97,7 +97,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 		}
 
 		[Fact]
-		public async void AsyncStaticMethodTest()
+		public async Task AsyncStaticMethodTest()
 		{
 			var fake = new Fake(typeof(AsyncTestClass));
 
@@ -297,13 +297,13 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.StaticTests
 				return value;
 			}
 
-			public static object GetFrameworkValue()
+			public static float GetFrameworkValue()
 			{
 				Debug.WriteLine("Started");
-				var cmd = new SqlCommand();
-				var vaue = cmd.ExecuteScalar();
+				var quaternion = new Quaternion();
+				var value = quaternion.LengthSquared();
 				Debug.WriteLine("Finished");
-				return vaue;
+				return value;
 			}
 
 			public static Hashtable GetFrameworkStaticValue()

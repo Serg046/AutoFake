@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
@@ -63,7 +63,7 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 			var fake = new Fake<TestClass>();
 
 			var sut = fake.Rewrite(f => f.GetFrameworkValue());
-			sut.Replace((SqlCommand c) => c.ExecuteScalar()).Return(7);
+			sut.Replace((Quaternion q) => q.LengthSquared()).Return(7);
 
 			Assert.Equal(7, sut.Execute());
 		}
@@ -349,11 +349,11 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 				return value;
 			}
 
-			public object GetFrameworkValue()
+			public float GetFrameworkValue()
 			{
 				Debug.WriteLine("Started");
-				var cmd = new SqlCommand();
-				var value = cmd.ExecuteScalar();
+				var cmd = new Quaternion();
+				var value = cmd.LengthSquared();
 				Debug.WriteLine("Finished");
 				return value;
 			}

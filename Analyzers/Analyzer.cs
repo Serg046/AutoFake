@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -7,34 +8,35 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace Analyzers
 {
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
+	[SuppressMessage("MicrosoftCodeAnalysisReleaseTracking", "RS2008:Enable analyzer release tracking")]
 	public class Analyzer : DiagnosticAnalyzer
 	{
-		internal static readonly DiagnosticDescriptor TypeAccessModifierRule =
+		private static readonly DiagnosticDescriptor _typeAccessModifierRule =
 			new("AF0001", "Type access modifier violation",
 				"Do not use public access modifier for classes, structs and records",
 				"Analyzers",
 				DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-		internal static readonly DiagnosticDescriptor InterfaceAccessModifierRule =
+		private static readonly DiagnosticDescriptor _interfaceAccessModifierRule =
 			new("AF0002", "Interface access modifier violation",
 				"Use public access modifier for interfaces",
 				"Analyzers",
 				DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-		internal static readonly DiagnosticDescriptor DIRule =
+		private static readonly DiagnosticDescriptor _diRule =
 			new("AF0003", "DI-container registration violation",
 				"Register an interface instead of the concrete implementation",
 				"Analyzers",
 				DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-		internal static readonly DiagnosticDescriptor NamespaceRule =
+		private static readonly DiagnosticDescriptor _namespaceRule =
 			new("AF0004", "Namespace style violation",
 				"Use file-scoped namespace declaration",
 				"Analyzers",
 				DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-			= ImmutableArray.Create(TypeAccessModifierRule, InterfaceAccessModifierRule, DIRule, NamespaceRule);
+			= [_typeAccessModifierRule, _interfaceAccessModifierRule, _diRule, _namespaceRule];
 
 		public override void Initialize(AnalysisContext context)
 		{
@@ -53,7 +55,7 @@ namespace Analyzers
 			if (GetAccessibility(context) == Accessibility.Public)
 			{
 				var typeSyntax = (TypeDeclarationSyntax)context.Node;
-				context.ReportDiagnostic(Diagnostic.Create(TypeAccessModifierRule, typeSyntax.Identifier.GetLocation()));
+				context.ReportDiagnostic(Diagnostic.Create(_typeAccessModifierRule, typeSyntax.Identifier.GetLocation()));
 			}
 		}
 
@@ -62,7 +64,7 @@ namespace Analyzers
 			if (GetAccessibility(context) != Accessibility.Public)
 			{
 				var interfaceSyntax = (InterfaceDeclarationSyntax)context.Node;
-				context.ReportDiagnostic(Diagnostic.Create(InterfaceAccessModifierRule, interfaceSyntax.Identifier.GetLocation()));
+				context.ReportDiagnostic(Diagnostic.Create(_interfaceAccessModifierRule, interfaceSyntax.Identifier.GetLocation()));
 			}
 		}
 
@@ -101,7 +103,7 @@ namespace Analyzers
 			else if (typeSymbol.TypeKind != TypeKind.Interface)
 			{
 				var syntax = invocation.FirstAncestorOrSelf<ExpressionStatementSyntax>() ?? (CSharpSyntaxNode)invocation;
-				context.ReportDiagnostic(Diagnostic.Create(DIRule, syntax.GetLocation()));
+				context.ReportDiagnostic(Diagnostic.Create(_diRule, syntax.GetLocation()));
 			}
 		}
 
@@ -109,7 +111,7 @@ namespace Analyzers
 		{
 			if (context.Node is not FileScopedNamespaceDeclarationSyntax)
 			{
-				context.ReportDiagnostic(Diagnostic.Create(NamespaceRule, context.Node.GetLocation()));
+				context.ReportDiagnostic(Diagnostic.Create(_namespaceRule, context.Node.GetLocation()));
 			}
 		}
 	}

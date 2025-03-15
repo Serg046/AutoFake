@@ -26,12 +26,12 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="InversionEnforcer">
       <Version>1.2.4.4</Version>
-	  <IncludeAssets>none</IncludeAssets>
-    </PackageReference>
+	  <PrivateAssets>all</PrivateAssets>
+	</PackageReference>
     <ProjectReference Include="..\Analyzers\Analyzers.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Analyzer</OutputItemType>
-      <IncludeAssets>none</IncludeAssets>
+	  <PrivateAssets>all</PrivateAssets>
 	</ProjectReference>
   </ItemGroup>
 

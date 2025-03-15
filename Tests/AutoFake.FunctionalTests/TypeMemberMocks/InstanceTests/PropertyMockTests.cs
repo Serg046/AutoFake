@@ -1,9 +1,8 @@
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Numerics;
 using Xunit;
 
 namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
@@ -59,11 +58,10 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 		{
 			var fake = new Fake<TestClass>();
 
-			const string cmd = "select * from Test";
 			var sut = fake.Rewrite(f => f.GetFrameworkValue());
-			sut.Replace((SqlCommand c) => c.CommandText).Return(cmd);
+			sut.Replace((Quaternion q) => q.IsIdentity).Return(true);
 
-			Assert.Equal(cmd, sut.Execute());
+			Assert.True(sut.Execute());
 		}
 
 		[Fact]
@@ -260,20 +258,20 @@ namespace AutoFake.FunctionalTests.TypeMemberMocks.InstanceTests
 				return value;
 			}
 
-			public string GetFrameworkValue()
+			public bool GetFrameworkValue()
 			{
 				Debug.WriteLine("Started");
-				var cmd = new SqlCommand();
-				var vaue = cmd.CommandText;
+				var cmd = new Quaternion();
+				var value = cmd.IsIdentity;
 				Debug.WriteLine("Finished");
-				return vaue;
+				return value;
 			}
 			public DateTime GetFrameworkStaticValue()
 			{
 				Debug.WriteLine("Started");
-				var vaue = DateTime.Now;
+				var value = DateTime.Now;
 				Debug.WriteLine("Finished");
-				return vaue;
+				return value;
 			}
 		}
 
