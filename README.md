@@ -1,5 +1,5 @@
 # AutoFake
-[![Build](https://img.shields.io/github/check-runs/Serg046/AutoFake/master)](https://github.com/Serg046/AutoFake/actions/workflows/ci.yml)
+[![Build](https://img.shields.io/github/check-runs/Serg046/AutoFake/master?label=build)](https://github.com/Serg046/AutoFake/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/AutoFake)](https://www.nuget.org/packages/AutoFake)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/AutoFake.svg?label=downloads)](https://www.nuget.org/packages/AutoFake)
 [![.NET Framework 4](https://img.shields.io/badge/.NET%20%20Framework-4.5+-brightgreen)](https://www.nuget.org/packages/AutoFake)
