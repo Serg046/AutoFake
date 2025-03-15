@@ -1,5 +1,4 @@
 # AutoFake
-[![Build](https://img.shields.io/appveyor/build/Serg046/AutoFake)](https://ci.appveyor.com/project/Serg046/autofake/branch/master)
 [![Build](https://img.shields.io/github/check-runs/Serg046/AutoFake/master)](https://github.com/Serg046/AutoFake/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/AutoFake)](https://www.nuget.org/packages/AutoFake)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/AutoFake.svg?label=downloads)](https://www.nuget.org/packages/AutoFake)
