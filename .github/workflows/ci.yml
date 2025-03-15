@@ -24,6 +24,4 @@ jobs:
         dotnet-version: 3.x
 
     - name: Build and test
-      run: |
-        dotnet workload list
-        dotnet test
+      run: dotnet test
