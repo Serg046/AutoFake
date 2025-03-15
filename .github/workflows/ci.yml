@@ -18,5 +18,10 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 2.x
+
     - name: Build and test
       run: dotnet test
