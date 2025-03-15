@@ -1,4 +1,4 @@
-name: Build and test
+name: Continuous Integration
 
 on:
   push:
@@ -21,7 +21,9 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.x
+        dotnet-version: |
+          2.x
+          3.x
 
     - name: Install libssl
       run: |
