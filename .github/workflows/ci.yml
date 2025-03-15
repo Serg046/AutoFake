@@ -24,6 +24,7 @@ jobs:
         dotnet-version: |
           2.x
           3.x
+          4.5
 
     - name: Install libssl
       run: |
