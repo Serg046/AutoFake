@@ -4,7 +4,7 @@
     <TargetFramework>net6</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="!$([MSBuild]::IsOsPlatform('OSX'))">
-    <TargetFrameworks>netcoreapp3.0;net46</TargetFrameworks>
+    <TargetFrameworks>net6;net46</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
