@@ -21,7 +21,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.x
+        dotnet-version: 3.x
 
     - name: Build and test
       run: |

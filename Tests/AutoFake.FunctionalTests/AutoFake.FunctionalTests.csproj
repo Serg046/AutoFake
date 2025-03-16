@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Condition="$([MSBuild]::IsOsPlatform('OSX')) AND '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">
     <TargetFramework>net6</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="!$([MSBuild]::IsOsPlatform('OSX'))">
-    <TargetFrameworks>netcoreapp2.0;net45</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.0;net46</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
@@ -27,7 +27,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">

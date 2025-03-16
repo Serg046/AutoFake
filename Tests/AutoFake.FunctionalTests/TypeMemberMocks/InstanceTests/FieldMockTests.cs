@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 
