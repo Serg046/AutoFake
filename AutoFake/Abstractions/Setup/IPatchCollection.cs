@@ -4,7 +4,7 @@ using Mono.Cecil;
 
 namespace AutoFake.Abstractions.Setup;
 
-internal interface IPatchCollection : IEnumerable<IPatch>
+public interface IPatchCollection : IEnumerable<IPatch>
 {
     void AddPatch(MethodDefinition patchCallback, IPatch patch);
     IPatch GetPatch(MethodBase patchCallback);

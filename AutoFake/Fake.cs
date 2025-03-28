@@ -66,6 +66,8 @@ public static class Fake
         return alcAsm;
     }
 
+    public static IServiceProvider GetServices() => GetCompositionRoot(Assembly.GetCallingAssembly());
+
     public static IPatchConfiguration Patch<TInput, TReturn>(Func<TInput, TReturn> entryPoint)
     {
         return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
@@ -76,11 +78,10 @@ public static class Fake
         return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
     }
     
-    private static IServiceProvider GetCompositionRoot(MethodBase entryPoint)
-    {
-        return _compositionRoots[entryPoint.Module.Assembly];
-    }
-    
+    private static IServiceProvider GetCompositionRoot(MethodBase entryPoint) => GetCompositionRoot(entryPoint.Module.Assembly);
+
+    private static IServiceProvider GetCompositionRoot(Assembly assembly) => _compositionRoots[assembly];
+
     private static void Run(Assembly assembly, MethodBase callback)
     {
         var type = callback.DeclaringType ?? throw new ArgumentNullException("callback.DeclaringType");

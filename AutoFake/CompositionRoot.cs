@@ -17,8 +17,6 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
     private void Setup()
     {
         DI.Setup()
-            .Bind<IServiceProvider>().To<IServiceProvider>(_ => this)
-            
             .Bind<MethodReference>().To<MethodReference>("patch")
             .RootBind<Func<MethodReference, IPatchMember>>().To<Func<MethodReference, IPatchMember>>(ctx => patch =>
             {
@@ -48,11 +46,13 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
                 return processor;
             })
             .Bind<IPatch>().To<IPatch>("patch")
+#pragma warning disable DIW003
             .RootBind<Func<IPatch,IReplacePatchConfiguration<TT>>>("CreateReplacePatchConfiguration").To<Func<IPatch,IReplacePatchConfiguration<TT>>>(ctx => patch =>
             {
                 ctx.Inject<ReplacePatchConfiguration<TT>>(out var cfg);
                 return cfg;
             })
+#pragma warning restore DIW003
 
             .RootBind<IPatchConfigurationFactory>().To<IPatchConfigurationFactory>(_ => this)
             .RootBind<IFakeCallback>().To<FakeCallback>()
