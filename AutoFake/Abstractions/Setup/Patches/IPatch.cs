@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.Loader;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -10,5 +11,6 @@ public interface IPatch
     FieldDefinition RetValueField { get; }
     bool IsMatch(Instruction instruction);
     void Inject(IEmitter emitter);
-    Assembly? PatchedAssembly { get; set; }
+    Assembly? PatchedAssembly { get; }
+    void LoadAssembly(AssemblyLoadContext alc);
 }

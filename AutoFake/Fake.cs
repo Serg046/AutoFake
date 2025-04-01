@@ -1,11 +1,8 @@
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
 using IServiceProvider = AutoFake.Abstractions.IServiceProvider;
 
 namespace AutoFake;
@@ -46,22 +43,10 @@ public static class Fake
         
         foreach (var patch in services.Resolve<IPatchCollection>())
         {
-            using var asm = new MemoryStream();
-            using var symbols = new MemoryStream();
-            var writerParameters = new WriterParameters();
-            if (Debugger.IsAttached)
-            {
-                patch.Type.Module.ReadSymbols();
-                writerParameters.SymbolStream = symbols;
-                writerParameters.SymbolWriterProvider = new SymbolsWriterProvider();
-            }
-
-            patch.Type.Module.Write(asm, writerParameters);
-            asm.Position = symbols.Position = 0;
-            patch.PatchedAssembly = alc.LoadFromStream(asm, symbols);
+            patch.LoadAssembly(alc);
         }
         
-        var alcAsm = alc.LoadFromAssemblyPath(callback.Module.FullyQualifiedName);
+        var alcAsm = alc.LoadFromAssemblyPath(callback.Module.FullyQualifiedName); // TODO: is there a need to check if loaded?
         _compositionRoots.Add(alcAsm, services);
         return alcAsm;
     }
@@ -99,15 +84,5 @@ public static class Fake
                         ?? throw new MissingMethodException(type.FullName, callback.Name);
         // TODO: Could be async requiring await
         alcMethod.Invoke(instance, null);
-    }
-    
-    private class SymbolsWriterProvider : ISymbolWriterProvider
-    {
-        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotSupportedException("Symbols should be added without files");
-
-        public ISymbolWriter? GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
-        {
-            return module.HasSymbols ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream) : null;
-        }
     }
 }

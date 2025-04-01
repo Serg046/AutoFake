@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.Loader;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Patches;
@@ -18,7 +20,7 @@ internal class ReplacePatch(IFieldNamePool fieldNamePool, MethodDefinition entry
         return field;
     });
 
-    public Assembly? PatchedAssembly { get; set; }
+    public Assembly? PatchedAssembly { get; private set; }
     public TypeDefinition Type => entryPoint.DeclaringType;
     public FieldDefinition RetValueField => _retValueField.Value;
     
@@ -32,5 +34,32 @@ internal class ReplacePatch(IFieldNamePool fieldNamePool, MethodDefinition entry
             : OpCodes.Ldsfld;
         emitter.InsertAbove(Instruction.Create(opCode, RetValueField));
         emitter.InsertAbove(Instruction.Create(OpCodes.Br, emitter.BaseInstruction.Next));
+    }
+
+    public void LoadAssembly(AssemblyLoadContext alc)
+    {
+        using var asm = new MemoryStream();
+        using var symbols = new MemoryStream();
+        var writerParameters = new WriterParameters();
+        if (Debugger.IsAttached)
+        {
+            Type.Module.ReadSymbols();
+            writerParameters.SymbolStream = symbols;
+            writerParameters.SymbolWriterProvider = new SymbolsWriterProvider();
+        }
+
+        Type.Module.Write(asm, writerParameters);
+        asm.Position = symbols.Position = 0;
+        PatchedAssembly = alc.LoadFromStream(asm, symbols);
+    }
+    
+    private class SymbolsWriterProvider : ISymbolWriterProvider
+    {
+        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotSupportedException("Symbols should be added without files");
+
+        public ISymbolWriter? GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
+        {
+            return module.HasSymbols ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream) : null;
+        }
     }
 }

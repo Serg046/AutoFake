@@ -10,7 +10,7 @@ internal class PatchCollection : IPatchCollection
 {
     private readonly Dictionary<string, IPatch> _patches = new();
 
-    public void AddPatch(MethodDefinition patchCallback, IPatch patch)
+    public void AddPatch(MethodReference patchCallback, IPatch patch)
     {
         var key = GetPatchKey(patchCallback.DeclaringType.GetClrTypeFullName(), patchCallback.Name);
         _patches.Add(key, patch);
