@@ -10,17 +10,22 @@ namespace AutoFake.Setup.Patches;
 
 internal class ReplacePatch(IFieldNamePool fieldNamePool, MethodDefinition entryPoint, IPatchMember patchMember) : IPatch
 {
+    private readonly Lazy<FieldDefinition> _retValueField = new(() =>
+    {
+        var field = new FieldDefinition(fieldNamePool.NextFieldName($"{entryPoint.Name}_{patchMember.Name}_RetValue"),
+            FieldAttributes.Static | FieldAttributes.Public, patchMember.ReturnType);
+        entryPoint.DeclaringType.Fields.Add(field);
+        return field;
+    });
+
     public Assembly? PatchedAssembly { get; set; }
     public TypeDefinition Type => entryPoint.DeclaringType;
-    public FieldDefinition RetValueField { get; }
-        = new (fieldNamePool.NextFieldName($"{entryPoint.Name}_{patchMember.Name}_RetValue"),
-            FieldAttributes.Static | FieldAttributes.Public, patchMember.ReturnType);
+    public FieldDefinition RetValueField => _retValueField.Value;
     
     public bool IsMatch(Instruction instruction) => patchMember.IsMatch(instruction);
 
     public void Inject(IEmitter emitter)
     {
-        Type.Fields.Add(RetValueField);
         if (patchMember.HasThis) emitter.InsertAbove(Instruction.Create(OpCodes.Pop));
         var opCode = emitter.BaseInstruction.OpCode == OpCodes.Ldsflda || emitter.BaseInstruction.OpCode == OpCodes.Ldflda
             ? OpCodes.Ldsflda

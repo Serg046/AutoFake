@@ -10,4 +10,10 @@ internal class PatchConfiguration(IPatchCollection patchCollection, IPatchConfig
         var patch = patchCollection.GetPatch(patchMember.Method);
         return patchCfgFactory.CreateReplacePatchConfiguration<TReturn>()(patch);
     }
+
+    public IReplacePatchConfiguration<TReturn> Replace<TInput, TReturn>(Func<TInput, TReturn> patchMember)
+    {
+        var patch = patchCollection.GetPatch(patchMember.Method);
+        return patchCfgFactory.CreateReplacePatchConfiguration<TReturn>()(patch);
+    }
 }

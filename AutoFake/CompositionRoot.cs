@@ -23,6 +23,12 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
                 ctx.Inject<PatchMethod>(out var member);
                 return member;
             })
+            .Bind<FieldReference>().To<FieldReference>("patch")
+            .RootBind<Func<FieldReference, IPatchMember>>().To<Func<FieldReference, IPatchMember>>(ctx => patch =>
+            {
+                ctx.Inject<PatchField>(out var member);
+                return member;
+            })
             .Bind<MethodDefinition>().To<MethodDefinition>("entryPoint")
             .Bind<IPatchMember>().To<IPatchMember>("patchMember")
             .RootBind<Func<MethodDefinition, IPatchMember, IPatch>>().To<Func<MethodDefinition, IPatchMember, IPatch>>(ctx =>

@@ -8,7 +8,7 @@ namespace AutoFake.Tests;
 public class Tests
 {
     [AutoFakeFact]
-    public void Test()
+    public void Test1()
     {
         var date = new DateTime(2024, 3, 13);
 
@@ -56,6 +56,58 @@ public class Tests
         sut.GetCurrentDate().ShouldBe(date);
     }
 
+    [AutoFakeFact]
+    public void Test5()
+    {
+        var date = new DateTime(2024, 3, 13);
+
+        Fake.Patch((SystemUnderTest s) => s.GetDateFromField())
+            .Replace((SystemUnderTest s) => s.DateField)
+            .Return(date);
+        
+        var sut = new SystemUnderTest();
+        sut.GetDateFromField().ShouldBe(date);
+    }
+    
+    [AutoFakeFact]
+    public void Test6()
+    {
+        var date = new DateTime(2024, 3, 13);
+
+        Fake.Patch((SystemUnderTest s) => s.GetDateFromProperty())
+            .Replace((SystemUnderTest s) => s.DateProperty)
+            .Return(date);
+        
+        var sut = new SystemUnderTest();
+        sut.GetDateFromProperty().ShouldBe(date);
+    }
+    
+    [AutoFakeFact]
+    public void Test7()
+    {
+        var date = new DateTime(2024, 3, 13);
+
+        Fake.Patch((SystemUnderTest s) => s.DateProperty)
+            .Replace(() => DateTime.Now)
+            .Return(date);
+        
+        var sut = new SystemUnderTest();
+        sut.DateProperty.ShouldBe(date);
+    }
+    
+    [AutoFakeFact]
+    public void Test8()
+    {
+        var date = new DateTime(2024, 3, 13);
+
+        Fake.Patch(() => new SystemUnderTest())
+            .Replace(() => DateTime.Now)
+            .Return(date);
+        
+        var sut = new SystemUnderTest();
+        sut.DatePropertyWithInit.ShouldBe(date);
+    }
+    
     public static IEnumerable<object[]> GetSystemUnderTest()
     {
         yield return [new SystemUnderTest()];
@@ -71,6 +123,12 @@ public class Tests
 
     public class SystemUnderTest
     {
+        public DateTime DateField = DateTime.Now;
+        public DateTime DateProperty => DateTime.Now;
+        public DateTime DatePropertyWithInit { get; } = DateTime.Now;
         public DateTime GetCurrentDate() => DateTime.Now;
+        public DateTime GetDateFromField() => DateField;
+        public DateTime GetDateFromProperty() => DateProperty;
+        public DateTime GetDateFromInitializedProperty() => DateProperty;
     }
 }

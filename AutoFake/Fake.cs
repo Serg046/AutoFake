@@ -78,6 +78,11 @@ public static class Fake
         return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
     }
     
+    public static IPatchConfiguration Patch<TReturn>(Func<TReturn> entryPoint)
+    {
+        return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
+    }
+    
     private static IServiceProvider GetCompositionRoot(MethodBase entryPoint) => GetCompositionRoot(entryPoint.Module.Assembly);
 
     private static IServiceProvider GetCompositionRoot(Assembly assembly) => _compositionRoots[assembly];

@@ -13,7 +13,7 @@ internal class PatchMethod(MethodReference patch) : IPatchMember
 
     public bool IsMatch(Instruction instruction)
     {
-        return instruction.OpCode.Code is Code.Call or Code.Callvirt
+        return instruction.OpCode.Code is Code.Call or Code.Callvirt // TODO: Code.Calli?
                && instruction.Operand is MethodReference methodRef
                && methodRef == patch;
     }
