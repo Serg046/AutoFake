@@ -10,7 +10,7 @@ using FieldAttributes = Mono.Cecil.FieldAttributes;
 
 namespace AutoFake.Setup.Patches;
 
-internal class ReplacePatch(IFieldNamePool fieldNamePool, MethodDefinition entryPoint, IPatchMember patchMember) : IPatch
+internal class ReplacePatch(IFieldNamePool fieldNamePool, MethodDefinition entryPoint, IPatchMember patchMember, Func<IEmitter, IByteCodeProcessor> createProcessor) : IPatch
 {
     private readonly Lazy<FieldDefinition> _retValueField = new(() =>
     {
@@ -28,12 +28,51 @@ internal class ReplacePatch(IFieldNamePool fieldNamePool, MethodDefinition entry
 
     public void Inject(IEmitter emitter)
     {
-        if (patchMember.HasThis) emitter.InsertAbove(Instruction.Create(OpCodes.Pop));
+        var nop = Instruction.Create(OpCodes.Nop);
+        var processor = createProcessor(emitter);
+        var array = processor.CreateArrayVariable(Type.Module, patchMember.GetParameters().Count);
+        var arguments = processor.RecordMethodCall(patchMember, array);
+        ValidateArguments(emitter, array, nop);
+        ReturnRetField(emitter);
+        emitter.Emit(nop);
+        PushRecordedArgumentsBack(emitter, arguments);
+    }
+
+    private static void PushRecordedArgumentsBack(IEmitter emitter, IReadOnlyList<VariableDefinition> arguments)
+    {
+        foreach (var argument in arguments)
+        {
+            emitter.Emit(Instruction.Create(OpCodes.Ldloc, argument));
+        }
+    }
+
+    private void ReturnRetField(IEmitter emitter)
+    {
+        if (patchMember.HasThis) emitter.Emit(Instruction.Create(OpCodes.Pop));
         var opCode = emitter.BaseInstruction.OpCode == OpCodes.Ldsflda || emitter.BaseInstruction.OpCode == OpCodes.Ldflda
             ? OpCodes.Ldsflda
             : OpCodes.Ldsfld;
-        emitter.InsertAbove(Instruction.Create(opCode, RetValueField));
-        emitter.InsertAbove(Instruction.Create(OpCodes.Br, emitter.BaseInstruction.Next));
+        emitter.Emit(Instruction.Create(opCode, RetValueField));
+        emitter.Emit(Instruction.Create(OpCodes.Br, emitter.BaseInstruction.Next));
+    }
+
+    private void ValidateArguments(IEmitter emitter, VariableDefinition array, Instruction nop)
+    {
+        emitter.Emit(Instruction.Create(OpCodes.Ldloc, array));
+        emitter.Emit(Instruction.Create(OpCodes.Call,
+            Type.Module.ImportReference(
+                typeof(Fake).GetMethod(nameof(Fake.ValidateArguments)))));
+        emitter.Emit(Instruction.Create(OpCodes.Brfalse, nop));
+    }
+
+    private void ValidateArguments(IEmitter emitter)
+    {
+        emitter.Emit(Instruction.Create(OpCodes.Dup));
+        emitter.Emit(Instruction.Create(OpCodes.Box, Type.Module.TypeSystem.Int32));
+        emitter.Emit(Instruction.Create(OpCodes.Call,
+            Type.Module.ImportReference(
+                typeof(Fake).GetMethod(nameof(Fake.ValidateArguments)))));
+        emitter.Emit(Instruction.Create(OpCodes.Brfalse, emitter.BaseInstruction));
     }
 
     public void LoadAssembly(AssemblyLoadContext alc)

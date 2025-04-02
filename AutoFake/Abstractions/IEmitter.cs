@@ -6,6 +6,5 @@ public interface IEmitter
 {
     MethodBody Method { get; }
     Instruction BaseInstruction { get; }
-    void InsertAbove(Instruction instruction);
-    void InsertBelow(Instruction instruction);
+    void Emit(Instruction instruction);
 }

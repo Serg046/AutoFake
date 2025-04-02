@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AutoFake.Tests;
 
-public class Tests
+public class Members
 {
     [AutoFakeFact]
     public void Test1()

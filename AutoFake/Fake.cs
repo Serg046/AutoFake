@@ -85,4 +85,9 @@ public static class Fake
         // TODO: Could be async requiring await
         alcMethod.Invoke(instance, null);
     }
+
+    public static bool ValidateArguments(object[] arguments)
+    {
+        return true;
+    }
 }
