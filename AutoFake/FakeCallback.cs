@@ -6,13 +6,12 @@ using AutoFake.Abstractions.Setup.Patches;
 using AutoFake.Setup.Configurations;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake;
 
 internal class FakeCallback(IPatchCollection patches,
     Func<MethodReference, IPatchMember> createPatchMethod, Func<FieldReference, IPatchMember> createPatchField,
-    Func<MethodDefinition, IPatchMember, IPatch> createPatch, Func<MethodBody, Instruction, IEmitter> createEmitter) : IFakeCallback
+    Func<MethodDefinition, MethodDefinition, IPatchMember, IPatch> createPatch) : IFakeCallback
 {
     public void Patch(MethodBase callback)
     {
@@ -35,7 +34,7 @@ internal class FakeCallback(IPatchCollection patches,
         {
             if (patch.IsMatch(cmd))
             {
-                patch.Inject(createEmitter(method.Body, cmd));
+                patch.Inject(method.Body, cmd);
             }
             else if (cmd.Operand is MethodReference methodRef)
             {
@@ -96,19 +95,19 @@ internal class FakeCallback(IPatchCollection patches,
     private IPatch GetPatch(Instruction instruction, MethodDefinition entryPoint)
     {
         var patchCfg = GetPatchCfg(instruction);
-        var patchMethod = FindCallback(patchCfg);
-        foreach (var cmd in patchMethod.Body.Instructions.Reverse())
+        var patchCallback = FindCallback(patchCfg);
+        foreach (var cmd in patchCallback.Body.Instructions.Reverse())
         {
             if (cmd.Operand is MethodReference methodRef)
             {
-                var patch = createPatch(entryPoint, createPatchMethod(methodRef));
-                patches.AddPatch(patchMethod, patch);
+                var patch = createPatch(entryPoint, patchCallback, createPatchMethod(methodRef));
+                patches.AddPatch(patch);
                 return patch;
             }
             else if (cmd.Operand is FieldReference fieldRef)
             {
-                var patch = createPatch(entryPoint, createPatchField(fieldRef));
-                patches.AddPatch(patchMethod, patch);
+                var patch = createPatch(entryPoint, patchCallback, createPatchField(fieldRef));
+                patches.AddPatch(patch);
                 return patch;
             }
         }

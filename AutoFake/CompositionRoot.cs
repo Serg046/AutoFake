@@ -30,9 +30,10 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
                 return member;
             })
             .Bind<MethodDefinition>().To<MethodDefinition>("entryPoint")
+            .Bind<MethodDefinition>("patchCallback").To<MethodDefinition>("patchCallback")
             .Bind<IPatchMember>().To<IPatchMember>("patchMember")
-            .RootBind<Func<MethodDefinition, IPatchMember, IPatch>>().To<Func<MethodDefinition, IPatchMember, IPatch>>(ctx =>
-                (entryPoint, patchMember) =>
+            .RootBind<Func<MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
+                (entryPoint, patchCallback, patchMember) =>
                 {
                     ctx.Inject<ReplacePatch>(out var patchCfg);
                     return patchCfg;
@@ -63,7 +64,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .RootBind<IPatchConfigurationFactory>().To<IPatchConfigurationFactory>(_ => this)
             .RootBind<IFakeCallback>().To<FakeCallback>()
             .RootBind<IPatchConfiguration>().To<PatchConfiguration>()
-            .RootBind<IFieldNamePool>().As(Lifetime.Singleton).To<FieldNamePool>()
+            .RootBind<IMemberNamePool>().As(Lifetime.Singleton).To<MemberNamePool>()
             .RootBind<IPatchCollection>().As(Lifetime.Singleton).To<PatchCollection>();
     }
 }

@@ -7,7 +7,7 @@ namespace AutoFake;
 
 internal class ByteCodeProcessor(IEmitter emitter) : IByteCodeProcessor
 {
-    public IReadOnlyList<VariableDefinition> RecordMethodCall(IPatchMember patchMember, VariableDefinition array)
+    public IReadOnlyList<VariableDefinition> ReadMethodArguments(IPatchMember patchMember, VariableDefinition array)
     {
         var variables = MoveArgumentsToVariables(patchMember);
         RecordMethodCall(variables, array, patchMember);

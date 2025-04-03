@@ -1,16 +1,20 @@
 using System.Reflection;
 using System.Runtime.Loader;
+using AutoFake.Setup.Patches;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake.Abstractions.Setup.Patches;
 
 public interface IPatch
 {
-    TypeDefinition Type { get; }
-    FieldDefinition RetValueField { get; }
+    string Key { get; }
+    ModuleDefinition Module { get; }
+    FieldDefinition? RetValueField { get; }
+    object[] Arguments { get; }
     bool IsMatch(Instruction instruction);
-    void Inject(IEmitter emitter);
-    Assembly? PatchedAssembly { get; }
-    void LoadAssembly(AssemblyLoadContext alc);
+    void Inject(MethodBody method, Instruction instruction);
+    Type? PatchedType { get; }
+    void LoadType(Assembly assembly);
 }

@@ -6,6 +6,7 @@ namespace AutoFake.Abstractions.Setup;
 
 public interface IPatchCollection : IEnumerable<IPatch>
 {
-    void AddPatch(MethodReference patchCallback, IPatch patch);
+    void AddPatch(IPatch patch);
     IPatch GetPatch(MethodBase patchCallback);
+    IPatch GetPatch(string key);
 }

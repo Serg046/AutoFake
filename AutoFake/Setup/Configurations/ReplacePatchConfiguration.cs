@@ -7,9 +7,12 @@ internal class ReplacePatchConfiguration<TReturn>(IPatch patch) : IReplacePatchC
 {
     public IReplacePatchConfiguration<TReturn> Return(TReturn value)
     {
-        var type = patch.PatchedAssembly?.GetType(patch.Type.GetClrTypeFullName()) ?? throw new MissingMemberException("Cannot find a patched type");
-        var field = type.GetField(patch.RetValueField.Name) ?? throw new MissingMemberException(type.FullName, patch.RetValueField.Name);
-        field.SetValue(obj: null, value);
+        if (patch.RetValueField != null)
+        {
+            var retField = patch.PatchedType?.GetField(patch.RetValueField.Name) ?? throw new MissingMemberException(patch.PatchedType?.FullName, patch.RetValueField.Name);
+            retField.SetValue(obj: null, value);
+        }
+
         return this;
     }
 }

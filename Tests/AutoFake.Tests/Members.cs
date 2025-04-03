@@ -26,7 +26,9 @@ public class Members
     {
         Fake.Patch((SystemUnderTest f) => f.GetCurrentDate()).Replace(() => DateTime.Now);
         type.ShouldBe(typeof(SystemUnderTest));
+        
         var patch = Fake.GetServices().Resolve<IPatchCollection>().Single();
+        patch.RetValueField.ShouldNotBeNull();
         type.GetFields().ShouldContain(f => f.Name == patch.RetValueField.Name);
     }
     

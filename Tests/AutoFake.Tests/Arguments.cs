@@ -22,7 +22,7 @@ public class Arguments
     [AutoFakeFact]
     public void Test2()
     {
-        var str = "modified";
+        const string str = "modified";
 
         Fake.Patch((SystemUnderTest sut) => sut.GetString())
             .Replace((StringBuilder sb) => sb.Append("test", 1, 2))

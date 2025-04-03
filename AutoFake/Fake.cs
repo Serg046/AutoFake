@@ -1,9 +1,13 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using IServiceProvider = AutoFake.Abstractions.IServiceProvider;
+using ModuleDefinition = Mono.Cecil.ModuleDefinition;
 
 namespace AutoFake;
 
@@ -40,15 +44,37 @@ public static class Fake
     {
         var fakeCallback = services.Resolve<IFakeCallback>();
         fakeCallback.Patch(callback);
-        
-        foreach (var patch in services.Resolve<IPatchCollection>())
-        {
-            patch.LoadAssembly(alc);
-        }
-        
+        LoadPatchedAssemblies(services, alc);
         var alcAsm = alc.LoadFromAssemblyPath(callback.Module.FullyQualifiedName); // TODO: is there a need to check if loaded?
         _compositionRoots.Add(alcAsm, services);
         return alcAsm;
+    }
+
+    private static void LoadPatchedAssemblies(IServiceProvider services, AssemblyLoadContext alc)
+    {
+        var assemblies = new Dictionary<ModuleDefinition, Assembly>();
+        foreach (var patch in services.Resolve<IPatchCollection>())
+        {
+            if (!assemblies.TryGetValue(patch.Module, out var assembly))
+            {
+                using var asm = new MemoryStream();
+                using var symbols = new MemoryStream(); //TODO: create if needed
+                var writerParameters = new WriterParameters();
+                if (Debugger.IsAttached)
+                {
+                    patch.Module.ReadSymbols();
+                    writerParameters.SymbolStream = symbols;
+                    writerParameters.SymbolWriterProvider = new SymbolsWriterProvider();
+                }
+
+                patch.Module.Write(asm, writerParameters);
+                asm.Position = symbols.Position = 0;
+                assembly = alc.LoadFromStream(asm, symbols);
+                assemblies.Add(patch.Module, assembly);
+            }
+            
+            patch.LoadType(assembly);
+        }
     }
 
     public static IServiceProvider GetServices() => GetCompositionRoot(Assembly.GetCallingAssembly());
@@ -86,8 +112,21 @@ public static class Fake
         alcMethod.Invoke(instance, null);
     }
 
-    public static bool ValidateArguments(object[] arguments)
+    public static bool ValidateArguments(string patchKey, object[] arguments)
     {
-        return true;
+        var services = GetCompositionRoot(Assembly.GetCallingAssembly());
+        var patchCollection = services.Resolve<IPatchCollection>();
+        var patch = patchCollection.GetPatch(patchKey);
+        return patch.Arguments.SequenceEqual(arguments);
+    }
+    
+    private class SymbolsWriterProvider : ISymbolWriterProvider
+    {
+        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotSupportedException("Symbols should be added without files");
+
+        public ISymbolWriter? GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
+        {
+            return module.HasSymbols ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream) : null;
+        }
     }
 }

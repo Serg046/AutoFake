@@ -10,10 +10,14 @@ internal class PatchCollection : IPatchCollection
 {
     private readonly Dictionary<string, IPatch> _patches = new();
 
-    public void AddPatch(MethodReference patchCallback, IPatch patch)
+    public void AddPatch(IPatch patch)
     {
-        var key = GetPatchKey(patchCallback.DeclaringType.GetClrTypeFullName(), patchCallback.Name);
-        _patches.Add(key, patch);
+        _patches.Add(patch.Key, patch);
+    }
+    
+    public static string GetPatchKey(MethodReference patchCallback)
+    {
+        return GetPatchKey(patchCallback.DeclaringType.GetClrTypeFullName(), patchCallback.Name);
     }
 
     public IPatch GetPatch(MethodBase patchCallback)
@@ -22,8 +26,13 @@ internal class PatchCollection : IPatchCollection
         var key = GetPatchKey(typeName, patchCallback.Name);
         return _patches[key];
     }
+    
+    public IPatch GetPatch(string key)
+    {
+        return _patches[key];
+    }
 
-    private string GetPatchKey(string type, string methodName) => $"{type}::{methodName}";
+    private static string GetPatchKey(string type, string methodName) => $"{type}::{methodName}";
     
     public IEnumerator<IPatch> GetEnumerator() => _patches.Values.GetEnumerator();
 
