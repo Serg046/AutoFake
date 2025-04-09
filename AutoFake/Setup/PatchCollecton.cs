@@ -15,9 +15,9 @@ internal class PatchCollection : IPatchCollection
         _patches.Add(patch.Key, patch);
     }
     
-    public static string GetPatchKey(MethodReference patchCallback)
+    public static string GetPatchKey(MethodReference callback)
     {
-        return GetPatchKey(patchCallback.DeclaringType.GetClrTypeFullName(), patchCallback.Name);
+        return GetPatchKey(callback.DeclaringType.GetClrTypeFullName(), callback.Name);
     }
 
     public IPatch GetPatch(MethodBase patchCallback)
