@@ -20,13 +20,13 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
     {
         DI.Setup()
             .Bind<MethodReference>().To<MethodReference>("patch")
-            .RootBind<Func<MethodReference, IPatchMember>>().To<Func<MethodReference, IPatchMember>>(ctx => patch =>
+            .Bind<Func<MethodReference, IPatchMember>>().To<Func<MethodReference, IPatchMember>>(ctx => patch =>
             {
                 ctx.Inject<PatchMethod>(out var member);
                 return member;
             })
             .Bind<FieldReference>().To<FieldReference>("patch")
-            .RootBind<Func<FieldReference, IPatchMember>>().To<Func<FieldReference, IPatchMember>>(ctx => patch =>
+            .Bind<Func<FieldReference, IPatchMember>>().To<Func<FieldReference, IPatchMember>>(ctx => patch =>
             {
                 ctx.Inject<PatchField>(out var member);
                 return member;
@@ -35,7 +35,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .Bind<MethodDefinition>("patchCallback").To<MethodDefinition>("patchCallback")
             .Bind<IPatchMember>().To<IPatchMember>("patchMember")
             .Bind<string>().To<string>("patchKey")
-            .RootBind<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
+            .Bind<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
                 (patchKey, entryPoint, patchCallback, patchMember) =>
                 {
                     ctx.Inject<ReplacePatch>(out var patchCfg);
@@ -43,7 +43,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
                 })
             .Bind<MethodBody>().To<MethodBody>("method")
             .Bind<Instruction>().To<Instruction>("instruction")
-            .RootBind<Func<MethodBody, Instruction, IEmitter>>().To<Func<MethodBody, Instruction, IEmitter>>(ctx =>
+            .Bind<Func<MethodBody, Instruction, IEmitter>>().To<Func<MethodBody, Instruction, IEmitter>>(ctx =>
                 (method, instruction) =>
                 {
                     ctx.Inject<Emitter>(out var emitter);
@@ -73,8 +73,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
 
     public IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch)
     {
-        var factory = ReplacePatchConfigurationFactory<TReturn>();
-        return factory(patch);
+        return ReplacePatchConfigurationFactory<TReturn>()(patch);
     }
 }
 
@@ -113,7 +112,6 @@ public partial class CompositionRoot : ICompositionRoot, IPatchConfigurationFact
 
     public IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch)
     {
-        var factory = ReplacePatchConfigurationFactory<TReturn>();
-        return factory(patch);
+        return ReplacePatchConfigurationFactory<TReturn>()(patch);
     }
 }
