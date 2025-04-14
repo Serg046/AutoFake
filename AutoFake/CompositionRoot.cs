@@ -49,32 +49,32 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
                     ctx.Inject<Emitter>(out var emitter);
                     return emitter;
                 })
-            .Bind<IByteCodeProcessor>().To<ByteCodeProcessor>()
-            .Bind<IPatchConfigurationFactory>().To<IPatchConfigurationFactory>(_ => this)
-            .Bind<IMemberNamePool>().As(Lifetime.Singleton).To<MemberNamePool>()
-            
-            .RootBind<IPatchCollection>().As(Lifetime.Singleton).To<PatchCollection>()
-            .RootBind<IFakeCallback>().To<FakeCallback>()
-            .RootBind<Func<MethodBase,IPatchConfiguration>>().To<Func<MethodBase,IPatchConfiguration>>(ctx => entryPoint =>
+            .Bind<IEmitter>().To<IEmitter>("emitter")
+            .RootBind<Func<IEmitter,IByteCodeProcessor>>().To<Func<IEmitter,IByteCodeProcessor>>(ctx => emitter =>
             {
-                ctx.Override(entryPoint);
-                ctx.Inject<PatchConfiguration>(out var cfg);
-                return cfg;
+                ctx.Inject<ByteCodeProcessor>(out var processor);
+                return processor;
             })
-#pragma warning disable DIW003 // The root can be used from the method only
-            .RootBind<Func<IPatch,IReplacePatchConfiguration<TT>>>("ReplacePatchConfigurationFactory").To<Func<IPatch,IReplacePatchConfiguration<TT>>>(ctx => patch =>
+            .Bind<IPatch>().To<IPatch>("patch")
 #pragma warning disable DIW003
+            .RootBind<Func<IPatch,IReplacePatchConfiguration<TT>>>("CreateReplacePatchConfiguration").To<Func<IPatch,IReplacePatchConfiguration<TT>>>(ctx => patch =>
             {
-                ctx.Override(patch);
                 ctx.Inject<ReplacePatchConfiguration<TT>>(out var cfg);
                 return cfg;
-            });
-    }
+            })
+            .Bind<MethodBase>().To<MethodBase>("entryPoint")
+            .RootBind<Func<MethodBase,IPatchConfiguration>>().To<Func<MethodBase,IPatchConfiguration>>(ctx =>
+                entryPoint =>
+                {
+                    ctx.Inject<PatchConfiguration>(out var cfg);
+                    return cfg;
+                })
+#pragma warning restore DIW003
 
-    public IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch)
-    {
-        var factory = ReplacePatchConfigurationFactory<TReturn>();
-        return factory(patch);
+            .RootBind<IPatchConfigurationFactory>().To<IPatchConfigurationFactory>(_ => this)
+            .RootBind<IFakeCallback>().To<FakeCallback>()
+            .RootBind<IMemberNamePool>().As(Lifetime.Singleton).To<MemberNamePool>()
+            .RootBind<IPatchCollection>().As(Lifetime.Singleton).To<PatchCollection>();
     }
 }
 
@@ -109,11 +109,5 @@ public partial class CompositionRoot : ICompositionRoot, IPatchConfigurationFact
         }
         
         return value;
-    }
-
-    public IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch)
-    {
-        var factory = ReplacePatchConfigurationFactory<TReturn>();
-        return factory(patch);
     }
 }

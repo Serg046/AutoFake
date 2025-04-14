@@ -9,12 +9,12 @@ internal class PatchConfiguration(MethodBase entryPoint, IPatchCollection patchC
     public IReplacePatchConfiguration<TReturn> Replace<TReturn>(Func<TReturn> patchMember)
     {
         var patch = patchCollection.GetPatch(entryPoint);
-        return patchCfgFactory.CreateReplacePatchConfiguration<TReturn>(patch);
+        return patchCfgFactory.CreateReplacePatchConfiguration<TReturn>()(patch);
     }
 
     public IReplacePatchConfiguration<TReturn> Replace<TInput, TReturn>(Func<TInput, TReturn> patchMember)
     {
         var patch = patchCollection.GetPatch(entryPoint);
-        return patchCfgFactory.CreateReplacePatchConfiguration<TReturn>(patch);
+        return patchCfgFactory.CreateReplacePatchConfiguration<TReturn>()(patch);
     }
 }
