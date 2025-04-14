@@ -81,24 +81,17 @@ public static class Fake
 
     public static IPatchConfiguration Patch<TInput, TReturn>(Func<TInput, TReturn> entryPoint)
     {
-        return GetPatchConfiguration(entryPoint.Method);
+        return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
     }
 
     public static IPatchConfiguration Patch<TInput>(Action<TInput> entryPoint)
     {
-        return GetPatchConfiguration(entryPoint.Method);
+        return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
     }
     
     public static IPatchConfiguration Patch<TReturn>(Func<TReturn> entryPoint)
     {
-        return GetPatchConfiguration(entryPoint.Method);
-    }
-    
-    private static IPatchConfiguration GetPatchConfiguration(MethodBase entryPoint)
-    {
-        var services = GetCompositionRoot(entryPoint);
-        var factory = services.Resolve<Func<MethodBase,IPatchConfiguration>>();
-        return factory(entryPoint);
+        return GetCompositionRoot(entryPoint.Method).Resolve<IPatchConfiguration>();
     }
     
     private static IServiceProvider GetCompositionRoot(MethodBase entryPoint) => GetCompositionRoot(entryPoint.Module.Assembly);

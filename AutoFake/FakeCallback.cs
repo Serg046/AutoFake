@@ -3,7 +3,6 @@ using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
 using AutoFake.Abstractions.Setup.Patches;
-using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -12,7 +11,7 @@ namespace AutoFake;
 
 internal class FakeCallback(IPatchCollection patches,
     Func<MethodReference, IPatchMember> createPatchMethod, Func<FieldReference, IPatchMember> createPatchField,
-    Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch> createPatch) : IFakeCallback
+    Func<MethodDefinition, MethodDefinition, IPatchMember, IPatch> createPatch) : IFakeCallback
 {
     public void Patch(MethodBase callback)
     {
@@ -22,9 +21,9 @@ internal class FakeCallback(IPatchCollection patches,
         var methodDef = asmDef.MainModule.ImportReference(callback).AsMethodDefinition();
         foreach (var entryPointCfg in GetEntryPoints(methodDef))
         {
-            var entryPoint = GetEntryPoint(entryPointCfg);
-            var patch = GetPatch(entryPointCfg, entryPoint.Method,entryPoint.Key);
-            Patch(entryPoint.Method, patch);
+            var entryPointMethod = GetEntryPoint(entryPointCfg);
+            var patch = GetPatch(entryPointCfg, entryPointMethod);
+            Patch(entryPointMethod, patch);
         }
     }
 
@@ -79,22 +78,21 @@ internal class FakeCallback(IPatchCollection patches,
         }
     }
 
-    private (MethodDefinition Method, string Key) GetEntryPoint(Instruction instruction)
+    private MethodDefinition GetEntryPoint(Instruction instruction)
     {
         var callback = FindCallback(instruction);
-        var patchKey = PatchCollection.GetPatchKey(callback);
         foreach (var cmd in callback.Body.Instructions.Reverse())
         {
             if (cmd.Operand is MethodReference methodRef)
             {
-                return (methodRef.AsMethodDefinition(), patchKey);
+                return methodRef.AsMethodDefinition();
             }
         }
 
         throw new MissingMemberException("Cannot find a patch");
     }
     
-    private IPatch GetPatch(Instruction instruction, MethodDefinition entryPoint, string patchKey)
+    private IPatch GetPatch(Instruction instruction, MethodDefinition entryPoint)
     {
         var patchCfg = GetPatchCfg(instruction);
         var patchCallback = FindCallback(patchCfg);
@@ -102,13 +100,13 @@ internal class FakeCallback(IPatchCollection patches,
         {
             if (cmd.Operand is MethodReference methodRef)
             {
-                var patch = createPatch(patchKey, entryPoint, patchCallback, createPatchMethod(methodRef));
+                var patch = createPatch(entryPoint, patchCallback, createPatchMethod(methodRef));
                 patches.AddPatch(patch);
                 return patch;
             }
             else if (cmd.Operand is FieldReference fieldRef)
             {
-                var patch = createPatch(patchKey, entryPoint, patchCallback, createPatchField(fieldRef));
+                var patch = createPatch(entryPoint, patchCallback, createPatchField(fieldRef));
                 patches.AddPatch(patch);
                 return patch;
             }

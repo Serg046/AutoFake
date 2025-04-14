@@ -1,4 +1,3 @@
-using System.Reflection;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
@@ -10,7 +9,6 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Pure.DI;
 using IServiceProvider = AutoFake.Abstractions.IServiceProvider;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace AutoFake;
 
@@ -34,9 +32,8 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .Bind<MethodDefinition>().To<MethodDefinition>("entryPoint")
             .Bind<MethodDefinition>("patchCallback").To<MethodDefinition>("patchCallback")
             .Bind<IPatchMember>().To<IPatchMember>("patchMember")
-            .Bind<string>().To<string>("patchKey")
-            .RootBind<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
-                (patchKey, entryPoint, patchCallback, patchMember) =>
+            .RootBind<Func<MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
+                (entryPoint, patchCallback, patchMember) =>
                 {
                     ctx.Inject<ReplacePatch>(out var patchCfg);
                     return patchCfg;
@@ -62,17 +59,11 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
                 ctx.Inject<ReplacePatchConfiguration<TT>>(out var cfg);
                 return cfg;
             })
-            .Bind<MethodBase>().To<MethodBase>("entryPoint")
-            .RootBind<Func<MethodBase,IPatchConfiguration>>().To<Func<MethodBase,IPatchConfiguration>>(ctx =>
-                entryPoint =>
-                {
-                    ctx.Inject<PatchConfiguration>(out var cfg);
-                    return cfg;
-                })
 #pragma warning restore DIW003
 
             .RootBind<IPatchConfigurationFactory>().To<IPatchConfigurationFactory>(_ => this)
             .RootBind<IFakeCallback>().To<FakeCallback>()
+            .RootBind<IPatchConfiguration>().To<PatchConfiguration>()
             .RootBind<IMemberNamePool>().As(Lifetime.Singleton).To<MemberNamePool>()
             .RootBind<IPatchCollection>().As(Lifetime.Singleton).To<PatchCollection>();
     }

@@ -23,7 +23,7 @@ internal class ReplacePatch : IPatch
     private readonly Func<MethodBody, Instruction, IEmitter> _createEmitter;
     private readonly Func<IEmitter, IByteCodeProcessor> _createProcessor;
 
-    public ReplacePatch(IMemberNamePool memberNamePool, string patchKey, MethodDefinition entryPoint, [Tag("patchCallback")]MethodDefinition patchCallback,
+    public ReplacePatch(IMemberNamePool memberNamePool, MethodDefinition entryPoint, [Tag("patchCallback")]MethodDefinition patchCallback,
         IPatchMember patchMember, Func<MethodBody, Instruction, IEmitter> createEmitter, Func<IEmitter, IByteCodeProcessor> createProcessor)
     {
         _memberNamePool = memberNamePool;
@@ -32,8 +32,8 @@ internal class ReplacePatch : IPatch
         _patchMember = patchMember;
         _createEmitter = createEmitter;
         _createProcessor = createProcessor;
-
-        Key = patchKey;
+        
+        Key = PatchCollection.GetPatchKey(patchCallback);
         _retValueField = new(() =>
         {
             var field = new FieldDefinition(_memberNamePool.NextFieldName($"{_entryPoint.Name}_{_patchMember.Name}_RetValue"),
