@@ -9,6 +9,7 @@ using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
+using static Pure.DI.Tag;
 
 namespace AutoFake.Setup.Patches;
 
@@ -23,7 +24,7 @@ internal class ReplacePatch : IPatch
     private readonly Func<MethodBody, Instruction, IEmitter> _createEmitter;
     private readonly Func<IEmitter, IByteCodeProcessor> _createProcessor;
 
-    public ReplacePatch(IMemberNamePool memberNamePool, string patchKey, MethodDefinition entryPoint, MethodDefinition patchCallback,
+    public ReplacePatch(IMemberNamePool memberNamePool, string patchKey, MethodDefinition entryPoint, [Tag(PatchCallback)]MethodDefinition patchCallback,
         IPatchMember patchMember, Func<MethodBody, Instruction, IEmitter> createEmitter, Func<IEmitter, IByteCodeProcessor> createProcessor)
     {
         _memberNamePool = memberNamePool;

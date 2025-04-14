@@ -6,13 +6,12 @@ using AutoFake.Abstractions.Setup.Patches;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Patches;
+using Mono.Cecil;
 using Pure.DI;
 using static Pure.DI.Hint;
 using static Pure.DI.Lifetime;
 using static Pure.DI.Tag;
 using IServiceProvider = AutoFake.Abstractions.IServiceProvider;
-
-// ReSharper disable UnusedMember.Local
 
 namespace AutoFake;
 
@@ -24,7 +23,16 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .Hint(ResolveMethodName, nameof(IServiceProvider.Resolve))
             .Bind(Method).To<PatchMethod>()
             .Bind(Field).To<PatchField>()
-            .Bind().To<ReplacePatch>()
+            .Bind<MethodDefinition>(PatchCallback).To<MethodDefinition>("patchCallback")
+            .Bind<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
+                (patchKey, entryPoint, patchCallback, patchMember) =>
+                {
+                    ctx.Override(patchKey);
+                    ctx.Override(entryPoint);
+                    ctx.Override(patchMember);
+                    ctx.Inject<ReplacePatch>(out var patchCfg);
+                    return patchCfg;
+                })
             .Bind().To<Emitter>()
             .Bind().To<ByteCodeProcessor>()
             .Bind().To<IPatchConfigurationFactory>(_ => this)
@@ -34,7 +42,12 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
 
             .RootBind<IPatchCollection>().As(Singleton).To<PatchCollection>()
             .RootBind<IFakeCallback>().To<FakeCallback>()
-            .Root<Func<MethodBase,IPatchConfiguration>>()
+            .RootBind<Func<MethodBase,IPatchConfiguration>>().To<Func<MethodBase,IPatchConfiguration>>(ctx => entryPoint =>
+            {
+                ctx.Override(entryPoint);
+                ctx.Inject<PatchConfiguration>(out var cfg);
+                return cfg;
+            })
 #pragma warning disable DIW003 // The root can be used from the method only
             .Root<Func<IPatch,IReplacePatchConfiguration<TT>>>(nameof(ReplacePatchConfigurationFactory));
 #pragma warning disable DIW003
