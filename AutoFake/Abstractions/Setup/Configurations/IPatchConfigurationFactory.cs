@@ -4,5 +4,5 @@ namespace AutoFake.Abstractions.Setup.Configurations;
 
 public interface IPatchConfigurationFactory
 {
-    Func<IPatch,IReplacePatchConfiguration<TReturn>> CreateReplacePatchConfiguration<TReturn>();
+    IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch);
 }
