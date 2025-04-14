@@ -23,7 +23,7 @@ internal class ReplacePatch : IPatch
     private readonly Func<MethodBody, Instruction, IEmitter> _createEmitter;
     private readonly Func<IEmitter, IByteCodeProcessor> _createProcessor;
 
-    public ReplacePatch(IMemberNamePool memberNamePool, string patchKey, MethodDefinition entryPoint, [Tag("patchCallback")]MethodDefinition patchCallback,
+    public ReplacePatch(IMemberNamePool memberNamePool, string patchKey, MethodDefinition entryPoint, MethodDefinition patchCallback,
         IPatchMember patchMember, Func<MethodBody, Instruction, IEmitter> createEmitter, Func<IEmitter, IByteCodeProcessor> createProcessor)
     {
         _memberNamePool = memberNamePool;

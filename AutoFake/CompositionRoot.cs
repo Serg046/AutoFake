@@ -6,11 +6,13 @@ using AutoFake.Abstractions.Setup.Patches;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Patches;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
 using Pure.DI;
+using static Pure.DI.Hint;
+using static Pure.DI.Lifetime;
+using static Pure.DI.Tag;
 using IServiceProvider = AutoFake.Abstractions.IServiceProvider;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
+
+// ReSharper disable UnusedMember.Local
 
 namespace AutoFake;
 
@@ -19,56 +21,23 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
     private void Setup()
     {
         DI.Setup()
-            .Bind<MethodReference>().To<MethodReference>("patch")
-            .Bind<Func<MethodReference, IPatchMember>>().To<Func<MethodReference, IPatchMember>>(ctx => patch =>
-            {
-                ctx.Inject<PatchMethod>(out var member);
-                return member;
-            })
-            .Bind<FieldReference>().To<FieldReference>("patch")
-            .Bind<Func<FieldReference, IPatchMember>>().To<Func<FieldReference, IPatchMember>>(ctx => patch =>
-            {
-                ctx.Inject<PatchField>(out var member);
-                return member;
-            })
-            .Bind<MethodDefinition>().To<MethodDefinition>("entryPoint")
-            .Bind<MethodDefinition>("patchCallback").To<MethodDefinition>("patchCallback")
-            .Bind<IPatchMember>().To<IPatchMember>("patchMember")
-            .Bind<string>().To<string>("patchKey")
-            .Bind<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
-                (patchKey, entryPoint, patchCallback, patchMember) =>
-                {
-                    ctx.Inject<ReplacePatch>(out var patchCfg);
-                    return patchCfg;
-                })
-            .Bind<MethodBody>().To<MethodBody>("method")
-            .Bind<Instruction>().To<Instruction>("instruction")
-            .Bind<Func<MethodBody, Instruction, IEmitter>>().To<Func<MethodBody, Instruction, IEmitter>>(ctx =>
-                (method, instruction) =>
-                {
-                    ctx.Inject<Emitter>(out var emitter);
-                    return emitter;
-                })
-            .Bind<IByteCodeProcessor>().To<ByteCodeProcessor>()
-            .Bind<IPatchConfigurationFactory>().To<IPatchConfigurationFactory>(_ => this)
-            .Bind<IMemberNamePool>().As(Lifetime.Singleton).To<MemberNamePool>()
-            
-            .RootBind<IPatchCollection>().As(Lifetime.Singleton).To<PatchCollection>()
+            .Hint(ResolveMethodName, nameof(IServiceProvider.Resolve))
+            .Bind(Method).To<PatchMethod>()
+            .Bind(Field).To<PatchField>()
+            .Bind().To<ReplacePatch>()
+            .Bind().To<Emitter>()
+            .Bind().To<ByteCodeProcessor>()
+            .Bind().To<IPatchConfigurationFactory>(_ => this)
+            .Bind().As(Singleton).To<MemberNamePool>()
+            .Bind().To<PatchConfiguration>()
+            .Bind().To<ReplacePatchConfiguration<TT>>()
+
+            .RootBind<IPatchCollection>().As(Singleton).To<PatchCollection>()
             .RootBind<IFakeCallback>().To<FakeCallback>()
-            .RootBind<Func<MethodBase,IPatchConfiguration>>().To<Func<MethodBase,IPatchConfiguration>>(ctx => entryPoint =>
-            {
-                ctx.Override(entryPoint);
-                ctx.Inject<PatchConfiguration>(out var cfg);
-                return cfg;
-            })
+            .Root<Func<MethodBase,IPatchConfiguration>>()
 #pragma warning disable DIW003 // The root can be used from the method only
-            .RootBind<Func<IPatch,IReplacePatchConfiguration<TT>>>("ReplacePatchConfigurationFactory").To<Func<IPatch,IReplacePatchConfiguration<TT>>>(ctx => patch =>
+            .Root<Func<IPatch,IReplacePatchConfiguration<TT>>>(nameof(ReplacePatchConfigurationFactory));
 #pragma warning disable DIW003
-            {
-                ctx.Override(patch);
-                ctx.Inject<ReplacePatchConfiguration<TT>>(out var cfg);
-                return cfg;
-            });
     }
 
     public IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch)
@@ -80,12 +49,12 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
 public partial class CompositionRoot : ICompositionRoot, IPatchConfigurationFactory
 {
     private readonly Dictionary<Type, Delegate> _additionalRegistrations = new();
-    
+
     private void SetupExtended()
     {
         DI.Setup()
             .DependsOn(nameof(DefaultCompositionRoot))
-            .Hint(Hint.OnDependencyInjection, "On");
+            .Hint(Hint.OnDependencyInjection, Name.On);
     }
 
     public void ReplaceService<T>(Func<ICompositionRoot, T> factory)
@@ -97,17 +66,18 @@ public partial class CompositionRoot : ICompositionRoot, IPatchConfigurationFact
         
     private partial T OnDependencyInjection<T>(in T value, object? tag, Lifetime lifetime)
     {
-        if (_additionalRegistrations.TryGetValue(typeof(T), out var factory))
+        if (!_additionalRegistrations.TryGetValue(typeof(T), out var factory))
         {
-            if (factory is not Func<ICompositionRoot, T> typedFactory)
-            {
-                throw new InvalidOperationException("The service factory is invalid");
-            }
-
-            return typedFactory(this);
+            return value;
         }
-        
-        return value;
+
+        if (factory is not Func<ICompositionRoot, T> typedFactory)
+        {
+            throw new InvalidOperationException("The service factory is invalid");
+        }
+
+        return typedFactory(this);
+
     }
 
     public IReplacePatchConfiguration<TReturn> CreateReplacePatchConfiguration<TReturn>(IPatch patch)
