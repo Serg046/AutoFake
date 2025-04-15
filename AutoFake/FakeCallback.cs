@@ -16,7 +16,7 @@ internal class FakeCallback(
     IPatchCollection patches,
     [Tag(Method)] Func<MethodReference, IPatchMember> createPatchMethod,
     [Tag(Field)] Func<FieldReference, IPatchMember> createPatchField,
-    Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch> createPatch) : IFakeCallback
+    Func<string, (MethodDefinition entryPoint, MethodDefinition patchCallback), IPatchMember, IPatch> createPatch) : IFakeCallback
 {
     public void Patch(MethodBase callback)
     {
@@ -106,13 +106,13 @@ internal class FakeCallback(
         {
             if (cmd.Operand is MethodReference methodRef)
             {
-                var patch = createPatch(patchKey, entryPoint, patchCallback, createPatchMethod(methodRef));
+                var patch = createPatch(patchKey, (entryPoint, patchCallback), createPatchMethod(methodRef));
                 patches.AddPatch(patch);
                 return patch;
             }
             else if (cmd.Operand is FieldReference fieldRef)
             {
-                var patch = createPatch(patchKey, entryPoint, patchCallback, createPatchField(fieldRef));
+                var patch = createPatch(patchKey, (entryPoint, patchCallback), createPatchField(fieldRef));
                 patches.AddPatch(patch);
                 return patch;
             }
