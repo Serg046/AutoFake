@@ -23,16 +23,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .Hint(ResolveMethodName, nameof(IServiceProvider.Resolve))
             .Bind(Method).To<PatchMethod>()
             .Bind(Field).To<PatchField>()
-            .Bind<MethodDefinition>(PatchCallback).To<MethodDefinition>("patchCallback")
-            .Bind<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>().To<Func<string, MethodDefinition, MethodDefinition, IPatchMember, IPatch>>(ctx =>
-                (patchKey, entryPoint, patchCallback, patchMember) =>
-                {
-                    ctx.Override(patchKey);
-                    ctx.Override(entryPoint);
-                    ctx.Override(patchMember);
-                    ctx.Inject<ReplacePatch>(out var patchCfg);
-                    return patchCfg;
-                })
+            .Bind().To<ReplacePatch>()
             .Bind().To<Emitter>()
             .Bind().To<ByteCodeProcessor>()
             .Bind().To<IPatchConfigurationFactory>(_ => this)
@@ -42,12 +33,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
 
             .RootBind<IPatchCollection>().As(Singleton).To<PatchCollection>()
             .RootBind<IFakeCallback>().To<FakeCallback>()
-            .RootBind<Func<MethodBase,IPatchConfiguration>>().To<Func<MethodBase,IPatchConfiguration>>(ctx => entryPoint =>
-            {
-                ctx.Override(entryPoint);
-                ctx.Inject<PatchConfiguration>(out var cfg);
-                return cfg;
-            })
+            .Root<Func<MethodBase,IPatchConfiguration>>()
 #pragma warning disable DIW003 // The root can be used from the method only
             .Root<Func<IPatch,IReplacePatchConfiguration<TT>>>(nameof(ReplacePatchConfigurationFactory));
 #pragma warning disable DIW003
