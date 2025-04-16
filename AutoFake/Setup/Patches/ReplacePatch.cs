@@ -4,12 +4,10 @@ using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Patches;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Pure.DI;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
-using static Pure.DI.Tag;
 
 namespace AutoFake.Setup.Patches;
 
@@ -27,14 +25,14 @@ internal class ReplacePatch : IPatch
     public ReplacePatch(
         IMemberNamePool memberNamePool,
         string patchKey,
-        (MethodDefinition entryPoint, MethodDefinition patchCallback) methodDefinitions,
+        (MethodDefinition EntryPoint, MethodDefinition PatchCallback) methodDefinitions,
         IPatchMember patchMember,
         Func<MethodBody, Instruction, IEmitter> createEmitter,
         Func<IEmitter, IByteCodeProcessor> createProcessor)
     {
         _memberNamePool = memberNamePool;
-        _entryPoint = methodDefinitions.entryPoint;
-        _patchCallback = methodDefinitions.patchCallback;
+        _entryPoint = methodDefinitions.EntryPoint;
+        _patchCallback = methodDefinitions.PatchCallback;
         _patchMember = patchMember;
         _createEmitter = createEmitter;
         _createProcessor = createProcessor;

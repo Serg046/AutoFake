@@ -6,7 +6,6 @@ using AutoFake.Abstractions.Setup.Patches;
 using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using AutoFake.Setup.Patches;
-using Mono.Cecil;
 using Pure.DI;
 using static Pure.DI.Hint;
 using static Pure.DI.Lifetime;
