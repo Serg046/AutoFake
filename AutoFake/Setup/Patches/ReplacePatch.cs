@@ -88,25 +88,60 @@ internal class ReplacePatch : IPatch
         var name = _memberNamePool.NextFieldName($"{_entryPoint.Name}_{_patchMember.Name}_GetArguments");
         var method = new MethodDefinition(name, MethodAttributes.Public | MethodAttributes.Static, Module.ImportReference(typeof(object[])));
         AddParameters(method);
-        AddBody(method);
+        var patchMemberParameters = _patchMember.GetParameters();
+        var noBoxing = AddBody(method, patchMemberParameters);
 
         var emitter = _createEmitter(method.Body, method.Body.Instructions.Last());
         var processor = _createProcessor(emitter);
-        var array = processor.CreateArrayVariable(Module, _patchMember.GetParameters().Count);
-        processor.ReadMethodArguments(_patchMember, array);
+        var array = processor.CreateArrayVariable(Module, patchMemberParameters.Count);
+        processor.ReadMethodArguments(_patchMember, array, noBoxing);
         if (_patchMember.HasThis) emitter.Emit(Instruction.Create(OpCodes.Pop));
         emitter.Emit(Instruction.Create(OpCodes.Ldloc, array));
         return method;
     }
 
-    private void AddBody(MethodDefinition method)
+    private bool AddBody(MethodDefinition method, IReadOnlyList<ParameterDefinition> patchMemberParameters)
     {
+        var exprParameterTypes = new List<TypeReference>();
         foreach (var cmd in _patchCallback.Body.Instructions.TakeWhile(i => !IsMatch(i)))
         {
-            method.Body.Instructions.Add(cmd);
+            if (cmd.Operand is GenericInstanceMethod mRef && mRef.DeclaringType.FullName == typeof(Arg).FullName)
+            {
+                var newMethodName = mRef.Name switch
+                {
+                    nameof(Arg.Is) => nameof(Arg.Create),
+                    nameof(Arg.IsAny) => nameof(Arg.CreateAny),
+                    _ => null
+                };
+                
+                if (newMethodName != null && mRef.GenericArguments.Count == 1)
+                {
+                    var prmType = mRef.GenericArguments.Single();
+                    var createArg = new GenericInstanceMethod(Module.ImportReference(typeof(Arg).GetMethod(newMethodName)));
+                    createArg.GenericArguments.Add(prmType);
+                    method.Body.Instructions.Add(Instruction.Create(OpCodes.Call, createArg));
+                    exprParameterTypes.Add(prmType);
+                }
+            }
+            else
+            {
+                method.Body.Instructions.Add(cmd);
+            }
+        }
+        method.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+
+        if (patchMemberParameters.Count == exprParameterTypes.Count)
+        {
+            return true;
+        }
+        
+        if (exprParameterTypes.Any(t => t.IsValueType))
+        {
+            // TODO: Better description
+            throw new InvalidOperationException("You should either use expression or non-expression based arguments for all the parameters");
         }
 
-        method.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+        return false;
     }
 
     private void AddParameters(MethodDefinition method)
@@ -158,13 +193,8 @@ internal class ReplacePatch : IPatch
         {
             var method = PatchedType.GetMethod(_getArgumentsMethod.Name) ??
                          throw new MissingMethodException(PatchedType.FullName, _getArgumentsMethod.Name);
-            var args = method.GetParameters().Select(p => CreateDefault(p.ParameterType));
+            var args = method.GetParameters().Select(p => p.ParameterType.CreateDefault());
             Arguments = method.Invoke(obj: null, args.ToArray()) as object[] ?? throw new InvalidOperationException("Cannot read arguments");
         }
-    }
-    
-    private object? CreateDefault(Type type)
-    {
-        return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
 }

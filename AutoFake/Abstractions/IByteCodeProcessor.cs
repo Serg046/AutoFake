@@ -6,6 +6,6 @@ namespace AutoFake.Abstractions;
 
 public interface IByteCodeProcessor
 {
-    IReadOnlyList<VariableDefinition> ReadMethodArguments(IPatchMember patchMember, VariableDefinition array);
+    IReadOnlyList<VariableDefinition> ReadMethodArguments(IPatchMember patchMember, VariableDefinition array, bool noBoxing = false);
     VariableDefinition CreateArrayVariable(ModuleDefinition module, int capacity);
 }
