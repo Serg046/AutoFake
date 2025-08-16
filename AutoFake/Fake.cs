@@ -1,184 +1,151 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
+using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
 using AutoFake.Abstractions;
-using AutoFake.Abstractions.Expression;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
-using DryIoc;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using IServiceProvider = AutoFake.Abstractions.IServiceProvider;
+using ModuleDefinition = Mono.Cecil.ModuleDefinition;
 
 namespace AutoFake;
 
-#pragma warning disable AF0001 // Public by design
-public class Fake<T> : Fake, IExecutor<T>, IFakeObjectInfoSource
-#pragma warning restore AF0001
+public static class Fake
 {
-	public Fake([CallerFilePath] string stringKey = "", [CallerLineNumber] int intKey = 0)
-		: base(typeof(T), GetKey(stringKey, intKey), typeof(IFakeObjectInfoSource), typeof(IExecutor<T>), typeof(IExecutor<object>))
-	{
-	}
+    private static readonly Dictionary<Assembly, IServiceProvider> _compositionRoots = new();
+    
+    public static void Run(Action action, ICompositionRoot? services = null) => Run(action.Method, services);
 
-	public IFuncMockConfiguration<T, TReturn> Rewrite<TReturn>(Expression<Func<T, TReturn>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression, addMocks: true);
-		return scope.Resolve<IFuncMockConfiguration<T, TReturn>>();
-	}
+    public static void Run(MethodBase callback, ICompositionRoot? services = null)
+    {
+        var alc = CreateAssemblyLoadContext();
+        var compositionRoot = services ?? (IServiceProvider)new DefaultCompositionRoot();
+        
+        Assembly? assembly = null;
+        try
+        {
+            assembly = Patch(callback, compositionRoot, alc);
+            Run(assembly, callback);
+        }
+        finally
+        {
+            // TODO: Could be async without await (timeout for that?)
+            if (assembly != null) _compositionRoots.Remove(assembly);
+            alc.Unload();
+        }
+    }
 
-	public IActionMockConfiguration<T> Rewrite(Expression<Action<T>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression, addMocks: true);
-		return scope.Resolve<IActionMockConfiguration<T>>();
-	}
+    private static AssemblyLoadContext CreateAssemblyLoadContext() => new("AutoFake", isCollectible: true);
 
-	public TReturn Execute<TReturn>(Expression<Func<T, TReturn>> expression) => base.Execute(expression);
+    public static Assembly Patch(MethodBase callback) => Patch(callback, new DefaultCompositionRoot(), CreateAssemblyLoadContext());
 
-	public void Execute(Expression<Action<T>> expression) => base.Execute(expression);
-}
+    public static Assembly Patch(MethodBase callback, IServiceProvider services, AssemblyLoadContext alc)
+    {
+        var fakeCallback = services.Resolve<IFakeCallback>();
+        fakeCallback.Patch(callback);
+        LoadPatchedAssemblies(services, alc);
+        var alcAsm = alc.LoadFromAssemblyPath(callback.Module.FullyQualifiedName); // TODO: is there a need to check if loaded?
+        _compositionRoots.Add(alcAsm, services);
+        return alcAsm;
+    }
 
-#pragma warning disable AF0001 // Public by design
-public class Fake : IExecutor<object>, IFakeObjectInfoSource
-#pragma warning restore AF0001
-{
-	private IFakeObjectInfo? _fakeObjectInfo;
+    private static void LoadPatchedAssemblies(IServiceProvider services, AssemblyLoadContext alc)
+    {
+        var assemblies = new Dictionary<ModuleDefinition, Assembly>();
+        foreach (var patch in services.Resolve<IPatchCollection>())
+        {
+            if (!assemblies.TryGetValue(patch.Module, out var assembly))
+            {
+                using var asm = new MemoryStream();
+                using var symbols = new MemoryStream(); //TODO: create if needed
+                var writerParameters = new WriterParameters();
+                if (Debugger.IsAttached)
+                {
+                    patch.Module.ReadSymbols();
+                    writerParameters.SymbolStream = symbols;
+                    writerParameters.SymbolWriterProvider = new SymbolsWriterProvider();
+                }
 
-	public Fake(Type type, [CallerFilePath] string stringKey = "", [CallerLineNumber] int intKey = 0)
-		: this(type, GetKey(stringKey, intKey), typeof(IFakeObjectInfoSource), typeof(IExecutor<object>))
-	{
-	}
+                patch.Module.Write(asm, writerParameters);
+                asm.Position = symbols.Position = 0;
+                assembly = alc.LoadFromStream(asm, symbols);
+                assemblies.Add(patch.Module, assembly);
+            }
+            
+            patch.LoadType(assembly);
+        }
+    }
 
-	protected Fake(Type type, string key, params Type[] fakeServiceTypes)
-	{
-		if (type == null) throw new ArgumentNullException(nameof(type));
+    public static IServiceProvider GetServices() => GetCompositionRoot(Assembly.GetCallingAssembly());
 
-		Services = ContainerExtensions.CreateContainer(type, key, svc => svc.RegisterInstanceMany(fakeServiceTypes, this));
-		Options = Services.Resolve<IOptions>();
-	}
+    public static IPatchConfiguration Patch<TInput, TReturn>(Func<TInput, TReturn> entryPoint)
+    {
+        return GetPatchConfiguration(entryPoint.Method);
+    }
 
-	public Dictionary<Type, Func<object, object>> OnScopedServiceRegistration { get; } = new();
+    public static IPatchConfiguration Patch<TInput>(Action<TInput> entryPoint)
+    {
+        return GetPatchConfiguration(entryPoint.Method);
+    }
+    
+    public static IPatchConfiguration Patch<TReturn>(Func<TReturn> entryPoint)
+    {
+        return GetPatchConfiguration(entryPoint.Method);
+    }
+    
+    private static IPatchConfiguration GetPatchConfiguration(MethodBase entryPoint)
+    {
+        var services = GetCompositionRoot(entryPoint);
+        var factory = services.Resolve<Func<MethodBase,IPatchConfiguration>>();
+        return factory(entryPoint);
+    }
+    
+    private static IServiceProvider GetCompositionRoot(MethodBase entryPoint) => GetCompositionRoot(entryPoint.Module.Assembly);
 
-	public Container Services { get; }
+    private static IServiceProvider GetCompositionRoot(Assembly assembly) => _compositionRoots[assembly];
 
-	public IOptions Options { get; }
+    private static void Run(Assembly assembly, MethodBase callback)
+    {
+        var type = callback.DeclaringType ?? throw new ArgumentNullException("callback.DeclaringType");
+        
+        var alcType = assembly.GetType(
+                          type?.FullName ?? throw new InvalidOperationException("Cannot find the action type"))
+                      ?? throw new MissingMemberException($"Cannot find {type.FullName}");
+        var instance = Activator.CreateInstance(alcType);
+        var alcMethod = alcType.GetMethod(callback.Name, BindingFlags.Instance | BindingFlags.NonPublic)
+                        ?? throw new MissingMethodException(type.FullName, callback.Name);
+        // TODO: Could be async requiring await
+        alcMethod.Invoke(instance, null);
+    }
 
-	protected static string GetKey(string stringKey, int intKey)
-	{
-		var dir = Directory.GetCurrentDirectory();
-		var i = 0;
-		for (; i < stringKey.Length && i < dir.Length; i++)
-		{
-			if (stringKey[i] != dir[i]) break;
-		}
+    public static bool ValidateArguments(string patchKey, object[] arguments)
+    {
+        var services = GetCompositionRoot(Assembly.GetCallingAssembly());
+        var patchCollection = services.Resolve<IPatchCollection>();
+        var patch = patchCollection.GetPatch(patchKey);
+        return patch.Arguments.SequenceEqual(arguments, new ArgumentComparer());
+    }
+    
+    private class SymbolsWriterProvider : ISymbolWriterProvider
+    {
+        public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => throw new NotSupportedException("Symbols should be added without files");
 
-		return Convert.ToBase64String(Encoding.UTF8.GetBytes(stringKey[i..] + intKey)).Replace("=", "");
-	}
+        public ISymbolWriter? GetSymbolWriter(ModuleDefinition module, Stream symbolStream)
+        {
+            return module.HasSymbols ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream) : null;
+        }
+    }
+    
+    private class ArgumentComparer : IEqualityComparer<object>
+    {
+        bool IEqualityComparer<object>.Equals(object? x, object? y)
+        {
+            return x is IArgValidator validator
+                ? validator.Validate(y)
+                : EqualityComparer<object>.Default.Equals(x, y);
+        }
 
-	public IFuncMockConfiguration<object, TReturn> Rewrite<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression, addMocks: true);
-		return scope.Resolve<IFuncMockConfiguration<object, TReturn>>();
-	}
-
-	public IActionMockConfiguration<object> Rewrite<TInput>(Expression<Action<TInput>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression, addMocks: true);
-		return scope.Resolve<IActionMockConfiguration<object>>();
-	}
-
-	public IFuncMockConfiguration<object, TReturn> Rewrite<TReturn>(Expression<Func<TReturn>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression, addMocks: true);
-		return scope.Resolve<IFuncMockConfiguration<object, TReturn>>();
-	}
-
-	public IActionMockConfiguration<object> Rewrite(Expression<Action> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression, addMocks: true);
-		return scope.Resolve<IActionMockConfiguration<object>>();
-	}
-
-	TReturn IExecutor<object>.Execute<TReturn>(Expression<Func<object, TReturn>> expression) => Execute(expression);
-	public TReturn Execute<TInput, TReturn>(Expression<Func<TInput, TReturn>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression);
-		return scope.Resolve<IExpressionExecutor<TReturn>>().Execute();
-	}
-
-	void IExecutor<object>.Execute(Expression<Action<object>> expression) => Execute(expression);
-	public void Execute<TInput>(Expression<Action<TInput>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression);
-		scope.Resolve<IExpressionExecutor>().Execute();
-	}
-
-	public TReturn Execute<TReturn>(Expression<Func<TReturn>> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression);
-		return scope.Resolve<IExpressionExecutor<TReturn>>().Execute();
-	}
-
-	public void Execute(Expression<Action> expression)
-	{
-		using var scope = this.AddInvocationExpression(expression);
-		scope.Resolve<IExpressionExecutor>().Execute();
-	}
-
-	// todo: extract into a separate type
-	IFakeObjectInfo IFakeObjectInfoSource.GetFakeObject() => GetFakeObject();
-	internal IFakeObjectInfo GetFakeObject()
-	{
-		if (_fakeObjectInfo == null)
-		{
-			if (AssemblyLoadContext.CurrentContextualReflectionContext is AssemblyLoadContext and { Name: "FakeContext" } host)
-			{
-				_fakeObjectInfo = GetFakeObject(host);
-			}
-			else
-			{
-				_fakeObjectInfo = BuildFakeObject();
-			}
-		}
-
-		return _fakeObjectInfo;
-	}
-
-	private IFakeObjectInfo GetFakeObject(AssemblyLoadContext host)
-	{
-		var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
-		var assemblyReader = Services.Resolve<IAssemblyReader>();
-		
-		// todo: should be an extension
-		var assembly = host.Assemblies.Single(a => a.FullName == assemblyReader.SourceType.Assembly.FullName);
-		var type = assembly.GetType(assemblyReader.SourceType.FullName);
-		var instance = Activator.CreateInstance(type);
-
-		foreach (var setup in setups)
-		{
-			var visitor = Services.Resolve<IMemberVisitorFactory>().GetMemberVisitor<IGetTestMethodVisitor>();
-			var method = setup.Key.AcceptMemberVisitor(visitor);
-			foreach (var mock in setup.Value.Mocks)
-			{
-				mock.Initialize(type, method.Name);
-			}
-		}
-
-		return new FakeObjectInfo(type, instance);
-	}
-
-	private IFakeObjectInfo BuildFakeObject()
-	{
-		var fakeProcessor = Services.Resolve<IFakeProcessor>();
-		var setups = Services.Resolve<KeyValuePair<IInvocationExpression, IMockCollection>[]>();
-		foreach (var mocks in setups)
-		{
-			fakeProcessor.ProcessMethod(mocks.Value, mocks.Key, Options);
-		}
-
-		var asmWriter = Services.Resolve<IAssemblyWriter>();
-		return asmWriter.CreateFakeObject();
-	}
+        int IEqualityComparer<object>.GetHashCode(object obj) => EqualityComparer<object>.Default.GetHashCode(obj);
+    }
 }
