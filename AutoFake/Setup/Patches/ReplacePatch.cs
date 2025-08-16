@@ -109,15 +109,15 @@ internal class ReplacePatch : IPatch
             {
                 var newMethodName = mRef.Name switch
                 {
-                    nameof(Arg.Is) => nameof(Arg.Create),
-                    nameof(Arg.IsAny) => nameof(Arg.CreateAny),
+                    nameof(Arg.Is) => nameof(ArgValidator.Create),
+                    nameof(Arg.IsAny) => nameof(ArgValidator.CreateAny),
                     _ => null
                 };
                 
                 if (newMethodName != null && mRef.GenericArguments.Count == 1)
                 {
                     var prmType = mRef.GenericArguments.Single();
-                    var createArg = new GenericInstanceMethod(Module.ImportReference(typeof(Arg).GetMethod(newMethodName)));
+                    var createArg = new GenericInstanceMethod(Module.ImportReference(typeof(ArgValidator).GetMethod(newMethodName)));
                     createArg.GenericArguments.Add(prmType);
                     method.Body.Instructions.Add(Instruction.Create(OpCodes.Call, createArg));
                     exprParameterTypes.Add(prmType);
@@ -181,7 +181,7 @@ internal class ReplacePatch : IPatch
         emitter.Emit(Instruction.Create(OpCodes.Ldloc, array));
         emitter.Emit(Instruction.Create(OpCodes.Call,
             Module.ImportReference(
-                typeof(Fake).GetMethod(nameof(Fake.ValidateArguments)))));
+                typeof(ArgValidator).GetMethod(nameof(ArgValidator.ValidateArguments)))));
         emitter.Emit(Instruction.Create(OpCodes.Brfalse, nop));
     }
 

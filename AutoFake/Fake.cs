@@ -103,7 +103,7 @@ public static class Fake
     
     private static IServiceProvider GetCompositionRoot(MethodBase entryPoint) => GetCompositionRoot(entryPoint.Module.Assembly);
 
-    private static IServiceProvider GetCompositionRoot(Assembly assembly) => _compositionRoots[assembly];
+    internal static IServiceProvider GetCompositionRoot(Assembly assembly) => _compositionRoots[assembly];
 
     private static void Run(Assembly assembly, MethodBase callback)
     {
@@ -118,14 +118,6 @@ public static class Fake
         // TODO: Could be async requiring await
         alcMethod.Invoke(instance, null);
     }
-
-    public static bool ValidateArguments(string patchKey, object[] arguments)
-    {
-        var services = GetCompositionRoot(Assembly.GetCallingAssembly());
-        var patchCollection = services.Resolve<IPatchCollection>();
-        var patch = patchCollection.GetPatch(patchKey);
-        return patch.Arguments.SequenceEqual(arguments, new ArgumentComparer());
-    }
     
     private class SymbolsWriterProvider : ISymbolWriterProvider
     {
@@ -135,17 +127,5 @@ public static class Fake
         {
             return module.HasSymbols ? module.SymbolReader.GetWriterProvider().GetSymbolWriter(module, symbolStream) : null;
         }
-    }
-    
-    private class ArgumentComparer : IEqualityComparer<object>
-    {
-        bool IEqualityComparer<object>.Equals(object? x, object? y)
-        {
-            return x is IArgValidator validator
-                ? validator.Validate(y)
-                : EqualityComparer<object>.Default.Equals(x, y);
-        }
-
-        int IEqualityComparer<object>.GetHashCode(object obj) => EqualityComparer<object>.Default.GetHashCode(obj);
     }
 }
