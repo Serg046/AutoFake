@@ -7,15 +7,12 @@ using AutoFake.Setup;
 using AutoFake.Setup.Configurations;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Pure.DI;
-using static Pure.DI.Tag;
 
 namespace AutoFake;
 
 internal class FakeCallback(
     IPatchCollection patches,
-    [Tag(Method)] Func<MethodReference, IPatchMember> createPatchMethod,
-    [Tag(Field)] Func<FieldReference, IPatchMember> createPatchField,
+    IPatchMemberFactory patchMemberFactory,
     Func<string, (MethodDefinition EntryPoint, MethodDefinition PatchCallback), IPatchMember, IPatch> createPatch) : IFakeCallback
 {
     public void Patch(MethodBase callback)
@@ -104,15 +101,9 @@ internal class FakeCallback(
         var patchCallback = FindCallback(patchCfg);
         foreach (var cmd in patchCallback.Body.Instructions.Reverse())
         {
-            if (cmd.Operand is MethodReference methodRef)
+            if (patchMemberFactory.TryCreatePatchMember(cmd.Operand, out var patchMember))
             {
-                var patch = createPatch(patchKey, (entryPoint, patchCallback), createPatchMethod(methodRef));
-                patches.AddPatch(patch);
-                return patch;
-            }
-            else if (cmd.Operand is FieldReference fieldRef)
-            {
-                var patch = createPatch(patchKey, (entryPoint, patchCallback), createPatchField(fieldRef));
+                var patch = createPatch(patchKey, (entryPoint, patchCallback), patchMember);
                 patches.AddPatch(patch);
                 return patch;
             }

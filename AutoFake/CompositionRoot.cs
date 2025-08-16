@@ -22,6 +22,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .Hint(ResolveMethodName, nameof(IServiceProvider.Resolve))
             .Bind(Method).To<PatchMethod>()
             .Bind(Field).To<PatchField>()
+            .Bind(Constructor).To<PatchConstructor>()
             .Bind().To<ReplacePatch>()
             .Bind().To<Emitter>()
             .Bind().To<ByteCodeProcessor>()
@@ -29,6 +30,7 @@ internal partial class DefaultCompositionRoot : IServiceProvider, IPatchConfigur
             .Bind().As(Singleton).To<MemberNamePool>()
             .Bind().To<PatchConfiguration>()
             .Bind().To<ReplacePatchConfiguration<TT>>()
+            .Bind().To<PatchMemberFactory>()
 
             .RootBind<IPatchCollection>().As(Singleton).To<PatchCollection>()
             .RootBind<IFakeCallback>().To<FakeCallback>()

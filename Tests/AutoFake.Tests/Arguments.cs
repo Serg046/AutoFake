@@ -27,7 +27,7 @@ public class Arguments
 
         Fake.Patch((SystemUnderTest sut) => sut.GetString())
             .Replace((StringBuilder sb) => sb.Append("test", 1, 2))
-            .Return(new StringBuilder("modified"));
+            .Return(new StringBuilder(str));
 
         var sut = new SystemUnderTest();
         sut.GetString().ShouldBe(str);
@@ -38,12 +38,12 @@ public class Arguments
     {
         const string str = "modified";
 
-        Fake.Patch((SystemUnderTest sut) => sut.GetString2())
-            .Replace((StringBuilder sb) => sb.Append(Arg.Is<string>(a => a == "test")))
-            .Return(new StringBuilder("modified"));
+        Fake.Patch((SystemUnderTest sut) => sut.GetString())
+            .Replace(() => new StringBuilder(Arg.Is<string>(a => a == "base")))
+            .Return(new StringBuilder(str));
 
         var sut = new SystemUnderTest();
-        sut.GetString2().ShouldBe(str);
+        sut.GetString().ShouldBe(str + "es");
     }
     
     [AutoFakeFact]
@@ -53,7 +53,7 @@ public class Arguments
 
         Fake.Patch((SystemUnderTest sut) => sut.GetString())
             .Replace((StringBuilder sb) => sb.Append(Arg.Is<string>(a => a == "test"), 1, 2))
-            .Return(new StringBuilder("modified"));
+            .Return(new StringBuilder(str));
 
         var sut = new SystemUnderTest();
         sut.GetString().ShouldBe(str);
@@ -81,7 +81,7 @@ public class Arguments
                 Arg.Is<string>(a => a == "test"),
                 Arg.Is<int>(a => a == 1),
                 Arg.Is<int>(a => a == 2)))
-            .Return(new StringBuilder("modified"));
+            .Return(new StringBuilder(str));
 
         var sut = new SystemUnderTest();
         sut.GetString().ShouldBe(str);
@@ -92,18 +92,17 @@ public class Arguments
     {
         const string str = "modified";
 
-        Fake.Patch((SystemUnderTest sut) => sut.GetString2())
-            .Replace((StringBuilder sb) => sb.Append(Arg.IsAny<string>()))
-            .Return(new StringBuilder("modified"));
+        Fake.Patch((SystemUnderTest sut) => sut.GetString())
+            .Replace(() => new StringBuilder(Arg.IsAny<string>()))
+            .Return(new StringBuilder(str));
 
         var sut = new SystemUnderTest();
-        sut.GetString2().ShouldBe(str);
+        sut.GetString().ShouldBe(str + "es");
     }
     
     private class SystemUnderTest
     {
         public DateTime GetTomorrowDate() => DateTime.Now.AddDays(1);
         public string GetString() => new StringBuilder("base").Append("test", 1, 2).ToString();
-        public string GetString2() => new StringBuilder("base").Append("test").ToString();
     }
 }

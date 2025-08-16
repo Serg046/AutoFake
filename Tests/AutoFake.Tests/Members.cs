@@ -110,6 +110,19 @@ public class Members
         sut.DatePropertyWithInit.ShouldBe(date);
     }
     
+    [AutoFakeFact]
+    public void Test9()
+    {
+        var date = new DateTime(2024, 3, 13);
+
+        Fake.Patch((SystemUnderTest s) => s.GetDateFromConstructor())
+            .Replace(() => new DateTime(1, 1, 1))
+            .Return(date);
+        
+        var sut = new SystemUnderTest();
+        sut.GetDateFromConstructor().ShouldBe(date);
+    }
+    
     public static IEnumerable<object[]> GetSystemUnderTest()
     {
         yield return [new SystemUnderTest()];
@@ -131,7 +144,6 @@ public class Members
         public DateTime GetCurrentDate() => DateTime.Now;
         public DateTime GetDateFromField() => DateField;
         public DateTime GetDateFromProperty() => DateProperty;
-        public DateTime GetDateFromInitializedProperty() => DateProperty;
-        // TODO: constructors
+        public DateTime GetDateFromConstructor() => new DateTime(1, 1, 1);
     }
 }
