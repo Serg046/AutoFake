@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="AutoFake.Tests" />
       <PackageReference Include="Mono.Cecil" Version="0.11.6" />
       <PackageReference Include="Pure.DI" Version="2.1.60">
         <PrivateAssets>all</PrivateAssets>
