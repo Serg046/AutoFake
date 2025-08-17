@@ -14,13 +14,13 @@ public class AutoFakeTheoryDiscoverer(IMessageSink diagnosticMessageSink) : Theo
     protected override IEnumerable<IXunitTestCase> CreateTestCasesForTheory(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod,
         IAttributeInfo theoryAttribute)
     {
-        return base.CreateTestCasesForTheory(discoveryOptions, AutoFakeFactDiscoverer.PatchTestMethod(testMethod), theoryAttribute);
+        return [new AutoFakeXunitTheoryTestCase(DiagnosticMessageSink, discoveryOptions, testMethod)];
     }
 
     protected override IEnumerable<IXunitTestCase> CreateTestCasesForSkip(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod,
         IAttributeInfo theoryAttribute, string skipReason)
     {
-        return base.CreateTestCasesForSkip(discoveryOptions, AutoFakeFactDiscoverer.PatchTestMethod(testMethod), theoryAttribute, skipReason);
+        return [new AutoFakeXunitTestCase(DiagnosticMessageSink, discoveryOptions, testMethod)];
     }
 
     protected override IEnumerable<IXunitTestCase> CreateTestCasesForSkippedDataRow(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod,
