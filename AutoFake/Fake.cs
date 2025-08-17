@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -13,7 +14,7 @@ namespace AutoFake;
 
 public static class Fake
 {
-    private static readonly Dictionary<Assembly, IServiceProvider> _compositionRoots = new();
+    private static readonly ConcurrentDictionary<Assembly, IServiceProvider> _compositionRoots = new();
     
     public static void Run(Action action, ICompositionRoot? services = null) => Run(action.Method, services);
 
@@ -31,7 +32,7 @@ public static class Fake
         finally
         {
             // TODO: Could be async without await (timeout for that?)
-            if (assembly != null) _compositionRoots.Remove(assembly);
+            if (assembly != null) _compositionRoots.Remove(assembly, out _);
             alc.Unload();
         }
     }
@@ -46,7 +47,7 @@ public static class Fake
         fakeCallback.Patch(callback);
         LoadPatchedAssemblies(services, alc);
         var alcAsm = alc.LoadFromAssemblyPath(callback.Module.FullyQualifiedName); // TODO: is there a need to check if loaded?
-        _compositionRoots.Add(alcAsm, services);
+        if (!_compositionRoots.TryAdd(alcAsm, services)) throw new InvalidOperationException("Cannot register a composition root");
         return alcAsm;
     }
 
@@ -103,7 +104,10 @@ public static class Fake
     
     private static IServiceProvider GetCompositionRoot(MethodBase entryPoint) => GetCompositionRoot(entryPoint.Module.Assembly);
 
-    internal static IServiceProvider GetCompositionRoot(Assembly assembly) => _compositionRoots[assembly];
+    internal static IServiceProvider GetCompositionRoot(Assembly assembly)
+    {
+        return _compositionRoots[assembly];
+    }
 
     private static void Run(Assembly assembly, MethodBase callback)
     {
