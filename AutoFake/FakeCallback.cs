@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using AutoFake.Abstractions;
 using AutoFake.Abstractions.Setup;
 using AutoFake.Abstractions.Setup.Configurations;
@@ -15,6 +16,8 @@ internal class FakeCallback(
     IPatchMemberFactory patchMemberFactory,
     Func<string, (MethodDefinition EntryPoint, MethodDefinition PatchCallback), IPatchMember, IPatch> createPatch) : IFakeCallback
 {
+    private static readonly string _stateMachineAttributeFullName = typeof(StateMachineAttribute).FullName!;
+
     public void Patch(MethodBase callback)
     {
         if (callback.DeclaringType == null) throw new ArgumentNullException("callback.DeclaringType");
@@ -47,12 +50,34 @@ internal class FakeCallback(
                 }
             }
         }
+        
+        foreach (var stateMachineMethod in GetStateMachineMethods(method))
+        {
+            if (stateMachineMethod.Name == nameof(IAsyncStateMachine.MoveNext))
+            {
+                Patch(stateMachineMethod, patch);
+            }
+        }
     }
 
     private bool IsSameModule(MethodDefinition method1, MethodDefinition method2)
     {
         //TODO: Should be deeper in reality
         return method1.DeclaringType.Module == method2.DeclaringType.Module;
+    }
+    
+    private IEnumerable<MethodDefinition> GetStateMachineMethods(MethodDefinition currentMethod)
+    {
+        foreach (var attribute in currentMethod.CustomAttributes.Where(a => a.AttributeType.AsTypeDefinition().BaseType?.FullName == _stateMachineAttributeFullName))
+        {
+            if (attribute.ConstructorArguments.Count > 0 && attribute.ConstructorArguments[0].Value is TypeReference typeRef)
+            {
+                foreach (var methodDef in typeRef.AsTypeDefinition().Methods)
+                {
+                    yield return methodDef;
+                }
+            }
+        }
     }
 
     private IEnumerable<Instruction> GetEntryPoints(MethodDefinition method)
@@ -75,6 +100,17 @@ internal class FakeCallback(
                             yield return patch;
                         }
                     }
+                }
+            }
+        }
+        
+        foreach (var stateMachineMethod in GetStateMachineMethods(method))
+        {
+            if (stateMachineMethod.Name == nameof(IAsyncStateMachine.MoveNext))
+            {
+                foreach (var patch in GetEntryPoints(stateMachineMethod))
+                {
+                    yield return patch;
                 }
             }
         }

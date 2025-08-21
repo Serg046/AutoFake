@@ -81,7 +81,7 @@ public class PatchMethodTests
         _system.CallOverloadedMethod().ShouldBe(date2);
     }
     
-    /* TODO: [AutoFakeFact]
+    [AutoFakeFact]
     public async Task When_async_method_Should_patch()
     {
         var date = new DateTime(2025, 8, 17);
@@ -92,7 +92,7 @@ public class PatchMethodTests
 
         var actualDate = await _system.CallAsyncMethod();
         actualDate.ShouldBe(date);
-    }*/
+    }
     
     /* TODO: [AutoFakeFact]
     public void When_params_method_Should_patch()
@@ -118,7 +118,7 @@ public class PatchMethodTests
         _system.CallEnumerableMethod().ShouldBe([date]);
     }
     
-    /* TODO: [AutoFakeFact]
+    [AutoFakeFact]
     public async Task When_async_enumerable_method_Should_patch()
     {
         var date = new DateTime(2025, 8, 17);
@@ -137,7 +137,7 @@ public class PatchMethodTests
             await Task.Yield();
             yield return date;
         }
-    }*/
+    }
     
     private class System
     {

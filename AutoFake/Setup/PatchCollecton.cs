@@ -24,7 +24,7 @@ internal class PatchCollection : IPatchCollection
     {
         var typeName = patchCallback.DeclaringType?.FullName ?? throw new MissingMemberException("Cannot find a callback type");
         var key = GetPatchKey(typeName, patchCallback.Name);
-        return _patches[key];
+        return _patches[key]; // TODO: Means no patches applied, throw a better explanation
     }
     
     public IPatch GetPatch(string key)
