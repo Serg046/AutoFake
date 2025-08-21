@@ -21,4 +21,11 @@ internal static class Extensions
     {
         return type.IsValueType ? Activator.CreateInstance(type)! : null;
     }
+
+    public static bool Compare(this MethodReference method1, MethodReference method2)
+    {
+        return method1 is GenericInstanceMethod
+            ? method1.ToString() == method2.ToString()
+            : method1 == method2;
+    }
 }

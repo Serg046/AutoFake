@@ -54,7 +54,7 @@ public class PatchMethodTests
         //
     }*/
     
-    /*[AutoFakeFact]
+    [AutoFakeFact]
     public void When_generic_method_Should_patch()
     {
         var setup = (2, "3");
@@ -63,7 +63,7 @@ public class PatchMethodTests
             .Return(setup);
 
         _system.CallGenericMethod().ShouldBe(setup);
-    }*/
+    }
     
     [AutoFakeFact]
     public void When_overloaded_method_Should_patch()

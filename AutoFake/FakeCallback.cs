@@ -24,7 +24,7 @@ internal class FakeCallback(
         foreach (var entryPointCfg in GetEntryPoints(methodDef))
         {
             var entryPoint = GetEntryPoint(entryPointCfg);
-            var patch = GetPatch(entryPointCfg, entryPoint.Method,entryPoint.Key);
+            var patch = GetPatch(entryPointCfg, entryPoint.Method, entryPoint.Key);
             Patch(entryPoint.Method, patch);
         }
     }

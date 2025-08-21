@@ -15,6 +15,6 @@ public class PatchConstructor(MethodReference patch) : IPatchMember
     {
         return instruction.OpCode.Code is Code.Newobj
                && instruction.Operand is MethodReference methodRef
-               && methodRef == patch;
+               && methodRef.Compare(patch);
     }
 }

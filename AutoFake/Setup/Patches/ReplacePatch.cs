@@ -40,7 +40,8 @@ internal class ReplacePatch : IPatch
         Key = patchKey;
         _retValueField = new(() =>
         {
-            var field = new FieldDefinition(_memberNamePool.NextFieldName($"{_entryPoint.Name}_{_patchMember.Name}_RetValue"),
+            var field = new FieldDefinition(
+                _memberNamePool.NextFieldName($"{_entryPoint.Name}_{_patchMember.Name}_RetValue"),
                 FieldAttributes.Static | FieldAttributes.Public, _patchMember.ReturnType);
             _entryPoint.DeclaringType.Fields.Add(field);
             return field;
