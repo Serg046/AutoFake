@@ -18,7 +18,6 @@ internal class ReplacePatch : IPatch
     private readonly IMemberNamePool _memberNamePool;
     private readonly MethodDefinition _entryPoint;
     private readonly MethodDefinition _patchCallback;
-    private readonly IPatchMember _patchMember;
     private readonly Func<MethodBody, Instruction, IEmitter> _createEmitter;
     private readonly Func<IEmitter, IByteCodeProcessor> _createProcessor;
 
@@ -33,7 +32,7 @@ internal class ReplacePatch : IPatch
         _memberNamePool = memberNamePool;
         _entryPoint = methodDefinitions.EntryPoint;
         _patchCallback = methodDefinitions.PatchCallback;
-        _patchMember = patchMember;
+        PatchMember = patchMember;
         _createEmitter = createEmitter;
         _createProcessor = createProcessor;
 
@@ -41,8 +40,8 @@ internal class ReplacePatch : IPatch
         _retValueField = new(() =>
         {
             var field = new FieldDefinition(
-                _memberNamePool.NextFieldName($"{_entryPoint.Name}_{_patchMember.Name}_RetValue"),
-                FieldAttributes.Static | FieldAttributes.Public, _patchMember.ReturnType);
+                _memberNamePool.NextFieldName($"{_entryPoint.Name}_{PatchMember.Name}_RetValue"),
+                FieldAttributes.Static | FieldAttributes.Public, PatchMember.ReturnType);
             _entryPoint.DeclaringType.Fields.Add(field);
             return field;
         });
@@ -53,8 +52,9 @@ internal class ReplacePatch : IPatch
     public ModuleDefinition Module => _entryPoint.DeclaringType.Module;
     public object[] Arguments { get; private set; } = [];
     public FieldDefinition? RetValueField => _retValueField.IsValueCreated ? _retValueField.Value : null;
+    public IPatchMember PatchMember { get; }
     
-    public bool IsMatch(Instruction instruction) => _patchMember.IsMatch(instruction);
+    public bool IsMatch(Instruction instruction) => PatchMember.IsMatch(instruction);
 
     public void Inject(MethodBody method, Instruction instruction)
     {
@@ -76,8 +76,8 @@ internal class ReplacePatch : IPatch
         var nop = Instruction.Create(OpCodes.Nop);
         var emitter = _createEmitter(method, instruction);
         var processor = _createProcessor(emitter);
-        var array = processor.CreateArrayVariable(Module, _patchMember.GetParameters().Count);
-        var arguments = processor.ReadMethodArguments(_patchMember, array);
+        var array = processor.CreateArrayVariable(Module, PatchMember.GetParameters().Count);
+        var arguments = processor.ReadMethodArguments(PatchMember, array);
         ValidateArguments(emitter, array, nop);
         ReturnRetField(emitter);
         emitter.Emit(nop);
@@ -86,17 +86,17 @@ internal class ReplacePatch : IPatch
 
     private MethodDefinition GenerateGetArgumentsMethod()
     {
-        var name = _memberNamePool.NextFieldName($"{_entryPoint.Name}_{_patchMember.Name}_GetArguments");
+        var name = _memberNamePool.NextFieldName($"{_entryPoint.Name}_{PatchMember.Name}_GetArguments");
         var method = new MethodDefinition(name, MethodAttributes.Public | MethodAttributes.Static, Module.ImportReference(typeof(object[])));
         AddParameters(method);
-        var patchMemberParameters = _patchMember.GetParameters();
+        var patchMemberParameters = PatchMember.GetParameters();
         var noBoxing = AddBody(method, patchMemberParameters);
 
         var emitter = _createEmitter(method.Body, method.Body.Instructions.Last());
         var processor = _createProcessor(emitter);
         var array = processor.CreateArrayVariable(Module, patchMemberParameters.Count);
-        processor.ReadMethodArguments(_patchMember, array, noBoxing);
-        if (_patchMember.HasThis) emitter.Emit(Instruction.Create(OpCodes.Pop));
+        processor.ReadMethodArguments(PatchMember, array, noBoxing);
+        if (PatchMember.HasThis) emitter.Emit(Instruction.Create(OpCodes.Pop));
         emitter.Emit(Instruction.Create(OpCodes.Ldloc, array));
         return method;
     }
@@ -168,7 +168,7 @@ internal class ReplacePatch : IPatch
 
     private void ReturnRetField(IEmitter emitter)
     {
-        if (_patchMember.HasThis) emitter.Emit(Instruction.Create(OpCodes.Pop));
+        if (PatchMember.HasThis) emitter.Emit(Instruction.Create(OpCodes.Pop));
         var opCode = emitter.BaseInstruction.OpCode == OpCodes.Ldsflda || emitter.BaseInstruction.OpCode == OpCodes.Ldflda
             ? OpCodes.Ldsflda
             : OpCodes.Ldsfld;

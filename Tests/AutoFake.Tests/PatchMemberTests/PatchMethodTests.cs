@@ -94,7 +94,7 @@ public class PatchMethodTests
         actualDate.ShouldBe(date);
     }
     
-    /* TODO: [AutoFakeFact]
+    [AutoFakeFact]
     public void When_params_method_Should_patch()
     {
         var date = new DateTime(2025, 8, 17);
@@ -104,7 +104,7 @@ public class PatchMethodTests
             .Return(date);
 
         _system.CallParamsMethod().ShouldBe(date);
-    }*/
+    }
     
     [AutoFakeFact]
     public void When_enumerable_method_Should_patch()

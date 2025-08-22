@@ -13,6 +13,7 @@ public interface IPatch
     ModuleDefinition Module { get; }
     FieldDefinition? RetValueField { get; }
     object[] Arguments { get; }
+    IPatchMember PatchMember { get; }
     bool IsMatch(Instruction instruction);
     void Inject(MethodBody method, Instruction instruction);
     Type? PatchedType { get; }
