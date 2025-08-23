@@ -24,7 +24,7 @@ internal static class Extensions
 
     public static bool Compare(this MethodReference method1, MethodReference method2)
     {
-        return method1 is GenericInstanceMethod
+        return method1.ContainsGenericParameter
             ? method1.ToString() == method2.ToString()
             : method1 == method2;
     }

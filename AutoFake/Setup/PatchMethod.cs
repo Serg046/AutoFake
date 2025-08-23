@@ -22,28 +22,25 @@ internal class PatchMethod(MethodReference patch) : IPatchMember
     
     private bool TryGetGenericReturnType([NotNullWhen(true)]out TypeReference? returnType)
     {
+        if (patch.ReturnType is GenericParameter genericParameter)
+        {
+            var generics = GetGenerics();
+            returnType = generics.TryGetValue(genericParameter.FullName, out var generic)
+                ? generic
+                : throw NoGenericParameter(genericParameter);
+            return true;
+        }
+        
         if (patch.ReturnType is GenericInstanceType genericReturnType && genericReturnType.GenericArguments.Any(g => g.IsGenericParameter))
         {
-            var generics = new Dictionary<string, TypeReference>();
-            if (patch is GenericInstanceMethod genericMethod)
-            {
-                var methodDef = genericMethod.AsMethodDefinition();
-                AddGenerics(generics, genericMethod.GenericArguments, methodDef.GenericParameters);
-            }
-            
-            if (patch.DeclaringType is GenericInstanceType genericType)
-            {
-                var typeDef = genericType.AsTypeDefinition();
-                AddGenerics(generics, genericType.GenericArguments, typeDef.GenericParameters);
-            }
-            
+            var generics = GetGenerics();
             var returnTypeDef = patch.ReturnType.AsTypeDefinition();
             genericReturnType = new GenericInstanceType(returnTypeDef);
-            foreach (var genericParameter in returnTypeDef.GenericParameters)
+            foreach (var genericPrm in returnTypeDef.GenericParameters)
             {
-                if (!generics.TryGetValue(genericParameter.FullName, out var generic))
+                if (!generics.TryGetValue(genericPrm.FullName, out var generic))
                 {
-                    throw new InvalidOperationException($"Cannot find {genericParameter.FullName} generic parameter");
+                    throw NoGenericParameter(genericPrm);
                 }
                     
                 genericReturnType.GenericArguments.Add(generic);
@@ -57,13 +54,34 @@ internal class PatchMethod(MethodReference patch) : IPatchMember
         return false;
     }
 
-    private void AddGenerics(IDictionary<string, TypeReference> generics, IList<TypeReference> genericArguments, IList<GenericParameter> genericParameters)
+    private InvalidOperationException NoGenericParameter(GenericParameter genericParameter)
+        => new($"Cannot find {genericParameter.FullName} generic parameter");
+
+    private Dictionary<string, TypeReference> GetGenerics()
     {
-        for (var i = 0; i < genericArguments.Count; i++)
+        var generics = new Dictionary<string, TypeReference>();
+        if (patch is GenericInstanceMethod genericMethod)
         {
-            if (i < genericParameters.Count)
+            var methodDef = genericMethod.AsMethodDefinition();
+            AddGenerics(genericMethod.GenericArguments, methodDef.GenericParameters);
+        }
+            
+        if (patch.DeclaringType is GenericInstanceType genericType)
+        {
+            var typeDef = genericType.AsTypeDefinition();
+            AddGenerics(genericType.GenericArguments, typeDef.GenericParameters);
+        }
+
+        return generics;
+        
+        void AddGenerics(IList<TypeReference> genericArguments, IList<GenericParameter> genericParameters)
+        {
+            for (var i = 0; i < genericArguments.Count; i++)
             {
-                generics.Add(genericParameters[i].FullName, genericArguments[i]);
+                if (i < genericParameters.Count)
+                {
+                    generics.Add(genericParameters[i].FullName, genericArguments[i]);
+                }
             }
         }
     }
