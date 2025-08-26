@@ -137,7 +137,7 @@ internal class FakeCallback(
         var patchCallback = FindCallback(patchCfg);
         foreach (var cmd in patchCallback.Body.Instructions.Reverse())
         {
-            if (patchMemberFactory.TryCreatePatchMember(cmd.Operand, out var patchMember))
+            if (patchMemberFactory.TryCreatePatchMember(cmd, out var patchMember))
             {
                 var patch = createPatch(patchKey, (entryPoint, patchCallback), patchMember);
                 patches.AddPatch(patch);

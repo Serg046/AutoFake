@@ -54,7 +54,7 @@ public class PatchPropertyTests
         _system.CallEnumerableProperty().ShouldBe([date]);
     }
     
-    public class System
+    private class System
     {
         private readonly Impl _impl = new();
 
@@ -64,14 +64,14 @@ public class PatchPropertyTests
         public IEnumerable<DateTime> CallEnumerableProperty() => _impl.EnumerableProperty;
     }
     
-    public class Impl
+    private class Impl
     {
         public DateTime InstanceProperty => DateTime.Now;
         public static DateTime StaticProperty => DateTime.Now;
         public IEnumerable<DateTime> EnumerableProperty => [DateTime.Now];
     }
 
-    public class Impl<T1>
+    private class Impl<T1>
     {
         public T1 GenericProperty => Extensions.CreateDefault<T1>();
     }
