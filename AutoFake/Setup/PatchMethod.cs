@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using AutoFake.Abstractions.Setup;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -17,6 +16,6 @@ internal class PatchMethod(MethodReference patch) : PatchMember(patch), IPatchMe
     {
         return instruction.OpCode.Code is Code.Call or Code.Callvirt // TODO: Code.Calli?
                && instruction.Operand is MethodReference methodRef
-               && methodRef.Compare(patch);
+               && IsMatch(methodRef);
     }
 }

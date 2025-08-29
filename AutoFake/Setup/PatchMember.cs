@@ -5,12 +5,34 @@ namespace AutoFake.Setup;
 
 internal class PatchMember(MemberReference patch)
 {
+    private readonly Lazy<IReadOnlyDictionary<string, TypeReference>> _patchGenericArguments = new(() => GetGenericArguments(patch));
+    
+    protected bool IsMatch(MemberReference member)
+    {
+        return patch.ContainsGenericParameter
+            ? patch.ToString() == member.ToString() && IsMatch(GetGenericArguments(member))
+            : patch == member;
+    }
+
+    private bool IsMatch(IReadOnlyDictionary<string, TypeReference> currentMemberGenerics)
+    {
+        foreach (var generic in _patchGenericArguments.Value)
+        {
+            if (!currentMemberGenerics.TryGetValue(generic.Key, out var currentGenericType) || generic.Value != currentGenericType) // TODO: this type could be also generic
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     protected bool TryGetGenericReturnType(TypeReference originalReturnType, [NotNullWhen(true)]out TypeReference? returnType)
     {
+        // TODO: Test this scenario
         if (originalReturnType is GenericParameter genericParameter)
         {
-            var generics = GetGenerics();
-            returnType = generics.TryGetValue(genericParameter.FullName, out var generic)
+            returnType = _patchGenericArguments.Value.TryGetValue(genericParameter.FullName, out var generic)
                 ? generic
                 : throw NoGenericParameter(genericParameter);
             return true;
@@ -18,12 +40,11 @@ internal class PatchMember(MemberReference patch)
         
         if (originalReturnType is GenericInstanceType genericReturnType && genericReturnType.GenericArguments.Any(g => g.IsGenericParameter))
         {
-            var generics = GetGenerics();
             var returnTypeDef = originalReturnType.AsTypeDefinition();
             genericReturnType = new GenericInstanceType(returnTypeDef);
             foreach (var genericPrm in returnTypeDef.GenericParameters)
             {
-                if (!generics.TryGetValue(genericPrm.FullName, out var generic))
+                if (!_patchGenericArguments.Value.TryGetValue(genericPrm.FullName, out var generic))
                 {
                     throw NoGenericParameter(genericPrm);
                 }
@@ -42,18 +63,16 @@ internal class PatchMember(MemberReference patch)
     private InvalidOperationException NoGenericParameter(GenericParameter genericParameter)
         => new($"Cannot find {genericParameter.FullName} generic parameter");
     
-    private Dictionary<string, TypeReference> GetGenerics()
+    private static IReadOnlyDictionary<string, TypeReference> GetGenericArguments(MemberReference member)
     {
         var generics = new Dictionary<string, TypeReference>();
-        if (patch is IGenericInstance generic)
+        if (member is IGenericInstance generic)
         {
-            var genericDef = patch as IGenericParameterProvider
-                             ?? patch.Resolve() as IGenericParameterProvider
-                             ?? throw new InvalidOperationException("Cannot get generic parameters");
+            var genericDef = GetPatchGenericParameterProvider(member);
             AddGenerics(generic.GenericArguments, genericDef.GenericParameters);
         }
             
-        if (patch.DeclaringType is GenericInstanceType genericType)
+        if (member.DeclaringType is GenericInstanceType genericType)
         {
             var typeDef = genericType.AsTypeDefinition();
             AddGenerics(genericType.GenericArguments, typeDef.GenericParameters);
@@ -71,5 +90,12 @@ internal class PatchMember(MemberReference patch)
                 }
             }
         }
+    }
+
+    private static IGenericParameterProvider GetPatchGenericParameterProvider(MemberReference member)
+    {
+        return (member as IMemberDefinition) as IGenericParameterProvider 
+               ?? member.Resolve() as IGenericParameterProvider
+               ?? throw new InvalidOperationException("Cannot get generic parameters");
     }
 }

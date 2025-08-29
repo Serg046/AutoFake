@@ -16,6 +16,6 @@ internal class PatchField(FieldReference patch, bool hasThis) : PatchMember(patc
     {
         return instruction.OpCode.Code is Code.Ldfld or StaticFieldCode //TODO Code.Ldflda or Code.Ldftn?
                && instruction.Operand is FieldReference field
-               && field.Compare(patch);
+               && IsMatch(field);
     }
 }
